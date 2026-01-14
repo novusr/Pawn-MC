@@ -254,14 +254,24 @@
                         android:scrollbars="vertical"
                         android:fadeScrollbars="false">
 
-                        <TextView
-                            android:id="@+id/tvOutput"
+                        <HorizontalScrollView
+                            android:id="@+id/horizontalScrollOutput"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:padding="16dp"
-                            android:text="Ready to compile...\n"
-                            android:textIsSelectable="true"
-                            style="@style/TextAppearance.PawnMC.Terminal" />
+                            android:fillViewport="true"
+                            android:scrollbars="horizontal"
+                            android:fadeScrollbars="false">
+
+                            <TextView
+                                android:id="@+id/tvOutput"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:padding="16dp"
+                                android:text="Ready to compile...\n"
+                                android:textIsSelectable="true"
+                                style="@style/TextAppearance.PawnMC.Terminal" />
+
+                        </HorizontalScrollView>
 
                     </ScrollView>
 
