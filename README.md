@@ -2,6 +2,8 @@
 
 An Android app for compiling Pawn scripts directly on mobile devices. Built with Kotlin and integrating the native Pawn compiler library.
 
+![pawnmc](https://raw.githubusercontent.com/gskeleton/Pawn-MC/refs/heads/main/pawnmc.png)
+
 ## Requirements
 
 - Android 7.0 (API 24) or higher
@@ -10,8 +12,8 @@ An Android app for compiling Pawn scripts directly on mobile devices. Built with
 ## Installation
 
 ### From APK
-1. Download the latest APK from releases
-- release-1: https://github.com/novusr/Pawn-MC/releases/download/Pawn-MC-26-1/pawnmc.apk
+1. Download the latest APK from releases<br>
+\- release 1 (2026): https://github.com/novusr/Pawn-MC/releases/download/Pawn-MC-26-1/pawnmc.apk
 3. Install on your ARM64 Android device
 4. And Run.
 
