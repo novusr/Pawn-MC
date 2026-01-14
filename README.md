@@ -11,7 +11,9 @@ An Android app for compiling Pawn scripts directly on mobile devices. Built with
 
 ### From APK
 1. Download the latest APK from releases
-2. Install on your ARM64 Android device
+- release-1: https://github.com/novusr/Pawn-MC/releases/download/Pawn-MC-26-1/pawnmc.apk
+3. Install on your ARM64 Android device
+4. And Run.
 
 ### Build from Source
 ```bash
