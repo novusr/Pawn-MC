@@ -37,6 +37,7 @@
 
                 <data android:scheme="file" />
                 <data android:scheme="content" />
+                <data android:host="*" />
                 <data android:mimeType="*/*" />
                 <data android:pathPattern=".*\\.pwn" />
                 <data android:pathPattern=".*\\.p" />
