@@ -391,57 +391,48 @@ Java_com_rvdjv_pawnmc_PawnCompiler_compile(JNIEnv* env, jobject thiz,
     }
     
     int argc = env->GetArrayLength(args);
-    std::vector<std::string> argStorage(argc);
+    if (argc == 0) {
+        return env->NewStringUTF("Exit code: -1\nNo arguments provided");
+    }
     
-    for (int i = 0; i < argc; i++) {
-        jstring jstr = static_cast<jstring>(env->GetObjectArrayElement(args, i));
-        const char* str = env->GetStringUTFChars(jstr, nullptr);
-        argStorage[i] = str;
+    std::vector<std::string> args_storage;
+    args_storage.reserve(argc + 1);
+    
+    jstring jstr = static_cast<jstring>(env->GetObjectArrayElement(args, 0));
+    const char* str = env->GetStringUTFChars(jstr, nullptr);
+    args_storage.emplace_back(str);
+    env->ReleaseStringUTFChars(jstr, str);
+    env->DeleteLocalRef(jstr);
+    
+    if (argc > 1) {
+        jstring srcJstr = static_cast<jstring>(env->GetObjectArrayElement(args, argc - 1));
+        const char* srcStr = env->GetStringUTFChars(srcJstr, nullptr);
+        char* pathCopy = strdup(srcStr);
+        args_storage.emplace_back(std::string("-D") + dirname(pathCopy));
+        free(pathCopy);
+        env->ReleaseStringUTFChars(srcJstr, srcStr);
+        env->DeleteLocalRef(srcJstr);
+        
+        LOGI("Working directory: %s", args_storage[1].c_str());
+    }
+    
+    for (int i = 1; i < argc; i++) {
+        jstr = static_cast<jstring>(env->GetObjectArrayElement(args, i));
+        str = env->GetStringUTFChars(jstr, nullptr);
+        args_storage.emplace_back(str);
         env->ReleaseStringUTFChars(jstr, str);
         env->DeleteLocalRef(jstr);
     }
     
-    // Insert -D flag to set active directory
-    if (argc > 1) {
-        std::string sourcePath = argStorage[argc - 1];
-        char* sourcePathCopy = strdup(sourcePath.c_str());
-        char* sourceDir = dirname(sourcePathCopy);
-        std::string dirFlag = std::string("-D") + sourceDir;
-        free(sourcePathCopy);
-        
-        LOGI("Using active directory flag: %s", dirFlag.c_str());
-        
-        std::vector<std::string> newArgStorage;
-        newArgStorage.push_back(argStorage[0]);
-        newArgStorage.push_back(dirFlag);
-        for (int i = 1; i < argc; i++) {
-            newArgStorage.push_back(argStorage[i]);
-        }
-        
-        std::vector<char*> newArgv;
-        for (auto& s : newArgStorage) {
-            newArgv.push_back(const_cast<char*>(s.c_str()));
-        }
-        
-        int newArgc = static_cast<int>(newArgv.size());
-        LOGI("Calling pc_compile with %d arguments", newArgc);
-        for (int i = 0; i < newArgc; i++) {
-            LOGD("Arg[%d]: %s", i, newArgv[i]);
-        }
-        
-        int result = compile_with_large_stack(newArgc, newArgv.data());
-        LOGI("pc_compile returned: %d", result);
-        
-        return env->NewStringUTF(getOutputResult(result).c_str());
+    std::vector<char*> argv(args_storage.size());
+    for (size_t i = 0; i < args_storage.size(); i++) {
+        argv[i] = const_cast<char*>(args_storage[i].c_str());
+        LOGD("Arg[%zu]: %s", i, argv[i]);
     }
     
-    std::vector<char*> argv;
-    for (auto& s : argStorage) {
-        argv.push_back(const_cast<char*>(s.c_str()));
-    }
-    
-    LOGI("Calling pc_compile with %d arguments", argc);
-    int result = compile_with_large_stack(argc, argv.data());
+    LOGI("Calling pc_compile with %zu arguments", argv.size());
+    int result = compile_with_large_stack((int)argv.size(), argv.data());
+    LOGI("pc_compile returned: %d", result);
     
     return env->NewStringUTF(getOutputResult(result).c_str());
 }

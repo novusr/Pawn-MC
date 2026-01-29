@@ -51,31 +51,29 @@ object PawnCompiler {
         version: CompilerConfig.CompilerVersion = CompilerConfig.CompilerVersion.V31111
     ): Pair<Int, String> {
         if (!ensureInitialized(version)) {
-            return Pair(-1, "Failed to load compiler library")
+            return -1 to "Failed to load compiler library"
         }
 
-        val actualVersion = initializedVersion ?: version
-        android.util.Log.d("PawnCompiler", "Compiling with: ${actualVersion.label}")
+        android.util.Log.d("PawnCompiler", "Compiling with: ${initializedVersion?.label}")
 
-        val args = mutableListOf("pawncc")
-        args.addAll(options)
-        args.add(sourceFile)
+        val args = buildList {
+            add("pawncc")
+            addAll(options)
+            add(sourceFile)
+        }
 
         val output = compile(args.toTypedArray())
+        return parseCompilerOutput(output)
+    }
+
+    private fun parseCompilerOutput(output: String): Pair<Int, String> {
+        val exitCodeRegex = """^Exit code: (-?\d+)""".toRegex()
+        val match = exitCodeRegex.find(output)
         
-        val exitCode = try {
-            val lines = output.split('\n')
-            if (lines.isNotEmpty() && lines[0].startsWith("Exit code:")) {
-                lines[0].substringAfter("Exit code: ").trim().toIntOrNull() ?: -1
-            } else {
-                -1
-            }
-        } catch (e: Exception) {
-            -1
-        }
+        val exitCode = match?.groupValues?.get(1)?.toIntOrNull() ?: -1
+        val actualOutput = output.substringAfter('\n', "")
         
-        val actualOutput = output.substringAfter('\n')
-        return Pair(exitCode, actualOutput)
+        return exitCode to actualOutput
     }
 
     fun getCapturedOutput(): String = if (isInitialized) getOutput() else ""
