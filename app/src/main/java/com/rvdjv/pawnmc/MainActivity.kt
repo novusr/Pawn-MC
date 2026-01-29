@@ -76,6 +76,7 @@ class MainActivity : AppCompatActivity() {
         config = CompilerConfig(this)
         appendOutput("Using ${config.compilerVersion.label}\n")
         loadLastSelectedFile()
+        handleIncomingIntent()
     }
 
     private fun setupToolbar() {
@@ -263,6 +264,15 @@ class MainActivity : AppCompatActivity() {
             tvSelectedFile.text = File(lastPath).name
             btnCompile.isEnabled = true
             appendOutput("Loaded file: $lastPath\n")
+        }
+    }
+
+    private fun handleIncomingIntent() {
+        val action = intent.action
+        val uri = intent.data
+
+        if (Intent.ACTION_VIEW == action && uri != null) {
+            handleSelectedFile(uri)
         }
     }
 
