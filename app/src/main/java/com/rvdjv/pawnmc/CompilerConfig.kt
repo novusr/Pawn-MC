@@ -48,6 +48,13 @@ class CompilerConfig(context: Context) {
         }
         set(value) = prefs.edit { putString(KEY_INCLUDE_PATHS, value.joinToString(";")) }
 
+    // compiler version
+    var compilerVersion: CompilerVersion
+        get() = CompilerVersion.fromValue(
+            prefs.getString(KEY_COMPILER_VERSION, CompilerVersion.V31111.value) ?: CompilerVersion.V31111.value
+        )
+        set(value) = prefs.edit { putString(KEY_COMPILER_VERSION, value.value) }
+
     /**
      * Build compiler options list from current configuration.
      */
@@ -104,6 +111,15 @@ class CompilerConfig(context: Context) {
         }
     }
 
+    enum class CompilerVersion(val value: String, val libraryName: String, val label: String, val description: String) {
+        V3107("3.10.7", "pawnc3107", "Pawn Compiler 3.10.7", "Older version with SA-MP compatibility"),
+        V31111("3.10.11", "pawnc31111", "Pawn Compiler 3.10.11 (Default)", "Latest version with bug fixes and improvements");
+
+        companion object {
+            fun fromValue(value: String) = entries.find { it.value == value } ?: V31111
+        }
+    }
+
     companion object {
         private const val PREFS_NAME = "compiler_config"
         private const val KEY_OPTIMIZATION = "optimization"
@@ -113,5 +129,6 @@ class CompilerConfig(context: Context) {
         private const val KEY_SAMP_COMPAT = "samp_compat"
         private const val KEY_CUSTOM_FLAGS = "custom_flags"
         private const val KEY_INCLUDE_PATHS = "include_paths"
+        private const val KEY_COMPILER_VERSION = "compiler_version"
     }
 }

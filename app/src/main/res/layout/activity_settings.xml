@@ -35,9 +35,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"> 
 
-            <!-- Optimization -->
+            <!-- Compiler Version -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -66,34 +66,34 @@
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:src="@drawable/ic_speed"
-                            android:contentDescription="Optimization" />
+                            android:src="@drawable/ic_compile"
+                            android:contentDescription="Compiler Version" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:text="OPTIMIZATION"
+                            android:text="COMPILER VERSION"
                             style="@style/TextAppearance.PawnMC.SectionHeader" />
 
                     </LinearLayout>
 
                     <!-- Content -->
                     <RadioGroup
-                        android:id="@+id/rgOptimization"
+                        android:id="@+id/rgCompilerVersion"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:padding="16dp">
 
                         <RadioButton
-                            android:id="@+id/rbO0"
+                            android:id="@+id/rbV3107"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:paddingVertical="12dp"
                             android:paddingStart="8dp"
                             android:buttonTint="@color/vue_green_primary"
                             android:textColor="@color/text_primary"
-                            android:text="No Optimization (-O0)"
+                            android:text="Pawn Compiler 3.10.7"
                             android:textSize="15sp" />
 
                         <TextView
@@ -101,46 +101,26 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="40dp"
                             android:layout_marginBottom="8dp"
-                            android:text="Fastest build, largest output"
+                            android:text="Older version with SA-MP compatibility"
                             android:textColor="@color/text_tertiary"
                             android:textSize="13sp" />
 
                         <RadioButton
-                            android:id="@+id/rbO1"
+                            android:id="@+id/rbV31111"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:paddingVertical="12dp"
                             android:paddingStart="8dp"
                             android:buttonTint="@color/vue_green_primary"
                             android:textColor="@color/text_primary"
-                            android:text="JIT-Compatible (-O1)"
+                            android:text="Pawn Compiler 3.10.11 (Default)"
                             android:textSize="15sp" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="40dp"
-                            android:layout_marginBottom="8dp"
-                            android:text="Moderate optimization, safe for JIT (Default)"
-                            android:textColor="@color/text_tertiary"
-                            android:textSize="13sp" />
-
-                        <RadioButton
-                            android:id="@+id/rbO2"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:paddingVertical="12dp"
-                            android:paddingStart="8dp"
-                            android:buttonTint="@color/vue_green_primary"
-                            android:textColor="@color/text_primary"
-                            android:text="Full Optimization (-O2)"
-                            android:textSize="15sp" />
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="40dp"
-                            android:text="Maximum performance"
+                            android:text="Latest version with bug fixes and improvements"
                             android:textColor="@color/text_tertiary"
                             android:textSize="13sp" />
 

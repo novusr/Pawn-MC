@@ -1,120 +1,87 @@
 package com.rvdjv.pawnmc
 
-import android.os.Handler
-import android.os.Looper
-
 /**
- * Kotlin wrapper for the Pawn Compiler native library.
- * Provides thread-safe compilation with callback support.
+ *kotlin wrapper
  */
 object PawnCompiler {
 
-    init {
-        System.loadLibrary("pawnc_jni")
-    }
+    private var initializedVersion: CompilerConfig.CompilerVersion? = null
+    private var isInitialized = false
 
-    private val mainHandler = Handler(Looper.getMainLooper())
-    private var outputListener: ((String) -> Unit)? = null
-    private var errorListener: ((CompileError) -> Unit)? = null
-    private val errorsList = mutableListOf<CompileError>()
-
-    // jni cbi
-    private val outputCallback = object : OutputCallback {
-        override fun onOutput(message: String) {
-            mainHandler.post {
-                outputListener?.invoke(message)
+    //load lib when app is opened
+    private fun ensureInitialized(version: CompilerConfig.CompilerVersion): Boolean {
+        if (isInitialized) {
+            if (initializedVersion != version) {
+                android.util.Log.w("PawnCompiler", 
+                    "Requested ${version.label} but ${initializedVersion?.label} is already loaded. " +
+                    "App restart required.")
             }
+            return true
+        }
+
+        return try {
+            System.loadLibrary(version.libraryName)
+            initializedVersion = version
+            isInitialized = true
+            android.util.Log.i("PawnCompiler", "Loaded: ${version.libraryName}")
+            true
+        } catch (e: UnsatisfiedLinkError) {
+            android.util.Log.e("PawnCompiler", "Failed to load: ${version.libraryName}", e)
+            false
         }
     }
 
-    private val errorCallback = object : ErrorCallback {
-        override fun onError(number: Int, filename: String, firstline: Int, lastline: Int, message: String) {
-            val error = CompileError(number, filename, firstline, lastline, message)
-            synchronized(errorsList) {
-                errorsList.add(error)
-            }
-            mainHandler.post {
-                errorListener?.invoke(error)
-            }
-        }
+    fun getLoadedVersion(): CompilerConfig.CompilerVersion? = initializedVersion
+
+    fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean {
+        return isInitialized && initializedVersion != requestedVersion
     }
 
     /**
-     * set output listener for compiler output messages.
-     * callbacks are delivered on the main thread.
+     * pawn file compilation
+     * 
+     * @param sourceFile absolute path to .pwn source file
+     * @param options compiler options
+     * @param version compiler versions
+     * @return exitCode capturedOutput
      */
-    fun setOutputListener(listener: ((String) -> Unit)?) {
-        outputListener = listener
-        if (listener != null) {
-            nativeSetOutputCallback(outputCallback)
-        } else {
-            nativeSetOutputCallback(null)
-        }
-    }
-
-    /**
-     * set error listener for compiler errors and warnings.
-     * callbacks are delivered on the main thread.
-     */
-    fun setErrorListener(listener: ((CompileError) -> Unit)?) {
-        errorListener = listener
-        if (listener != null) {
-            nativeSetErrorCallback(errorCallback)
-        } else {
-            nativeSetErrorCallback(null)
-        }
-    }
-
-    /**
-     * compile a pawn source file.
-     * this method should be called from a background thread.
-     *
-     * @param sourceFile absolute path to the .pwn source file
-     * @param options additional compiler options (e.g., "-i/path/to/includes")
-     * @return CompileResult with success status and list of errors/warnings
-     */
-    fun compile(sourceFile: String, options: List<String> = emptyList()): CompileResult {
-        synchronized(errorsList) {
-            errorsList.clear()
+    fun compile(
+        sourceFile: String,
+        options: List<String> = emptyList(),
+        version: CompilerConfig.CompilerVersion = CompilerConfig.CompilerVersion.V31111
+    ): Pair<Int, String> {
+        if (!ensureInitialized(version)) {
+            return Pair(-1, "Failed to load compiler library")
         }
 
-        // Build argument list: pawncc <options> <sourcefile>
+        val actualVersion = initializedVersion ?: version
+        android.util.Log.d("PawnCompiler", "Compiling with: ${actualVersion.label}")
+
         val args = mutableListOf("pawncc")
         args.addAll(options)
         args.add(sourceFile)
 
-        val result = nativeCompile(args.toTypedArray())
-
-        val errors: List<CompileError>
-        synchronized(errorsList) {
-            errors = errorsList.toList()
+        val output = nativeCompileWithOutput(args.toTypedArray())
+        
+        val exitCode = try {
+            val lines = output.split('\n')
+            if (lines.isNotEmpty() && lines[0].startsWith("Exit code:")) {
+                lines[0].substringAfter("Exit code: ").trim().toIntOrNull() ?: -1
+            } else {
+                -1
+            }
+        } catch (e: Exception) {
+            -1
         }
-
-        return CompileResult(
-            success = result == 0,
-            errors = errors
-        )
+        
+        val actualOutput = output.substringAfter('\n')
+        return Pair(exitCode, actualOutput)
     }
 
-    /**
-     * clear all callbacks and release resources.
-     */
-    fun clearCallbacks() {
-        outputListener = null
-        errorListener = null
-        nativeClearCallbacks()
-    }
+    fun getCapturedOutput(): String = if (isInitialized) nativeGetCapturedOutput() else ""
+    fun getCapturedErrors(): String = if (isInitialized) nativeGetCapturedErrors() else ""
 
-    private external fun nativeCompile(args: Array<String>): Int
-    private external fun nativeSetOutputCallback(callback: OutputCallback?)
-    private external fun nativeSetErrorCallback(callback: ErrorCallback?)
-    private external fun nativeClearCallbacks()
-
-    interface OutputCallback {
-        fun onOutput(message: String)
-    }
-
-    interface ErrorCallback {
-        fun onError(number: Int, filename: String, firstline: Int, lastline: Int, message: String)
-    }
+    private external fun nativeCompileWithOutput(args: Array<String>): String
+    private external fun nativeGetCapturedOutput(): String
+    private external fun nativeGetCapturedErrors(): String
 }

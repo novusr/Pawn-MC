@@ -1,6 +1,8 @@
 package com.rvdjv.pawnmc
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -13,6 +15,7 @@ import android.widget.ScrollView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
@@ -51,6 +54,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val legacyStoragePermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.entries.all { it.value }
+        if (allGranted) {
+            appendOutput("Storage permission granted\n")
+        } else {
+            appendOutput("Storage permission denied\n")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -58,9 +72,9 @@ class MainActivity : AppCompatActivity() {
         initViews()
         setupToolbar()
         setupListeners()
-        setupCompilerCallbacks()
         checkStoragePermission()
         config = CompilerConfig(this)
+        appendOutput("Using ${config.compilerVersion.label}\n")
     }
 
     private fun setupToolbar() {
@@ -97,23 +111,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupCompilerCallbacks() {
-        PawnCompiler.setOutputListener { message ->
-            appendOutput(message)
-        }
-
-        PawnCompiler.setErrorListener { error ->
-            val type = when {
-                error.isWarning -> "Warning"
-                error.isFatal -> "Fatal Error"
-                error.isError -> "Error"
-                else -> "Info"
-            }
-            val fileName = File(error.file).name
-            appendOutput("$type ${String.format("%03d", error.number)}: $fileName${error.lineInfo}: ${error.message}\n")
-        }
-    }
-
     private fun checkStoragePermission() {
         if (!hasStoragePermission()) {
             AlertDialog.Builder(this)
@@ -131,7 +128,14 @@ class MainActivity : AppCompatActivity() {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
         } else {
-            true // older versions of Android do not require this permission.
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
         }
     }
 
@@ -141,6 +145,13 @@ class MainActivity : AppCompatActivity() {
                 data = Uri.parse("package:$packageName")
             }
             manageStorageLauncher.launch(intent)
+        } else {
+            legacyStoragePermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
+            )
         }
     }
 
@@ -183,14 +194,12 @@ class MainActivity : AppCompatActivity() {
                         val type = parts[0]
                         val path = parts[1]
                         
-                        // Check common locations
                         when (type.lowercase()) {
                             "home" -> return "${Environment.getExternalStorageDirectory().absolutePath}/$path"
                             "downloads" -> return "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/$path"
-                            "raw" -> return path // Raw file path
+                            "raw" -> return path
                         }
                         
-                        // Try external storage with volume name
                         val externalDirs = getExternalFilesDirs(null)
                         for (dir in externalDirs) {
                             if (dir != null) {
@@ -204,7 +213,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
-                // DocumentsContract failed, try other methods
+                // failed
             }
 
             try {
@@ -217,7 +226,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
-                // _data column not available
+                // failed
             }
         }
 
@@ -232,22 +241,16 @@ class MainActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             val options = config.buildOptions()
+            val version = config.compilerVersion
             val result = withContext(Dispatchers.IO) {
-                PawnCompiler.compile(filePath, options)
+                PawnCompiler.compile(filePath, options, version)
             }
 
             progressBar.visibility = View.GONE
             btnCompile.isEnabled = true
             btnSelectFile.isEnabled = true
 
-            // if (result.success) {
-            //     val amxPath = filePath.replace(".pwn", ".amx", ignoreCase = true)
-            //     appendOutput("Output: $amxPath\n")
-            // } else {
-            //     val errorCount = result.errors.count { it.isError || it.isFatal }
-            //     val warningCount = result.errors.count { it.isWarning }
-            //     appendOutput("Errors: $errorCount, Warnings: $warningCount\n")
-            // }
+            appendOutput(result.second)
         }
     }
 
@@ -256,10 +259,5 @@ class MainActivity : AppCompatActivity() {
         scrollOutput.post {
             scrollOutput.fullScroll(View.FOCUS_DOWN)
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        PawnCompiler.clearCallbacks()
     }
 }

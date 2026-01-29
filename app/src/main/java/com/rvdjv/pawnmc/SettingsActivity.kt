@@ -12,6 +12,7 @@ import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
@@ -22,7 +23,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var config: CompilerConfig
 
-    private lateinit var rgOptimization: RadioGroup
+    private lateinit var rgCompilerVersion: RadioGroup
     private lateinit var rgDebug: RadioGroup
     private lateinit var switchSemicolons: SwitchMaterial
     private lateinit var switchParentheses: SwitchMaterial
@@ -62,7 +63,7 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun initViews() {
-        rgOptimization = findViewById(R.id.rgOptimization)
+        rgCompilerVersion = findViewById(R.id.rgCompilerVersion)
         rgDebug = findViewById(R.id.rgDebug)
         switchSemicolons = findViewById(R.id.switchSemicolons)
         switchParentheses = findViewById(R.id.switchParentheses)
@@ -74,12 +75,13 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun loadSettings() {
-        // optimization
-        when (config.optimization) {
-            CompilerConfig.OptimizationLevel.O0 -> rgOptimization.check(R.id.rbO0)
-            CompilerConfig.OptimizationLevel.O1 -> rgOptimization.check(R.id.rbO1)
-            CompilerConfig.OptimizationLevel.O2 -> rgOptimization.check(R.id.rbO2)
+        // compiler version
+        when (config.compilerVersion) {
+            CompilerConfig.CompilerVersion.V3107 -> rgCompilerVersion.check(R.id.rbV3107)
+            CompilerConfig.CompilerVersion.V31111 -> rgCompilerVersion.check(R.id.rbV31111)
         }
+
+
 
         // debug
         when (config.debugLevel) {
@@ -104,14 +106,21 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun setupListeners() {
-        rgOptimization.setOnCheckedChangeListener { _, checkedId ->
-            config.optimization = when (checkedId) {
-                R.id.rbO0 -> CompilerConfig.OptimizationLevel.O0
-                R.id.rbO1 -> CompilerConfig.OptimizationLevel.O1
-                R.id.rbO2 -> CompilerConfig.OptimizationLevel.O2
-                else -> CompilerConfig.OptimizationLevel.O1
+        rgCompilerVersion.setOnCheckedChangeListener { _, checkedId ->
+            val newVersion = when (checkedId) {
+                R.id.rbV3107 -> CompilerConfig.CompilerVersion.V3107
+                R.id.rbV31111 -> CompilerConfig.CompilerVersion.V31111
+                else -> CompilerConfig.CompilerVersion.V31111
+            }
+            
+            config.compilerVersion = newVersion
+            
+            if (PawnCompiler.isRestartRequired(newVersion)) {
+                showRestartDialog(newVersion)
             }
         }
+
+
 
         rgDebug.setOnCheckedChangeListener { _, checkedId ->
             config.debugLevel = when (checkedId) {
@@ -217,5 +226,33 @@ class SettingsActivity : AppCompatActivity() {
         super.onPause()
         // save custom flags
         config.customFlags = etCustomFlags.text?.toString() ?: ""
+    }
+
+    private fun showRestartDialog(newVersion: CompilerConfig.CompilerVersion) {
+        val currentVersion = PawnCompiler.getLoadedVersion()
+        
+        AlertDialog.Builder(this)
+            .setTitle("Restart Required")
+            .setMessage(
+                "Compiler version has been changed from ${currentVersion?.label ?: "unknown"} " +
+                "to ${newVersion.label}.\n\n" +
+                "Due to Android limitations, the change will take effect after restarting the app.\n\n" +
+                "Would you like to restart now?"
+            )
+            .setPositiveButton("Restart Now") { _, _ ->
+                restartApp()
+            }
+            .setNegativeButton("Later") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .show()
+    }
+
+    private fun restartApp() {
+        val intent = packageManager.getLaunchIntentForPackage(packageName)
+        intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
+        finishAffinity()
+        Runtime.getRuntime().exit(0)
     }
 }
