@@ -11,11 +11,6 @@ class CompilerConfig(context: Context) {
 
     private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    // optimization
-    var optimization: OptimizationLevel
-        get() = OptimizationLevel.fromValue(prefs.getInt(KEY_OPTIMIZATION, OptimizationLevel.O0.value))
-        set(value) = prefs.edit { putInt(KEY_OPTIMIZATION, value.value) }
-
     // debug
     var debugLevel: DebugLevel
         get() = DebugLevel.fromValue(prefs.getInt(KEY_DEBUG, DebugLevel.D3.value))
@@ -61,9 +56,6 @@ class CompilerConfig(context: Context) {
     fun buildOptions(): List<String> {
         val options = mutableListOf<String>()
 
-        // optimization
-        options.add("-O${optimization.value}")
-
         // debug
         options.add("-d${debugLevel.value}")
 
@@ -90,16 +82,6 @@ class CompilerConfig(context: Context) {
         return options
     }
 
-    enum class OptimizationLevel(val value: Int, val label: String, val description: String) {
-        O0(0, "No Optimization (-O0)", "Fastest build time, produces the largest output file."),
-        O1(1, "JIT-Compatible (-O1)", "Moderate optimization level, safe for JIT usage. (Default)"),
-        O2(2, "Full Optimization (-O2)", "High-level optimization for maximum performance.");
-
-        companion object {
-            fun fromValue(value: Int) = entries.find { it.value == value } ?: O1
-        }
-    }
-
     enum class DebugLevel(val value: Int, val label: String, val description: String) {
         D0(0, "Disabled (-d0)", "No debug symbols and no runtime validation."),
         D1(1, "Runtime Validation (-d1)", "Enables array bounds checking without debug symbols. (Default)"),
@@ -122,7 +104,6 @@ class CompilerConfig(context: Context) {
 
     companion object {
         private const val PREFS_NAME = "compiler_config"
-        private const val KEY_OPTIMIZATION = "optimization"
         private const val KEY_DEBUG = "debug"
         private const val KEY_SEMICOLONS = "semicolons"
         private const val KEY_PARENTHESES = "parentheses"

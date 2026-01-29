@@ -92,6 +92,5 @@ int pc_error(int number,      // 0=info, 1-99=error, 100-199=fatal, 200+=warning
 ## Dev Notes
 
 - Compilation runs on a separate thread with 8MB stack to handle large scripts
-- Output is buffered internally and returned as a combined string
-- The working directory is changed to the source file's directory before compilation
+- Output is buffered internally and returned as a combined string\
 - Settings are persisted using SharedPreferences

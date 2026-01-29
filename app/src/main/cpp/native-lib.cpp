@@ -365,28 +365,58 @@ Java_com_rvdjv_pawnmc_PawnCompiler_nativeCompileWithOutput(JNIEnv* env, jobject 
         LOGD("Arg[%d]: %s", i, argv[i]);
     }
     
-    char* oldCwd = getcwd(nullptr, 0);
-    
+    // Use -D flag to set active directory instead of manual chdir
     if (argc > 1) {
         std::string sourcePath = argStorage[argc - 1];
         char* sourcePathCopy = strdup(sourcePath.c_str());
         char* sourceDir = dirname(sourcePathCopy);
         
-        LOGI("Changing to directory: %s", sourceDir);
-        if (chdir(sourceDir) != 0) {
-            LOGE("Failed to chdir to %s: %s", sourceDir, strerror(errno));
+        // Insert -D<path> flag at the beginning of arguments
+        std::string dirFlag = std::string("-D") + sourceDir;
+        LOGI("Using active directory flag: %s", dirFlag.c_str());
+        
+        // Rebuild argv with -D flag inserted after program name
+        std::vector<std::string> newArgStorage;
+        std::vector<char*> newArgv;
+        
+        newArgStorage.push_back(argStorage[0]); // program name
+        newArgStorage.push_back(dirFlag);       // -D flag
+        for (int i = 1; i < argc; i++) {
+            newArgStorage.push_back(argStorage[i]);
         }
+        
+        for (auto& s : newArgStorage) {
+            newArgv.push_back(const_cast<char*>(s.c_str()));
+        }
+        
         free(sourcePathCopy);
+        
+        int newArgc = static_cast<int>(newArgv.size());
+        LOGI("Calling pc_compile with %d arguments", newArgc);
+        for (int i = 0; i < newArgc; i++) {
+            LOGD("Arg[%d]: %s", i, newArgv[i]);
+        }
+        int result = compile_with_large_stack(newArgc, newArgv.data());
+        LOGI("pc_compile returned: %d", result);
+        
+        std::string output;
+        {
+            std::lock_guard<std::mutex> lock(g_outputMutex);
+            output = g_errorBuffer.str();
+            if (!g_outputBuffer.str().empty()) {
+                if (!output.empty()) output += "\n";
+                output += g_outputBuffer.str();
+            }
+        }
+        
+        std::stringstream ss;
+        ss << "Exit code: " << result << "\n" << output;
+        
+        return env->NewStringUTF(ss.str().c_str());
     }
     
     LOGI("Calling pc_compile with %d arguments", argc);
     int result = compile_with_large_stack(argc, argv.data());
-    LOGI("pc_compile returned: %d", result);
-    
-    if (oldCwd) {
-        chdir(oldCwd);
-        free(oldCwd);
-    }
     
     std::string output;
     {
