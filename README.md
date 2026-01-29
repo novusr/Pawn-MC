@@ -14,10 +14,12 @@ An Android app for compiling Pawn scripts directly on mobile devices. Built with
 ### From APK
 1. Download the latest APK from releases<br>
 \- release-2 (2026): https://github.com/novusr/Pawn-MC/releases/download/Pawn-MC-26-2/pawnmc-release-2.apk
+![pawnmc](https://raw.githubusercontent.com/gskeleton/Pawn-MC/refs/heads/main/click_file.png)
 3. Install on your ARM64 Android device
-4. And Run.
-> Options: https://github.com/novusr/Pawn-MC/blob/main/options.md
-> Example: `-;+ -(+ -Z+ -d2 -O1`
+4. And Run.<br>
+
+Custom Compiler Flags: https://github.com/novusr/Pawn-MC/blob/main/options.md<br>
+- ![pawnmc](https://raw.githubusercontent.com/gskeleton/Pawn-MC/refs/heads/main/custom_flag.png)
 
 ### Build from Source
 ```bash
