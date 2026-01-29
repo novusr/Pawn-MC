@@ -50,6 +50,10 @@ class CompilerConfig(context: Context) {
         )
         set(value) = prefs.edit { putString(KEY_COMPILER_VERSION, value.value) }
 
+    var lastSelectedFilePath: String?
+        get() = prefs.getString(KEY_LAST_FILE, null)
+        set(value) = prefs.edit { putString(KEY_LAST_FILE, value) }
+
     /**
      * Build compiler options list from current configuration.
      */
@@ -111,5 +115,6 @@ class CompilerConfig(context: Context) {
         private const val KEY_CUSTOM_FLAGS = "custom_flags"
         private const val KEY_INCLUDE_PATHS = "include_paths"
         private const val KEY_COMPILER_VERSION = "compiler_version"
+        private const val KEY_LAST_FILE = "last_selected_file"
     }
 }

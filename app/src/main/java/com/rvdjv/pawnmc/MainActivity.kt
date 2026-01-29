@@ -75,6 +75,7 @@ class MainActivity : AppCompatActivity() {
         checkStoragePermission()
         config = CompilerConfig(this)
         appendOutput("Using ${config.compilerVersion.label}\n")
+        loadLastSelectedFile()
     }
 
     private fun setupToolbar() {
@@ -160,6 +161,7 @@ class MainActivity : AppCompatActivity() {
         
         if (path != null && (path.endsWith(".pwn", ignoreCase = true) || path.endsWith(".p", ignoreCase = true))) {
             selectedFilePath = path
+            config.lastSelectedFilePath = path
             tvSelectedFile.text = File(path).name
             btnCompile.isEnabled = true
             appendOutput("Selected: $path\n")
@@ -251,6 +253,16 @@ class MainActivity : AppCompatActivity() {
             btnSelectFile.isEnabled = true
 
             appendOutput(result.second)
+        }
+    }
+
+    private fun loadLastSelectedFile() {
+        val lastPath = config.lastSelectedFilePath
+        if (lastPath != null && File(lastPath).exists()) {
+            selectedFilePath = lastPath
+            tvSelectedFile.text = File(lastPath).name
+            btnCompile.isEnabled = true
+            appendOutput("Loaded file: $lastPath\n")
         }
     }
 
