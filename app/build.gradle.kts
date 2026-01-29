@@ -18,10 +18,16 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = rootProject.file("release-key.jks")
-            storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
-            keyAlias = "novusr"
-            keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
+            val keystoreFile = rootProject.file("release-key.jks")
+            val storePass = localProperties.getProperty("RELEASE_STORE_PASSWORD")
+            val keyPass = localProperties.getProperty("RELEASE_KEY_PASSWORD")
+            
+            if (keystoreFile.exists() && !storePass.isNullOrEmpty() && !keyPass.isNullOrEmpty()) {
+                storeFile = keystoreFile
+                storePassword = storePass
+                keyAlias = "novusr"
+                keyPassword = keyPass
+            }
         }
     }
 
@@ -42,7 +48,10 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            val releaseSigningConfig = signingConfigs.findByName("release")
+            if (releaseSigningConfig?.storeFile != null) {
+                signingConfig = releaseSigningConfig
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
