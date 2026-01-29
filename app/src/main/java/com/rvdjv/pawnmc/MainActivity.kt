@@ -245,15 +245,26 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val options = config.buildOptions()
             val version = config.compilerVersion
+            
+            val startTime = System.currentTimeMillis()
             val result = withContext(Dispatchers.IO) {
                 PawnCompiler.compile(filePath, options, version)
             }
+            val endTime = System.currentTimeMillis()
+            val duration = endTime - startTime
 
             progressBar.visibility = View.GONE
             btnCompile.isEnabled = true
             btnSelectFile.isEnabled = true
 
             appendOutput(result.second)
+            
+            val timeString = if (duration >= 1000) {
+                String.format("%.2f seconds", duration / 1000.0)
+            } else {
+                "$duration ms"
+            }
+            appendOutput("\nCompilation time: $timeString\n")
         }
     }
 
