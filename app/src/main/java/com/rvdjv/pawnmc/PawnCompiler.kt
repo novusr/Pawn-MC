@@ -61,7 +61,7 @@ object PawnCompiler {
         args.addAll(options)
         args.add(sourceFile)
 
-        val output = nativeCompileWithOutput(args.toTypedArray())
+        val output = compile(args.toTypedArray())
         
         val exitCode = try {
             val lines = output.split('\n')
@@ -78,10 +78,10 @@ object PawnCompiler {
         return Pair(exitCode, actualOutput)
     }
 
-    fun getCapturedOutput(): String = if (isInitialized) nativeGetCapturedOutput() else ""
-    fun getCapturedErrors(): String = if (isInitialized) nativeGetCapturedErrors() else ""
+    fun getCapturedOutput(): String = if (isInitialized) getOutput() else ""
+    fun getCapturedErrors(): String = if (isInitialized) getErrors() else ""
 
-    private external fun nativeCompileWithOutput(args: Array<String>): String
-    private external fun nativeGetCapturedOutput(): String
-    private external fun nativeGetCapturedErrors(): String
+    private external fun compile(args: Array<String>): String
+    private external fun getOutput(): String
+    private external fun getErrors(): String
 }

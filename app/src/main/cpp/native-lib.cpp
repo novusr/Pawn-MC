@@ -7,7 +7,7 @@
 #include <vector>
 #include <mutex>
 #include <sstream>
-#include <cstring>  
+#include <cstring>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -35,6 +35,15 @@ namespace {
     std::stringstream g_outputBuffer;
     std::stringstream g_errorBuffer;
     
+    const int MAX_WARNINGS = 15;
+    const int MAX_ERRORS = 24;
+    const size_t MAX_BUFFER_SIZE = 512 * 1024;
+    
+    int g_warningCount = 0;
+    int g_errorCount = 0;
+    bool g_warningLimitReached = false;
+    bool g_errorLimitReached = false;
+    
     std::mutex g_posMutex;
     std::map<FILE*, fpos_t> g_filePositions;
     
@@ -44,6 +53,22 @@ namespace {
         g_outputBuffer.clear();
         g_errorBuffer.str("");
         g_errorBuffer.clear();
+        g_warningCount = 0;
+        g_errorCount = 0;
+        g_warningLimitReached = false;
+        g_errorLimitReached = false;
+    }
+    
+    std::string getOutputResult(int exitCode) {
+        std::lock_guard<std::mutex> lock(g_outputMutex);
+        std::string output = g_errorBuffer.str();
+        if (!g_outputBuffer.str().empty()) {
+            if (!output.empty()) output += "\n";
+            output += g_outputBuffer.str();
+        }
+        std::stringstream ss;
+        ss << "Exit code: " << exitCode << "\n" << output;
+        return ss.str();
     }
 }
 
@@ -79,26 +104,57 @@ extern "C" int pc_printf(const char* message, ...) {
         g_outputBuffer << buffer;
     }
     
-    if (heapBuffer) {
-        free(heapBuffer);
-    }
-    
+    if (heapBuffer) free(heapBuffer);
     return needed;
 }
 
-extern "C" int pc_error(int number, char* message, char* filename, 
+extern "C" int pc_error(int number, char* message, char* filename,
                         int firstline, int lastline, va_list argptr) {
-    static const char* prefix[3] = { "error", "fatal error", "warning" };
+    static const char* prefix[3] = {"error", "fatal error", "warning"};
+    
+    bool isWarning = (number >= 200);
+    bool isError = (number > 0 && number < 200);
+    
+    {
+        std::lock_guard<std::mutex> lock(g_outputMutex);
+        
+        if (g_errorBuffer.tellp() >= (std::streampos)MAX_BUFFER_SIZE) {
+            return 0;
+        }
+        
+        if (isWarning) {
+            g_warningCount++;
+            if (g_warningCount > MAX_WARNINGS) {
+                if (!g_warningLimitReached) {
+                    g_warningLimitReached = true;
+                    g_errorBuffer << "\n... (" << MAX_WARNINGS << "+ warnings truncated)\n";
+                    LOGI("Warning limit reached (%d)", MAX_WARNINGS);
+                }
+                return 0;
+            }
+        }
+        
+        if (isError) {
+            g_errorCount++;
+            if (g_errorCount > MAX_ERRORS) {
+                if (!g_errorLimitReached) {
+                    g_errorLimitReached = true;
+                    g_errorBuffer << "\n... (" << MAX_ERRORS << "+ errors truncated)\n";
+                    LOGE("Error limit reached (%d)", MAX_ERRORS);
+                }
+                return 0;
+            }
+        }
+    }
     
     std::stringstream ss;
     
     if (number != 0) {
         const char* pre = prefix[number / 100];
-        
         if (number == 111 || number == 237) {
             ss << filename << "(" << lastline << ") : ";
         } else if (firstline >= 0) {
-            ss << filename << "(" << firstline << " -- " << lastline << ") : " 
+            ss << filename << "(" << firstline << " -- " << lastline << ") : "
                << pre << " " << number << ": ";
         } else {
             ss << filename << "(" << lastline << ") : " << pre << " " << number << ": ";
@@ -123,18 +179,15 @@ extern "C" int pc_error(int number, char* message, char* filename,
     }
     
     ss << msgBuffer;
-    
-    if (heapBuffer) {
-        free(heapBuffer);
-    }
+    if (heapBuffer) free(heapBuffer);
     
     std::string errorStr = ss.str();
     
-    if (number >= 200) {
+    if (isWarning) {
         LOGI("Warning: %s", errorStr.c_str());
     } else if (number >= 100) {
         LOGE("Fatal: %s", errorStr.c_str());
-    } else if (number > 0) {
+    } else if (isError) {
         LOGE("Error: %s", errorStr.c_str());
     } else {
         LOGD("Info: %s", errorStr.c_str());
@@ -142,7 +195,6 @@ extern "C" int pc_error(int number, char* message, char* filename,
     
     std::lock_guard<std::mutex> lock(g_outputMutex);
     g_errorBuffer << errorStr;
-    
     return 0;
 }
 
@@ -173,21 +225,17 @@ extern "C" void* pc_createtmpsrc(char** filename) {
         }
     }
     
-    if (filename != nullptr) {
-        *filename = tname;
-    }
+    if (filename != nullptr) *filename = tname;
     return ftmp;
 }
 
 extern "C" void pc_closesrc(void* handle) {
     if (handle != nullptr) {
         FILE* fp = static_cast<FILE*>(handle);
-        
         {
             std::lock_guard<std::mutex> lock(g_posMutex);
             g_filePositions.erase(fp);
         }
-        
         fclose(fp);
     }
 }
@@ -208,7 +256,6 @@ extern "C" int pc_writesrc(void* handle, unsigned char* source) {
 
 extern "C" void* pc_getpossrc(void* handle) {
     FILE* fp = static_cast<FILE*>(handle);
-    
     std::lock_guard<std::mutex> lock(g_posMutex);
     fgetpos(fp, &g_filePositions[fp]);
     return &g_filePositions[fp];
@@ -223,9 +270,7 @@ extern "C" void* pc_openasm(char* filename) {
 }
 
 extern "C" void pc_closeasm(void* handle, int deletefile) {
-    if (handle != nullptr) {
-        fclose(static_cast<FILE*>(handle));
-    }
+    if (handle != nullptr) fclose(static_cast<FILE*>(handle));
     if (deletefile) {
         extern char outfname[];
         remove(outfname);
@@ -249,9 +294,7 @@ extern "C" char* pc_readasm(void* handle, char* string, int maxchars) {
 
 extern "C" void* pc_openbin(char* filename) {
     FILE* fbin = fopen(filename, "wb");
-    if (fbin != nullptr) {
-        setvbuf(fbin, nullptr, _IOFBF, 1UL << 20);
-    }
+    if (fbin != nullptr) setvbuf(fbin, nullptr, _IOFBF, 1UL << 20);
     return fbin;
 }
 
@@ -295,10 +338,7 @@ static void* compile_thread_func(void* arg) {
 }
 
 static int compile_with_large_stack(int argc, char** argv) {
-    CompileArgs cargs;
-    cargs.argc = argc;
-    cargs.argv = argv;
-    cargs.result = -1;
+    CompileArgs cargs = {argc, argv, -1};
     
     pthread_t thread;
     pthread_attr_t attr;
@@ -323,7 +363,6 @@ static int compile_with_large_stack(int argc, char** argv) {
     }
     
     pthread_attr_destroy(&attr);
-    
     pthread_join(thread, nullptr);
     
     return cargs.result;
@@ -342,8 +381,8 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 //nativeCompileWithOutput
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_PawnCompiler_nativeCompileWithOutput(JNIEnv* env, jobject thiz,
-                                                           jobjectArray args) {
+Java_com_rvdjv_pawnmc_PawnCompiler_compile(JNIEnv* env, jobject thiz,
+                                           jobjectArray args) {
     clearBuffers();
     
     {
@@ -352,106 +391,71 @@ Java_com_rvdjv_pawnmc_PawnCompiler_nativeCompileWithOutput(JNIEnv* env, jobject 
     }
     
     int argc = env->GetArrayLength(args);
-    std::vector<char*> argv(argc);
     std::vector<std::string> argStorage(argc);
     
     for (int i = 0; i < argc; i++) {
         jstring jstr = static_cast<jstring>(env->GetObjectArrayElement(args, i));
         const char* str = env->GetStringUTFChars(jstr, nullptr);
         argStorage[i] = str;
-        argv[i] = const_cast<char*>(argStorage[i].c_str());
         env->ReleaseStringUTFChars(jstr, str);
         env->DeleteLocalRef(jstr);
-        LOGD("Arg[%d]: %s", i, argv[i]);
     }
     
-    // Use -D flag to set active directory instead of manual chdir
+    // Insert -D flag to set active directory
     if (argc > 1) {
         std::string sourcePath = argStorage[argc - 1];
         char* sourcePathCopy = strdup(sourcePath.c_str());
         char* sourceDir = dirname(sourcePathCopy);
-        
-        // Insert -D<path> flag at the beginning of arguments
         std::string dirFlag = std::string("-D") + sourceDir;
+        free(sourcePathCopy);
+        
         LOGI("Using active directory flag: %s", dirFlag.c_str());
         
-        // Rebuild argv with -D flag inserted after program name
         std::vector<std::string> newArgStorage;
-        std::vector<char*> newArgv;
-        
-        newArgStorage.push_back(argStorage[0]); // program name
-        newArgStorage.push_back(dirFlag);       // -D flag
+        newArgStorage.push_back(argStorage[0]);
+        newArgStorage.push_back(dirFlag);
         for (int i = 1; i < argc; i++) {
             newArgStorage.push_back(argStorage[i]);
         }
         
+        std::vector<char*> newArgv;
         for (auto& s : newArgStorage) {
             newArgv.push_back(const_cast<char*>(s.c_str()));
         }
-        
-        free(sourcePathCopy);
         
         int newArgc = static_cast<int>(newArgv.size());
         LOGI("Calling pc_compile with %d arguments", newArgc);
         for (int i = 0; i < newArgc; i++) {
             LOGD("Arg[%d]: %s", i, newArgv[i]);
         }
+        
         int result = compile_with_large_stack(newArgc, newArgv.data());
         LOGI("pc_compile returned: %d", result);
         
-        std::string output;
-        {
-            std::lock_guard<std::mutex> lock(g_outputMutex);
-            output = g_errorBuffer.str();
-            if (!g_outputBuffer.str().empty()) {
-                if (!output.empty()) output += "\n";
-                output += g_outputBuffer.str();
-            }
-        }
-        
-        std::stringstream ss;
-        ss << "Exit code: " << result << "\n" << output;
-        
-        return env->NewStringUTF(ss.str().c_str());
+        return env->NewStringUTF(getOutputResult(result).c_str());
+    }
+    
+    std::vector<char*> argv;
+    for (auto& s : argStorage) {
+        argv.push_back(const_cast<char*>(s.c_str()));
     }
     
     LOGI("Calling pc_compile with %d arguments", argc);
     int result = compile_with_large_stack(argc, argv.data());
     
-    std::string output;
-    {
-        std::lock_guard<std::mutex> lock(g_outputMutex);
-        output = g_errorBuffer.str();
-        if (!g_outputBuffer.str().empty()) {
-            if (!output.empty()) output += "\n";
-            output += g_outputBuffer.str();
-        }
-    }
-    
-    std::stringstream ss;
-    ss << "Exit code: " << result << "\n" << output;
-    
-    return env->NewStringUTF(ss.str().c_str());
+    return env->NewStringUTF(getOutputResult(result).c_str());
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_PawnCompiler_nativeGetCapturedOutput(JNIEnv* env, jobject thiz) {
-    std::string output;
-    {
-        std::lock_guard<std::mutex> lock(g_outputMutex);
-        output = g_outputBuffer.str();
-    }
-    return env->NewStringUTF(output.c_str());
+Java_com_rvdjv_pawnmc_PawnCompiler_getOutput(JNIEnv* env, jobject thiz) {
+    std::lock_guard<std::mutex> lock(g_outputMutex);
+    return env->NewStringUTF(g_outputBuffer.str().c_str());
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_PawnCompiler_nativeGetCapturedErrors(JNIEnv* env, jobject thiz) {
-    std::string errors;
-    {
-        std::lock_guard<std::mutex> lock(g_outputMutex);
-        errors = g_errorBuffer.str();
-    }
-    return env->NewStringUTF(errors.c_str());
+Java_com_rvdjv_pawnmc_PawnCompiler_getErrors(JNIEnv* env, jobject thiz) {
+    std::lock_guard<std::mutex> lock(g_outputMutex);
+    return env->NewStringUTF(g_errorBuffer.str().c_str());
 }
 
-}
+} // extern "C"
