@@ -35,8 +35,8 @@ android {
         applicationId = "com.rvdjv.pawnmc"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.2.5"
+        versionCode = 2
+        versionName = "1.2.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
