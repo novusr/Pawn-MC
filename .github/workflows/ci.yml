@@ -49,12 +49,42 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug
 
-      - name: Build Release APK (unsigned)
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release-key.jks
+          echo "Keystore decoded successfully"
+
+      - name: Create local.properties for signing
+        run: |
+          echo "RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> local.properties
+          echo "RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> local.properties
+
+      - name: Build Signed Release APK
         run: ./gradlew assembleRelease
-        env:
-          # Skip signing for CI builds
-          ORG_GRADLE_PROJECT_RELEASE_STORE_PASSWORD: ""
-          ORG_GRADLE_PROJECT_RELEASE_KEY_PASSWORD: ""
+
+      - name: Verify APK is signed
+        run: |
+          APK_PATH=$(find app/build/outputs/apk/release -name "*.apk" | head -1)
+          if [ -z "$APK_PATH" ]; then
+            echo "Error: No APK found!"
+            exit 1
+          fi
+          
+          echo "Checking APK: $APK_PATH"
+          
+          # Check if APK is signed using apksigner
+          if $ANDROID_HOME/build-tools/$(ls $ANDROID_HOME/build-tools | tail -1)/apksigner verify --print-certs "$APK_PATH" 2>/dev/null; then
+            echo "✅ APK is properly signed!"
+          else
+            echo "❌ Error: APK is NOT signed or signature is invalid!"
+            exit 1
+          fi
+
+      - name: Cleanup sensitive files
+        if: always()
+        run: |
+          rm -f release-key.jks
+          rm -f local.properties
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
@@ -63,10 +93,10 @@ jobs:
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
 
-      - name: Upload Release APK
+      - name: Upload Signed Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-unsigned
+          name: app-release-signed
           path: app/build/outputs/apk/release/*.apk
           retention-days: 14
 
