@@ -32,8 +32,6 @@ An Android app for compiling Pawn scripts directly on mobile devices. Built with
 2. Install on your Android device
 3. Grant storage permissions when prompted
 
-![File Selection](https://raw.githubusercontent.com/gskeleton/Pawn-MC/refs/heads/main/click_file.png)
-
 ### Custom Compiler Flags
 
 Configure custom flags in Settings. See [options.md](options.md) for available flags.
