@@ -29,6 +29,16 @@ extern "C" {
     int pc_compile(int argc, char *argv[]);
 }
 
+extern "C" {
+    typedef unsigned char MEMFILE;
+    MEMFILE *mfcreate(const char *filename);
+    void mfclose(MEMFILE *mf);
+    int mfdump(MEMFILE *mf);
+    long mfseek(MEMFILE *mf, long offset, int whence);
+    int mfputs(MEMFILE *mf, const char *string);
+    char *mfgets(MEMFILE *mf, char *string, unsigned int size);
+}
+
 // output sistem
 namespace {
     std::mutex g_outputMutex;
@@ -266,30 +276,29 @@ extern "C" int pc_eofsrc(void* handle) {
 }
 
 extern "C" void* pc_openasm(char* filename) {
-    return fopen(filename, "w+t");
+    return mfcreate(filename);
 }
 
 extern "C" void pc_closeasm(void* handle, int deletefile) {
-    if (handle != nullptr) fclose(static_cast<FILE*>(handle));
-    if (deletefile) {
-        extern char outfname[];
-        remove(outfname);
+    if (handle != nullptr) {
+        if (!deletefile)
+            mfdump(static_cast<MEMFILE*>(handle));
+        mfclose(static_cast<MEMFILE*>(handle));
     }
 }
 
 extern "C" void pc_resetasm(void* handle) {
     if (handle != nullptr) {
-        fflush(static_cast<FILE*>(handle));
-        fseek(static_cast<FILE*>(handle), 0, SEEK_SET);
+        mfseek(static_cast<MEMFILE*>(handle), 0, SEEK_SET);
     }
 }
 
 extern "C" int pc_writeasm(void* handle, char* string) {
-    return fputs(string, static_cast<FILE*>(handle)) >= 0;
+    return mfputs(static_cast<MEMFILE*>(handle), string);
 }
 
 extern "C" char* pc_readasm(void* handle, char* string, int maxchars) {
-    return fgets(string, maxchars, static_cast<FILE*>(handle));
+    return mfgets(static_cast<MEMFILE*>(handle), string, static_cast<unsigned int>(maxchars));
 }
 
 extern "C" void* pc_openbin(char* filename) {
