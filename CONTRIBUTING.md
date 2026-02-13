@@ -216,7 +216,7 @@ What actually happened.
 **Environment**
 - Android Version: (e.g., Android 13)
 - Device: (e.g., Samsung Galaxy S21)
-- App Version: (e.g., 1.2.5)
+- App Version: (e.g., 1.2.7)
 - Compiler Version: (3.10.7 or 3.10.11)
 
 **Logs/Screenshots**

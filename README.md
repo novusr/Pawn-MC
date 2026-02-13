@@ -1,6 +1,6 @@
 # PawnMC - Pawn Mobile Compiler
 
-![Version](https://img.shields.io/badge/version-1.2.6-blue) ![Android](https://img.shields.io/badge/Android-7.0%2B-green) ![License](https://img.shields.io/badge/license-Apache%202.0-orange)
+![Version](https://img.shields.io/badge/version-1.2.7-blue) ![Android](https://img.shields.io/badge/Android-7.0%2B-green) ![License](https://img.shields.io/badge/license-Apache%202.0-orange)
 
 An Android app for compiling Pawn scripts directly on mobile devices. Built with Kotlin and integrating the native Pawn compiler library with support for multiple compiler versions.
 

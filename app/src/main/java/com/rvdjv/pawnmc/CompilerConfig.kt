@@ -27,7 +27,7 @@ class CompilerConfig(context: Context) {
 
     // samp compatibility
     var sampCompatibility: Boolean
-        get() = prefs.getBoolean(KEY_SAMP_COMPAT, true)
+        get() = prefs.getBoolean(KEY_SAMP_COMPAT, false)
         set(value) = prefs.edit { putBoolean(KEY_SAMP_COMPAT, value) }
 
     // custom
