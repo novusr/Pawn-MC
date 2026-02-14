@@ -5,7 +5,7 @@ project("pawnc" C CXX)
 
 # Source path
 set(PAWNC_3107_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10.7/source")
-set(PAWNC_31111_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10.11/source")
+set(PAWNC_31011_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10.11/source")
 
 # Version 3.10.7
 set(VERSION_MAJOR 3)
@@ -22,8 +22,8 @@ configure_file(
 set(VERSION_BUILD 11)
 set(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BUILD}")
 configure_file(
-    "${PAWNC_31111_SOURCE_DIR}/compiler/version.h.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/pawnc31111/version.h"
+    "${PAWNC_31011_SOURCE_DIR}/compiler/version.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/pawnc31011/version.h"
 )
 
 # Common definition
@@ -78,23 +78,23 @@ set(PAWNC_3107_SOURCES
     ${PAWNC_3107_SOURCE_DIR}/linux/binreloc.c
 )
 
-set(PAWNC_31111_SOURCES
-    ${PAWNC_31111_SOURCE_DIR}/compiler/sc1.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/sc2.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/sc3.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/sc4.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/sc5.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/sc6.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/sc7.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/sci18n.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/sclist.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/scmemfil.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/scstate.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/scvars.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/lstring.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/memfile.c
-    ${PAWNC_31111_SOURCE_DIR}/compiler/hashtable/wrap_hashtable.c
-    ${PAWNC_31111_SOURCE_DIR}/linux/binreloc.c
+set(PAWNC_31011_SOURCES
+    ${PAWNC_31011_SOURCE_DIR}/compiler/sc1.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/sc2.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/sc3.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/sc4.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/sc5.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/sc6.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/sc7.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/sci18n.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/sclist.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/scmemfil.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/scstate.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/scvars.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/lstring.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/memfile.c
+    ${PAWNC_31011_SOURCE_DIR}/compiler/hashtable/wrap_hashtable.c
+    ${PAWNC_31011_SOURCE_DIR}/linux/binreloc.c
 )
 
 # pawnc 3107
@@ -120,26 +120,26 @@ target_compile_options(pawnc3107 PRIVATE
 target_link_libraries(pawnc3107 android log)
 
 # pawnc 31011
-add_library(pawnc31111 SHARED
-    ${PAWNC_31111_SOURCES}
+add_library(pawnc31011 SHARED
+    ${PAWNC_31011_SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/native-lib.cpp
 )
 
-target_include_directories(pawnc31111 PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}/pawnc31111
-    ${PAWNC_31111_SOURCE_DIR}/compiler
-    ${PAWNC_31111_SOURCE_DIR}/linux
-    ${PAWNC_31111_SOURCE_DIR}/amx
+target_include_directories(pawnc31011 PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}/pawnc31011
+    ${PAWNC_31011_SOURCE_DIR}/compiler
+    ${PAWNC_31011_SOURCE_DIR}/linux
+    ${PAWNC_31011_SOURCE_DIR}/amx
 )
 
-target_compile_definitions(pawnc31111 PRIVATE
+target_compile_definitions(pawnc31011 PRIVATE
     ${COMMON_DEFINITIONS}
     sNAMEMAX=63
 )
 
-target_compile_options(pawnc31111 PRIVATE
+target_compile_options(pawnc31011 PRIVATE
     $<$<COMPILE_LANGUAGE:C>:${COMMON_C_FLAGS}>
     $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -fPIC>
 )
 
-target_link_libraries(pawnc31111 android log)
+target_link_libraries(pawnc31011 android log)

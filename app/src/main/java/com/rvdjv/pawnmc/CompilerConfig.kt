@@ -46,7 +46,7 @@ class CompilerConfig(context: Context) {
     // compiler version
     var compilerVersion: CompilerVersion
         get() = CompilerVersion.fromValue(
-            prefs.getString(KEY_COMPILER_VERSION, CompilerVersion.V31111.value) ?: CompilerVersion.V31111.value
+            prefs.getString(KEY_COMPILER_VERSION, CompilerVersion.V31011.value) ?: CompilerVersion.V31011.value
         )
         set(value) = prefs.edit { putString(KEY_COMPILER_VERSION, value.value) }
 
@@ -99,10 +99,10 @@ class CompilerConfig(context: Context) {
 
     enum class CompilerVersion(val value: String, val libraryName: String, val label: String, val description: String) {
         V3107("3.10.7", "pawnc3107", "Pawn Compiler 3.10.7", "Older version with SA-MP compatibility"),
-        V31111("3.10.11", "pawnc31111", "Pawn Compiler 3.10.11 (Default)", "Latest version with bug fixes and improvements");
+        V31011("3.10.11", "pawnc31011", "Pawn Compiler 3.10.11 (Default)", "Latest version with bug fixes and improvements");
 
         companion object {
-            fun fromValue(value: String) = entries.find { it.value == value } ?: V31111
+            fun fromValue(value: String) = entries.find { it.value == value } ?: V31011
         }
     }
 

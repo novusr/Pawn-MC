@@ -48,7 +48,7 @@ object PawnCompiler {
     fun compile(
         sourceFile: String,
         options: List<String> = emptyList(),
-        version: CompilerConfig.CompilerVersion = CompilerConfig.CompilerVersion.V31111
+        version: CompilerConfig.CompilerVersion = CompilerConfig.CompilerVersion.V31011
     ): Pair<Int, String> {
         if (!ensureInitialized(version)) {
             return -1 to "Failed to load compiler library"

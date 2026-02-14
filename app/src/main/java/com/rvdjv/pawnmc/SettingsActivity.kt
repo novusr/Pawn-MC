@@ -78,7 +78,7 @@ class SettingsActivity : AppCompatActivity() {
         // compiler version
         when (config.compilerVersion) {
             CompilerConfig.CompilerVersion.V3107 -> rgCompilerVersion.check(R.id.rbV3107)
-            CompilerConfig.CompilerVersion.V31111 -> rgCompilerVersion.check(R.id.rbV31111)
+            CompilerConfig.CompilerVersion.V31011 -> rgCompilerVersion.check(R.id.rbV31011)
         }
 
 
@@ -109,8 +109,8 @@ class SettingsActivity : AppCompatActivity() {
         rgCompilerVersion.setOnCheckedChangeListener { _, checkedId ->
             val newVersion = when (checkedId) {
                 R.id.rbV3107 -> CompilerConfig.CompilerVersion.V3107
-                R.id.rbV31111 -> CompilerConfig.CompilerVersion.V31111
-                else -> CompilerConfig.CompilerVersion.V31111
+                R.id.rbV31011 -> CompilerConfig.CompilerVersion.V31011
+                else -> CompilerConfig.CompilerVersion.V31011
             }
             
             config.compilerVersion = newVersion
