@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.22.1)
 project("pawnc" C CXX)
 
 # Source path
-set(PAWNC_3107_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../pawnc-3.10.7/source")
-set(PAWNC_31111_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../pawnc-3.10.11/source")
+set(PAWNC_3107_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10.7/source")
+set(PAWNC_31111_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10.11/source")
 
 # Version 3.10.7
 set(VERSION_MAJOR 3)
