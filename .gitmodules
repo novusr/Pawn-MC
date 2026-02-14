@@ -1,8 +1,8 @@
 [submodule "pawnc-3.10.11"]
-	path = pawnc-3.10.11
+	path = compilers/pawnc-3.10.11
 	url = https://github.com/novusr/Pawnc-3.10.11
 	shallow = true
 [submodule "pawnc-3.10.7"]
-	path = pawnc-3.10.7
+	path = compilers/pawnc-3.10.7
 	url = https://github.com/novusr/pawnc-3.10.7.git
 	shallow = true
