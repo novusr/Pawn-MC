@@ -27,6 +27,7 @@
 
 extern "C" {
     int pc_compile(int argc, char *argv[]);
+    int pc_geterrorwarnings(void);
 }
 
 extern "C" {
@@ -122,8 +123,9 @@ extern "C" int pc_error(int number, char* message, char* filename,
                         int firstline, int lastline, va_list argptr) {
     static const char* prefix[3] = {"error", "fatal error", "warning"};
     
-    bool isWarning = (number >= 200);
-    bool isError = (number > 0 && number < 200);
+    bool warnAsError = (number >= 200 && pc_geterrorwarnings());
+    bool isWarning = (number >= 200 && !warnAsError);
+    bool isError = (number > 0 && number < 200) || warnAsError;
     
     {
         std::lock_guard<std::mutex> lock(g_outputMutex);
@@ -161,6 +163,9 @@ extern "C" int pc_error(int number, char* message, char* filename,
     
     if (number != 0) {
         const char* pre = prefix[number / 100];
+        if (warnAsError) {
+            pre = prefix[0];
+        }
         if (number == 111 || number == 237) {
             ss << filename << "(" << lastline << ") : ";
         } else if (firstline >= 0) {
@@ -195,7 +200,7 @@ extern "C" int pc_error(int number, char* message, char* filename,
     
     if (isWarning) {
         LOGI("Warning: %s", errorStr.c_str());
-    } else if (number >= 100) {
+    } else if (number >= 100 && !warnAsError) {
         LOGE("Fatal: %s", errorStr.c_str());
     } else if (isError) {
         LOGE("Error: %s", errorStr.c_str());
