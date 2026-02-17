@@ -81,8 +81,6 @@ class SettingsActivity : AppCompatActivity() {
             CompilerConfig.CompilerVersion.V31011 -> rgCompilerVersion.check(R.id.rbV31011)
         }
 
-
-
         // debug
         when (config.debugLevel) {
             CompilerConfig.DebugLevel.D0 -> rgDebug.check(R.id.rbD0)
