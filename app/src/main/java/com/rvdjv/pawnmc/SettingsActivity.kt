@@ -32,6 +32,9 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var llIncludePaths: LinearLayout
     private lateinit var tvEmptyPaths: TextView
     private lateinit var btnAddIncludePath: MaterialButton
+    private lateinit var tvAppVersion: TextView
+    private lateinit var tvBuildNumber: TextView
+    private lateinit var btnGitHub: MaterialButton
 
     private val includePaths = mutableListOf<String>()
 
@@ -72,6 +75,9 @@ class SettingsActivity : AppCompatActivity() {
         llIncludePaths = findViewById(R.id.llIncludePaths)
         tvEmptyPaths = findViewById(R.id.tvEmptyPaths)
         btnAddIncludePath = findViewById(R.id.btnAddIncludePath)
+        tvAppVersion = findViewById(R.id.tvAppVersion)
+        tvBuildNumber = findViewById(R.id.tvBuildNumber)
+        btnGitHub = findViewById(R.id.btnGitHub)
     }
 
     private fun loadSettings() {
@@ -101,6 +107,16 @@ class SettingsActivity : AppCompatActivity() {
         includePaths.clear()
         includePaths.addAll(config.includePaths)
         refreshIncludePathsUI()
+
+        // about
+        val packageInfo = packageManager.getPackageInfo(packageName, 0)
+        tvAppVersion.text = "v${packageInfo.versionName}"
+        tvBuildNumber.text = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            packageInfo.longVersionCode.toString()
+        } else {
+            @Suppress("DEPRECATION")
+            packageInfo.versionCode.toString()
+        }
     }
 
     private fun setupListeners() {
@@ -150,6 +166,11 @@ class SettingsActivity : AppCompatActivity() {
 
         btnAddIncludePath.setOnClickListener {
             folderPickerLauncher.launch(null)
+        }
+
+        btnGitHub.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/novusr/Pawn-MC"))
+            startActivity(intent)
         }
     }
 
