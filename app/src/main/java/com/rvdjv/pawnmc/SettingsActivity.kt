@@ -3,8 +3,6 @@ package com.rvdjv.pawnmc
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
-import android.provider.DocumentsContract
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageButton
@@ -175,46 +173,12 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun handleSelectedFolder(uri: Uri) {
-        val path = getPathFromTreeUri(uri)
+        val path = UriUtils.getPathFromTreeUri(this, uri)
         if (path != null && path !in includePaths) {
             includePaths.add(path)
             config.includePaths = includePaths
             refreshIncludePathsUI()
         }
-    }
-
-    private fun getPathFromTreeUri(uri: Uri): String? {
-        try {
-            val docId = DocumentsContract.getTreeDocumentId(uri)
-            if (docId.startsWith("primary:")) {
-                val relativePath = docId.removePrefix("primary:")
-                return "${Environment.getExternalStorageDirectory().absolutePath}/$relativePath"
-            }
-            if (docId.contains(":")) {
-                val parts = docId.split(":")
-                if (parts.size == 2) {
-                    val type = parts[0]
-                    val path = parts[1]
-
-                    when (type.lowercase()) {
-                        "home" -> return "${Environment.getExternalStorageDirectory().absolutePath}/$path"
-                        "downloads" -> return "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/$path"
-                        "raw" -> return path
-                    }
-                    val externalDirs = getExternalFilesDirs(null)
-                    for (dir in externalDirs) {
-                        if (dir != null) {
-                            val root = dir.absolutePath.substringBefore("/Android")
-                            val testPath = "$root/$path"
-                            if (java.io.File(testPath).exists()) {
-                                return testPath
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) { }
-        return null
     }
 
     private fun refreshIncludePathsUI() {

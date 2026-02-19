@@ -7,7 +7,6 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
-import android.provider.DocumentsContract
 import android.provider.Settings
 import android.view.View
 import android.widget.TextView
@@ -158,7 +157,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleSelectedFile(uri: Uri) {
-        val path = getPathFromUri(uri)
+        val path = UriUtils.getPathFromDocumentUri(this, uri)
         
         if (path != null && (path.endsWith(".pwn", ignoreCase = true) || path.endsWith(".p", ignoreCase = true))) {
             selectedFilePath = path
@@ -175,65 +174,6 @@ class MainActivity : AppCompatActivity() {
             btnCompile.isEnabled = false
             appendOutput("Error: Cannot access file. Make sure storage permission is granted.\n")
         }
-    }
-
-    private fun getPathFromUri(uri: Uri): String? {
-        if (uri.scheme == "file") {
-            return uri.path
-        }
-
-        if (uri.scheme == "content") {
-            try {
-                val docId = DocumentsContract.getDocumentId(uri)
-                
-                if (docId.startsWith("primary:")) {
-                    val relativePath = docId.removePrefix("primary:")
-                    return "${Environment.getExternalStorageDirectory().absolutePath}/$relativePath"
-                }
-                
-                if (docId.contains(":")) {
-                    val parts = docId.split(":")
-                    if (parts.size == 2) {
-                        val type = parts[0]
-                        val path = parts[1]
-                        
-                        when (type.lowercase()) {
-                            "home" -> return "${Environment.getExternalStorageDirectory().absolutePath}/$path"
-                            "downloads" -> return "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath}/$path"
-                            "raw" -> return path
-                        }
-                        
-                        val externalDirs = getExternalFilesDirs(null)
-                        for (dir in externalDirs) {
-                            if (dir != null) {
-                                val root = dir.absolutePath.substringBefore("/Android")
-                                val testPath = "$root/$path"
-                                if (File(testPath).exists()) {
-                                    return testPath
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                // failed
-            }
-
-            try {
-                contentResolver.query(uri, arrayOf("_data"), null, null, null)?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val index = cursor.getColumnIndex("_data")
-                        if (index >= 0) {
-                            return cursor.getString(index)
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                // failed
-            }
-        }
-
-        return null
     }
 
     private fun compileFile(filePath: String) {
