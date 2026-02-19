@@ -67,8 +67,7 @@ object PawnCompiler {
     }
 
     private fun parseCompilerOutput(output: String): Pair<Int, String> {
-        val exitCodeRegex = """^Exit code: (-?\d+)""".toRegex()
-        val match = exitCodeRegex.find(output)
+        val match = EXIT_CODE_REGEX.find(output)
         
         val exitCode = match?.groupValues?.get(1)?.toIntOrNull() ?: -1
         val actualOutput = output.substringAfter('\n', "")
@@ -82,4 +81,8 @@ object PawnCompiler {
     private external fun compile(args: Array<String>): String
     private external fun getOutput(): String
     private external fun getErrors(): String
+
+    companion object {
+        private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
+    }
 }
