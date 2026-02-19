@@ -11,7 +11,8 @@ set(PAWNC_31011_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 10)
 set(VERSION_BUILD 7)
-set(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BUILD}")
+set(PAWNMC_PATCH 1)
+set(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BUILD}-pawnmc.${PAWNMC_PATCH}")
 math(EXPR VERSION_INT "${VERSION_MAJOR} << 8 | ${VERSION_MINOR}")
 configure_file(
     "${PAWNC_3107_SOURCE_DIR}/compiler/version.h.in"
@@ -20,7 +21,7 @@ configure_file(
 
 # Version 3.10.11
 set(VERSION_BUILD 11)
-set(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BUILD}")
+set(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BUILD}-pawnmc.${PAWNMC_PATCH}")
 configure_file(
     "${PAWNC_31011_SOURCE_DIR}/compiler/version.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/pawnc31011/version.h"
