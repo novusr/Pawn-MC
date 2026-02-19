@@ -7,6 +7,7 @@ object PawnCompiler {
 
     private var initializedVersion: CompilerConfig.CompilerVersion? = null
     private var isInitialized = false
+    private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
 
     //load lib when app is opened
     private fun ensureInitialized(version: CompilerConfig.CompilerVersion): Boolean {
@@ -81,8 +82,4 @@ object PawnCompiler {
     private external fun compile(args: Array<String>): String
     private external fun getOutput(): String
     private external fun getErrors(): String
-
-    companion object {
-        private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
-    }
 }
