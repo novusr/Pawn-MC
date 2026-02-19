@@ -93,7 +93,7 @@
                             android:paddingStart="8dp"
                             android:buttonTint="@color/vue_green_primary"
                             android:textColor="@color/text_primary"
-                            android:text="Pawn 3.10.7-pawnmc.1 (Default)"
+                            android:text="Pawn 3.10.7-pawnmc.2"
                             android:textSize="15sp" />
 
                         <TextView
