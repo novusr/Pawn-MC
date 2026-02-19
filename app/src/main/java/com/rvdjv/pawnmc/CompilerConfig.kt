@@ -7,9 +7,9 @@ import androidx.core.content.edit
 /**
  * compiler configuration options.
  */
-class CompilerConfig(context: Context) {
+class CompilerConfig private constructor(context: Context) {
 
-    private val prefs: SharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     // debug
     var debugLevel: DebugLevel
@@ -116,5 +116,14 @@ class CompilerConfig(context: Context) {
         private const val KEY_INCLUDE_PATHS = "include_paths"
         private const val KEY_COMPILER_VERSION = "compiler_version"
         private const val KEY_LAST_FILE = "last_selected_file"
+
+        @Volatile
+        private var instance: CompilerConfig? = null
+
+        fun getInstance(context: Context): CompilerConfig {
+            return instance ?: synchronized(this) {
+                instance ?: CompilerConfig(context).also { instance = it }
+            }
+        }
     }
 }

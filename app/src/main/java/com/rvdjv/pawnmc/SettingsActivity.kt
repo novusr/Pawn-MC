@@ -48,7 +48,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(R.layout.activity_settings)
 
         setupToolbar()
-        config = CompilerConfig(this)
+        config = CompilerConfig.getInstance(this)
 
         initViews()
         loadSettings()

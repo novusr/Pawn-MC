@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
         setupToolbar()
         setupListeners()
         checkStoragePermission()
-        config = CompilerConfig(this)
+        config = CompilerConfig.getInstance(this)
         appendOutput("Using ${config.compilerVersion.label}\n")
         loadLastSelectedFile()
         handleIncomingIntent()
