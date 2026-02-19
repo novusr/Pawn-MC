@@ -16,6 +16,7 @@
 #include <libgen.h>
 #include <pthread.h>
 #include <map>
+#include <unordered_map>
 
 #define LOG_TAG "PawnCompiler"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -57,6 +58,16 @@ namespace {
     
     std::mutex g_posMutex;
     std::map<FILE*, fpos_t> g_filePositions;
+    
+    struct CachedFile {
+        const std::string* data;
+        size_t pos;
+        size_t savedPos;
+        
+        CachedFile(const std::string* d) : data(d), pos(0), savedPos(0) {}
+    };
+    
+    std::unordered_map<std::string, std::string> g_srcCache;
     
     void clearBuffers() {
         std::lock_guard<std::mutex> lock(g_outputMutex);
@@ -216,7 +227,31 @@ extern "C" int pc_error(int number, char* message, char* filename,
 // pawnc file i/o functions
 
 extern "C" void* pc_opensrc(char* filename) {
-    return fopen(filename, "rt");
+    std::string fname(filename);
+    
+    auto it = g_srcCache.find(fname);
+    if (it == g_srcCache.end()) {
+        FILE* f = fopen(filename, "rb");
+        if (!f) return nullptr;
+        
+        fseek(f, 0, SEEK_END);
+        long fsize = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        
+        if (fsize <= 0) {
+            fclose(f);
+            g_srcCache[fname] = "";
+        } else {
+            std::string content(fsize, '\0');
+            size_t bytesRead = fread(&content[0], 1, fsize, f);
+            content.resize(bytesRead);
+            fclose(f);
+            g_srcCache[fname] = std::move(content);
+        }
+        it = g_srcCache.find(fname);
+    }
+    
+    return new CachedFile(&it->second);
 }
 
 extern "C" void* pc_createsrc(char* filename) {
@@ -246,23 +281,37 @@ extern "C" void* pc_createtmpsrc(char** filename) {
 
 extern "C" void pc_closesrc(void* handle) {
     if (handle != nullptr) {
-        FILE* fp = static_cast<FILE*>(handle);
-        {
-            std::lock_guard<std::mutex> lock(g_posMutex);
-            g_filePositions.erase(fp);
-        }
-        fclose(fp);
+        CachedFile* cf = static_cast<CachedFile*>(handle);
+        delete cf;
     }
 }
 
 extern "C" void pc_resetsrc(void* handle, void* position) {
     if (handle != nullptr) {
-        fsetpos(static_cast<FILE*>(handle), static_cast<fpos_t*>(position));
+        CachedFile* cf = static_cast<CachedFile*>(handle);
+        cf->pos = *static_cast<size_t*>(position);
     }
 }
 
 extern "C" char* pc_readsrc(void* handle, unsigned char* target, int maxchars) {
-    return fgets(reinterpret_cast<char*>(target), maxchars, static_cast<FILE*>(handle));
+    CachedFile* cf = static_cast<CachedFile*>(handle);
+    const std::string& data = *cf->data;
+    
+    if (cf->pos >= data.size() || maxchars <= 1)
+        return nullptr;
+    
+    size_t avail = data.size() - cf->pos;
+    size_t maxread = (avail < (size_t)(maxchars - 1)) ? avail : (size_t)(maxchars - 1);
+    
+    const char* src = data.c_str() + cf->pos;
+    const char* nl = (const char*)memchr(src, '\n', maxread);
+    size_t copylen = nl ? (size_t)(nl - src + 1) : maxread;
+    
+    memcpy(target, src, copylen);
+    target[copylen] = '\0';
+    cf->pos += copylen;
+    
+    return reinterpret_cast<char*>(target);
 }
 
 extern "C" int pc_writesrc(void* handle, unsigned char* source) {
@@ -270,14 +319,14 @@ extern "C" int pc_writesrc(void* handle, unsigned char* source) {
 }
 
 extern "C" void* pc_getpossrc(void* handle) {
-    FILE* fp = static_cast<FILE*>(handle);
-    std::lock_guard<std::mutex> lock(g_posMutex);
-    fgetpos(fp, &g_filePositions[fp]);
-    return &g_filePositions[fp];
+    CachedFile* cf = static_cast<CachedFile*>(handle);
+    cf->savedPos = cf->pos;
+    return &cf->savedPos;
 }
 
 extern "C" int pc_eofsrc(void* handle) {
-    return feof(static_cast<FILE*>(handle));
+    CachedFile* cf = static_cast<CachedFile*>(handle);
+    return (cf->pos >= cf->data->size()) ? 1 : 0;
 }
 
 extern "C" void* pc_openasm(char* filename) {
@@ -346,8 +395,17 @@ struct CompileArgs {
 static void* compile_thread_func(void* arg) {
     CompileArgs* cargs = static_cast<CompileArgs*>(arg);
     LOGI("Compile thread started with %d arguments", cargs->argc);
+    
+    struct timespec start, end;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    
     cargs->result = pc_compile(cargs->argc, cargs->argv);
-    LOGI("Compile thread finished with result: %d", cargs->result);
+    
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    double elapsed_ms = (end.tv_sec - start.tv_sec) * 1000.0 
+                      + (end.tv_nsec - start.tv_nsec) / 1000000.0;
+    LOGI("Compile finished in %.2f ms (exit code: %d)", elapsed_ms, cargs->result);
+    
     return nullptr;
 }
 
@@ -398,6 +456,7 @@ JNIEXPORT jstring JNICALL
 Java_com_rvdjv_pawnmc_PawnCompiler_compile(JNIEnv* env, jobject thiz,
                                            jobjectArray args) {
     clearBuffers();
+    g_srcCache.clear();
     
     {
         std::lock_guard<std::mutex> lock(g_posMutex);

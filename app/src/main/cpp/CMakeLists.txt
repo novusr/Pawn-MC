@@ -41,6 +41,11 @@ set(COMMON_DEFINITIONS
     __BIG_ENDIAN=4321
 )
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -flto")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -flto")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -flto")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto")
+
 set(COMMON_C_FLAGS
     -Wno-implicit-function-declaration
     -Wno-int-conversion
