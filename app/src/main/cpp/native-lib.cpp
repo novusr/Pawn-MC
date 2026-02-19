@@ -68,6 +68,7 @@ namespace {
     };
     
     std::unordered_map<std::string, std::string> g_srcCache;
+    std::string g_cacheDir = "/tmp";  // overwritten from JNI with app cache dir
     
     void clearBuffers() {
         std::lock_guard<std::mutex> lock(g_outputMutex);
@@ -262,10 +263,10 @@ extern "C" void* pc_createtmpsrc(char** filename) {
     char* tname = nullptr;
     FILE* ftmp = nullptr;
     
-    static const char template_str[] = "/tmp/pawnXXXXXX";
-    if ((tname = static_cast<char*>(malloc(sizeof(template_str)))) != nullptr) {
+    std::string tmpl = g_cacheDir + "/pawnXXXXXX";
+    if ((tname = static_cast<char*>(malloc(tmpl.size() + 1))) != nullptr) {
         int fdtmp;
-        strncpy(tname, template_str, sizeof(template_str));
+        memcpy(tname, tmpl.c_str(), tmpl.size() + 1);
         if ((fdtmp = mkstemp(tname)) >= 0) {
             ftmp = fdopen(fdtmp, "wt");
         }
@@ -457,6 +458,37 @@ Java_com_rvdjv_pawnmc_PawnCompiler_compile(JNIEnv* env, jobject thiz,
                                            jobjectArray args) {
     clearBuffers();
     g_srcCache.clear();
+    
+    // Get app cache dir for temp files
+    {
+        jclass contextClass = env->FindClass("android/app/ActivityThread");
+        if (contextClass) {
+            jmethodID currentApp = env->GetStaticMethodID(contextClass, "currentApplication", "()Landroid/app/Application;");
+            if (currentApp) {
+                jobject app = env->CallStaticObjectMethod(contextClass, currentApp);
+                if (app) {
+                    jclass appClass = env->GetObjectClass(app);
+                    jmethodID getCacheDir = env->GetMethodID(appClass, "getCacheDir", "()Ljava/io/File;");
+                    if (getCacheDir) {
+                        jobject cacheFile = env->CallObjectMethod(app, getCacheDir);
+                        if (cacheFile) {
+                            jclass fileClass = env->GetObjectClass(cacheFile);
+                            jmethodID getPath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
+                            jstring pathStr = (jstring)env->CallObjectMethod(cacheFile, getPath);
+                            if (pathStr) {
+                                const char* pathChars = env->GetStringUTFChars(pathStr, nullptr);
+                                g_cacheDir = pathChars;
+                                env->ReleaseStringUTFChars(pathStr, pathChars);
+                            }
+                            env->DeleteLocalRef(cacheFile);
+                        }
+                    }
+                    env->DeleteLocalRef(app);
+                }
+            }
+            env->DeleteLocalRef(contextClass);
+        }
+    }
     
     {
         std::lock_guard<std::mutex> lock(g_posMutex);
