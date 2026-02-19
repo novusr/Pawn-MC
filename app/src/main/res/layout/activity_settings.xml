@@ -93,7 +93,7 @@
                             android:paddingStart="8dp"
                             android:buttonTint="@color/vue_green_primary"
                             android:textColor="@color/text_primary"
-                            android:text="Pawn Compiler 3.10.7"
+                            android:text="Pawn Compiler 3.10.7 (Default)"
                             android:textSize="15sp" />
 
                         <TextView
@@ -101,7 +101,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="40dp"
                             android:layout_marginBottom="8dp"
-                            android:text="Older version with SA-MP compatibility"
+                            android:text="Recommended for most SA-MP gamemodes"
                             android:textColor="@color/text_tertiary"
                             android:textSize="13sp" />
 
@@ -113,14 +113,14 @@
                             android:paddingStart="8dp"
                             android:buttonTint="@color/vue_green_primary"
                             android:textColor="@color/text_primary"
-                            android:text="Pawn Compiler 3.10.11 (Default)"
+                            android:text="Pawn Compiler 3.10.11"
                             android:textSize="15sp" />
 
                         <TextView
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="40dp"
-                            android:text="Latest version with bug fixes and improvements"
+                            android:text="Recommended for open.mp gamemodes"
                             android:textColor="@color/text_tertiary"
                             android:textSize="13sp" />
 
