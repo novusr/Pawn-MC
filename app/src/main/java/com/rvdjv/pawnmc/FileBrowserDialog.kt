@@ -3,6 +3,7 @@ package com.rvdjv.pawnmc
 import android.app.Dialog
 import android.os.Bundle
 import android.os.Environment
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -68,7 +69,11 @@ class FileBrowserDialog : DialogFragment() {
         btnSelectFolder = view.findViewById(R.id.btnSelectFolder)
 
         toolbar.title = if (mode == Mode.FILE) "Select File" else "Select Folder"
-        toolbar.setNavigationOnClickListener { dismiss() }
+        toolbar.setNavigationOnClickListener { 
+            if (!navigateUp()) {
+                dismiss()
+            }
+        }
 
         if (mode == Mode.FOLDER) {
             layoutSelectFolder.visibility = View.VISIBLE
@@ -94,6 +99,26 @@ class FileBrowserDialog : DialogFragment() {
             ?: Environment.getExternalStorageDirectory().absolutePath
         currentDir = File(startPath)
         navigateTo(currentDir)
+
+        dialog?.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP) {
+                if (navigateUp()) true else false
+            } else {
+                false
+            }
+        }
+    }
+
+    private fun navigateUp(): Boolean {
+        val rootPath = Environment.getExternalStorageDirectory().absolutePath
+        if (currentDir.absolutePath != rootPath) {
+            val parent = currentDir.parentFile
+            if (parent != null && parent.canRead()) {
+                navigateTo(parent)
+                return true
+            }
+        }
+        return false
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
