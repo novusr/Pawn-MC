@@ -35,12 +35,13 @@ class FileBrowserDialog : DialogFragment() {
     private var fileExtensions: Set<String> = setOf("pwn", "p")
 
     private lateinit var currentDir: File
-    private lateinit var tvBreadcrumb: TextView
+    private lateinit var rvBreadcrumb: RecyclerView
     private lateinit var rvFiles: RecyclerView
     private lateinit var layoutEmpty: View
     private lateinit var layoutSelectFolder: View
     private lateinit var btnSelectFolder: MaterialButton
     private lateinit var adapter: FileAdapter
+    private lateinit var breadcrumbAdapter: BreadcrumbAdapter
 
     override fun getTheme(): Int = R.style.Theme_PawnMC
 
@@ -62,7 +63,7 @@ class FileBrowserDialog : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbarBrowser)
-        tvBreadcrumb = view.findViewById(R.id.tvBreadcrumb)
+        rvBreadcrumb = view.findViewById(R.id.rvBreadcrumb)
         rvFiles = view.findViewById(R.id.rvFiles)
         layoutEmpty = view.findViewById(R.id.layoutEmpty)
         layoutSelectFolder = view.findViewById(R.id.layoutSelectFolder)
@@ -91,6 +92,13 @@ class FileBrowserDialog : DialogFragment() {
                 dismiss()
             }
         }
+
+        breadcrumbAdapter = BreadcrumbAdapter { dir ->
+            navigateTo(dir)
+        }
+
+        rvBreadcrumb.layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        rvBreadcrumb.adapter = breadcrumbAdapter
 
         rvFiles.layoutManager = LinearLayoutManager(requireContext())
         rvFiles.adapter = adapter
@@ -130,7 +138,7 @@ class FileBrowserDialog : DialogFragment() {
 
     private fun navigateTo(dir: File) {
         currentDir = dir
-        tvBreadcrumb.text = dir.absolutePath
+        updateBreadcrumb(dir)
 
         val entries = listEntries(dir)
         adapter.submitList(entries)
@@ -142,10 +150,27 @@ class FileBrowserDialog : DialogFragment() {
             layoutEmpty.visibility = View.GONE
             rvFiles.visibility = View.VISIBLE
         }
+    }
 
-        (tvBreadcrumb.parent as? android.widget.HorizontalScrollView)?.post {
-            (tvBreadcrumb.parent as? android.widget.HorizontalScrollView)?.fullScroll(View.FOCUS_RIGHT)
+    private fun updateBreadcrumb(dir: File) {
+        val rootPath = Environment.getExternalStorageDirectory().absolutePath
+        val crumbs = mutableListOf<File>()
+        
+        var current: File? = dir
+        while (current != null) {
+            val isRoot = current.absolutePath == rootPath
+            val isOutsideRoot = !current.absolutePath.startsWith(rootPath)
+            
+            crumbs.add(0, current)
+            
+            if (isRoot || isOutsideRoot || current.parentFile == null) {
+                break
+            }
+            current = current.parentFile
         }
+
+        breadcrumbAdapter.submitList(crumbs)
+        rvBreadcrumb.scrollToPosition(crumbs.size - 1)
     }
 
     private fun listEntries(dir: File): List<FileEntry> {
@@ -239,6 +264,54 @@ class FileBrowserDialog : DialogFragment() {
                 }
 
                 itemView.setOnClickListener { onClick(entry) }
+            }
+        }
+    }
+
+    private inner class BreadcrumbAdapter(
+        private val onClick: (File) -> Unit
+    ) : RecyclerView.Adapter<BreadcrumbAdapter.ViewHolder>() {
+
+        private var items: List<File> = emptyList()
+        private val rootPath = Environment.getExternalStorageDirectory().absolutePath
+
+        fun submitList(newItems: List<File>) {
+            items = newItems
+            notifyDataSetChanged()
+        }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_breadcrumb, parent, false)
+            return ViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+            holder.bind(items[position], position == items.size - 1)
+        }
+
+        override fun getItemCount() = items.size
+
+        inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            private val tvBreadcrumbFolder: TextView = view.findViewById(R.id.tvBreadcrumbFolder)
+            private val tvBreadcrumbDivider: TextView = view.findViewById(R.id.tvBreadcrumbDivider)
+
+            fun bind(dir: File, isLast: Boolean) {
+                if (dir.absolutePath == rootPath) {
+                    tvBreadcrumbFolder.text = "Internal Storage"
+                } else {
+                    tvBreadcrumbFolder.text = dir.name
+                }
+                
+                tvBreadcrumbDivider.visibility = if (isLast) View.GONE else View.VISIBLE
+                
+                if (isLast) {
+                    tvBreadcrumbFolder.setTextColor(itemView.context.getColor(R.color.text_secondary))
+                } else {
+                    tvBreadcrumbFolder.setTextColor(itemView.context.getColor(R.color.vue_green_primary))
+                }
+
+                itemView.setOnClickListener { onClick(dir) }
             }
         }
     }

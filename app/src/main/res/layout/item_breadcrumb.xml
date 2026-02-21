@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:background="?attr/selectableItemBackground"
+    android:paddingHorizontal="6dp"
+    android:paddingVertical="6dp">
+
+    <TextView
+        android:id="@+id/tvBreadcrumbFolder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/vue_green_primary"
+        android:textSize="13sp"
+        android:fontFamily="sans-serif-medium"
+        android:singleLine="true" />
+
+    <TextView
+        android:id="@+id/tvBreadcrumbDivider"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:text="/"
+        android:textColor="@color/text_tertiary"
+        android:textSize="13sp" />
+
+</LinearLayout>
