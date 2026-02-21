@@ -118,7 +118,7 @@ class MainActivity : AppCompatActivity() {
         if (!hasStoragePermission()) {
             AlertDialog.Builder(this)
                 .setTitle("Storage Permission Required")
-                .setMessage("This app needs access to all files to compile .pwn files and write .amx output to any location.")
+                .setMessage("This app needs access to all files to compile pawn files and write amx output to any location.")
                 .setPositiveButton("Grant Permission") { _, _ ->
                     requestStoragePermission()
                 }
@@ -159,7 +159,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleSelectedFile(path: String) {
-        if (path.endsWith(".pwn", ignoreCase = true) || path.endsWith(".p", ignoreCase = true)) {
+        if (path.endsWith(".pwn", ignoreCase = true) || 
+            path.endsWith(".p", ignoreCase = true) || 
+            path.endsWith(".inc", ignoreCase = true)) {
             selectedFilePath = path
             config.lastSelectedFilePath = path
             tvSelectedFile.text = File(path).name
@@ -168,7 +170,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             tvSelectedFile.text = "Invalid file type"
             btnCompile.isEnabled = false
-            appendOutput("Error: Please select a .pwn file\n")
+            appendOutput("Error: Please select a pawn file\n")
         }
     }
 

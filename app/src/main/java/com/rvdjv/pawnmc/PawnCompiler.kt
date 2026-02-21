@@ -41,7 +41,7 @@ object PawnCompiler {
     /**
      * pawn file compilation
      * 
-     * @param sourceFile absolute path to .pwn source file
+     * @param sourceFile absolute path to pawn source file
      * @param options compiler options
      * @param version compiler versions
      * @return exitCode capturedOutput

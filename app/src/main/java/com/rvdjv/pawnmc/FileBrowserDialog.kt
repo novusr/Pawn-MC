@@ -32,7 +32,7 @@ class FileBrowserDialog : DialogFragment() {
     private var mode = Mode.FILE
     private var fileListener: OnFileSelectedListener? = null
     private var folderListener: OnFolderSelectedListener? = null
-    private var fileExtensions: Set<String> = setOf("pwn", "p")
+    private var fileExtensions: Set<String> = setOf("pwn", "p", "inc")
 
     private lateinit var currentDir: File
     private lateinit var rvBreadcrumb: RecyclerView
@@ -334,7 +334,7 @@ class FileBrowserDialog : DialogFragment() {
 
         fun newFilePickerInstance(
             listener: OnFileSelectedListener,
-            extensions: Set<String> = setOf("pwn", "p")
+            extensions: Set<String> = setOf("pwn", "p", "inc")
         ): FileBrowserDialog {
             return FileBrowserDialog().apply {
                 mode = Mode.FILE
