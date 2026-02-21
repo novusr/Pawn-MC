@@ -38,6 +38,9 @@ class FileBrowserDialog : DialogFragment() {
     private lateinit var rvBreadcrumb: RecyclerView
     private lateinit var rvFiles: RecyclerView
     private lateinit var layoutEmpty: View
+    private lateinit var ivEmptyIcon: ImageView
+    private lateinit var tvEmptyTitle: TextView
+    private lateinit var tvEmptySubtitle: TextView
     private lateinit var layoutSelectFolder: View
     private lateinit var btnSelectFolder: MaterialButton
     private lateinit var adapter: FileAdapter
@@ -66,6 +69,9 @@ class FileBrowserDialog : DialogFragment() {
         rvBreadcrumb = view.findViewById(R.id.rvBreadcrumb)
         rvFiles = view.findViewById(R.id.rvFiles)
         layoutEmpty = view.findViewById(R.id.layoutEmpty)
+        ivEmptyIcon = view.findViewById(R.id.ivEmptyIcon)
+        tvEmptyTitle = view.findViewById(R.id.tvEmptyTitle)
+        tvEmptySubtitle = view.findViewById(R.id.tvEmptySubtitle)
         layoutSelectFolder = view.findViewById(R.id.layoutSelectFolder)
         btnSelectFolder = view.findViewById(R.id.btnSelectFolder)
 
@@ -140,15 +146,28 @@ class FileBrowserDialog : DialogFragment() {
         currentDir = dir
         updateBreadcrumb(dir)
 
-        val entries = listEntries(dir)
-        adapter.submitList(entries)
-
-        if (entries.isEmpty()) {
+        val files = dir.listFiles()
+        if (files == null || files.isEmpty()) {
+            ivEmptyIcon.setImageResource(R.drawable.ic_folder_open)
+            tvEmptyTitle.text = "Empty Folder"
+            tvEmptySubtitle.text = "There are no files in this folder."
             layoutEmpty.visibility = View.VISIBLE
             rvFiles.visibility = View.GONE
+            adapter.submitList(emptyList())
         } else {
-            layoutEmpty.visibility = View.GONE
-            rvFiles.visibility = View.VISIBLE
+            val entries = listEntries(files)
+            adapter.submitList(entries)
+    
+            if (entries.isEmpty()) {
+                ivEmptyIcon.setImageResource(R.drawable.ic_file_code)
+                tvEmptyTitle.text = "No Matching Files"
+                tvEmptySubtitle.text = "There are no files with the required extension."
+                layoutEmpty.visibility = View.VISIBLE
+                rvFiles.visibility = View.GONE
+            } else {
+                layoutEmpty.visibility = View.GONE
+                rvFiles.visibility = View.VISIBLE
+            }
         }
     }
 
@@ -173,14 +192,8 @@ class FileBrowserDialog : DialogFragment() {
         rvBreadcrumb.scrollToPosition(crumbs.size - 1)
     }
 
-    private fun listEntries(dir: File): List<FileEntry> {
-        val files = dir.listFiles() ?: return emptyList()
+    private fun listEntries(files: Array<File>): List<FileEntry> {
         val result = mutableListOf<FileEntry>()
-
-        val parent = dir.parentFile
-        if (parent != null && parent.canRead()) {
-            result.add(FileEntry(parent, isParent = true))
-        }
 
         val filtered = files
             .filter { !it.name.startsWith(".") }
