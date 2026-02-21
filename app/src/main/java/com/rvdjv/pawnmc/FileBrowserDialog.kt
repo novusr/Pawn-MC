@@ -36,12 +36,12 @@ class FileBrowserDialog : DialogFragment() {
     private lateinit var currentDir: File
     private lateinit var tvBreadcrumb: TextView
     private lateinit var rvFiles: RecyclerView
-    private lateinit var tvEmpty: TextView
+    private lateinit var layoutEmpty: View
     private lateinit var layoutSelectFolder: View
     private lateinit var btnSelectFolder: MaterialButton
     private lateinit var adapter: FileAdapter
 
-    override fun getTheme(): Int = android.R.style.Theme_Black_NoTitleBar_Fullscreen
+    override fun getTheme(): Int = R.style.Theme_PawnMC
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState)
@@ -63,7 +63,7 @@ class FileBrowserDialog : DialogFragment() {
         val toolbar = view.findViewById<MaterialToolbar>(R.id.toolbarBrowser)
         tvBreadcrumb = view.findViewById(R.id.tvBreadcrumb)
         rvFiles = view.findViewById(R.id.rvFiles)
-        tvEmpty = view.findViewById(R.id.tvEmpty)
+        layoutEmpty = view.findViewById(R.id.layoutEmpty)
         layoutSelectFolder = view.findViewById(R.id.layoutSelectFolder)
         btnSelectFolder = view.findViewById(R.id.btnSelectFolder)
 
@@ -111,10 +111,10 @@ class FileBrowserDialog : DialogFragment() {
         adapter.submitList(entries)
 
         if (entries.isEmpty()) {
-            tvEmpty.visibility = View.VISIBLE
+            layoutEmpty.visibility = View.VISIBLE
             rvFiles.visibility = View.GONE
         } else {
-            tvEmpty.visibility = View.GONE
+            layoutEmpty.visibility = View.GONE
             rvFiles.visibility = View.VISIBLE
         }
 
@@ -176,26 +176,37 @@ class FileBrowserDialog : DialogFragment() {
         override fun getItemCount() = items.size
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+            private val cvIcon: com.google.android.material.card.MaterialCardView = view.findViewById(R.id.cvIcon)
             private val ivIcon: ImageView = view.findViewById(R.id.ivIcon)
             private val tvFileName: TextView = view.findViewById(R.id.tvFileName)
             private val tvFileInfo: TextView = view.findViewById(R.id.tvFileInfo)
             private val ivChevron: ImageView = view.findViewById(R.id.ivChevron)
 
             fun bind(entry: FileEntry) {
+                val context = itemView.context
                 if (entry.isParent) {
+                    cvIcon.setCardBackgroundColor(context.getColor(R.color.surface_elevated))
                     ivIcon.setImageResource(R.drawable.ic_arrow_up)
+                    ivIcon.setColorFilter(context.getColor(R.color.text_secondary))
+                    
                     tvFileName.text = ".."
                     tvFileInfo.visibility = View.GONE
                     ivChevron.visibility = View.GONE
                 } else if (entry.file.isDirectory) {
+                    cvIcon.setCardBackgroundColor(context.getColor(R.color.vue_green_surface))
                     ivIcon.setImageResource(R.drawable.ic_folder_open)
+                    ivIcon.setColorFilter(context.getColor(R.color.vue_green_primary))
+                    
                     tvFileName.text = entry.file.name
                     val count = entry.file.listFiles()?.size ?: 0
                     tvFileInfo.text = "$count items"
                     tvFileInfo.visibility = View.VISIBLE
                     ivChevron.visibility = View.VISIBLE
                 } else {
+                    cvIcon.setCardBackgroundColor(context.getColor(R.color.surface_elevated))
                     ivIcon.setImageResource(R.drawable.ic_file_code)
+                    ivIcon.setColorFilter(context.getColor(R.color.text_secondary))
+                    
                     tvFileName.text = entry.file.name
                     tvFileInfo.text = formatFileSize(entry.file.length())
                     tvFileInfo.visibility = View.VISIBLE
