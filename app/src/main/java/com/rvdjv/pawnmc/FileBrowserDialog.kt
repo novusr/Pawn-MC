@@ -109,9 +109,17 @@ class FileBrowserDialog : DialogFragment() {
         rvFiles.layoutManager = LinearLayoutManager(requireContext())
         rvFiles.adapter = adapter
 
+        val config = CompilerConfig.getInstance(requireContext())
         val startPath = savedInstanceState?.getString(KEY_CURRENT_DIR)
+            ?: config.lastOpenedDirPath
             ?: Environment.getExternalStorageDirectory().absolutePath
-        currentDir = File(startPath)
+            
+        var startDir = File(startPath)
+        if (!startDir.exists() || !startDir.isDirectory) {
+            startDir = Environment.getExternalStorageDirectory()
+        }
+        
+        currentDir = startDir
         navigateTo(currentDir)
 
         dialog?.setOnKeyListener { _, keyCode, event ->
@@ -125,7 +133,7 @@ class FileBrowserDialog : DialogFragment() {
 
     private fun navigateUp(): Boolean {
         val rootPath = Environment.getExternalStorageDirectory().absolutePath
-        if (currentDir.absolutePath != rootPath) {
+        if (currentDir.absolutePath.length > rootPath.length && currentDir.absolutePath.startsWith(rootPath)) {
             val parent = currentDir.parentFile
             if (parent != null && parent.canRead()) {
                 navigateTo(parent)
@@ -144,31 +152,31 @@ class FileBrowserDialog : DialogFragment() {
 
     private fun navigateTo(dir: File) {
         currentDir = dir
+        CompilerConfig.getInstance(requireContext()).lastOpenedDirPath = dir.absolutePath
         updateBreadcrumb(dir)
 
-        val files = dir.listFiles()
-        if (files == null || files.isEmpty()) {
-            ivEmptyIcon.setImageResource(R.drawable.ic_folder_open)
-            tvEmptyTitle.text = "Empty Folder"
-            tvEmptySubtitle.text = "There are no files in this folder."
-            layoutEmpty.visibility = View.VISIBLE
-            rvFiles.visibility = View.GONE
-            adapter.submitList(emptyList())
-        } else {
-            val entries = listEntries(files)
-            adapter.submitList(entries)
-    
-            if (entries.isEmpty()) {
+        val entries = listEntries(dir)
+        adapter.submitList(entries)
+
+        val hasFiles = entries.any { !it.isParent }
+
+        if (!hasFiles) {
+            val files = dir.listFiles() ?: emptyArray()
+            if (files.isEmpty()) {
+                ivEmptyIcon.setImageResource(R.drawable.ic_folder_open)
+                tvEmptyTitle.text = "Empty Folder"
+                tvEmptySubtitle.text = "There are no files in this folder."
+            } else {
                 ivEmptyIcon.setImageResource(R.drawable.ic_file_code)
                 tvEmptyTitle.text = "No Matching Files"
                 tvEmptySubtitle.text = "There are no files with the required extension."
-                layoutEmpty.visibility = View.VISIBLE
-                rvFiles.visibility = View.GONE
-            } else {
-                layoutEmpty.visibility = View.GONE
-                rvFiles.visibility = View.VISIBLE
             }
+            layoutEmpty.visibility = View.VISIBLE
+        } else {
+            layoutEmpty.visibility = View.GONE
         }
+        
+        rvFiles.visibility = if (entries.isEmpty()) View.GONE else View.VISIBLE
     }
 
     private fun updateBreadcrumb(dir: File) {
@@ -192,8 +200,18 @@ class FileBrowserDialog : DialogFragment() {
         rvBreadcrumb.scrollToPosition(crumbs.size - 1)
     }
 
-    private fun listEntries(files: Array<File>): List<FileEntry> {
+    private fun listEntries(dir: File): List<FileEntry> {
         val result = mutableListOf<FileEntry>()
+        val rootPath = Environment.getExternalStorageDirectory().absolutePath
+
+        if (dir.absolutePath.length > rootPath.length && dir.absolutePath.startsWith(rootPath)) {
+            val parent = dir.parentFile
+            if (parent != null && parent.canRead()) {
+                result.add(FileEntry(parent, isParent = true))
+            }
+        }
+
+        val files = dir.listFiles() ?: emptyArray()
 
         val filtered = files
             .filter { !it.name.startsWith(".") }

@@ -46,53 +46,59 @@
         </com.google.android.material.card.MaterialCardView>
     </FrameLayout>
 
-    <!-- File list -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvFiles"
+    <!-- Main content area -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:paddingVertical="8dp" />
+        android:layout_weight="1">
 
-    <!-- Empty state -->
-    <LinearLayout
-        android:id="@+id/layoutEmpty"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:visibility="gone">
-        
-        <ImageView
-            android:id="@+id/ivEmptyIcon"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/ic_folder_open"
-            app:tint="@color/divider"
-            android:layout_marginBottom="16dp"
-            android:importantForAccessibility="no" />
+        <!-- Empty state -->
+        <LinearLayout
+            android:id="@+id/layoutEmpty"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:visibility="gone">
             
-        <TextView
-            android:id="@+id/tvEmptyTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Empty Folder"
-            android:fontFamily="sans-serif-medium"
-            android:textColor="@color/text_secondary"
-            android:textSize="18sp" />
-            
-        <TextView
-            android:id="@+id/tvEmptySubtitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="There are no files here."
-            android:textColor="@color/text_tertiary"
-            android:textSize="14sp" />
-            
-    </LinearLayout>
+            <ImageView
+                android:id="@+id/ivEmptyIcon"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:src="@drawable/ic_folder_open"
+                app:tint="@color/divider"
+                android:layout_marginBottom="16dp"
+                android:importantForAccessibility="no" />
+                
+            <TextView
+                android:id="@+id/tvEmptyTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Empty Folder"
+                android:fontFamily="sans-serif-medium"
+                android:textColor="@color/text_secondary"
+                android:textSize="18sp" />
+                
+            <TextView
+                android:id="@+id/tvEmptySubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="There are no files here."
+                android:textColor="@color/text_tertiary"
+                android:textSize="14sp" />
+                
+        </LinearLayout>
+
+        <!-- File list -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvFiles"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingVertical="8dp" />
+
+    </FrameLayout>
 
     <!-- Select folder button -->
     <LinearLayout

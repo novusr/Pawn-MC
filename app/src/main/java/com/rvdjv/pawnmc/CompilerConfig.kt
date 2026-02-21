@@ -54,6 +54,10 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getString(KEY_LAST_FILE, null)
         set(value) = prefs.edit { putString(KEY_LAST_FILE, value) }
 
+    var lastOpenedDirPath: String?
+        get() = prefs.getString(KEY_LAST_DIR, null)
+        set(value) = prefs.edit { putString(KEY_LAST_DIR, value) }
+
     /**
      * Build compiler options list from current configuration.
      */
@@ -116,6 +120,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_INCLUDE_PATHS = "include_paths"
         private const val KEY_COMPILER_VERSION = "compiler_version"
         private const val KEY_LAST_FILE = "last_selected_file"
+        private const val KEY_LAST_DIR = "last_opened_dir"
 
         @Volatile
         private var instance: CompilerConfig? = null
