@@ -9,7 +9,6 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.TextView
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
@@ -36,12 +35,7 @@ class SettingsActivity : AppCompatActivity() {
 
     private val includePaths = mutableListOf<String>()
 
-    // Fflder picker
-    private val folderPickerLauncher = registerForActivityResult(
-        ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        uri?.let { handleSelectedFolder(it) }
-    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -163,7 +157,14 @@ class SettingsActivity : AppCompatActivity() {
         }
 
         btnAddIncludePath.setOnClickListener {
-            folderPickerLauncher.launch(null)
+            val dialog = FileBrowserDialog.newFolderPickerInstance(
+                object : FileBrowserDialog.OnFolderSelectedListener {
+                    override fun onFolderSelected(path: String) {
+                        handleSelectedFolder(path)
+                    }
+                }
+            )
+            dialog.show(supportFragmentManager, "folder_picker")
         }
 
         btnGitHub.setOnClickListener {
@@ -172,9 +173,8 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleSelectedFolder(uri: Uri) {
-        val path = UriUtils.getPathFromTreeUri(this, uri)
-        if (path != null && path !in includePaths) {
+    private fun handleSelectedFolder(path: String) {
+        if (path !in includePaths) {
             includePaths.add(path)
             config.includePaths = includePaths
             refreshIncludePathsUI()

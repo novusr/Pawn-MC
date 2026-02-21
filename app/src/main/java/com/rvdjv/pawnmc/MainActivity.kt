@@ -36,12 +36,7 @@ class MainActivity : AppCompatActivity() {
     private var selectedFilePath: String? = null
     private lateinit var config: CompilerConfig
 
-    // file picker
-    private val filePickerLauncher = registerForActivityResult(
-        ActivityResultContracts.OpenDocument()
-    ) { uri ->
-        uri?.let { handleSelectedFile(it) }
-    }
+
 
     private val manageStorageLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -102,7 +97,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupListeners() {
         btnSelectFile.setOnClickListener {
-            filePickerLauncher.launch(arrayOf("*/*"))
+            val dialog = FileBrowserDialog.newFilePickerInstance(
+                object : FileBrowserDialog.OnFileSelectedListener {
+                    override fun onFileSelected(path: String) {
+                        handleSelectedFile(path)
+                    }
+                }
+            )
+            dialog.show(supportFragmentManager, "file_picker")
         }
 
         btnCompile.setOnClickListener {
@@ -156,23 +158,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleSelectedFile(uri: Uri) {
-        val path = UriUtils.getPathFromDocumentUri(this, uri)
-        
-        if (path != null && (path.endsWith(".pwn", ignoreCase = true) || path.endsWith(".p", ignoreCase = true))) {
+    private fun handleSelectedFile(path: String) {
+        if (path.endsWith(".pwn", ignoreCase = true) || path.endsWith(".p", ignoreCase = true)) {
             selectedFilePath = path
             config.lastSelectedFilePath = path
             tvSelectedFile.text = File(path).name
             btnCompile.isEnabled = true
             appendOutput("Selected: $path\n")
-        } else if (path != null) {
+        } else {
             tvSelectedFile.text = "Invalid file type"
             btnCompile.isEnabled = false
             appendOutput("Error: Please select a .pwn file\n")
-        } else {
-            tvSelectedFile.text = "Cannot access file"
-            btnCompile.isEnabled = false
-            appendOutput("Error: Cannot access file. Make sure storage permission is granted.\n")
         }
     }
 
@@ -223,7 +219,10 @@ class MainActivity : AppCompatActivity() {
         val uri = intent.data
 
         if (Intent.ACTION_VIEW == action && uri != null) {
-            handleSelectedFile(uri)
+            val path = uri.path
+            if (path != null) {
+                handleSelectedFile(path)
+            }
         }
     }
 
