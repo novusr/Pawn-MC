@@ -71,6 +71,7 @@ class MainActivity : AppCompatActivity() {
         appendOutput("Using ${config.compilerVersion.label}\n")
         loadLastSelectedFile()
         handleIncomingIntent()
+        checkForAppUpdate()
     }
 
     private fun setupToolbar() {
@@ -233,5 +234,28 @@ class MainActivity : AppCompatActivity() {
         scrollOutput.post {
             scrollOutput.fullScroll(View.FOCUS_DOWN)
         }
+    }
+
+    private fun checkForAppUpdate() {
+        lifecycleScope.launch {
+            val checker = UpdateChecker(this@MainActivity)
+            val update = checker.checkForUpdate() ?: return@launch
+            if (update.versionName == checker.getSkippedVersion()) return@launch
+            showUpdateDialog(update, checker)
+        }
+    }
+
+    private fun showUpdateDialog(update: UpdateChecker.UpdateInfo, checker: UpdateChecker) {
+        AlertDialog.Builder(this)
+            .setTitle("Update Available — v${update.versionName}")
+            .setMessage(update.changelog)
+            .setPositiveButton("Download") { _, _ ->
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(update.downloadUrl)))
+            }
+            .setNegativeButton("Later", null)
+            .setNeutralButton("Skip Version") { _, _ ->
+                checker.setSkippedVersion(update.versionName)
+            }
+            .show()
     }
 }
