@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_dialog"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="28dp"
+    android:paddingBottom="20dp"
+    android:gravity="center_horizontal">
+
+    <!-- Icon -->
+    <FrameLayout
+        android:id="@+id/layoutDialogIcon"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:background="@drawable/bg_dialog_icon"
+        android:layout_marginBottom="16dp">
+
+        <ImageView
+            android:id="@+id/ivDialogIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            app:tint="@color/vue_green_primary"
+            android:importantForAccessibility="no" />
+    </FrameLayout>
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/tvDialogTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Message -->
+    <TextView
+        android:id="@+id/tvDialogMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:fontFamily="sans-serif"
+        android:lineSpacingMultiplier="1.3"
+        android:gravity="center"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Primary buttons row (Negative + Positive) -->
+    <LinearLayout
+        android:id="@+id/layoutDialogButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDialogNegative"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:visibility="gone"
+            android:layout_marginEnd="8dp"
+            style="@style/Widget.PawnMC.Button.Outlined" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDialogPositive"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:visibility="gone"
+            style="@style/Widget.PawnMC.Button" />
+
+    </LinearLayout>
+
+    <!-- Neutral button (text-only, below main buttons) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDialogNeutral"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:layout_marginTop="4dp"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:textColor="@color/text_tertiary"
+        android:textAllCaps="false"
+        android:fontFamily="sans-serif-medium"
+        app:rippleColor="@color/surface_elevated" />
+
+</LinearLayout>

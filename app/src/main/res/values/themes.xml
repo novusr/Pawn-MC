@@ -165,5 +165,11 @@
         <item name="android:fontFamily">monospace</item>
         <item name="android:lineSpacingMultiplier">1.3</item>
     </style>
+
+    <!-- Dialog Animation -->
+    <style name="PawnMC_DialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/dialog_slide_up</item>
+        <item name="android:windowExitAnimation">@anim/dialog_slide_down</item>
+    </style>
     
 </resources>

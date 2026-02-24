@@ -12,7 +12,7 @@ import android.view.View
 import android.widget.TextView
 import android.widget.ScrollView
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
+
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -117,10 +117,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkStoragePermission() {
         if (!hasStoragePermission()) {
-            AlertDialog.Builder(this)
+            PawnDialog(this)
+                .setIcon(R.drawable.ic_folder_open)
                 .setTitle("Storage Permission Required")
                 .setMessage("This app needs access to all files to compile pawn files and write amx output to any location.")
-                .setPositiveButton("Grant Permission") { _, _ ->
+                .setPositiveButton("Grant") {
+                    it.dismiss()
                     requestStoragePermission()
                 }
                 .setNegativeButton("Cancel", null)
@@ -246,14 +248,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showUpdateDialog(update: UpdateChecker.UpdateInfo, checker: UpdateChecker) {
-        AlertDialog.Builder(this)
-            .setTitle("Update Available — v${update.versionName}")
+        PawnDialog(this)
+            .setIcon(R.drawable.ic_info, R.color.accent_info)
+            .setTitle("Update Available \u2014 v${update.versionName}")
             .setMessage(update.changelog)
-            .setPositiveButton("Download") { _, _ ->
+            .setPositiveButton("Download") {
+                it.dismiss()
                 startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(update.downloadUrl)))
             }
             .setNegativeButton("Later", null)
-            .setNeutralButton("Skip Version") { _, _ ->
+            .setNeutralButton("Skip Version") {
+                it.dismiss()
                 checker.setSkippedVersion(update.versionName)
             }
             .show()

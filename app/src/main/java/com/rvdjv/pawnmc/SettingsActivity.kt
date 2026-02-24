@@ -9,7 +9,7 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.RadioGroup
 import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
+
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
@@ -214,7 +214,8 @@ class SettingsActivity : AppCompatActivity() {
     private fun showRestartDialog(newVersion: CompilerConfig.CompilerVersion) {
         val currentVersion = PawnCompiler.getLoadedVersion()
         
-        AlertDialog.Builder(this)
+        PawnDialog(this)
+            .setIcon(R.drawable.ic_info, R.color.accent_warning)
             .setTitle("Restart Required")
             .setMessage(
                 "Compiler version has been changed from ${currentVersion?.label ?: "unknown"} " +
@@ -222,12 +223,11 @@ class SettingsActivity : AppCompatActivity() {
                 "Due to Android limitations, the change will take effect after restarting the app.\n\n" +
                 "Would you like to restart now?"
             )
-            .setPositiveButton("Restart Now") { _, _ ->
+            .setPositiveButton("Restart Now") {
+                it.dismiss()
                 restartApp()
             }
-            .setNegativeButton("Later") { dialog, _ ->
-                dialog.dismiss()
-            }
+            .setNegativeButton("Later", null)
             .show()
     }
 
