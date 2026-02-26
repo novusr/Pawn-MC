@@ -241,10 +241,33 @@ class MainActivity : AppCompatActivity() {
     private fun checkForAppUpdate() {
         lifecycleScope.launch {
             val checker = UpdateChecker(this@MainActivity)
-            val update = checker.checkForUpdate() ?: return@launch
-            if (update.versionName == checker.getSkippedVersion()) return@launch
-            showUpdateDialog(update, checker)
+            val result = checker.checkManifest() ?: return@launch
+
+            // Force update
+            if (result.forceUpdate && result.updateInfo != null) {
+                showForceUpdateDialog(result.updateInfo)
+                return@launch
+            }
+
+            // Regular update
+            val update = result.updateInfo
+            if (update != null && update.versionName != checker.getSkippedVersion()) {
+                showUpdateDialog(update, checker)
+            }
         }
+    }
+
+    private fun showForceUpdateDialog(update: UpdateChecker.UpdateInfo) {
+        PawnDialog(this)
+            .setIcon(R.drawable.ic_warning, R.color.accent_error)
+            .setTitle("Update Required")
+            .setMessage("Your version is no longer supported. Please update to v${update.versionName} to continue.\n\n${update.changelog}")
+            .setCancelable(false)
+            .setPositiveButton("Download") {
+                it.dismiss()
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(update.downloadUrl)))
+            }
+            .show()
     }
 
     private fun showUpdateDialog(update: UpdateChecker.UpdateInfo, checker: UpdateChecker) {

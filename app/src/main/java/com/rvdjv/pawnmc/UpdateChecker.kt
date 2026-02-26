@@ -3,19 +3,12 @@ package com.rvdjv.pawnmc
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 
-/**
- * Checks for app updates via the GitHub Releases API.
- *
- * - Only checks when network is available
- * - Fails silently on any error (timeout, parse error, no network)
- * - Supports "skip this version" via SharedPreferences
- */
 class UpdateChecker(private val context: Context) {
 
     data class UpdateInfo(
@@ -24,45 +17,58 @@ class UpdateChecker(private val context: Context) {
         val changelog: String
     )
 
+    data class ManifestResult(
+        val updateInfo: UpdateInfo?,
+        val forceUpdate: Boolean
+    )
+
     companion object {
-        private const val GITHUB_API_URL =
-            "https://api.github.com/repos/novusr/Pawn-MC/releases/latest"
         private const val PREFS_NAME = "update_checker"
         private const val KEY_SKIPPED_VERSION = "skipped_update_version"
-        private const val CONNECT_TIMEOUT_MS = 10_000
-        private const val READ_TIMEOUT_MS = 10_000
+        private const val FETCH_INTERVAL_SECONDS = 3600L // 1 hour
     }
 
     private val prefs = context.applicationContext
         .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    /**
-     * Check for a newer release on GitHub.
-     * Returns [UpdateInfo] if a newer version exists, null otherwise.
-     * Never throws — all errors are caught and result in null.
-     */
-    suspend fun checkForUpdate(): UpdateInfo? = withContext(Dispatchers.IO) {
+    suspend fun checkManifest(): ManifestResult? = withContext(Dispatchers.IO) {
         try {
             if (!isNetworkAvailable()) return@withContext null
 
-            val json = fetchLatestRelease() ?: return@withContext null
-            val tagName = json.optString("tag_name", "").removePrefix("v")
-            if (tagName.isEmpty()) return@withContext null
+            val remoteConfig = FirebaseRemoteConfig.getInstance()
+            val configSettings = FirebaseRemoteConfigSettings.Builder()
+                .setMinimumFetchIntervalInSeconds(FETCH_INTERVAL_SECONDS)
+                .build()
+            remoteConfig.setConfigSettingsAsync(configSettings)
+
+            remoteConfig.fetchAndActivate().await()
 
             val currentVersion = getCurrentVersion()
-            if (!isNewerVersion(remote = tagName, current = currentVersion)) {
-                return@withContext null
+
+            // Check for force update
+            val minSupported = remoteConfig.getString("min_supported_version").ifEmpty { "0.0.0" }
+            val forceUpdate = isNewerVersion(remote = minSupported, current = currentVersion)
+
+            // Check for regular update
+            val latestVersion = remoteConfig.getString("latest_version")
+            var updateInfo: UpdateInfo? = null
+            if (latestVersion.isNotEmpty() && isNewerVersion(remote = latestVersion, current = currentVersion)) {
+                val downloadUrl = remoteConfig.getString("download_url")
+                if (downloadUrl.isNotEmpty()) {
+                    val changelog = remoteConfig.getString("changelog").ifEmpty {
+                        "A new version is available."
+                    }
+                    updateInfo = UpdateInfo(
+                        versionName = latestVersion,
+                        downloadUrl = downloadUrl,
+                        changelog = changelog
+                    )
+                }
             }
 
-            val downloadUrl = findApkDownloadUrl(json) ?: return@withContext null
-            val changelog = json.optString("body", "").ifEmpty {
-                "A new version is available."
-            }
-
-            UpdateInfo(
-                versionName = tagName,
-                downloadUrl = downloadUrl,
-                changelog = changelog
+            ManifestResult(
+                updateInfo = updateInfo,
+                forceUpdate = forceUpdate
             )
         } catch (_: Exception) {
             null
@@ -82,26 +88,6 @@ class UpdateChecker(private val context: Context) {
         return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
-    private fun fetchLatestRelease(): JSONObject? {
-        val url = URL(GITHUB_API_URL)
-        val connection = url.openConnection() as HttpURLConnection
-        return try {
-            connection.requestMethod = "GET"
-            connection.connectTimeout = CONNECT_TIMEOUT_MS
-            connection.readTimeout = READ_TIMEOUT_MS
-            connection.setRequestProperty("Accept", "application/vnd.github+json")
-
-            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-                return null
-            }
-
-            val body = connection.inputStream.bufferedReader().use { it.readText() }
-            JSONObject(body)
-        } finally {
-            connection.disconnect()
-        }
-    }
-
     private fun getCurrentVersion(): String {
         return try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -111,10 +97,6 @@ class UpdateChecker(private val context: Context) {
         }
     }
 
-    /**
-     * Compare two semver strings (e.g. "1.2.8" vs "1.3.0").
-     * Returns true if [remote] is strictly newer than [current].
-     */
     private fun isNewerVersion(remote: String, current: String): Boolean {
         val remoteParts = remote.split(".").mapNotNull { it.toIntOrNull() }
         val currentParts = current.split(".").mapNotNull { it.toIntOrNull() }
@@ -127,20 +109,5 @@ class UpdateChecker(private val context: Context) {
             if (r < c) return false
         }
         return false
-    }
-
-    /**
-     * Find the first .apk asset download URL from the release JSON.
-     */
-    private fun findApkDownloadUrl(json: JSONObject): String? {
-        val assets = json.optJSONArray("assets") ?: return null
-        for (i in 0 until assets.length()) {
-            val asset = assets.getJSONObject(i)
-            val name = asset.optString("name", "")
-            if (name.endsWith(".apk", ignoreCase = true)) {
-                return asset.optString("browser_download_url", "").ifEmpty { null }
-            }
-        }
-        return null
     }
 }
