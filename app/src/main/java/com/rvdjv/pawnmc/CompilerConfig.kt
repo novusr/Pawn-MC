@@ -58,6 +58,10 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getString(KEY_LAST_DIR, null)
         set(value) = prefs.edit { putString(KEY_LAST_DIR, value) }
 
+    var autoLoadLastFile: Boolean
+        get() = prefs.getBoolean(KEY_AUTO_LOAD_LAST_FILE, true)
+        set(value) = prefs.edit { putBoolean(KEY_AUTO_LOAD_LAST_FILE, value) }
+
     /**
      * Build compiler options list from current configuration.
      */
@@ -121,6 +125,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_COMPILER_VERSION = "compiler_version"
         private const val KEY_LAST_FILE = "last_selected_file"
         private const val KEY_LAST_DIR = "last_opened_dir"
+        private const val KEY_AUTO_LOAD_LAST_FILE = "auto_load_last_file"
 
         @Volatile
         private var instance: CompilerConfig? = null

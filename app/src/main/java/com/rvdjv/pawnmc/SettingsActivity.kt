@@ -25,6 +25,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var switchSemicolons: SwitchMaterial
     private lateinit var switchParentheses: SwitchMaterial
     private lateinit var switchSampCompat: SwitchMaterial
+    private lateinit var switchAutoLoadLastFile: SwitchMaterial
     private lateinit var etCustomFlags: TextInputEditText
     private lateinit var llIncludePaths: LinearLayout
     private lateinit var tvEmptyPaths: TextView
@@ -63,6 +64,7 @@ class SettingsActivity : AppCompatActivity() {
         switchSemicolons = findViewById(R.id.switchSemicolons)
         switchParentheses = findViewById(R.id.switchParentheses)
         switchSampCompat = findViewById(R.id.switchSampCompat)
+        switchAutoLoadLastFile = findViewById(R.id.switchAutoLoadLastFile)
         etCustomFlags = findViewById(R.id.etCustomFlags)
         llIncludePaths = findViewById(R.id.llIncludePaths)
         tvEmptyPaths = findViewById(R.id.tvEmptyPaths)
@@ -91,6 +93,7 @@ class SettingsActivity : AppCompatActivity() {
         switchSemicolons.isChecked = config.mandatorySemicolons
         switchParentheses.isChecked = config.mandatoryParentheses
         switchSampCompat.isChecked = config.sampCompatibility
+        switchAutoLoadLastFile.isChecked = config.autoLoadLastFile
 
         // custom flags
         etCustomFlags.setText(config.customFlags)
@@ -148,6 +151,10 @@ class SettingsActivity : AppCompatActivity() {
 
         switchSampCompat.setOnCheckedChangeListener { _, isChecked ->
             config.sampCompatibility = isChecked
+        }
+
+        switchAutoLoadLastFile.setOnCheckedChangeListener { _, isChecked ->
+            config.autoLoadLastFile = isChecked
         }
 
         etCustomFlags.setOnFocusChangeListener { _, hasFocus ->

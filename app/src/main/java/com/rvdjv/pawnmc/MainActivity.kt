@@ -210,6 +210,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadLastSelectedFile() {
+        if (!config.autoLoadLastFile) return
+
         val lastPath = config.lastSelectedFilePath
         if (lastPath != null && File(lastPath).exists()) {
             selectedFilePath = lastPath
