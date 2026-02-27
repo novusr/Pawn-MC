@@ -151,6 +151,17 @@
                                 android:singleLine="true"
                                 android:ellipsize="middle" />
 
+                            <ImageView
+                                android:id="@+id/btnQuickEdit"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_marginStart="8dp"
+                                android:src="@drawable/ic_edit"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:contentDescription="Quick Edit"
+                                app:tint="@color/vue_green_primary"
+                                android:visibility="gone" />
+
                         </LinearLayout>
                         
                         <com.google.android.material.button.MaterialButton

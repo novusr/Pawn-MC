@@ -11,6 +11,7 @@ import android.provider.Settings
 import android.view.View
 import android.widget.TextView
 import android.widget.ScrollView
+import android.widget.ImageView
 import androidx.activity.result.contract.ActivityResultContracts
 
 import androidx.appcompat.app.AppCompatActivity
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnSelectFile: MaterialButton
     private lateinit var btnCompile: MaterialButton
     private lateinit var progressBar: LinearProgressIndicator
+    private lateinit var btnQuickEdit: ImageView
 
     private var selectedFilePath: String? = null
     private lateinit var config: CompilerConfig
@@ -94,6 +96,7 @@ class MainActivity : AppCompatActivity() {
         btnSelectFile = findViewById(R.id.btnSelectFile)
         btnCompile = findViewById(R.id.btnCompile)
         progressBar = findViewById(R.id.progressBar)
+        btnQuickEdit = findViewById(R.id.btnQuickEdit)
     }
 
     private fun setupListeners() {
@@ -111,6 +114,13 @@ class MainActivity : AppCompatActivity() {
         btnCompile.setOnClickListener {
             selectedFilePath?.let { path ->
                 compileFile(path)
+            }
+        }
+
+        btnQuickEdit.setOnClickListener {
+            selectedFilePath?.let { path ->
+                appendOutput("Opening quick editor for: $path\n")
+                // TODO: Launch Editor Activity or Bottom Sheet later
             }
         }
     }
@@ -169,10 +179,12 @@ class MainActivity : AppCompatActivity() {
             config.lastSelectedFilePath = path
             tvSelectedFile.text = File(path).name
             btnCompile.isEnabled = true
+            btnQuickEdit.visibility = View.VISIBLE
             appendOutput("Selected: $path\n")
         } else {
             tvSelectedFile.text = "Invalid file type"
             btnCompile.isEnabled = false
+            btnQuickEdit.visibility = View.GONE
             appendOutput("Error: Please select a pawn file\n")
         }
     }
@@ -217,6 +229,7 @@ class MainActivity : AppCompatActivity() {
             selectedFilePath = lastPath
             tvSelectedFile.text = File(lastPath).name
             btnCompile.isEnabled = true
+            btnQuickEdit.visibility = View.VISIBLE
             appendOutput("Loaded file: $lastPath\n")
         }
     }
