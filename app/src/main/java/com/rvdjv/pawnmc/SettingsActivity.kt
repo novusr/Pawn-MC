@@ -24,7 +24,6 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var rgDebug: RadioGroup
     private lateinit var switchSemicolons: SwitchMaterial
     private lateinit var switchParentheses: SwitchMaterial
-    private lateinit var switchSampCompat: SwitchMaterial
     private lateinit var etCustomFlags: TextInputEditText
     private lateinit var llIncludePaths: LinearLayout
     private lateinit var tvEmptyPaths: TextView
@@ -62,7 +61,6 @@ class SettingsActivity : AppCompatActivity() {
         rgDebug = findViewById(R.id.rgDebug)
         switchSemicolons = findViewById(R.id.switchSemicolons)
         switchParentheses = findViewById(R.id.switchParentheses)
-        switchSampCompat = findViewById(R.id.switchSampCompat)
         etCustomFlags = findViewById(R.id.etCustomFlags)
         llIncludePaths = findViewById(R.id.llIncludePaths)
         tvEmptyPaths = findViewById(R.id.tvEmptyPaths)
@@ -90,7 +88,6 @@ class SettingsActivity : AppCompatActivity() {
         // switches
         switchSemicolons.isChecked = config.mandatorySemicolons
         switchParentheses.isChecked = config.mandatoryParentheses
-        switchSampCompat.isChecked = config.sampCompatibility
 
         // custom flags
         etCustomFlags.setText(config.customFlags)
@@ -146,9 +143,6 @@ class SettingsActivity : AppCompatActivity() {
             config.mandatoryParentheses = isChecked
         }
 
-        switchSampCompat.setOnCheckedChangeListener { _, isChecked ->
-            config.sampCompatibility = isChecked
-        }
 
         etCustomFlags.setOnFocusChangeListener { _, hasFocus ->
             if (!hasFocus) {

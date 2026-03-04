@@ -25,11 +25,6 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getBoolean(KEY_PARENTHESES, true)
         set(value) = prefs.edit { putBoolean(KEY_PARENTHESES, value) }
 
-    // samp compatibility
-    var sampCompatibility: Boolean
-        get() = prefs.getBoolean(KEY_SAMP_COMPAT, false)
-        set(value) = prefs.edit { putBoolean(KEY_SAMP_COMPAT, value) }
-
     // custom
     var customFlags: String
         get() = prefs.getString(KEY_CUSTOM_FLAGS, "") ?: ""
@@ -70,9 +65,6 @@ class CompilerConfig private constructor(context: Context) {
         // code style
         if (mandatorySemicolons) options.add("-;+")
         if (mandatoryParentheses) options.add("-(+")
-
-        // samp compatibility
-        if (sampCompatibility) options.add("-Z+")
 
         // include paths
         for (path in includePaths) {
@@ -115,7 +107,6 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_DEBUG = "debug"
         private const val KEY_SEMICOLONS = "semicolons"
         private const val KEY_PARENTHESES = "parentheses"
-        private const val KEY_SAMP_COMPAT = "samp_compat"
         private const val KEY_CUSTOM_FLAGS = "custom_flags"
         private const val KEY_INCLUDE_PATHS = "include_paths"
         private const val KEY_COMPILER_VERSION = "compiler_version"
