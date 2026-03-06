@@ -26,7 +26,6 @@ A quick list of the most common options. See the sections below for full details
 | -v     | Verbosity&nbsp;Level   | 0,&nbsp;1,&nbsp;2      | 1       |
 | -C     | Compact&nbsp;Encoding  | +&nbsp;(on),&nbsp;-&nbsp;(off) | +    |
 | -S     | Stack/Heap&nbsp;Size   | cells               | 4096    |
-| -Z     | SA-MP&nbsp;Compatibility | +&nbsp;(on),&nbsp;-&nbsp;(off) | -    |
 | -w     | Disable&nbsp;Warning   | warning&nbsp;number  | -      |
 | -E     | Warnings&nbsp;as&nbsp;Errors | +&nbsp;(on),&nbsp;-&nbsp;(off) | -    |
 
@@ -116,10 +115,6 @@ A quick list of the most common options. See the sections below for full details
 ### -XD<num>
 **Abstract Machine Data/Stack Limit**: The maximum memory for data and stack only (in bytes). Used with `-X` for finer control in embedded/ROM environments.
 
-### -Z[+/-]
-**Compatibility Mode**: Run in SA-MP compatibility mode. CRITICAL for SA-MP scripts.
-**DEFAULT**: `-Z-` (off). Use `-Z+` for SA-MP.<br>
-**For what?**: What is meant by compatibility here is support for Path Separators. For example, if you compile a script on Windows OS, you need `-Z+` because the forward slash `/` path separator is not directly supported in `#include "name/too.pwn"` — it will throw "cannot read from file" even if the file exists. Conversely, if you compile on Linux, the path separator is naturally supported.
 
 ### -\
 **Use backslash ('\')** as the escape character (like C, C++, Java).
@@ -176,15 +171,15 @@ main() {
 
 ### For SA-MP Development (New Script):
 ```bash
-pawncc script.pwn -Z+ -d2 -v2
+pawncc script.pwn -d2 -v2
 ```
-Enables SA-MP compatibility, full debug info, and verbose output.
+Enables full debug info and verbose output.
 
 ### For SA-MP Production Build:
 ```bash
-pawncc script.pwn -Z+ -O2 -d1 -C+
+pawncc script.pwn -O2 -d1 -C+
 ```
-Enables SA-MP compatibility, full optimization, runtime checks, and compact encoding.
+Enables full optimization, runtime checks, and compact encoding.
 
 ### For Debugging a Problem:
 ```bash
@@ -201,7 +196,6 @@ Preprocess only and check include paths.
 ## Notes and Links
 
 * The default settings favor safety (`-d1`) and smaller output size (`-C+`).
-* The `-Z` flag (compatibility mode) is **ESSENTIAL** when compiling for SA-MP.
 * Verbose level 2 (`-v2`) prints a memory usage report.
 * Debug level 3 (`-d3`) implicitly sets optimization level to 0 (`-O0`).
 * The official repository and source code can be found at:
