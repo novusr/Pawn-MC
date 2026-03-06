@@ -167,6 +167,7 @@ class MainActivity : AppCompatActivity() {
             path.endsWith(".inc", ignoreCase = true)) {
             selectedFilePath = path
             config.lastSelectedFilePath = path
+            IncludePathDetector.reset()
             tvSelectedFile.text = File(path).name
             btnCompile.isEnabled = true
             appendOutput("Selected: $path\n")
@@ -198,7 +199,8 @@ class MainActivity : AppCompatActivity() {
             btnCompile.isEnabled = true
             btnSelectFile.isEnabled = true
 
-            appendOutput(result.second)
+            val outputText = result.second
+            appendOutput(outputText)
             
             val timeString = if (duration >= 1000) {
                 String.format("%.2f seconds", duration / 1000.0)
@@ -206,6 +208,10 @@ class MainActivity : AppCompatActivity() {
                 "$duration ms"
             }
             appendOutput("\nCompilation time: $timeString\n")
+
+            if (config.includePaths.isEmpty() && outputText.contains("cannot read from file", ignoreCase = true)) {
+                IncludePathDetector.detect(this@MainActivity, filePath, config) { _ -> compileFile(filePath) }
+            }
         }
     }
 
