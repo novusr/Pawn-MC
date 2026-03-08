@@ -393,7 +393,7 @@ struct CompileArgs {
     int result;
 };
 
-static void* compile_thread_func(void* arg) {
+static void* compiler_thread(void* arg) {
     CompileArgs* cargs = static_cast<CompileArgs*>(arg);
     LOGI("Compile thread started with %d arguments", cargs->argc);
     
@@ -410,7 +410,7 @@ static void* compile_thread_func(void* arg) {
     return nullptr;
 }
 
-static int compile_with_large_stack(int argc, char** argv) {
+static int run_compiler(int argc, char** argv) {
     CompileArgs cargs = {argc, argv, -1};
     
     pthread_t thread;
@@ -429,7 +429,7 @@ static int compile_with_large_stack(int argc, char** argv) {
     
     LOGI("Creating compile thread with %zu byte stack", (size_t)COMPILE_THREAD_STACK_SIZE);
     
-    if (pthread_create(&thread, &attr, compile_thread_func, &cargs) != 0) {
+    if (pthread_create(&thread, &attr, compiler_thread, &cargs) != 0) {
         LOGE("Failed to create compile thread, falling back to direct call");
         pthread_attr_destroy(&attr);
         return pc_compile(argc, argv);
@@ -536,7 +536,7 @@ Java_com_rvdjv_pawnmc_PawnCompiler_compile(JNIEnv* env, jobject thiz,
     }
     
     LOGI("Calling pc_compile with %zu arguments", argv.size());
-    int result = compile_with_large_stack((int)argv.size(), argv.data());
+    int result = run_compiler((int)argv.size(), argv.data());
     LOGI("pc_compile returned: %d", result);
     
     return env->NewStringUTF(getOutputResult(result).c_str());
