@@ -93,7 +93,7 @@
                             android:paddingStart="8dp"
                             android:buttonTint="@color/vue_green_primary"
                             android:textColor="@color/text_primary"
-                            android:text="Pawn 3.10.7-pawnmc.2"
+                            android:text="Pawn 3.10.7-pawnmc.3"
                             android:textSize="15sp" />
 
                         <TextView
@@ -113,7 +113,7 @@
                             android:paddingStart="8dp"
                             android:buttonTint="@color/vue_green_primary"
                             android:textColor="@color/text_primary"
-                            android:text="Pawn 3.10.11-pawnmc.1"
+                            android:text="Pawn 3.10.11-pawnmc.2"
                             android:textSize="15sp" />
 
                         <TextView
@@ -261,7 +261,7 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Code Style -->
+            <!-- Advanced Settings -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -290,14 +290,14 @@
                         <ImageView
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:src="@drawable/ic_compile"
-                            android:contentDescription="Code Style" />
+                            android:src="@drawable/ic_settings"
+                            android:contentDescription="Advanced" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="10dp"
-                            android:text="CODE STYLE RULES"
+                            android:text="ADVANCED SETTINGS"
                             style="@style/TextAppearance.PawnMC.SectionHeader" />
 
                     </LinearLayout>
@@ -395,60 +395,12 @@
 
                         </LinearLayout>
 
-                    </LinearLayout>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Advanced Settings -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/card_background"
-                app:cardCornerRadius="16dp"
-                app:strokeColor="@color/border"
-                app:strokeWidth="1dp"
-                app:cardElevation="0dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <!-- Section Header -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingHorizontal="16dp"
-                        android:paddingVertical="14dp"
-                        android:background="@drawable/bg_card_header">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:src="@drawable/ic_settings"
-                            android:contentDescription="Advanced" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="10dp"
-                            android:text="ADVANCED SETTINGS"
-                            style="@style/TextAppearance.PawnMC.SectionHeader" />
-
-                    </LinearLayout>
-
-                    <!-- Content -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-
+                        <!-- Divider -->
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginVertical="12dp"
+                            android:background="@color/divider" />
 
                         <!-- Custom Flags Input -->
                         <TextView
