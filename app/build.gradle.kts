@@ -1,5 +1,18 @@
 import java.util.Properties
+import java.util.regex.Pattern
 
+fun extractPawncVersionLabel(cmakePath: String, defaultBase: String): String {
+    val file = rootProject.file(cmakePath)
+    var patchVersion = "?"
+    if (file.exists()) {
+        val content = file.readText()
+        val patchMatcher = Pattern.compile("set\\s*\\(\\s*PAWNMC_PATCH\\s+([0-9]+)\\s*\\)").matcher(content)
+        if (patchMatcher.find()) {
+            patchVersion = patchMatcher.group(1)
+        }
+    }
+    return "Pawn ${defaultBase}-pawnmc.${patchVersion}"
+}
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -31,12 +44,21 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.rvdjv.pawnmc"
         minSdk = 24
         targetSdk = 36
         versionCode = 5
         versionName = "1.3.0"
+
+        val label3107 = extractPawncVersionLabel("compilers/pawnc-3.10.7/source/compiler/CMakeLists.txt", "3.10.7")
+        val label31011 = extractPawncVersionLabel("compilers/pawnc-3.10.11/source/compiler/CMakeLists.txt", "3.10.11")
+        buildConfigField("String", "PAWNC_3107_LABEL", "\"$label3107\"")
+        buildConfigField("String", "PAWNC_31011_LABEL", "\"$label31011\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

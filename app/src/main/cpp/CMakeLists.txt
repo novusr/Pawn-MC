@@ -7,11 +7,17 @@ project("pawnc" C CXX)
 set(PAWNC_3107_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10.7/source")
 set(PAWNC_31011_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10.11/source")
 
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PAWNC_3107_SOURCE_DIR}/compiler/CMakeLists.txt")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PAWNC_31011_SOURCE_DIR}/compiler/CMakeLists.txt")
+
 # Version 3.10.7
+file(READ "${PAWNC_3107_SOURCE_DIR}/compiler/CMakeLists.txt" CMAKE_3107_CONTENT)
+string(REGEX MATCH "set\\(PAWNMC_PATCH ([0-9]+)\\)" _ "${CMAKE_3107_CONTENT}")
+set(PAWNMC_PATCH ${CMAKE_MATCH_1})
+
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 10)
 set(VERSION_BUILD 7)
-set(PAWNMC_PATCH 2)
 set(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BUILD}-pawnmc.${PAWNMC_PATCH}")
 math(EXPR VERSION_INT "${VERSION_MAJOR} << 8 | ${VERSION_MINOR}")
 configure_file(
@@ -20,6 +26,10 @@ configure_file(
 )
 
 # Version 3.10.11
+file(READ "${PAWNC_31011_SOURCE_DIR}/compiler/CMakeLists.txt" CMAKE_31011_CONTENT)
+string(REGEX MATCH "set\\(PAWNMC_PATCH ([0-9]+)\\)" _ "${CMAKE_31011_CONTENT}")
+set(PAWNMC_PATCH ${CMAKE_MATCH_1})
+
 set(VERSION_BUILD 11)
 set(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BUILD}-pawnmc.${PAWNMC_PATCH}")
 configure_file(

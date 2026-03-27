@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
 
@@ -58,6 +59,12 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun initViews() {
         rgCompilerVersion = findViewById(R.id.rgCompilerVersion)
+        
+        val rbV3107 = findViewById<RadioButton>(R.id.rbV3107)
+        val rbV31011 = findViewById<RadioButton>(R.id.rbV31011)
+        rbV3107.text = CompilerConfig.CompilerVersion.V3107.label
+        rbV31011.text = CompilerConfig.CompilerVersion.V31011.label
+
         rgDebug = findViewById(R.id.rgDebug)
         switchSemicolons = findViewById(R.id.switchSemicolons)
         switchParentheses = findViewById(R.id.switchParentheses)
