@@ -209,8 +209,8 @@ class MainActivity : AppCompatActivity() {
             }
             appendOutput("\nCompilation time: $timeString\n")
 
-            if (config.includePaths.isEmpty() && outputText.contains("cannot read from file", ignoreCase = true)) {
-                IncludePathDetector.detect(this@MainActivity, filePath, config) { _ -> compileFile(filePath) }
+            if (outputText.contains("cannot read from file", ignoreCase = true)) {
+                IncludePathDetector.detect(this@MainActivity, filePath, outputText, config) { _ -> compileFile(filePath) }
             }
         }
     }
