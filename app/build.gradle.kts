@@ -52,8 +52,8 @@ android {
         applicationId = "com.rvdjv.pawnmc"
         minSdk = 24
         targetSdk = 36
-        versionCode = 5
-        versionName = "1.3.0"
+        versionCode = 6
+        versionName = "1.4.0"
 
         val label3107 = extractPawncVersionLabel("compilers/pawnc-3.10.7/source/compiler/CMakeLists.txt", "3.10.7")
         val label31011 = extractPawncVersionLabel("compilers/pawnc-3.10.11/source/compiler/CMakeLists.txt", "3.10.11")
