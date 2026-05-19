@@ -1,10 +1,9 @@
-# Pawn Compiler (Community Version)
+# Pawn Options
 
-This is the Pawn Community Compiler, a modified version of Pawn 3.2.3664 with bug fixes and enhancements for the SA-MP community.
 * Reference: https://github.com/pawn-lang/compiler/tree/master/doc
 
 ## Version
-3.10.11, 3.10.10, 3.10.9, 3.10.8, 3.10.7
+3.10.X (pawncc/pawnMC)
 
 ## Basic Usage
 The compiler is invoked from the command line. All options start with a dash ("-") or, on Microsoft Windows and DOS, with a forward slash ("/"). Example: `pawncc input.pwn -O2`
@@ -125,44 +124,14 @@ A quick list of the most common options. See the sections below for full details
 ### -;[+/-]
 **Semicolon Requirement**: With `-;+`, every statement must end with a semicolon. With `-;-`, a semicolon is optional if the statement is the last one on a line.
 **DEFAULT**: `-;-` (optional)<br>
-**Sample:**
-```c
-#include "a_samp"
-
-main() {
-  printf("Hello, World")
-                /*      ^ none ; pawno/pawncc xx.pwn -oxx.amx -;- */
-  printf("Hello, World");
-                /*      ^ have ; pawno/pawncc xx.pwn -oxx.amx -;+ */
-}
-```
 
 ### -([+/-]
 **Parentheses Requirement**: With `-(+`, parentheses are required for function invocation. With `-(-`, they are optional in some contexts.
 **DEFAULT**: `-(-` (optional)<br>
-**For what?**: As in, what is the meaning of the explanation for the flag above.<br>
-```c
-#include "a_samp"
-
-main() {
-  printf "Hello, World!"; // if you try to call a function or something similar without '()',
-                         // and if -(+ (active) then you cannot perform an operation like that.
-}
-```
+**For**: As in, what is the meaning of the explanation for the flag above.<br>
 
 ### sym=val
 **Define Constant**: Define a constant "sym" with the numeric value "val". The value is optional (`sym=` defines it as 0).<br>
-**Sample:**
-```c
-#if mydef == 1
-  // pawno/pawncc xx.pwn -oxx.amx mydef=1
-  //...
-#else
-  // pawno/pawncc xx.pwn -oxx.amx mydef=0
-  // pawno/pawncc xx.pwn -oxx.amx
-  //...
-#endif
-```
 
 ### @filename
 **Response File**: Read additional command-line options from the specified text file. Useful for long commands.
