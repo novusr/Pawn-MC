@@ -122,7 +122,7 @@ extern "C" int pc_printf(const char* message, ...) {
     va_end(argptr);
     
     if (needed > 0) {
-        LOGD("pc_printf: %s", buffer);
+        // LOGD("pc_printf: %s", buffer);
         std::lock_guard<std::mutex> lock(g_outputMutex);
         g_outputBuffer << buffer;
     }
