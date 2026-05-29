@@ -94,8 +94,8 @@ class CompilerConfig private constructor(context: Context) {
     }
 
     enum class CompilerVersion(val value: String, val libraryName: String, val label: String, val description: String) {
-        V3107("3.10.7", "pawnc3107", BuildConfig.PAWNC_3107_LABEL, "Recommended for most SA-MP gamemodes"),
-        V31011("3.10.11", "pawnc31011", BuildConfig.PAWNC_31011_LABEL, "Recommended for open.mp gamemodes");
+        V3107("3.10.7", "pawnc3107", "Pawn 3.10.7", "Recommended for most SA-MP gamemodes"),
+        V31011("3.10.11", "pawnc31011", "Pawn 3.10.11", "Recommended for open.mp gamemodes");
 
         companion object {
             fun fromValue(value: String) = entries.find { it.value == value } ?: V3107
