@@ -1,6 +1,9 @@
 package com.rvdjv.pawnmc
 
 import android.Manifest
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -9,8 +12,10 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
 import android.view.View
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.ScrollView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 
 import androidx.appcompat.app.AppCompatActivity
@@ -31,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var scrollOutput: ScrollView
     private lateinit var btnSelectFile: MaterialButton
     private lateinit var btnCompile: MaterialButton
+    private lateinit var btnCopyOutput: ImageButton
     private lateinit var progressBar: LinearProgressIndicator
 
     private var selectedFilePath: String? = null
@@ -93,6 +99,7 @@ class MainActivity : AppCompatActivity() {
         scrollOutput = findViewById(R.id.scrollOutput)
         btnSelectFile = findViewById(R.id.btnSelectFile)
         btnCompile = findViewById(R.id.btnCompile)
+        btnCopyOutput = findViewById(R.id.btnCopyOutput)
         progressBar = findViewById(R.id.progressBar)
     }
 
@@ -112,6 +119,19 @@ class MainActivity : AppCompatActivity() {
             selectedFilePath?.let { path ->
                 compileFile(path)
             }
+        }
+        btnCopyOutput.setOnClickListener {
+        val outputText = tvOutput.text.toString()
+        val isEmpty = outputText.isEmpty() || outputText == "Ready to compile...\n"
+
+        if (isEmpty) {
+            Toast.makeText(this, "Output is empty", Toast.LENGTH_SHORT).show()
+            return@setOnClickListener
+        }
+
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("Compilation Result", outputText))
+        Toast.makeText(this, "Copied to clipboard", Toast.LENGTH_SHORT).show()
         }
     }
 

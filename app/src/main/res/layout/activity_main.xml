@@ -232,6 +232,19 @@
                             android:layout_marginStart="10dp"
                             android:text="OUTPUT"
                             style="@style/TextAppearance.PawnMC.SectionHeader" />
+
+                        <ImageButton
+                            android:id="@+id/btnCopyOutput"
+                            android:layout_width="36dp"
+                            android:layout_height="36dp"
+                            android:layout_marginEnd="10dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:src="@drawable/ic_copy"
+                            android:tint="@color/text_secondary"
+                            app:tint="@color/text_secondary"
+                            android:contentDescription="Copy Output"
+                            android:padding="8dp"
+                            android:scaleType="fitCenter" />
                         
                         <View
                             android:id="@+id/statusIndicator"
