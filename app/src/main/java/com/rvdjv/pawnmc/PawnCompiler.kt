@@ -1,5 +1,8 @@
 package com.rvdjv.pawnmc
 
+import android.util.Log
+import java.io.File
+
 /**
  *kotlin wrapper
  */
@@ -57,6 +60,16 @@ object PawnCompiler {
 
         android.util.Log.d("PawnCompiler", "Compiling with: ${initializedVersion?.label}")
 
+        val logFile = runCatching {
+            File(sourceFile).let { f ->
+                val base = f.nameWithoutExtension
+                File(f.parent, "$base.log")
+            }
+        }.getOrNull()
+
+        logFile?.takeIf { it.exists() }?.runCatching { delete() }
+            ?.onFailure { Log.e("PawnCompiler", "Failed to delete old log file: ${logFile.absolutePath}", it) }
+
         val args = buildList {
             add("pawncc")
             addAll(options)
@@ -64,7 +77,12 @@ object PawnCompiler {
         }
 
         val output = compile(args.toTypedArray())
-        return parseCompilerOutput(output)
+        val parsedResult = parseCompilerOutput(output)
+
+        logFile?.runCatching { writeText(parsedResult.second) }
+            ?.onFailure { Log.e("PawnCompiler", "Failed to write log file: ${logFile.absolutePath}", it) }
+
+        return parsedResult
     }
 
     private fun parseCompilerOutput(output: String): Pair<Int, String> {
