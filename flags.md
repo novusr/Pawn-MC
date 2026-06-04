@@ -1,171 +1,409 @@
 # Pawn Options
 
-* Reference: https://github.com/pawn-lang/compiler/tree/master/doc
+* [Reference](https://github.com/pawn-lang/compiler/tree/master/doc)
 
 ## Version
-3.10.X (pawncc/pawnMC)
+
+*3.10.xx* (pawn-lang/compiler / Pawn MC)
 
 ## Basic Usage
-The compiler is invoked from the command line. All options start with a dash ("-") or, on Microsoft Windows and DOS, with a forward slash ("/"). Example: `pawncc input.pwn -O2`
+
+The compiler is invoked from the command line. Every option starts with a dash (`-`) or, on Microsoft Windows and DOS, a forward slash (`/`).
 
 ### Syntax for Values
-Many options accept a value. The value can be:
-* Glued to the option letter: `-d2`
-* Separated by a colon: `-d:2`
-* Separated by an equal sign: `-d=2`
-All three formats are equivalent.
+
+A lot of options accept a value. You can pass it in several ways:
+
+* Glued directly to the option: `-d2`
+* Using a colon: `-d:2`
+* Using an equal sign: `-d=2`
+
+They're all exactly the same thing.
 
 ## Quick Reference Table
-A quick list of the most common options. See the sections below for full details.
 
-| Option | Quick&nbsp;Description | Typical&nbsp;Value | Default |
-|--------|----------------------|------------------|---------|
-| -O     | Optimization&nbsp;Level | 0,&nbsp;1,&nbsp;2      | 1       |
-| -d     | Debug&nbsp;Level       | 0,&nbsp;1,&nbsp;2,&nbsp;3 | 1       |
-| -v     | Verbosity&nbsp;Level   | 0,&nbsp;1,&nbsp;2      | 1       |
-| -C     | Compact&nbsp;Encoding  | +&nbsp;(on),&nbsp;-&nbsp;(off) | +    |
-| -S     | Stack/Heap&nbsp;Size   | cells               | 4096    |
-| -w     | Disable&nbsp;Warning   | warning&nbsp;number  | -      |
-| -E     | Warnings&nbsp;as&nbsp;Errors | +&nbsp;(on),&nbsp;-&nbsp;(off) | -    |
+A quick look at the most commonly used options. Check the sections below for the full explanation.
+
+| Option | Quick Description              | Typical Value   | Default |
+| ------ | ------------------------------ | --------------- | ------- |
+| `-O`   | Optimization Level             | 0, 1, 2         | 1       |
+| `-d`   | Debug Level                    | 0, 1, 2, 3      | 1       |
+| `-v`   | Verbosity Level                | 0, 1, 2         | 1       |
+| `-C`   | Compact Encoding               | + (on), - (off) | +       |
+| `-S`   | Stack/Heap Size                | cells           | 4096    |
+| `-w`   | Disable Warning                | warning number  | -       |
+| `-E`   | Warnings as Errors             | + (on), - (off) | -       |
+| `-Z`   | Cross-Platform Path Separators | + (on), - (off) | -       |
 
 ## Essential Options
 
-### -a
-**Output Assembler Code**: Generate a text file with the pseudo-assembler code for the pawn abstract machine, instead of a binary .amx file.
+### `-a`
 
-### -C[+/-]
-**Compact Encoding**: Significantly reduces the size of the binary output file (typically by more than half). Use `-C+` to enable or `-C-` to disable. The option `-C` alone toggles the current setting.
-**DEFAULT**: `-C+` (enabled)
+**Output Assembler Code**
 
-### -c<name>
-**Codepage**: Set the codepage for translating the source file (e.g., 1252 for Windows Latin-1). You can specify a number or a full path to a mapping file.
+Generate a text file containing Pawn Abstract Machine pseudo-assembler instructions instead of a compiled `.amx` binary.
 
-### -d<num>
-**Debug Level**:
-* `0` = No symbolic information, no run-time checks.
-* `1` = Run-time checks (bounds checking, assertions), no symbolic information.
-* `2` = Full debug information and dynamic checking.
-* `3` = Same as `-d2`, but forces optimization level to `-O0`.
-**DEFAULT**: `-d1`
+---
 
-### -D<path>
-**Active Directory**: The directory where the compiler should search for input files and store output files. (Platform-specific support).
+### `-C[+/-]`
 
-### -e<name>
-**Error File**: Set the name of the file where all warning and error messages are written. When set, there is no output to the screen (quiet compile).
+**Compact Encoding**
 
-### -E[+/-]
-**Warnings as Errors**: When enabled (`-E+`), all warnings are treated as errors and will cause the compilation to fail.
-**DEFAULT**: `-E-` (off)
+Shrinks the generated binary significantly — often by more than half.
 
-### -H<value>
-**HWND** (Windows only): The compiler can post a completion message to the specified window handle. Used for IDE integration.
+* `-C+` → Enable compact encoding.
+* `-C-` → Disable compact encoding.
+* `-C` → Toggle the current state.
 
-### -i<name>
-**Include Path**: Set the path where the compiler can find include files. This option can appear multiple times to set several search paths.
+**DEFAULT:** `-C+` (enabled)
 
-### -l
-**Create List File**: Perform only the file reading and preprocessing steps (preprocess only). Useful for checking macro expansion.
+---
 
-### -o<name>
-**Output File**: Set the base name for the generated P-code (.amx) output file.
+### `-c<name>`
 
-### -O<num>
-**Optimization Level**:
-* `0` = No optimization.
-* `1` = JIT-compatible optimizations only.
-* `2` = Full optimizations.
-**DEFAULT**: `-O1`
+**Codepage**
 
-### -p<name>
-**Prefix File**: Set the name of an implicit "prefix" file that is parsed before the main input file. Overrides the default "default.inc". Using `-p` alone disables all implicit includes.
+Sets the codepage used when translating the source file.
 
-### -R[+/-]
-**Recursion Report**: Add a detailed recursion report with call chains to the output.
-**DEFAULT**: `-R-` (off)
+Examples:
 
-### -r[name]
-**Cross-Reference Report**: Write a cross-reference report. If a filename is provided, output goes to that file; otherwise, it goes to the console. The report is in XML format.
+* `1252`
+* `932`
+* Full path to a custom mapping file
 
-### -S<num>
-**Stack/Heap Size**: The size of the stack and heap in cells (not bytes). The value is in cells.
-**DEFAULT**: 4096 cells
+---
 
-### -s<num>
-**Skip Lines**: The number of lines to skip at the beginning of the input file before starting compilation.
+### `-d<num>`
 
-### -t<num>
-**TAB Indent Size**: The number of space characters that represent a TAB. Setting this to 0 (`-t0`) disables warning 217 (loose indentation).
-**DEFAULT**: 8
+**Debug Level**
 
-### -v<num>
-**Verbosity Level**:
-* `0` = Quiet compile. Only fatal errors are shown.
-* `1` = Normal output (errors and warnings).
-* `2` = Verbose. Adds a code/data/stack usage report to the normal output.
-**DEFAULT**: `-v1`
+* `0` → No debug info, no runtime checks.
+* `1` → Runtime checks enabled, no debug symbols.
+* `2` → Full debug symbols and runtime checking.
+* `3` → Same as `-d2`, but automatically forces `-O0`.
 
-### -w<num>
-**Disable Warning**: Disable a specific compiler warning by its number (e.g., `-w217`).
+**DEFAULT:** `-d1`
 
-### -X<num>
-**Abstract Machine Size Limit**: The maximum total memory (in bytes) a compiled script may require (code + data + stack). Useful for embedded environments.
+---
 
-### -XD<num>
-**Abstract Machine Data/Stack Limit**: The maximum memory for data and stack only (in bytes). Used with `-X` for finer control in embedded/ROM environments.
+### `-D<path>`
 
+**Active Directory**
 
-### -\
-**Use backslash ('\')** as the escape character (like C, C++, Java).
+Sets the working directory used for locating input files and generating outputs.
 
-### -^
-**Use caret ('^')** as the escape character (for compatibility with older Pawn versions).
+(Platform-specific support.)
 
-### -;[+/-]
-**Semicolon Requirement**: With `-;+`, every statement must end with a semicolon. With `-;-`, a semicolon is optional if the statement is the last one on a line.
-**DEFAULT**: `-;-` (optional)<br>
+---
 
-### -([+/-]
-**Parentheses Requirement**: With `-(+`, parentheses are required for function invocation. With `-(-`, they are optional in some contexts.
-**DEFAULT**: `-(-` (optional)<br>
-**For**: As in, what is the meaning of the explanation for the flag above.<br>
+### `-e<name>`
 
-### sym=val
-**Define Constant**: Define a constant "sym" with the numeric value "val". The value is optional (`sym=` defines it as 0).<br>
+**Error File**
 
-### @filename
-**Response File**: Read additional command-line options from the specified text file. Useful for long commands.
+Writes all warnings and errors to a file instead of the console.
 
-## Common Use Case Commands
+Perfect for automated builds and IDE integrations.
 
-### For SA-MP Development (New Script):
+---
+
+### `-E[+/-]`
+
+**Warnings as Errors**
+
+Treat every warning as a compilation error.
+
+* `-E+` → Enabled.
+* `-E-` → Disabled.
+
+**DEFAULT:** `-E-`
+
+---
+
+### `-H<value>`
+
+**HWND** *(Windows only)*
+
+Posts a completion message to the specified window handle.
+
+Mostly used by IDEs and editor integrations.
+
+---
+
+### `-i<name>`
+
+**Include Path**
+
+Adds a directory to the include search list.
+
+Can be used multiple times.
+
+Example:
+
 ```bash
-pawncc script.pwn -d2 -v2
+-iincludes
+-icore
+-imodules
 ```
-Enables full debug info and verbose output.
 
-### For SA-MP Production Build:
-```bash
-pawncc script.pwn -O2 -d1 -C+
-```
-Enables full optimization, runtime checks, and compact encoding.
+---
 
-### For Debugging a Problem:
-```bash
-pawncc script.pwn -d3 -O0 -v2 -E+ -R+
-```
-Full symbolic debug, forces no optimization, verbose output, treats warnings as errors, and adds a recursion report.
+### `-l`
 
-### For Checking Syntax/Preprocessing:
+**Create List File**
+
+Preprocess only.
+
+Reads the source, expands macros/includes, and generates the preprocessed output without producing an `.amx`.
+
+---
+
+### `-o<name>`
+
+**Output File**
+
+Sets the output `.amx` filename.
+
+---
+
+### `-O<num>`
+
+**Optimization Level**
+
+* `0` → No optimization.
+* `1` → JIT-safe optimizations only.
+* `2` → Full optimization pass.
+
+**DEFAULT:** `-O1`
+
+---
+
+### `-p<name>`
+
+**Prefix File**
+
+Specifies an implicit include file that gets parsed before the main script.
+
+Overrides the default `default.inc`.
+
+Using `-p` without a filename disables automatic prefix inclusion entirely.
+
+---
+
+### `-R[+/-]`
+
+**Recursion Report**
+
+Adds detailed recursion-chain information to compiler output.
+
+**DEFAULT:** `-R-`
+
+---
+
+### `-r[name]`
+
+**Cross-Reference Report**
+
+Generates an XML cross-reference report.
+
+* Without filename → printed to console.
+* With filename → written to file.
+
+---
+
+### `-S<num>`
+
+**Stack / Heap Size**
+
+Sets the stack and heap size in cells.
+
+**DEFAULT:** `4096`
+
+---
+
+### `-s<num>`
+
+**Skip Lines**
+
+Skips the specified number of lines at the start of the source file before compilation begins.
+
+---
+
+### `-t<num>`
+
+**TAB Indent Size**
+
+Controls how many spaces a TAB represents.
+
+* `-t0` disables warning 217 (loose indentation).
+
+**DEFAULT:** `8`
+
+---
+
+### `-v<num>`
+
+**Verbosity Level**
+
+* `0` → Quiet. Only fatal errors.
+* `1` → Standard warnings and errors.
+* `2` → Extra details, including memory usage reports.
+
+**DEFAULT:** `-v1`
+
+---
+
+### `-w<num>`
+
+**Disable Warning**
+
+Disables a specific warning.
+
+Example:
+
 ```bash
-pawncc script.pwn -l -i./include
+-w217
 ```
-Preprocess only and check include paths.
+
+---
+
+### `-X<num>`
+
+**Abstract Machine Size Limit**
+
+Sets the maximum total memory usage (code + data + stack) allowed for the compiled script.
+
+Mainly useful for embedded environments.
+
+---
+
+### `-XD<num>`
+
+**Data / Stack Memory Limit**
+
+Limits data and stack memory usage only.
+
+Usually used together with `-X`.
+
+---
+
+### `-Z[+/-]`
+
+**Cross-Platform Path Separators**
+
+Controls how path separators are interpreted by the compiler.
+
+Pawn MC already provides automatic cross-platform path handling by default, so this option is usually unnecessary for most projects.
+
+* `-Z+` -> Force compatibility mode and accept both `/` and `\` as path separators regardless of the current operating system.
+* `-Z-` -> Use the compiler's native path parsing behavior.
+
+Examples:
+
+```bash
+-iincludes/core
+-iincludes\core
+```
+
+With `-Z+`, both path styles are always accepted.
+
+This option mainly exists for compatibility, testing, legacy build systems, or environments where explicit separator handling is preferred.
+
+**DEFAULT:** Automatic behavior (Pawn MC)
+
+---
+
+### `-\`
+
+**Backslash Escape Mode**
+
+Use backslash (`\`) as the escape character.
+
+Compatible with C, C++, Java, C#, and many other languages.
+
+---
+
+### `-^`
+
+**Caret Escape Mode**
+
+Use caret (`^`) as the escape character.
+
+Provided for compatibility with older Pawn codebases.
+
+---
+
+### `-;[+/-]`
+
+**Semicolon Requirement**
+
+* `-;+` → Every statement must end with `;`
+* `-;-` → The last statement on a line may omit `;`
+
+**DEFAULT:** `-;-`
+
+---
+
+### `-([+/-]`
+
+**Parentheses Requirement**
+
+Controls whether parentheses are required for function calls.
+
+* `-(+` → Parentheses required.
+* `-(-` → Parentheses may be omitted in supported contexts.
+
+**DEFAULT:** `-(-`
+
+---
+
+### `sym=val`
+
+**Define Constant**
+
+Defines a compile-time constant.
+
+Examples:
+
+```bash
+DEBUG=1
+TESTMODE=1
+VERSION=42
+```
+
+If the value is omitted:
+
+```bash
+DEBUG=
+```
+
+it becomes:
+
+```pawn
+DEBUG = 0
+```
+
+---
+
+### `@filename`
+
+**Response File**
+
+Loads additional command-line options from a text file.
+
+Useful when the command line starts getting ridiculously long.
+
+Example:
+
+```bash
+pawncc @build.cfg
+```
 
 ## Notes and Links
 
-* The default settings favor safety (`-d1`) and smaller output size (`-C+`).
-* Verbose level 2 (`-v2`) prints a memory usage report.
-* Debug level 3 (`-d3`) implicitly sets optimization level to 0 (`-O0`).
-* The official repository and source code can be found at:
-  https://github.com/pawn-lang/compiler
+* Default settings prioritize safety (`-d1`) and smaller binaries (`-C+`).
+* `-v2` prints memory usage statistics after compilation.
+* `-d3` automatically switches optimization to `-O0`.
+* `-Z+` is recommended for teams working across both Windows and Linux environments.
+* Official source code and repository:
+
+https://github.com/pawn-lang/compiler
