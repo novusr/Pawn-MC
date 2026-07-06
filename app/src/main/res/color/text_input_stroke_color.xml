@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_focused="true" android:color="@color/vue_green_primary"/>
-    <item android:state_hovered="true" android:color="@color/vue_green_light"/>
-    <item android:state_enabled="false" android:color="@color/text_disabled"/>
-    <item android:color="@color/border"/>
-</selector>

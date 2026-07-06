@@ -454,7 +454,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 //nativeCompileWithOutput
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_PawnCompiler_compile(JNIEnv* env, jobject thiz,
+Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_compile(JNIEnv* env, jobject thiz,
                                            jobjectArray args) {
     clearBuffers();
     g_srcCache.clear();
@@ -543,13 +543,13 @@ Java_com_rvdjv_pawnmc_PawnCompiler_compile(JNIEnv* env, jobject thiz,
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_PawnCompiler_getOutput(JNIEnv* env, jobject thiz) {
+Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_getOutput(JNIEnv* env, jobject thiz) {
     std::lock_guard<std::mutex> lock(g_outputMutex);
     return env->NewStringUTF(g_outputBuffer.str().c_str());
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_PawnCompiler_getErrors(JNIEnv* env, jobject thiz) {
+Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_getErrors(JNIEnv* env, jobject thiz) {
     std::lock_guard<std::mutex> lock(g_outputMutex);
     return env->NewStringUTF(g_errorBuffer.str().c_str());
 }
