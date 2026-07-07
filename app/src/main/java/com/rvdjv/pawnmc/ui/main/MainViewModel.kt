@@ -29,6 +29,9 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
     var outputText by mutableStateOf("Ready to compile...\n")
         private set
 
+    var lastExitCode by mutableStateOf<Int?>(null)
+        private set
+
     fun loadLastSelectedFile() {
         val lastPath = config.lastSelectedFilePath
         if (lastPath != null && File(lastPath).exists()) {
@@ -46,6 +49,7 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
                     selectedFilePath = path
                     config.lastSelectedFilePath = path
                     selectionError = null
+                    lastExitCode = null
                     outputText = "Opened file: $path\n"
                 } else {
                     selectionError = "Invalid file type"
@@ -60,6 +64,7 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
             selectedFilePath = path
             config.lastSelectedFilePath = path
             selectionError = null
+            lastExitCode = null
         } else {
             selectionError = "Invalid file type"
         }
@@ -91,6 +96,7 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
             }
             outputText += "\nCompilation time: $timeString\n"
 
+            lastExitCode = result.first
             isCompiling = false
         }
     }
