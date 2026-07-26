@@ -15,7 +15,7 @@ See the [repository](//github.com/novusr/Pawn-MC) for documentation and guides o
 ## Installation
 Download the latest [release](//github.com/novusr/Pawn-MC/releases/latest) for your Android device and install the provided APK.
 
-Open a `.pwn` script within the application and you are ready to compile.
+Open a (`.pawn` - `.pwn` - `.p`) script within the application and you are ready to compile.
 
 ## Configuration
 This application allows you to optionally configure a number of compilation features, such as specific compiler versions, custom include paths, and build flags. These are fully adjustable directly within the app interface to ensure compatibility with different SA-MP or open.mp project structures.
