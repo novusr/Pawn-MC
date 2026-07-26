@@ -19,12 +19,15 @@
 #include <unordered_map>
 
 #define LOG_TAG "PawnCompiler"
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
+#define LOGI(...) \
+    __android_log_print(ANDROID_LOG_INFO,  LOG_TAG, __VA_ARGS__) // INFO
+#define LOGE(...) \
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__) // ERROR
+#define LOGD(...) \
+    __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__) // DEBUG
 
-// compilation thread stack size 
-#define COMPILE_THREAD_STACK_SIZE (8 * 1024 * 1024)
+// compilation thread stack size
+#define COMPILE_THREAD_STACK_SIZE (8 * 1024 * 1024) // 8MB
 
 extern "C" {
     int pc_compile(int argc, char *argv[]);
@@ -34,11 +37,11 @@ extern "C" {
 extern "C" {
     typedef unsigned char MEMFILE;
     MEMFILE *mfcreate(const char *filename);
-    void mfclose(MEMFILE *mf);
-    int mfdump(MEMFILE *mf);
-    long mfseek(MEMFILE *mf, long offset, int whence);
-    int mfputs(MEMFILE *mf, const char *string);
-    char *mfgets(MEMFILE *mf, char *string, unsigned int size);
+    void     mfclose(MEMFILE *mf);
+    int      mfdump(MEMFILE *mf);
+    long     mfseek(MEMFILE *mf, long offset, int whence);
+    int      mfputs(MEMFILE *mf, const char *string);
+    char    *mfgets(MEMFILE *mf, char *string, unsigned int size);
 }
 
 // output sistem
@@ -46,47 +49,45 @@ namespace {
     std::mutex g_outputMutex;
     std::stringstream g_outputBuffer;
     std::stringstream g_errorBuffer;
-    
-    const int MAX_WARNINGS = 15;
-    const int MAX_ERRORS = 24;
-    const size_t MAX_BUFFER_SIZE = 512 * 1024;
-    
-    int g_warningCount = 0;
-    int g_errorCount = 0;
-    bool g_warningLimitReached = false;
-    bool g_errorLimitReached = false;
-    
     std::mutex g_posMutex;
     std::map<FILE*, fpos_t> g_filePositions;
-    
+
+    int  g_warningCount = 0;
+    int  g_errorCount = 0;
+    bool g_warningLimitReached = false;
+    bool g_errorLimitReached = false;
+
+    const int MAX_WARNINGS = 15, MAX_ERRORS = 24;
+    const size_t MAX_BUFFER_SIZE = 512 * 1024; // 512KB
+
     struct CachedFile {
         const std::string* data;
         size_t pos;
         size_t savedPos;
-        
         CachedFile(const std::string* d) : data(d), pos(0), savedPos(0) {}
     };
-    
+
     std::unordered_map<std::string, std::string> g_srcCache;
     std::string g_cacheDir = "/tmp";  // overwritten from JNI with app cache dir
-    
+
     void clearBuffers() {
         std::lock_guard<std::mutex> lock(g_outputMutex);
         g_outputBuffer.str("");
         g_outputBuffer.clear();
         g_errorBuffer.str("");
         g_errorBuffer.clear();
-        g_warningCount = 0;
-        g_errorCount = 0;
+        g_warningCount        = 0;
+        g_errorCount          = 0;
         g_warningLimitReached = false;
-        g_errorLimitReached = false;
+        g_errorLimitReached   = false;
     }
-    
+
     std::string getOutputResult(int exitCode) {
         std::lock_guard<std::mutex> lock(g_outputMutex);
         std::string output = g_errorBuffer.str();
         if (!g_outputBuffer.str().empty()) {
-            if (!output.empty()) output += "\n";
+            if (!output.empty())
+                output += "\n";
             output += g_outputBuffer.str();
         }
         std::stringstream ss;
@@ -95,121 +96,121 @@ namespace {
     }
 }
 
-// function i/o
-
+// function i/o (input/output)
 extern "C" int pc_printf(const char* message, ...) {
-    if (!message) return 0;
-    
+
+    char buf[4096];
+
+    if (!message)
+        return 0;
+
     va_list argptr;
     va_start(argptr, message);
-    
-    char stackBuffer[4096];
+
     va_list argcopy;
     va_copy(argcopy, argptr);
-    int needed = vsnprintf(stackBuffer, sizeof(stackBuffer), message, argcopy);
+    int n = vsnprintf(buf,
+        sizeof(buf), message, argcopy);
     va_end(argcopy);
-    
-    char* buffer = stackBuffer;
+
+    char* buffer = buf;
     char* heapBuffer = nullptr;
-    
-    if (needed >= (int)sizeof(stackBuffer)) {
-        heapBuffer = static_cast<char*>(malloc(needed + 1));
+
+    if (n >= (int)sizeof(buf)) {
+        heapBuffer = static_cast<char*>(malloc(n + 1));
         if (heapBuffer) {
-            vsnprintf(heapBuffer, needed + 1, message, argptr);
+            vsnprintf(heapBuffer, n + 1, message, argptr);
             buffer = heapBuffer;
         }
     }
     va_end(argptr);
-    
-    if (needed > 0) {
+
+    if (n > 0) {
         // LOGD("pc_printf: %s", buffer);
         std::lock_guard<std::mutex> lock(g_outputMutex);
         g_outputBuffer << buffer;
     }
-    
-    if (heapBuffer) free(heapBuffer);
-    return needed;
+
+    if (heapBuffer)
+        free(heapBuffer);
+
+    return n;
 }
 
 extern "C" int pc_error(int number, char* message, char* filename,
                         int firstline, int lastline, va_list argptr) {
-    static const char* prefix[3] = {"error", "fatal error", "warning"};
-    
+
+    std::stringstream ss;
+    char buf[4096];
     bool warnAsError = (number >= 200 && pc_geterrorwarnings());
-    bool isWarning = (number >= 200 && !warnAsError);
-    bool isError = (number > 0 && number < 200) || warnAsError;
-    
+    bool isWarning   = (number >= 200 && !warnAsError);
+    bool isError     = (number > 0 && number < 200) || warnAsError;
+
+    static const char* prefix[3] = {"error", "fatal error", "warning"};
+
     {
         std::lock_guard<std::mutex> lock(g_outputMutex);
-        
+
         if (g_errorBuffer.tellp() >= (std::streampos)MAX_BUFFER_SIZE) {
             return 0;
         }
-        
-        if (isWarning) {
-            g_warningCount++;
-            if (g_warningCount > MAX_WARNINGS) {
-                if (!g_warningLimitReached) {
-                    g_warningLimitReached = true;
-                    g_errorBuffer << "\n... (" << MAX_WARNINGS << "+ warnings truncated)\n";
-                    LOGI("Warning limit reached (%d)", MAX_WARNINGS);
-                }
+
+        if (isWarning != (bool)0) {
+            ++g_warningCount;
+            if (g_warningCount > MAX_WARNINGS && !g_warningLimitReached) {
+                g_warningLimitReached = !g_warningLimitReached;
+                g_errorBuffer << "\n... (" << MAX_WARNINGS << "+ warnings truncated)\n";
+                LOGI("Warning limit reached (%d)", MAX_WARNINGS);
                 return 0;
             }
         }
-        
-        if (isError) {
-            g_errorCount++;
-            if (g_errorCount > MAX_ERRORS) {
-                if (!g_errorLimitReached) {
-                    g_errorLimitReached = true;
-                    g_errorBuffer << "\n... (" << MAX_ERRORS << "+ errors truncated)\n";
-                    LOGE("Error limit reached (%d)", MAX_ERRORS);
-                }
+        if (isError != (bool)0) {
+            ++g_errorCount;
+            if (g_errorCount > MAX_ERRORS && !g_errorLimitReached) {
+                g_errorLimitReached = !g_errorLimitReached;
+                g_errorBuffer << "\n... (" << MAX_ERRORS << "+ errors truncated)\n";
+                LOGE("Error limit reached (%d)", MAX_ERRORS);
                 return 0;
             }
         }
     }
-    
-    std::stringstream ss;
-    
+
     if (number != 0) {
         const char* pre = prefix[number / 100];
-        if (warnAsError) {
+        if (warnAsError)
             pre = prefix[0];
-        }
         if (number == 111 || number == 237) {
             ss << filename << "(" << lastline << ") : ";
         } else if (firstline >= 0) {
             ss << filename << "(" << firstline << " -- " << lastline << ") : "
                << pre << " " << number << ": ";
         } else {
-            ss << filename << "(" << lastline << ") : " << pre << " " << number << ": ";
+            ss << filename << "(" << lastline << ") : "
+                << pre << " " << number << ": ";
         }
     }
-    
-    char stackBuffer[4096];
+
     va_list argcopy;
     va_copy(argcopy, argptr);
-    int needed = vsnprintf(stackBuffer, sizeof(stackBuffer), message, argcopy);
+    int n = vsnprintf(buf, sizeof(buf), message, argcopy);
     va_end(argcopy);
-    
-    char* msgBuffer = stackBuffer;
+
+    char* msgBuffer = buf;
     char* heapBuffer = nullptr;
-    
-    if (needed >= (int)sizeof(stackBuffer)) {
-        heapBuffer = static_cast<char*>(malloc(needed + 1));
+
+    if (n >= (int)sizeof(buf)) {
+        heapBuffer = static_cast<char*>(malloc(n + 1));
         if (heapBuffer) {
-            vsnprintf(heapBuffer, needed + 1, message, argptr);
+            vsnprintf(heapBuffer, n + 1, message, argptr);
             msgBuffer = heapBuffer;
         }
     }
-    
+
     ss << msgBuffer;
     if (heapBuffer) free(heapBuffer);
-    
+
     std::string errorStr = ss.str();
-    
+
     if (isWarning) {
         LOGI("Warning: %s", errorStr.c_str());
     } else if (number >= 100 && !warnAsError) {
@@ -219,7 +220,7 @@ extern "C" int pc_error(int number, char* message, char* filename,
     } else {
         LOGD("Info: %s", errorStr.c_str());
     }
-    
+
     std::lock_guard<std::mutex> lock(g_outputMutex);
     g_errorBuffer << errorStr;
     return 0;
@@ -229,16 +230,16 @@ extern "C" int pc_error(int number, char* message, char* filename,
 
 extern "C" void* pc_opensrc(char* filename) {
     std::string fname(filename);
-    
+
     auto it = g_srcCache.find(fname);
     if (it == g_srcCache.end()) {
         FILE* f = fopen(filename, "rb");
         if (!f) return nullptr;
-        
+
         fseek(f, 0, SEEK_END);
         long fsize = ftell(f);
         fseek(f, 0, SEEK_SET);
-        
+
         if (fsize <= 0) {
             fclose(f);
             g_srcCache[fname] = "";
@@ -251,7 +252,7 @@ extern "C" void* pc_opensrc(char* filename) {
         }
         it = g_srcCache.find(fname);
     }
-    
+
     return new CachedFile(&it->second);
 }
 
@@ -262,10 +263,10 @@ extern "C" void* pc_createsrc(char* filename) {
 extern "C" void* pc_createtmpsrc(char** filename) {
     char* tname = nullptr;
     FILE* ftmp = nullptr;
-    
+
     std::string tmpl = g_cacheDir + "/pawnXXXXXX";
     if ((tname = static_cast<char*>(malloc(tmpl.size() + 1))) != nullptr) {
-        int fdtmp;
+        int fdtmp = -1;
         memcpy(tname, tmpl.c_str(), tmpl.size() + 1);
         if ((fdtmp = mkstemp(tname)) >= 0) {
             ftmp = fdopen(fdtmp, "wt");
@@ -275,7 +276,7 @@ extern "C" void* pc_createtmpsrc(char** filename) {
             tname = nullptr;
         }
     }
-    
+
     if (filename != nullptr) *filename = tname;
     return ftmp;
 }
@@ -295,23 +296,26 @@ extern "C" void pc_resetsrc(void* handle, void* position) {
 }
 
 extern "C" char* pc_readsrc(void* handle, unsigned char* target, int maxchars) {
+    if (!handle)
+        return nullptr;
+
     CachedFile* cf = static_cast<CachedFile*>(handle);
     const std::string& data = *cf->data;
-    
+
     if (cf->pos >= data.size() || maxchars <= 1)
         return nullptr;
-    
+
     size_t avail = data.size() - cf->pos;
     size_t maxread = (avail < (size_t)(maxchars - 1)) ? avail : (size_t)(maxchars - 1);
-    
+
     const char* src = data.c_str() + cf->pos;
     const char* nl = (const char*)memchr(src, '\n', maxread);
     size_t copylen = nl ? (size_t)(nl - src + 1) : maxread;
-    
+
     memcpy(target, src, copylen);
     target[copylen] = '\0';
     cf->pos += copylen;
-    
+
     return reinterpret_cast<char*>(target);
 }
 
@@ -358,12 +362,14 @@ extern "C" char* pc_readasm(void* handle, char* string, int maxchars) {
 
 extern "C" void* pc_openbin(char* filename) {
     FILE* fbin = fopen(filename, "wb");
-    if (fbin != nullptr) setvbuf(fbin, nullptr, _IOFBF, 1UL << 20);
+    if (fbin != nullptr)
+        setvbuf(fbin, nullptr, _IOFBF, 1UL << 20);
     return fbin;
 }
 
 extern "C" void pc_closebin(void* handle, int deletefile) {
-    fclose(static_cast<FILE*>(handle));
+    if (handle != nullptr) {
+        fclose(static_cast<FILE*>(handle));
     if (deletefile) {
         extern char binfname[];
         remove(binfname);
@@ -396,48 +402,48 @@ struct CompileArgs {
 static void* compiler_thread(void* arg) {
     CompileArgs* cargs = static_cast<CompileArgs*>(arg);
     LOGI("Compile thread started with %d arguments", cargs->argc);
-    
+
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
-    
+
     cargs->result = pc_compile(cargs->argc, cargs->argv);
-    
+
     clock_gettime(CLOCK_MONOTONIC, &end);
-    double elapsed_ms = (end.tv_sec - start.tv_sec) * 1000.0 
+    double elapsed_ms = (end.tv_sec - start.tv_sec) * 1000.0
                       + (end.tv_nsec - start.tv_nsec) / 1000000.0;
     LOGI("Compile finished in %.2f ms (exit code: %d)", elapsed_ms, cargs->result);
-    
+
     return nullptr;
 }
 
 static int run_compiler(int argc, char** argv) {
     CompileArgs cargs = {argc, argv, -1};
-    
+
     pthread_t thread;
     pthread_attr_t attr;
-    
+
     if (pthread_attr_init(&attr) != 0) {
         LOGE("Failed to init thread attributes, falling back to direct call");
         return pc_compile(argc, argv);
     }
-    
+
     if (pthread_attr_setstacksize(&attr, COMPILE_THREAD_STACK_SIZE) != 0) {
         LOGE("Failed to set stack size, falling back to direct call");
         pthread_attr_destroy(&attr);
         return pc_compile(argc, argv);
     }
-    
+
     LOGI("Creating compile thread with %zu byte stack", (size_t)COMPILE_THREAD_STACK_SIZE);
-    
+
     if (pthread_create(&thread, &attr, compiler_thread, &cargs) != 0) {
         LOGE("Failed to create compile thread, falling back to direct call");
         pthread_attr_destroy(&attr);
         return pc_compile(argc, argv);
     }
-    
+
     pthread_attr_destroy(&attr);
     pthread_join(thread, nullptr);
-    
+
     return cargs.result;
 }
 
@@ -458,57 +464,111 @@ Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_compile(JNIEnv* env, jobject th
                                            jobjectArray args) {
     clearBuffers();
     g_srcCache.clear();
-    
+
     // Get app cache dir for temp files
     {
         jclass contextClass = env->FindClass("android/app/ActivityThread");
-        if (contextClass) {
-            jmethodID currentApp = env->GetStaticMethodID(contextClass, "currentApplication", "()Landroid/app/Application;");
-            if (currentApp) {
-                jobject app = env->CallStaticObjectMethod(contextClass, currentApp);
-                if (app) {
-                    jclass appClass = env->GetObjectClass(app);
-                    jmethodID getCacheDir = env->GetMethodID(appClass, "getCacheDir", "()Ljava/io/File;");
-                    if (getCacheDir) {
-                        jobject cacheFile = env->CallObjectMethod(app, getCacheDir);
-                        if (cacheFile) {
-                            jclass fileClass = env->GetObjectClass(cacheFile);
-                            jmethodID getPath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
-                            jstring pathStr = (jstring)env->CallObjectMethod(cacheFile, getPath);
-                            if (pathStr) {
-                                const char* pathChars = env->GetStringUTFChars(pathStr, nullptr);
-                                g_cacheDir = pathChars;
-                                env->ReleaseStringUTFChars(pathStr, pathChars);
-                            }
-                            env->DeleteLocalRef(cacheFile);
-                        }
-                    }
-                    env->DeleteLocalRef(app);
-                }
-            }
+        if (!contextClass)
+            return env->NewStringUTF("Exit code: -2\nActivityThread not found");
+
+        jmethodID currentApp = env->GetStaticMethodID(contextClass, "currentApplication", "()Landroid/app/Application;");
+        if (!currentApp) {
             env->DeleteLocalRef(contextClass);
+            return env->NewStringUTF("Exit code: -2\nFailed get currentApplication method");
         }
+
+        jobject app = env->CallStaticObjectMethod(contextClass, currentApp);
+        if (!app) {
+            env->DeleteLocalRef(contextClass);
+            return env->NewStringUTF("Exit code: -2\nFailed to get Application context");
+        }
+
+        jclass appClass = env->GetObjectClass(app);
+        if (!appClass) {
+            env->DeleteLocalRef(app);
+            env->DeleteLocalRef(contextClass);
+            return env->NewStringUTF("Exit code: -2\nFailed get Application class");
+        }
+
+        jmethodID getCacheDir = env->GetMethodID(appClass, "getCacheDir", "()Ljava/io/File;");
+        if (!getCacheDir) {
+            LOGE("Failed getCacheDir method");
+            env->DeleteLocalRef(appClass);
+            env->DeleteLocalRef(app);
+            return env->NewStringUTF("Exit code: -2\nFailed getCacheDir method");
+        }
+
+        jobject cacheFile = env->CallObjectMethod(app, getCacheDir);
+        if (!cacheFile) {
+            LOGE("getCacheDir() returned NULL");
+            env->DeleteLocalRef(appClass);
+            env->DeleteLocalRef(app);
+            return env->NewStringUTF("Exit code: -2\nFailed getCacheDir method");
+        }
+
+        jclass fileClass = env->GetObjectClass(cacheFile);
+        jmethodID getPath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
+
+        if (!getPath) {
+            LOGE("Failed getAbsolutePath method");
+            env->DeleteLocalRef(fileClass);
+            env->DeleteLocalRef(cacheFile);
+            env->DeleteLocalRef(appClass);
+            env->DeleteLocalRef(app);
+            return env->NewStringUTF("Exit code: -2\nFailed getAbsolutePath method");
+        }
+
+        jstring pathStr = (jstring)env->CallObjectMethod(cacheFile, getPath);
+        if (!pathStr) {
+            LOGE("getAbsolutePath() returned NULL");
+            env->DeleteLocalRef(fileClass);
+            env->DeleteLocalRef(cacheFile);
+            env->DeleteLocalRef(appClass);
+            env->DeleteLocalRef(app);
+            return env->NewStringUTF("Exit code: -2\nFailed getAbsolutePath method");
+        }
+
+        const char* pathChars = env->GetStringUTFChars(pathStr, nullptr);
+        if (!pathChars) {
+            LOGE("Failed GetStringUTFChars");
+            env->DeleteLocalRef(pathStr);
+            env->DeleteLocalRef(fileClass);
+            env->DeleteLocalRef(cacheFile);
+            env->DeleteLocalRef(appClass);
+            env->DeleteLocalRef(app);
+            return env->NewStringUTF("Exit code: -2\nFailed convert cache path");
+        }
+
+        g_cacheDir = pathChars;
+
+        env->ReleaseStringUTFChars(pathStr, pathChars);
+        env->DeleteLocalRef(pathStr);
+        env->DeleteLocalRef(cacheFile);
+        env->DeleteLocalRef(fileClass);
+        env->DeleteLocalRef(appClass);
+        env->DeleteLocalRef(app);
+        env->DeleteLocalRef(contextClass);
     }
-    
+
     {
         std::lock_guard<std::mutex> lock(g_posMutex);
         g_filePositions.clear();
     }
-    
+
     int argc = env->GetArrayLength(args);
     if (argc == 0) {
         return env->NewStringUTF("Exit code: -1\nNo arguments provided");
     }
-    
+
     std::vector<std::string> args_storage;
     args_storage.reserve(argc + 1);
-    
+
     jstring jstr = static_cast<jstring>(env->GetObjectArrayElement(args, 0));
     const char* str = env->GetStringUTFChars(jstr, nullptr);
     args_storage.emplace_back(str);
     env->ReleaseStringUTFChars(jstr, str);
     env->DeleteLocalRef(jstr);
-    
+
     if (argc > 1) {
         jstring srcJstr = static_cast<jstring>(env->GetObjectArrayElement(args, argc - 1));
         const char* srcStr = env->GetStringUTFChars(srcJstr, nullptr);
@@ -517,10 +577,10 @@ Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_compile(JNIEnv* env, jobject th
         free(pathCopy);
         env->ReleaseStringUTFChars(srcJstr, srcStr);
         env->DeleteLocalRef(srcJstr);
-        
+
         LOGI("Working directory: %s", args_storage[1].c_str());
     }
-    
+
     for (int i = 1; i < argc; i++) {
         jstr = static_cast<jstring>(env->GetObjectArrayElement(args, i));
         str = env->GetStringUTFChars(jstr, nullptr);
@@ -528,17 +588,17 @@ Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_compile(JNIEnv* env, jobject th
         env->ReleaseStringUTFChars(jstr, str);
         env->DeleteLocalRef(jstr);
     }
-    
+
     std::vector<char*> argv(args_storage.size());
     for (size_t i = 0; i < args_storage.size(); i++) {
         argv[i] = const_cast<char*>(args_storage[i].c_str());
         LOGD("Arg[%zu]: %s", i, argv[i]);
     }
-    
+
     LOGI("Calling pc_compile with %zu arguments", argv.size());
     int result = run_compiler((int)argv.size(), argv.data());
     LOGI("pc_compile returned: %d", result);
-    
+
     return env->NewStringUTF(getOutputResult(result).c_str());
 }
 

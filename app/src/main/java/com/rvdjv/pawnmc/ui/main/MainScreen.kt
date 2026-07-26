@@ -307,7 +307,7 @@ private fun ScreenHeader(onSettingsClick: () -> Unit) {
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onBackground
             )
-            
+
             Text(
                 text = "Compiling ideas on the go.",
                 style = MaterialTheme.typography.labelSmall,
