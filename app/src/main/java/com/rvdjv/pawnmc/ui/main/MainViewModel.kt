@@ -44,7 +44,7 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
         uri?.let { u ->
             val path = u.path
             if (path != null) {
-                val validExtensions = setOf("pwn", "p", "inc")
+                val validExtensions = setOf("pawn", "pwn", "p", "inc")
                 if (File(path).extension.lowercase() in validExtensions) {
                     selectedFilePath = path
                     config.lastSelectedFilePath = path
@@ -52,21 +52,21 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
                     lastExitCode = null
                     outputText = "Opened file: $path\n"
                 } else {
-                    selectionError = "Invalid file type"
+                    selectionError = "Invalid file type! (only: .pawn .pwn .p)"
                 }
             }
         }
     }
 
     fun selectFile(path: String) {
-        val validExtensions = setOf("pwn", "p", "inc")
+        val validExtensions = setOf("pawn", "pwn", "p", "inc")
         if (File(path).extension.lowercase() in validExtensions) {
             selectedFilePath = path
             config.lastSelectedFilePath = path
             selectionError = null
             lastExitCode = null
         } else {
-            selectionError = "Invalid file type"
+            selectionError = "Invalid file type! (only: .pawn .pwn .p)"
         }
     }
 

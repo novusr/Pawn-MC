@@ -75,11 +75,11 @@ fun SettingsScreen(
     var showVersionDialog by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
     var pendingVersion by remember { mutableStateOf<CompilerConfig.CompilerVersion?>(null) }
-    
+
     var appVersion by remember { mutableStateOf("") }
     var buildNumber by remember { mutableStateOf("") }
 
-    // loadinfo versi
+    // loadinfo version
     LaunchedEffect(Unit) {
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -130,7 +130,7 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
         ) {
-            CategoryHeader(text = "General") 
+            CategoryHeader(text = "General")
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -139,21 +139,21 @@ fun SettingsScreen(
                 Column {
                     NavigationRow(
                         title = "Compiler Version",
-                        subtitle = viewModel.compilerVersion.label, 
+                        subtitle = viewModel.compilerVersion.label,
                         onClick = { showVersionDialog = true }
                     )
-                    
+
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp),
                         thickness = 1.2.dp,
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
-                    
+
                     NavigationRow(
                         title = "Theme",
                         subtitle = "System Default",
-                        onClick = { 
-                            // TODO: huahuahahahahaha
+                        onClick = {
+                            // TODO: onClick
                         }
                     )
                 }
@@ -211,8 +211,8 @@ fun SettingsScreen(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
-                        
-                        Spacer(modifier = Modifier.height(8.dp))                      
+
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Slider(
                             value = currentIndex.toFloat(),
@@ -372,7 +372,7 @@ fun SettingsScreen(
     if (showIncludePathDialog) {
         FileBrowserDialog(
             mode = FileBrowserMode.FOLDER,
-            onFileSelected = {}, 
+            onFileSelected = {},
             onFolderSelected = { path ->
                 viewModel.addIncludePath(path)
                 showIncludePathDialog = false
@@ -416,33 +416,34 @@ fun SettingsScreen(
             }
         )
     }
+
     //dialog version change
     if (showVersionDialog) {
         AlertDialog(
             onDismissRequest = { showVersionDialog = false },
-            title = { 
+            title = {
                 Text(
                     text = "Select Compiler Version",
                     style = MaterialTheme.typography.titleLarge
-                ) 
+                )
             },
-            text = {                
+            text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     CompilerConfig.CompilerVersion.entries.forEachIndexed { index, version ->
                         RadioButtonRow(
                             text = version.label,
-                            description = version.description, 
+                            description = version.description,
                             selected = viewModel.compilerVersion == version,
                             onClick = {
                                 viewModel.updateCompilerVersion(version)
-                                showVersionDialog = false 
+                                showVersionDialog = false
                                 if (viewModel.isRestartRequired(version)) {
                                     pendingVersion = version
                                     showRestartDialog = true
                                 }
                             }
                         )
-                                                
+
                         if (index < CompilerConfig.CompilerVersion.entries.size - 1) {
                             HorizontalDivider(
                                 modifier = Modifier.padding(horizontal = 8.dp),

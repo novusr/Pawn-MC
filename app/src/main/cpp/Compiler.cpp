@@ -1,5 +1,8 @@
 /**
  * JNI wraper Pawn Compiler
+ * File: Compiler.cpp
+ * Location: app/src/
+ * License: Apache License (v2)
  */
 
 #include <jni.h>
@@ -492,7 +495,6 @@ Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_compile(JNIEnv* env, jobject th
 
         jmethodID getCacheDir = env->GetMethodID(appClass, "getCacheDir", "()Ljava/io/File;");
         if (!getCacheDir) {
-            LOGE("Failed getCacheDir method");
             env->DeleteLocalRef(appClass);
             env->DeleteLocalRef(app);
             return env->NewStringUTF("Exit code: -2\nFailed getCacheDir method");
@@ -500,7 +502,6 @@ Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_compile(JNIEnv* env, jobject th
 
         jobject cacheFile = env->CallObjectMethod(app, getCacheDir);
         if (!cacheFile) {
-            LOGE("getCacheDir() returned NULL");
             env->DeleteLocalRef(appClass);
             env->DeleteLocalRef(app);
             return env->NewStringUTF("Exit code: -2\nFailed getCacheDir method");
@@ -510,31 +511,22 @@ Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_compile(JNIEnv* env, jobject th
         jmethodID getPath = env->GetMethodID(fileClass, "getAbsolutePath", "()Ljava/lang/String;");
 
         if (!getPath) {
-            LOGE("Failed getAbsolutePath method");
-            env->DeleteLocalRef(fileClass);
-            env->DeleteLocalRef(cacheFile);
-            env->DeleteLocalRef(appClass);
-            env->DeleteLocalRef(app);
+            env->DeleteLocalRef(fileClass); env->DeleteLocalRef(cacheFile);
+            env->DeleteLocalRef(appClass); env->DeleteLocalRef(app);
             return env->NewStringUTF("Exit code: -2\nFailed getAbsolutePath method");
         }
 
         jstring pathStr = (jstring)env->CallObjectMethod(cacheFile, getPath);
         if (!pathStr) {
-            LOGE("getAbsolutePath() returned NULL");
-            env->DeleteLocalRef(fileClass);
-            env->DeleteLocalRef(cacheFile);
-            env->DeleteLocalRef(appClass);
-            env->DeleteLocalRef(app);
+            env->DeleteLocalRef(fileClass); env->DeleteLocalRef(cacheFile);
+            env->DeleteLocalRef(appClass); env->DeleteLocalRef(app);
             return env->NewStringUTF("Exit code: -2\nFailed getAbsolutePath method");
         }
 
         const char* pathChars = env->GetStringUTFChars(pathStr, nullptr);
         if (!pathChars) {
-            LOGE("Failed GetStringUTFChars");
-            env->DeleteLocalRef(pathStr);
-            env->DeleteLocalRef(fileClass);
-            env->DeleteLocalRef(cacheFile);
-            env->DeleteLocalRef(appClass);
+            env->DeleteLocalRef(pathStr); env->DeleteLocalRef(fileClass);
+            env->DeleteLocalRef(cacheFile); env->DeleteLocalRef(appClass);
             env->DeleteLocalRef(app);
             return env->NewStringUTF("Exit code: -2\nFailed convert cache path");
         }

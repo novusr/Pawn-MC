@@ -108,7 +108,7 @@ set(PAWNC_31011_SOURCES
 # pawnc 3107
 add_library(pawnc3107 SHARED
     ${PAWNC_3107_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/native-lib.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Compiler.cpp
 )
 
 target_include_directories(pawnc3107 PRIVATE
@@ -130,7 +130,7 @@ target_link_libraries(pawnc3107 android log)
 # pawnc 31011
 add_library(pawnc31011 SHARED
     ${PAWNC_31011_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/native-lib.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Compiler.cpp
 )
 
 target_include_directories(pawnc31011 PRIVATE

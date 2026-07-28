@@ -166,7 +166,7 @@ fun MainScreen(
     if (showPermissionDialog) {
         AlertDialog(
             onDismissRequest = { showPermissionDialog = false },
-            title = { Text("Storage Permission Required") },
+            title = { Text("Storage Permission Required!") },
             text = {
                 Text(
                     "This app needs access to all files to compile pawn files " +
@@ -365,7 +365,7 @@ private fun CompileActionCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = selectedFileName ?: "No file selected",
+                        text = selectedFileName ?: "No file selected!",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
@@ -464,7 +464,7 @@ private fun CompilerLogsSection(
                 )
                 Spacer(modifier = Modifier.width(SpaceXS + 2.dp))
                 Text(
-                    text = "COMPILER LOGS",
+                    text = "PAWNMC LOGS",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

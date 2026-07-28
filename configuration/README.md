@@ -1,10 +1,38 @@
-# Pawn Options
+# PawnMC/pawncc Configuration
 
-* [Reference](https://github.com/pawn-lang/compiler/tree/master/doc)
+* Reference: https://github.com/pawn-lang/compiler/tree/master/doc
+* Version: *3.10.xx* ([pawn-lang/compiler](https://github.com/pawn-lang/compiler) / [openmultiplayer/compiler](https://github.com/openmultiplayer/compiler) / Pawn MC)
+* Default settings prioritize safety (`-d2`) and smaller binaries (`-C+`) also (`-;+`) (`-(+`)
+* Official source code and repository: https://github.com/pawn-lang/compiler https://github.com/novusr/Pawnc-3.10.11 https://github.com/novusr/Pawnc-3.10.7
+* More (useful links):
+  * Pawn Basic https://sampwiki.blast.hk/wiki/Scripting_Basics
+  * Pawn Basic 2 https://sampwiki.blast.hk/wiki/PAWN_for_Beginners
+  * Scripting Function https://sampwiki.blast.hk/wiki/Category:Scripting_Functions
+  * Scripting Callbacks https://sampwiki.blast.hk/wiki/Category:Scripting_Callbacks
+  * Scripting Editor https://sampwiki.blast.hk/wiki/Scripting_Editors
+  * Script Examples https://sampwiki.blast.hk/wiki/Script_Examples
+  * SA-MP NPC Docs https://sampwiki.blast.hk/wiki/Category:NPC
+  * Script Resources https://sampwiki.blast.hk/wiki/Category:Scripting_Documentation
+  * MySQL Tutorial https://sampwiki.blast.hk/wiki/Mysql_tutorial
+  * MySQL Tutorial 2 https://sampwiki.blast.hk/wiki/MySQL
+  * SQLite https://sampwiki.blast.hk/wiki/Category:SQLite
+  * Server Issues https://open.mp/docs/server/CommonServerIssues
+  * Controlling https://open.mp/docs/server/ControllingServer
+  * Crash Addresses https://open.mp/docs/client/CrashAddresses
+  * String Manipulation https://open.mp/docs/tutorials/stringmanipulation
+  * Binary https://open.mp/docs/tutorials/Binary
+  * Cooldown https://open.mp/docs/tutorials/cooldowns
+  * Variable System https://open.mp/docs/tutorials/servervariablesystem
+  * Query Mechanism https://open.mp/docs/tutorials/QueryMechanism
+  * Advanced Structures https://open.mp/docs/tutorials/AdvancedStructures
+  * Plugin Development https://open.mp/docs/tutorials/PluginDevelopmentGuide
+  * Pickup Guide https://open.mp/docs/tutorials/PickupGuide
+  * Menu Guide https://open.mp/docs/tutorials/MenuGuide
+  * Errors/Warnings https://sampwiki.blast.hk/wiki/Errors_List
 
-## Version
-
-*3.10.xx* (pawn-lang/compiler / Pawn MC)
+## PawnMC Basic Usage
+Open a (`.pawn` - `.pwn` - `.p`) script within the application and you are ready to compile.
+![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/PAWNMC.png)
 
 ## Basic Usage
 
@@ -135,14 +163,10 @@ Mostly used by IDEs and editor integrations.
 
 Adds a directory to the include search list.
 
-Can be used multiple times.
-
 Example:
 
-```bash
--iincludes
--icore
--imodules
+```yml
+pawno\pawncc.exe gamemodes\unit.pwn -ogamemodes\unit.amx -i=includes -i=core -i=modules
 ```
 
 ---
@@ -260,7 +284,7 @@ Disables a specific warning.
 
 Example:
 
-```bash
+```yml
 -w217
 ```
 
@@ -299,9 +323,9 @@ Pawn MC already provides automatic cross-platform path handling by default, so t
 
 Examples:
 
-```bash
--iincludes/core
--iincludes\core
+```yml
+-i=includes/core
+-i=includes\core
 ```
 
 With `-Z+`, both path styles are always accepted.
@@ -364,7 +388,7 @@ Defines a compile-time constant.
 
 Examples:
 
-```bash
+```yml
 DEBUG=1
 TESTMODE=1
 VERSION=42
@@ -372,13 +396,13 @@ VERSION=42
 
 If the value is omitted:
 
-```bash
+```yml
 DEBUG=
 ```
 
 it becomes:
 
-```pawn
+```yml
 DEBUG = 0
 ```
 
@@ -394,16 +418,6 @@ Useful when the command line starts getting ridiculously long.
 
 Example:
 
-```bash
+```yml
 pawncc @build.cfg
 ```
-
-## Notes and Links
-
-* Default settings prioritize safety (`-d1`) and smaller binaries (`-C+`).
-* `-v2` prints memory usage statistics after compilation.
-* `-d3` automatically switches optimization to `-O0`.
-* `-Z+` is recommended for teams working across both Windows and Linux environments.
-* Official source code and repository:
-
-https://github.com/pawn-lang/compiler

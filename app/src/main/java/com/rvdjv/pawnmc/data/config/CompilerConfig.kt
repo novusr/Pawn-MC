@@ -11,12 +11,16 @@ class CompilerConfig private constructor(context: Context) {
 
     private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    // debug
+    //
+    // [debug]
+    //
     var debugLevel: DebugLevel
         get() = DebugLevel.fromValue(prefs.getInt(KEY_DEBUG, DebugLevel.D3.value))
         set(value) = prefs.edit { putInt(KEY_DEBUG, value.value) }
 
-    // code style
+    //
+    // [code style]
+    //
     var mandatorySemicolons: Boolean
         get() = prefs.getBoolean(KEY_SEMICOLONS, true)
         set(value) = prefs.edit { putBoolean(KEY_SEMICOLONS, value) }
@@ -25,12 +29,16 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getBoolean(KEY_PARENTHESES, true)
         set(value) = prefs.edit { putBoolean(KEY_PARENTHESES, value) }
 
-    // custom
+    //
+    // [custom]
+    //
     var customFlags: String
         get() = prefs.getString(KEY_CUSTOM_FLAGS, "") ?: ""
         set(value) = prefs.edit { putString(KEY_CUSTOM_FLAGS, value) }
 
-    // include paths
+    //
+    // [include paths]
+    //
     var includePaths: List<String>
         get() {
             val stored = prefs.getString(KEY_INCLUDE_PATHS, "") ?: ""
@@ -38,7 +46,9 @@ class CompilerConfig private constructor(context: Context) {
         }
         set(value) = prefs.edit { putString(KEY_INCLUDE_PATHS, value.joinToString(";")) }
 
-    // compiler version
+    //
+    // [compiler version]
+    //
     var compilerVersion: CompilerVersion
         get() = CompilerVersion.fromValue(
             prefs.getString(KEY_COMPILER_VERSION, CompilerVersion.V3107.value) ?: CompilerVersion.V3107.value
@@ -59,21 +69,29 @@ class CompilerConfig private constructor(context: Context) {
     fun buildOptions(): List<String> {
         val options = mutableListOf<String>()
 
-        // debug
+        //
+        // [debug]
+        //
         options.add("-d${debugLevel.value}")
 
-        // code style
+        //
+        // [code style]
+        //
         if (mandatorySemicolons) options.add("-;+")
         if (mandatoryParentheses) options.add("-(+")
 
-        // include paths
+        //
+        // [include paths]
+        //
         for (path in includePaths) {
             if (path.isNotBlank()) {
-                options.add("-i$path")
+                options.add("-i=$path")
             }
         }
 
-        // custom flags
+        //
+        // [custom flags]
+        //
         val custom = customFlags.trim()
         if (custom.isNotEmpty()) {
             options.addAll(custom.split("\\s+".toRegex()).filter { it.isNotBlank() })
@@ -94,8 +112,8 @@ class CompilerConfig private constructor(context: Context) {
     }
 
     enum class CompilerVersion(val value: String, val libraryName: String, val label: String, val description: String) {
-        V3107("3.10.7", "pawnc3107", "Pawn 3.10.7", "Recommended for most SA-MP gamemodes"),
-        V31011("3.10.11", "pawnc31011", "Pawn 3.10.11", "Recommended for open.mp gamemodes");
+        V3107("3.10.7", "pawnc3107", "Pawn 3.10.7", "Stable"),
+        V31011("3.10.11", "pawnc31011", "Pawn 3.10.11", "Newer");
 
         companion object {
             fun fromValue(value: String) = entries.find { it.value == value } ?: V3107
@@ -103,15 +121,15 @@ class CompilerConfig private constructor(context: Context) {
     }
 
     companion object {
-        private const val PREFS_NAME = "compiler_config"
         private const val KEY_DEBUG = "debug"
+        private const val PREFS_NAME = "compiler_config"
+        private const val KEY_LAST_DIR = "last_opened_dir"
+        private const val KEY_LAST_FILE = "last_selected_file"
         private const val KEY_SEMICOLONS = "semicolons"
         private const val KEY_PARENTHESES = "parentheses"
         private const val KEY_CUSTOM_FLAGS = "custom_flags"
         private const val KEY_INCLUDE_PATHS = "include_paths"
         private const val KEY_COMPILER_VERSION = "compiler_version"
-        private const val KEY_LAST_FILE = "last_selected_file"
-        private const val KEY_LAST_DIR = "last_opened_dir"
 
         @Volatile
         private var instance: CompilerConfig? = null

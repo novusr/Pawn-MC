@@ -10,15 +10,14 @@ _PawnMC_ introduces a fully portable workspace, supporting standard libraries, c
 The underlying engine utilizes the native architecture of your Android device, removing the need to transfer files to a PC just to verify your code in most cases.
 
 ## Documentation
-See the [repository](//github.com/novusr/Pawn-MC) for documentation and guides on how to use this application and set up your mobile workspace.
+See the [configuration folder](//github.com/novusr/Pawn-MC/tree/main/configuration) for documentation and guides on how to use this application and set up your mobile workspace.
 
 ## Installation
 Download the latest [release](//github.com/novusr/Pawn-MC/releases/latest) for your Android device and install the provided APK.
 
-Open a (`.pawn` - `.pwn` - `.p`) script within the application and you are ready to compile.
-
 ## Configuration
-This application allows you to optionally configure a number of compilation features, such as specific compiler versions, custom include paths, and build flags. These are fully adjustable directly within the app interface to ensure compatibility with different SA-MP or open.mp project structures.
+This application allows you to optionally configure a number of compilation features, such as specific compiler versions, custom include paths, and build flags. These are fully adjustable directly within the app interface to ensure compatibility with different SA-MP or open.mp project structures.<br>
+See: https://github.com/novusr/Pawn-MC/tree/main/configuration
 
 ## Building
 Use Gradle to build the project from source on your environment. Requires Git for cloning submodules.
