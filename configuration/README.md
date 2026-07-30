@@ -34,7 +34,7 @@
 Open a (`.pawn` - `.pwn` - `.p`) script within the application and you are ready to compile.
 ![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/PAWNMC.png)
 
-## Basic Usage
+## Custom Flags
 
 The compiler is invoked from the command line. Every option starts with a dash (`-`) or, on Microsoft Windows and DOS, a forward slash (`/`).
 
