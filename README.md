@@ -9,6 +9,11 @@ _PawnMC_ introduces a fully portable workspace, supporting standard libraries, c
 
 The underlying engine utilizes the native architecture of your Android device, removing the need to transfer files to a PC just to verify your code in most cases.
 
+Indonesian | Tutorial
+- https://youtu.be/ym9E1QH1ABU?si=xcL-mrqrx3RknBYs 
+- https://youtu.be/sgG58JTytI4?si=r6r3TukcnwxD58SP
+- https://youtu.be/xSit9n80DoM?si=tDVehEI6KHBvSZME 
+
 ## Documentation
 See the [configuration folder](//github.com/novusr/Pawn-MC/tree/main/configuration) for documentation and guides on how to use this application and set up your mobile workspace.
 
