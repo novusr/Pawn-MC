@@ -14,6 +14,20 @@ Indonesian | Tutorial
 - https://youtu.be/sgG58JTytI4?si=r6r3TukcnwxD58SP
 - https://youtu.be/xSit9n80DoM?si=tDVehEI6KHBvSZME 
 
+Notes
+==========
+Indonesian | Notes<br>
+Selamat Datang di repositori resmi dari PawnMC.<br>
+Disini adalah tempat dimana PawnMC bisa dikatakan beroperasi, kami sangat menyambut baik kedatangan Anda disini.<br>
+PawnMC Adalah aplikasi Android yang secara khusus diciptakan untuk mempermudah dan mempercepat tugas Anda, sebagai Developer Android.<br>
+Kami sendiri sangat menempatkan harapan yang besar kepada kalian semua yang menggunakan aplikasi ini.<br>
+
+English | Notes<br>
+Welcome to the official PawnMC repository.<br>
+This is where PawnMC can be said to operate, and we sincerely welcome you here.<br>
+PawnMC is an Android application specifically created to make your work as an Android Developer easier and faster.<br>
+We place great hope in everyone who uses this application.<br>
+
 ## Documentation
 See the [configuration folder](//github.com/novusr/Pawn-MC/tree/main/configuration) for documentation and guides on how to use this application and set up your mobile workspace.
 

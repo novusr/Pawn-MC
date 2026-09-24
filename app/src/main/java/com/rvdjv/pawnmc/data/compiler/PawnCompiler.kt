@@ -9,25 +9,32 @@ import java.io.File
  */
 object PawnCompiler {
 
-    private var initializedVersion: CompilerConfig.CompilerVersion? = null
-    private var isInitialized = false
+    private const val AUTO_FALLBACK_ERROR_THRESHOLD = 5
+    private var INITIALIZED_VER: CompilerConfig.CompilerVersion? = null
+    private var IS_INITIALIZED = false
+    private var FALL_MUTATION = false
     private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
+    private val ERROR_COUNT_REGEX = """(?i)(\d+)\s+errors?\.?""".toRegex()
+
+    fun resetSessionState() {
+        FALL_MUTATION = false
+    }
 
     // load lib when app is opened
     private fun ensureInitialized(version: CompilerConfig.CompilerVersion): Boolean {
-        if (isInitialized) {
-            if (initializedVersion != version) {
-                Log.w("PawnCompiler", 
-                    "Requested ${version.label} but ${initializedVersion?.label} is already loaded. " +
-                    "App restart required.")
+        if (IS_INITIALIZED) {
+            if (INITIALIZED_VER != version) {
+                Log.w("PawnCompiler",
+                    "Requested ${version.label} but ${INITIALIZED_VER?.label} is already loaded. " +
+                    "App restart required for a full version swap.")
             }
             return true
         }
 
         return try {
             System.loadLibrary(version.libraryName)
-            initializedVersion = version
-            isInitialized = true
+            INITIALIZED_VER = version
+            IS_INITIALIZED = true
             Log.i("PawnCompiler", "Loaded: ${version.libraryName}")
             true
         } catch (e: UnsatisfiedLinkError) {
@@ -36,10 +43,20 @@ object PawnCompiler {
         }
     }
 
-    fun getLoadedVersion(): CompilerConfig.CompilerVersion? = initializedVersion
+    fun getLoadedVersion(): CompilerConfig.CompilerVersion? = INITIALIZED_VER
 
     fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean {
-        return isInitialized && initializedVersion != requestedVersion
+        return IS_INITIALIZED && INITIALIZED_VER != requestedVersion
+    }
+
+    internal fun shouldRetryWithFallback(output: String, threshold: Int = AUTO_FALLBACK_ERROR_THRESHOLD): Boolean {
+        return extractErrorCount(output) >= threshold
+    }
+
+    internal fun extractErrorCount(output: String): Int {
+        return ERROR_COUNT_REGEX.findAll(output)
+            .map { it.groupValues[1].toIntOrNull() ?: 0 }
+            .maxOrNull() ?: 0
     }
 
     /**
@@ -55,11 +72,41 @@ object PawnCompiler {
         options: List<String> = emptyList(),
         version: CompilerConfig.CompilerVersion = CompilerConfig.CompilerVersion.V3107
     ): Pair<Int, String> {
+        val result = compileWithVersion(sourceFile, options, version)
+
+        if (!FALL_MUTATION && shouldRetryWithFallback(result.second)) {
+            val fallbackVersion = version.other()
+            FALL_MUTATION = true
+
+            val config = CompilerConfig.getInstanceOrNull()
+            if (config != null) {
+                Log.w(
+                    "PawnCompiler",
+                    "Detected ${extractErrorCount(result.second)} Errors in ${version.label}. " +
+                    "Switching compiler to ${fallbackVersion.label} for the next retry."
+                )
+                config.compilerVersion = fallbackVersion
+            }
+
+            val retryResult = compileWithVersion(sourceFile, options, fallbackVersion)
+            if (retryResult.first >= 0 || retryResult.second.isNotBlank()) {
+                return retryResult
+            }
+        }
+
+        return result
+    }
+
+    private fun compileWithVersion(
+        sourceFile: String,
+        options: List<String>,
+        version: CompilerConfig.CompilerVersion
+    ): Pair<Int, String> {
         if (!ensureInitialized(version)) {
             return -1 to "Failed to load compiler library"
         }
 
-        Log.d("PawnCompiler", "Compiling with: ${initializedVersion?.label}")
+        Log.d("PawnCompiler", "Compiling with: ${INITIALIZED_VER?.label}")
 
         val logFile = runCatching {
             File(sourceFile).let { f ->
@@ -88,15 +135,15 @@ object PawnCompiler {
 
     private fun parseCompilerOutput(output: String): Pair<Int, String> {
         val match = EXIT_CODE_REGEX.find(output)
-        
+
         val exitCode = match?.groupValues?.get(1)?.toIntOrNull() ?: -1
         val actualOutput = output.substringAfter('\n', "")
-        
+
         return exitCode to actualOutput
     }
 
-    fun getCapturedOutput(): String = if (isInitialized) getOutput() else ""
-    fun getCapturedErrors(): String = if (isInitialized) getErrors() else ""
+    fun getCapturedOutput(): String = if (IS_INITIALIZED) getOutput() else ""
+    fun getCapturedErrors(): String = if (IS_INITIALIZED) getErrors() else ""
 
     private external fun compile(args: Array<String>): String
     private external fun getOutput(): String

@@ -24,7 +24,6 @@ class CompilerConfig private constructor(context: Context) {
     var mandatorySemicolons: Boolean
         get() = prefs.getBoolean(KEY_SEMICOLONS, true)
         set(value) = prefs.edit { putBoolean(KEY_SEMICOLONS, value) }
-
     var mandatoryParentheses: Boolean
         get() = prefs.getBoolean(KEY_PARENTHESES, true)
         set(value) = prefs.edit { putBoolean(KEY_PARENTHESES, value) }
@@ -68,35 +67,24 @@ class CompilerConfig private constructor(context: Context) {
      */
     fun buildOptions(): List<String> {
         val options = mutableListOf<String>()
-
         //
         // [debug]
         //
-        options.add("-d${debugLevel.value}")
-
+        options.add             ("-d=${debugLevel.value}")
         //
         // [code style]
         //
-        if (mandatorySemicolons) options.add("-;+")
-        if (mandatoryParentheses) options.add("-(+")
-
+        if (mandatorySemicolons) { options.add("-;+") }
+        if (mandatoryParentheses) { options.add("-(+") }
         //
         // [include paths]
         //
-        for (path in includePaths) {
-            if (path.isNotBlank()) {
-                options.add("-i=$path")
-            }
-        }
-
+        for (path in includePaths) { if (path.isNotBlank()) { options.add("-i=$path") } }
         //
         // [custom flags]
         //
         val custom = customFlags.trim()
-        if (custom.isNotEmpty()) {
-            options.addAll(custom.split("\\s+".toRegex()).filter { it.isNotBlank() })
-        }
-
+        if (custom.isNotEmpty()) { options.addAll(custom.split("\\s+".toRegex()).filter { it.isNotBlank() }) }
         return options
     }
 
@@ -112,8 +100,10 @@ class CompilerConfig private constructor(context: Context) {
     }
 
     enum class CompilerVersion(val value: String, val libraryName: String, val label: String, val description: String) {
-        V3107("3.10.7", "pawnc3107", "Pawn 3.10.7", "Stable"),
+        V3107("3.10.7",   "pawnc3107",  "Pawn 3.10.7",  "Stable"),
         V31011("3.10.11", "pawnc31011", "Pawn 3.10.11", "Newer");
+
+        fun other(): CompilerVersion = if (this == V3107) V31011 else V3107
 
         companion object {
             fun fromValue(value: String) = entries.find { it.value == value } ?: V3107
@@ -121,18 +111,23 @@ class CompilerConfig private constructor(context: Context) {
     }
 
     companion object {
-        private const val KEY_DEBUG = "debug"
-        private const val PREFS_NAME = "compiler_config"
-        private const val KEY_LAST_DIR = "last_opened_dir"
-        private const val KEY_LAST_FILE = "last_selected_file"
-        private const val KEY_SEMICOLONS = "semicolons"
-        private const val KEY_PARENTHESES = "parentheses"
-        private const val KEY_CUSTOM_FLAGS = "custom_flags"
-        private const val KEY_INCLUDE_PATHS = "include_paths"
+        private const val KEY_DEBUG            = "debug_level"
+        private const val PREFS_NAME           = "compiler_config"
+        private const val KEY_LAST_DIR         = "last_open_dir"
+        private const val KEY_LAST_FILE        = "last_sel_file"
+        private const val KEY_SEMICOLONS       = "semicolons"
+        private const val KEY_PARENTHESES      = "parentheses"
+        private const val KEY_CUSTOM_FLAGS     = "custom_flags"
+        private const val KEY_INCLUDE_PATHS    = "include_paths"
         private const val KEY_COMPILER_VERSION = "compiler_version"
 
         @Volatile
         private var instance: CompilerConfig? = null
+
+        fun getInstance(): CompilerConfig = instance
+            ?: throw IllegalStateException("CompilerConfig is not initialized. Call getInstance(context) first.")
+
+        fun getInstanceOrNull(): CompilerConfig? = instance
 
         fun getInstance(context: Context): CompilerConfig {
             return instance ?: synchronized(this) {
