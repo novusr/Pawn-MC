@@ -3,6 +3,7 @@ package com.rvdjv.pawnmc.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Dark 
+val md_theme_dark_primary = Color(0xFFCFBCFF)
 val md_theme_dark_onPrimary = Color(0xFF13111C)
 val md_theme_dark_primaryContainer = Color(0xFF4C3B82)
 val md_theme_dark_onPrimaryContainer = Color(0xFFE9E6F2)

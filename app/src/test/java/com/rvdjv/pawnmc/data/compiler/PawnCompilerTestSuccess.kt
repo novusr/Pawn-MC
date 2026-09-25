@@ -3,6 +3,7 @@ package com.rvdjv.pawnmc.data.compiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class PawnCompilerSuccessTest {
