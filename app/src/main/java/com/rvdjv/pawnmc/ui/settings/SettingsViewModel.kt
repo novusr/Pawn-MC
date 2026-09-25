@@ -71,8 +71,9 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     }
 
     fun addIncludePath(path: String) {
-        if (path !in n_include_paths) {
-            n_include_paths.add(path)
+        val normalizedPath = CompilerConfig.normalizeIncludePath(path)
+        if (normalizedPath !in n_include_paths) {
+            n_include_paths.add(normalizedPath)
             config.n_include_paths = n_include_paths.toList()
         }
     }

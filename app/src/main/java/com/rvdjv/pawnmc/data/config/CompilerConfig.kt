@@ -41,9 +41,12 @@ class CompilerConfig private constructor(context: Context) {
     var n_include_paths: List<String>
         get() {
             val stored = prefs.getString(KEY_INCLUDE_PATHS, "") ?: ""
-            return if (stored.isEmpty()) emptyList() else stored.split(";")
+            if (stored.isEmpty()) return emptyList()
+            return stored.split(";").map { normalizeIncludePath(it) }.filter { it.isNotBlank() }
         }
-        set(value) = prefs.edit { putString(KEY_INCLUDE_PATHS, value.joinToString(";")) }
+        set(value) = prefs.edit {
+            putString(KEY_INCLUDE_PATHS, value.map { normalizeIncludePath(it) }.filter { it.isNotBlank() }.distinct().joinToString(";"))
+        }
 
     //
     // [compiler version]
@@ -107,7 +110,10 @@ class CompilerConfig private constructor(context: Context) {
         //
         // [include paths]
         //
-        for (path in n_include_paths) { if (path.isNotBlank()) { options.add("-i=$path") } }
+        for (path in n_include_paths) {
+            val normalized = normalizeIncludePath(path)
+            if (normalized.isNotBlank()) { options.add("-i=$normalized") }
+        }
         //
         // [custom flags]
         //
@@ -223,6 +229,13 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_DETECTED_MD5 = "detected_compiler_md5"
         private const val KEY_FORCED_MODE = "forced_compiler_mode"
         private const val KEY_APP_THEME = "app_theme"
+
+        fun normalizeIncludePath(path: String): String {
+            val trimmed = path.trim().replace('\\', '/')
+            if (trimmed.isEmpty()) return ""
+            val withoutTrailingSlash = trimmed.trimEnd('/')
+            return if (withoutTrailingSlash.isEmpty()) "/" else "$withoutTrailingSlash/"
+        }
 
         @Volatile
         private var instance: CompilerConfig? = null

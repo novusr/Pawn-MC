@@ -190,7 +190,7 @@ object PawnCompiler {
 
         val n_sourceDir = File(sourceFile).parentFile
         if (n_sourceDir != null && n_sourceDir.exists() && n_sourceDir.isDirectory) {
-            n_result += n_sourceDir.absolutePath
+            n_result += CompilerConfig.normalizeIncludePath(n_sourceDir.absolutePath)
         }
 
         val n_compilerMatch = detectNearbyCompiler(sourceFile)
@@ -201,7 +201,7 @@ object PawnCompiler {
             if (n_baseDir != null && n_baseDir.exists() && n_baseDir.isDirectory) {
                 val n_includeCandidate = File(n_baseDir, "include")
                 if (!n_includeCandidate.exists() || n_includeCandidate.isDirectory) {
-                    n_result += n_includeCandidate.absolutePath
+                    n_result += CompilerConfig.normalizeIncludePath(n_includeCandidate.absolutePath)
                 }
             }
         }

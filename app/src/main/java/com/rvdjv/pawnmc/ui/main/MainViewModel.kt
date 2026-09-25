@@ -78,7 +78,8 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
         val autoIncludePaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath)
         val mergedPaths = config.n_include_paths.toMutableList()
         autoIncludePaths.forEach { path ->
-            if (path !in mergedPaths) mergedPaths.add(path)
+            val normalizedPath = CompilerConfig.normalizeIncludePath(path)
+            if (normalizedPath !in mergedPaths) mergedPaths.add(normalizedPath)
         }
         config.n_include_paths = mergedPaths
 
