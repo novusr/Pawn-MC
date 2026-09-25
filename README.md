@@ -23,7 +23,7 @@ Disini adalah tempat dimana PawnMC bisa dikatakan beroperasi, kami sangat menyam
 PawnMC Adalah aplikasi Android yang secara khusus diciptakan untuk mempermudah dan mempercepat tugas Anda, sebagai Developer Android.<br>
 Kami sendiri sangat menempatkan harapan yang besar kepada kalian semua yang menggunakan aplikasi ini.<br>
 Discord Kami: https://discord.gg/2YqkmDvTch<br>
--------------------------------------------------------<br>
+
 Sangat disayangkan bahwasannya sebagian pengguna PawnMC beralih ke aplikasi serupa hanya karna PawnMC tidak memiliki akses untuk menyuting teks (Text Editor)<br>
 PawnMC memang tidak memiliki Text Editor, karna sejak awal aplikasi ini dibangun dengan fokus untuk kompilasi dengan aneka fitur yang unik dan beragam<br>
 Kami tidak bisa memaksakan untuk memasukan Text Editor luar ke PawnMC yang bisa merusak orisinalitas dari PawnMC itu sendiri.<br>
@@ -42,7 +42,7 @@ This is where PawnMC can be said to operate, and we sincerely welcome you here.<
 PawnMC is an Android application specifically created to make your work as an Android Developer easier and faster.<br>
 We place great hope in everyone who uses this application.<br>
 Official Community: https://discord.gg/2YqkmDvTch<br>
--------------------------------------------------------<br>
+
 Unfortunately, some PawnMC users have switched to similar applications simply because PawnMC does not provide access to edit text through a Text Editor.<br>
 PawnMC does not have a built-in Text Editor because, from the beginning, the application was developed with a focus on its Compiler (for compile), along with various unique and diverse features.<br>
 We cannot simply integrate an external Text Editor into PawnMC, as doing so could compromise the originality of PawnMC itself.<br>
