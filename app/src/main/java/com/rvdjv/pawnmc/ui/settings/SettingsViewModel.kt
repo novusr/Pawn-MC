@@ -27,6 +27,9 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     var n_custom_flags by mutableStateOf(config.n_custom_flags)
         private set
 
+    var n_forced_compiler_mode by mutableStateOf(config.n_forced_compiler_mode)
+        private set
+
     val n_include_paths = mutableStateListOf<String>().apply { addAll(config.n_include_paths) }
 
     fun updateCompilerVersion(version: CompilerConfig.CompilerVersion) {
@@ -52,6 +55,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     fun updateCustomFlags(flags: String) {
         n_custom_flags = flags
         config.n_custom_flags = flags
+    }
+
+    fun updateForcedCompilerMode(enabled: Boolean) {
+        n_forced_compiler_mode = enabled
+        config.n_forced_compiler_mode = enabled
     }
 
     fun addIncludePath(path: String) {

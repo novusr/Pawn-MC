@@ -82,6 +82,10 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getString(KEY_DETECTED_MD5, null)
         set(value) = prefs.edit { putString(KEY_DETECTED_MD5, value) }
 
+    var n_forced_compiler_mode: Boolean
+        get() = prefs.getBoolean(KEY_FORCED_MODE, false)
+        set(value) = prefs.edit { putBoolean(KEY_FORCED_MODE, value) }
+
     /**
      * Build compiler options list from current configuration.
      */
@@ -176,6 +180,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_DETECTED_PRODUCT_VERSION = "detected_compiler_product_version"
         private const val KEY_DETECTED_SIZE_BYTES = "detected_compiler_size_bytes"
         private const val KEY_DETECTED_MD5 = "detected_compiler_md5"
+        private const val KEY_FORCED_MODE = "forced_compiler_mode"
 
         @Volatile
         private var instance: CompilerConfig? = null

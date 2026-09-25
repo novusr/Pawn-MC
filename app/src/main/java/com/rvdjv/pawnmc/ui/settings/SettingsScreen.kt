@@ -175,9 +175,10 @@ fun SettingsScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column {
-                    NavigationRow(
-                        title = "Compiler Version",
-                        subtitle = viewModel.n_compiler_version.label,
+                    CompilerVersionRow(
+                        version = viewModel.n_compiler_version.label,
+                        forced = viewModel.n_forced_compiler_mode,
+                        onToggleForced = { viewModel.updateForcedCompilerMode(it) },
                         onClick = { showVersionDialog = true }
                     )
 

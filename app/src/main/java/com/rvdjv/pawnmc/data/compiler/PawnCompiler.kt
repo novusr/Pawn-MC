@@ -21,6 +21,10 @@ object PawnCompiler {
     private var INITIALIZED_VER: CompilerConfig.CompilerVersion? = null
     private var IS_INITIALIZED = false
     private var FALL_MUTATION = false
+
+    fun isForcedModeEnabled(): Boolean {
+        return CompilerConfig.getInstanceOrNull()?.n_forced_compiler_mode == true
+    }
     private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
     private val ERROR_COUNT_REGEX = """(?i)(\d+)\s+errors?\.?""".toRegex()
     private val PRODUCT_VERSION_REGEX = """\b\d+\.\d+\.\d+\b""".toRegex()
@@ -70,8 +74,12 @@ object PawnCompiler {
 
     // Detect the compiler only when the nearby pawncc.exe metadata truly matches one of the known Pawn versions.
     fun detectCompilerVersionForFile(sourceFile: String): CompilerConfig.CompilerVersion? {
-        val match = detectNearbyCompiler(sourceFile) ?: return null
         val config = CompilerConfig.getInstanceOrNull()
+        if (config?.n_forced_compiler_mode == true) {
+            return null
+        }
+
+        val match = detectNearbyCompiler(sourceFile) ?: return null
         if (config != null) {
             config.n_detected_compiler_product_version = match.productVersion
             config.n_detected_compiler_size_bytes = match.sizeBytes
@@ -190,13 +198,15 @@ object PawnCompiler {
         options: List<String> = emptyList(),
         version: CompilerConfig.CompilerVersion = CompilerConfig.CompilerVersion.V3107
     ): Pair<Int, String> {
+        val config = CompilerConfig.getInstanceOrNull()
+        val isForced = config?.n_forced_compiler_mode == true
+
         val result = compileWithVersion(sourceFile, options, version)
 
-        if (!FALL_MUTATION && shouldRetryWithFallback(result.second)) {
+        if (!isForced && !FALL_MUTATION && shouldRetryWithFallback(result.second)) {
             val fallbackVersion = version.other()
             FALL_MUTATION = true
 
-            val config = CompilerConfig.getInstanceOrNull()
             if (config != null) {
                 Log.w(
                     "PawnCompiler",
