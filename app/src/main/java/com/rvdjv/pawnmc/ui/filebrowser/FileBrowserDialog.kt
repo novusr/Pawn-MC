@@ -66,7 +66,7 @@ private fun formatFileSize(size: Long): String {
 @Composable
 fun FileBrowserDialog(
     mode: FileBrowserMode,
-    fileExtensions: Set<String> = setOf("pwn", "p", "inc"),
+    fileExtensions: Set<String> = setOf("pawn", "pwn", "p", "inc"),
     onFileSelected: (String) -> Unit,
     onFolderSelected: (String) -> Unit = {},
     onDismiss: () -> Unit
