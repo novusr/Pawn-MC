@@ -124,20 +124,28 @@ object PawnCompiler {
         return null
     }
 
-    // Build the include directories that are most useful for a selected source file:
-    // 1. the file's own parent folder, and
-    // 2. the exact folder containing the detected pawncc.exe (for example: .../pawno).
+    // Build include paths from the selected source directory and the compiler directory. If the compiler is found at
+    // .../something/pawncc.exe or .../something/pawno/pawncc.exe, we normalize it to the include folder by replacing
+    // the executable path with an include folder, such as .../something/include or .../something/pawno/include.
     fun discoverRelevantIncludePaths(sourceFile: String): List<String> {
         val result = linkedSetOf<String>()
+
         val sourceDir = File(sourceFile).parentFile
         if (sourceDir != null && sourceDir.exists() && sourceDir.isDirectory) {
             result += sourceDir.absolutePath
         }
 
         val compilerMatch = detectNearbyCompiler(sourceFile)
-        val compilerDir = compilerMatch?.let { File(it.filePath).parentFile }
-        if (compilerDir != null && compilerDir.exists() && compilerDir.isDirectory) {
-            result += compilerDir.absolutePath
+        val compilerFile = compilerMatch?.let { File(it.filePath) }
+        if (compilerFile != null && compilerFile.exists() && compilerFile.isFile) {
+            val compilerDir = compilerFile.parentFile
+            val baseDir = compilerDir?.absoluteFile ?: File(sourceFile).parentFile
+            if (baseDir != null && baseDir.exists() && baseDir.isDirectory) {
+                val includeCandidate = File(baseDir, "include")
+                if (!includeCandidate.exists() || includeCandidate.isDirectory) {
+                    result += includeCandidate.absolutePath
+                }
+            }
         }
 
         return result.filter { it.isNotBlank() }

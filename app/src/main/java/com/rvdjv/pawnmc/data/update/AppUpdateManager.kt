@@ -44,6 +44,10 @@ class AppUpdateManager(private val context: Context) {
         versionFile.writeText(version.trim())
     }
 
+    fun ensureVersionFileWritten() {
+        storeCurrentVersion(getCurrentVersion())
+    }
+
     fun readStoredVersion(): String? {
         if (!versionFile.exists()) return null
         val stored = versionFile.readText().trim()

@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.rvdjv.pawnmc.data.compiler.PawnCompiler
+import com.rvdjv.pawnmc.data.update.AppUpdateManager
 import com.rvdjv.pawnmc.ui.settings.SettingsActivity
 import com.rvdjv.pawnmc.ui.theme.PawnMCTheme
 
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         PawnCompiler.resetSessionState()
+        AppUpdateManager(applicationContext).ensureVersionFileWritten()
         enableEdgeToEdge()
         setContent {
             PawnMCTheme {
