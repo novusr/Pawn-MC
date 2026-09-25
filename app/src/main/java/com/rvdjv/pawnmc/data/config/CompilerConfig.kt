@@ -129,10 +129,11 @@ class CompilerConfig private constructor(context: Context) {
         val label: String,
         val description: String,
         val expectedMd5: String? = null,
-        val sizeToleranceBytes: Long = 4_096L
+        val sizeToleranceBytes: Long = 4_096L,
+        val fallbackEquivalent: CompilerVersion? = null
     ) {
-        V3107("3.10.7", "pawnc3107", "Pawn 3.10.7", "Stable", "a48e04d28e8cb77e0361ecb4dced2501", 4_096L),
-        V31011("3.10.11", "pawnc31011", "Pawn 3.10.11", "Newer", "9044b9ef65658c79851b4e2e249e5c75", 4_096L);
+        V3107("3.10.7", "pawnc3107", "Pawn 3.10.7", "Stable", "a48e04d28e8cb77e0361ecb4dced2501", 4_096L, null),
+        V31011("3.10.11", "pawnc31011", "Pawn 3.10.11", "Newer", "9044b9ef65658c79851b4e2e249e5c75", 4_096L, null);
 
         fun other(): CompilerVersion = if (this == V3107) V31011 else V3107
 
@@ -151,6 +152,32 @@ class CompilerConfig private constructor(context: Context) {
             if (productMatches) return true
 
             return false
+        }
+
+        fun nearestSupportedEquivalent(productVersion: String?, sizeBytes: Long?, md5: String?): CompilerVersion? {
+            if (productVersion != null) {
+                val versionText = productVersion.trim()
+                when {
+                    versionText.startsWith("3.10.10", ignoreCase = true) || versionText.startsWith("3.10.9", ignoreCase = true) -> return V31011
+                    versionText.startsWith("3.10.8", ignoreCase = true) -> return V3107
+                }
+            }
+
+            if (md5 != null) {
+                when {
+                    md5.equals("ce6bd3ae0fb9fba27bb8189adf0c0fab", ignoreCase = true) -> return V31011
+                    md5.equals("f2d87592200cbfb3346a949ca5d1a2bd", ignoreCase = true) -> return V31011
+                    md5.equals("f28ab0d8b1ccbcc448b26e3255f4abb8", ignoreCase = true) -> return V3107
+                }
+            }
+
+            if (sizeBytes != null) {
+                val size = sizeBytes.toDouble()
+                if (size <= 20_000L) return V3107
+                if (size >= 28_000L) return V31011
+            }
+
+            return null
         }
 
         private fun sizeMatchesExpected(sizeBytes: Long): Boolean {

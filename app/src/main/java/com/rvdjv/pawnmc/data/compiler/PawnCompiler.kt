@@ -175,6 +175,9 @@ object PawnCompiler {
         }
 
         val version = CompilerConfig.CompilerVersion.entries.firstOrNull { it.matchesDetected(productVersion, sizeBytes, md5) }
+            ?: CompilerConfig.CompilerVersion.entries.firstOrNull {
+                it.nearestSupportedEquivalent(productVersion, sizeBytes, md5) != null
+            }?.nearestSupportedEquivalent(productVersion, sizeBytes, md5)
         return CompilerMetadata(version, productVersion, sizeBytes, md5)
     }
 
