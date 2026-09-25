@@ -33,7 +33,7 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
         private set
 
     fun loadLastSelectedFile() {
-        val lastPath = config.lastSelectedFilePath
+        val lastPath = config.n_last_selected_file_path
         if (lastPath != null && File(lastPath).exists()) {
             selectedFilePath = lastPath
             outputText = "Loaded file: $lastPath\n"
@@ -47,7 +47,7 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
                 val validExtensions = setOf("pawn", "pwn", "p", "inc")
                 if (File(path).extension.lowercase() in validExtensions) {
                     selectedFilePath = path
-                    config.lastSelectedFilePath = path
+                    config.n_last_selected_file_path = path
                     selectionError = null
                     lastExitCode = null
                     outputText = "Opened file: $path\n"
@@ -62,7 +62,7 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
         val validExtensions = setOf("pawn", "pwn", "p", "inc")
         if (File(path).extension.lowercase() in validExtensions) {
             selectedFilePath = path
-            config.lastSelectedFilePath = path
+            config.n_last_selected_file_path = path
             selectionError = null
             lastExitCode = null
         } else {
@@ -80,7 +80,7 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
         outputText = ""
         viewModelScope.launch {
             val options = config.buildOptions()
-            val version = config.compilerVersion
+            val version = config.n_compiler_version
 
             val startTime = System.currentTimeMillis()
             val result = withContext(Dispatchers.IO) {

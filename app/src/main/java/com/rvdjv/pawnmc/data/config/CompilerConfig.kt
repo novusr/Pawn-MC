@@ -14,31 +14,31 @@ class CompilerConfig private constructor(context: Context) {
     //
     // [debug]
     //
-    var debugLevel: DebugLevel
+    var n_debug_level: DebugLevel
         get() = DebugLevel.fromValue(prefs.getInt(KEY_DEBUG, DebugLevel.D3.value))
         set(value) = prefs.edit { putInt(KEY_DEBUG, value.value) }
 
     //
     // [code style]
     //
-    var mandatorySemicolons: Boolean
+    var n_mandatory_semicolons: Boolean
         get() = prefs.getBoolean(KEY_SEMICOLONS, true)
         set(value) = prefs.edit { putBoolean(KEY_SEMICOLONS, value) }
-    var mandatoryParentheses: Boolean
+    var n_mandatory_parentheses: Boolean
         get() = prefs.getBoolean(KEY_PARENTHESES, true)
         set(value) = prefs.edit { putBoolean(KEY_PARENTHESES, value) }
 
     //
     // [custom]
     //
-    var customFlags: String
+    var n_custom_flags: String
         get() = prefs.getString(KEY_CUSTOM_FLAGS, "") ?: ""
         set(value) = prefs.edit { putString(KEY_CUSTOM_FLAGS, value) }
 
     //
     // [include paths]
     //
-    var includePaths: List<String>
+    var n_include_paths: List<String>
         get() {
             val stored = prefs.getString(KEY_INCLUDE_PATHS, "") ?: ""
             return if (stored.isEmpty()) emptyList() else stored.split(";")
@@ -48,17 +48,17 @@ class CompilerConfig private constructor(context: Context) {
     //
     // [compiler version]
     //
-    var compilerVersion: CompilerVersion
+    var n_compiler_version: CompilerVersion
         get() = CompilerVersion.fromValue(
             prefs.getString(KEY_COMPILER_VERSION, CompilerVersion.V3107.value) ?: CompilerVersion.V3107.value
         )
         set(value) = prefs.edit { putString(KEY_COMPILER_VERSION, value.value) }
 
-    var lastSelectedFilePath: String?
+    var n_last_selected_file_path: String?
         get() = prefs.getString(KEY_LAST_FILE, null)
         set(value) = prefs.edit { putString(KEY_LAST_FILE, value) }
 
-    var lastOpenedDirPath: String?
+    var n_last_opened_dir_path: String?
         get() = prefs.getString(KEY_LAST_DIR, null)
         set(value) = prefs.edit { putString(KEY_LAST_DIR, value) }
 
@@ -70,20 +70,20 @@ class CompilerConfig private constructor(context: Context) {
         //
         // [debug]
         //
-        options.add             ("-d=${debugLevel.value}")
+        options.add("-d=${n_debug_level.value}")
         //
         // [code style]
         //
-        if (mandatorySemicolons) { options.add("-;+") }
-        if (mandatoryParentheses) { options.add("-(+") }
+        if (n_mandatory_semicolons) { options.add("-;+") }
+        if (n_mandatory_parentheses) { options.add("-(+") }
         //
         // [include paths]
         //
-        for (path in includePaths) { if (path.isNotBlank()) { options.add("-i=$path") } }
+        for (path in n_include_paths) { if (path.isNotBlank()) { options.add("-i=$path") } }
         //
         // [custom flags]
         //
-        val custom = customFlags.trim()
+        val custom = n_custom_flags.trim()
         if (custom.isNotEmpty()) { options.addAll(custom.split("\\s+".toRegex()).filter { it.isNotBlank() }) }
         return options
     }

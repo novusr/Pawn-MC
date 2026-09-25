@@ -85,7 +85,7 @@ object PawnCompiler {
                     "Detected ${extractErrorCount(result.second)} Errors in ${version.label}. " +
                     "Switching compiler to ${fallbackVersion.label} for the next retry."
                 )
-                config.compilerVersion = fallbackVersion
+                config.n_compiler_version = fallbackVersion
             }
 
             val retryResult = compileWithVersion(sourceFile, options, fallbackVersion)

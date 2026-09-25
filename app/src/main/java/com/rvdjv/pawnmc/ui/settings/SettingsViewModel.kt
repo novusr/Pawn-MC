@@ -12,59 +12,59 @@ import com.rvdjv.pawnmc.data.config.CompilerConfig
 
 class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
 
-    var compilerVersion by mutableStateOf(config.compilerVersion)
+    var n_compiler_version by mutableStateOf(config.n_compiler_version)
         private set
 
-    var debugLevel by mutableStateOf(config.debugLevel)
+    var n_debug_level by mutableStateOf(config.n_debug_level)
         private set
 
-    var mandatorySemicolons by mutableStateOf(config.mandatorySemicolons)
+    var n_mandatory_semicolons by mutableStateOf(config.n_mandatory_semicolons)
         private set
 
-    var mandatoryParentheses by mutableStateOf(config.mandatoryParentheses)
+    var n_mandatory_parentheses by mutableStateOf(config.n_mandatory_parentheses)
         private set
 
-    var customFlags by mutableStateOf(config.customFlags)
+    var n_custom_flags by mutableStateOf(config.n_custom_flags)
         private set
 
-    val includePaths = mutableStateListOf<String>().apply { addAll(config.includePaths) }
+    val n_include_paths = mutableStateListOf<String>().apply { addAll(config.n_include_paths) }
 
     fun updateCompilerVersion(version: CompilerConfig.CompilerVersion) {
-        compilerVersion = version
-        config.compilerVersion = version
+        n_compiler_version = version
+        config.n_compiler_version = version
     }
 
     fun updateDebugLevel(level: CompilerConfig.DebugLevel) {
-        debugLevel = level
-        config.debugLevel = level
+        n_debug_level = level
+        config.n_debug_level = level
     }
 
     fun updateMandatorySemicolons(enabled: Boolean) {
-        mandatorySemicolons = enabled
-        config.mandatorySemicolons = enabled
+        n_mandatory_semicolons = enabled
+        config.n_mandatory_semicolons = enabled
     }
 
     fun updateMandatoryParentheses(enabled: Boolean) {
-        mandatoryParentheses = enabled
-        config.mandatoryParentheses = enabled
+        n_mandatory_parentheses = enabled
+        config.n_mandatory_parentheses = enabled
     }
 
     fun updateCustomFlags(flags: String) {
-        customFlags = flags
-        config.customFlags = flags
+        n_custom_flags = flags
+        config.n_custom_flags = flags
     }
 
     fun addIncludePath(path: String) {
-        if (path !in includePaths) {
-            includePaths.add(path)
-            config.includePaths = includePaths.toList()
+        if (path !in n_include_paths) {
+            n_include_paths.add(path)
+            config.n_include_paths = n_include_paths.toList()
         }
     }
 
     fun removeIncludePathAt(index: Int) {
-        if (index in includePaths.indices) {
-            includePaths.removeAt(index)
-            config.includePaths = includePaths.toList()
+        if (index in n_include_paths.indices) {
+            n_include_paths.removeAt(index)
+            config.n_include_paths = n_include_paths.toList()
         }
     }
 

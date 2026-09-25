@@ -177,7 +177,7 @@ fun SettingsScreen(
                 Column {
                     NavigationRow(
                         title = "Compiler Version",
-                        subtitle = viewModel.compilerVersion.label,
+                        subtitle = viewModel.n_compiler_version.label,
                         onClick = { showVersionDialog = true }
                     )
 
@@ -207,7 +207,7 @@ fun SettingsScreen(
                     SwitchRow(
                         title = "Mandatory Semicolons",
                         description = "Require semicolons at the end of statements",
-                        checked = viewModel.mandatorySemicolons,
+                        checked = viewModel.n_mandatory_semicolons,
                         onCheckedChange = { viewModel.updateMandatorySemicolons(it) }
                     )
                     HorizontalDivider(
@@ -219,7 +219,7 @@ fun SettingsScreen(
                     SwitchRow(
                         title = "Mandatory Parentheses",
                         description = "Require parentheses in control statements",
-                        checked = viewModel.mandatoryParentheses,
+                        checked = viewModel.n_mandatory_parentheses,
                         onCheckedChange = { viewModel.updateMandatoryParentheses(it) }
                     )
                     HorizontalDivider(
@@ -235,14 +235,14 @@ fun SettingsScreen(
                     ) {
                         val entries = CompilerConfig.DebugLevel.entries
                         val maxIndex = (entries.size - 1).coerceAtLeast(1)
-                        val currentIndex = entries.indexOf(viewModel.debugLevel).coerceIn(0, maxIndex)
+                        val currentIndex = entries.indexOf(viewModel.n_debug_level).coerceIn(0, maxIndex)
 
                         Text(
-                            text = "Debug Level: ${viewModel.debugLevel.label}",
+                            text = "Debug Level: ${viewModel.n_debug_level.label}",
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        viewModel.debugLevel.description?.let { desc ->
+                        viewModel.n_debug_level.description?.let { desc ->
                             Text(
                                 text = desc,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -285,7 +285,7 @@ fun SettingsScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
-                            value = viewModel.customFlags,
+                            value = viewModel.n_custom_flags,
                             onValueChange = { viewModel.updateCustomFlags(it) },
                             placeholder = { Text("e.g. -d3 -O2") },
                             modifier = Modifier.fillMaxWidth(),
@@ -303,7 +303,7 @@ fun SettingsScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column {
-                    if (viewModel.includePaths.isEmpty()) {
+                    if (viewModel.n_include_paths.isEmpty()) {
                         Text(
                             text = "No include paths added.",
                             style = MaterialTheme.typography.bodyMedium,
@@ -311,12 +311,12 @@ fun SettingsScreen(
                             modifier = Modifier.padding(16.dp)
                         )
                     } else {
-                        viewModel.includePaths.forEachIndexed { index, path ->
+                        viewModel.n_include_paths.forEachIndexed { index, path ->
                             PathRow(
                                 path = path,
                                 onRemoveClick = { viewModel.removeIncludePathAt(index) }
                             )
-                            if (index < viewModel.includePaths.size - 1) {
+                            if (index < viewModel.n_include_paths.size - 1) {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
                                     thickness = 1.2.dp,
@@ -549,7 +549,7 @@ fun SettingsScreen(
                         RadioButtonRow(
                             text = version.label,
                             description = version.description,
-                            selected = viewModel.compilerVersion == version,
+                            selected = viewModel.n_compiler_version == version,
                             onClick = {
                                 viewModel.updateCompilerVersion(version)
                                 showVersionDialog = false
