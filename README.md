@@ -58,6 +58,8 @@ Xed Editor provides features such as Syntax Highlighting, support for multiple p
 ## Documentation
 See the [configuration folder](//github.com/novusr/Pawn-MC/tree/main/configuration) for documentation and guides on how to use this application and set up your mobile workspace.
 
+See the project roadmap in [ROADMAP.md](ROADMAP.md) for a full architecture overview, feature breakdown, and file-by-file analysis of the current codebase.
+
 ## Installation
 Download the latest [release](//github.com/novusr/Pawn-MC/releases/latest) for your Android device and install the provided APK.
 
