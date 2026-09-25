@@ -86,6 +86,10 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getBoolean(KEY_FORCED_MODE, false)
         set(value) = prefs.edit { putBoolean(KEY_FORCED_MODE, value) }
 
+    var n_app_theme: AppTheme
+        get() = AppTheme.fromValue(prefs.getString(KEY_APP_THEME, AppTheme.SYSTEM.value) ?: AppTheme.SYSTEM.value)
+        set(value) = prefs.edit { putString(KEY_APP_THEME, value.value) }
+
     /**
      * Build compiler options list from current configuration.
      */
@@ -120,6 +124,16 @@ class CompilerConfig private constructor(context: Context) {
 
         companion object {
             fun fromValue(value: Int) = entries.find { it.value == value } ?: D1
+        }
+    }
+
+    enum class AppTheme(val value: String, val label: String, val description: String) {
+        SYSTEM("system", "System Default", "Follow the Android system theme."),
+        LIGHT("light", "Light", "Always use the light theme."),
+        DARK("dark", "Dark", "Always use the dark theme.");
+
+        companion object {
+            fun fromValue(value: String?) = entries.find { it.value == value } ?: SYSTEM
         }
     }
 
@@ -208,6 +222,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_DETECTED_SIZE_BYTES = "detected_compiler_size_bytes"
         private const val KEY_DETECTED_MD5 = "detected_compiler_md5"
         private const val KEY_FORCED_MODE = "forced_compiler_mode"
+        private const val KEY_APP_THEME = "app_theme"
 
         @Volatile
         private var instance: CompilerConfig? = null

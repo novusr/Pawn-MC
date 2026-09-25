@@ -7,9 +7,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.rvdjv.pawnmc.data.compiler.PawnCompiler
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.update.AppUpdateManager
 import com.rvdjv.pawnmc.ui.settings.SettingsActivity
 import com.rvdjv.pawnmc.ui.theme.PawnMCTheme
+import com.rvdjv.pawnmc.ui.theme.resolveDarkTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -21,9 +23,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         PawnCompiler.resetSessionState()
         AppUpdateManager(applicationContext).ensureVersionFileWritten()
+        val appTheme = CompilerConfig.getInstance(applicationContext).n_app_theme
         enableEdgeToEdge()
         setContent {
-            PawnMCTheme {
+            PawnMCTheme(darkTheme = resolveDarkTheme(appTheme)) {
                 MainScreen(
                     viewModel = viewModel,
                     onSettingsClick = {

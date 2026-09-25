@@ -51,6 +51,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,6 +67,9 @@ import com.rvdjv.pawnmc.data.update.AppUpdateManager
 import com.rvdjv.pawnmc.data.update.UpdateStatus
 import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserMode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,41 +86,58 @@ fun SettingsScreen(
 
     var showIncludePathDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
+    var showThemeDialog by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
     var pendingVersion by remember { mutableStateOf<CompilerConfig.CompilerVersion?>(null) }
     var updateStatus by remember { mutableStateOf("Checking for updates...") }
     var updateReady by remember { mutableStateOf(false) }
+    var isCheckingUpdates by remember { mutableStateOf(false) }
     var downloadedApk by remember { mutableStateOf<java.io.File?>(null) }
     var lastReleaseInfo by remember { mutableStateOf<String?>(null) }
 
     var appVersion by remember { mutableStateOf("") }
     var buildNumber by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
 
     fun refreshUpdateStatus() {
-        runCatching {
-            val result = updateManager.checkForUpdate()
-            when (result.status) {
-                UpdateStatus.UPDATE_AVAILABLE -> {
-                    val latestVersion = result.latestVersion ?: "unknown"
-                    updateStatus = "Update available: $latestVersion"
-                    lastReleaseInfo = result.release?.releaseUrl
-                    val release = result.release ?: return@runCatching
-                    downloadedApk = updateManager.downloadLatestApk(release)
-                    updateReady = true
+        if (isCheckingUpdates) return
+
+        coroutineScope.launch {
+            isCheckingUpdates = true
+            updateStatus = "Checking for updates..."
+
+            try {
+                val result = withContext(Dispatchers.IO) { updateManager.checkForUpdate() }
+
+                when (result.status) {
+                    UpdateStatus.UPDATE_AVAILABLE -> {
+                        val latestVersion = result.latestVersion ?: "unknown"
+                        val release = result.release
+                        val downloaded = if (release != null) {
+                            withContext(Dispatchers.IO) { updateManager.downloadLatestApk(release) }
+                        } else null
+
+                        updateStatus = "Update available: $latestVersion"
+                        lastReleaseInfo = release?.releaseUrl
+                        downloadedApk = downloaded
+                        updateReady = true
+                    }
+                    UpdateStatus.UP_TO_DATE -> {
+                        updateStatus = "You're on the latest version"
+                        lastReleaseInfo = result.release?.releaseUrl
+                        updateReady = false
+                    }
+                    UpdateStatus.ERROR -> {
+                        updateStatus = "Unable to check for updates"
+                        updateReady = false
+                    }
                 }
-                UpdateStatus.UP_TO_DATE -> {
-                    updateStatus = "You're on the latest version"
-                    lastReleaseInfo = result.release?.releaseUrl
-                    updateReady = false
-                }
-                UpdateStatus.ERROR -> {
-                    updateStatus = "Unable to check for updates"
-                    updateReady = false
-                }
+            } catch (_: Exception) {
+                updateStatus = "Unable to check for updates"
+                updateReady = false
+            } finally {
+                isCheckingUpdates = false
             }
-        }.onFailure {
-            updateStatus = "Unable to check for updates"
-            updateReady = false
         }
     }
 
@@ -195,10 +216,8 @@ fun SettingsScreen(
 
                     NavigationRow(
                         title = "Theme",
-                        subtitle = "System Default",
-                        onClick = {
-                            // TODO: onClick
-                        }
+                        subtitle = viewModel.n_app_theme.label,
+                        onClick = { showThemeDialog = true }
                     )
                 }
             }
@@ -348,11 +367,14 @@ fun SettingsScreen(
                                 return@TextButton
                             }
 
-                            refreshUpdateStatus()
+                            if (!isCheckingUpdates) {
+                                refreshUpdateStatus()
+                            }
                         },
+                        enabled = !isCheckingUpdates,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(updateButtonText)
+                        Text(if (isCheckingUpdates) "Checking..." else updateButtonText)
                     }
                 }
             }
@@ -467,6 +489,41 @@ fun SettingsScreen(
         }
     }
 
+    if (showThemeDialog) {
+        AlertDialog(
+            onDismissRequest = { showThemeDialog = false },
+            title = { Text("Select Theme") },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    CompilerConfig.AppTheme.entries.forEachIndexed { index, theme ->
+                        RadioButtonRow(
+                            text = theme.label,
+                            description = theme.description,
+                            selected = viewModel.n_app_theme == theme,
+                            onClick = {
+                                viewModel.updateAppTheme(theme)
+                                showThemeDialog = false
+                            }
+                        )
+
+                        if (index < CompilerConfig.AppTheme.entries.size - 1) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                thickness = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showThemeDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
     // dialog include path folder picker
     if (showIncludePathDialog) {
         FileBrowserDialog(
@@ -559,6 +616,44 @@ fun SettingsScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun CompilerVersionRow(
+    version: String,
+    forced: Boolean,
+    onToggleForced: (Boolean) -> Unit,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Compiler Version",
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = version,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        TextButton(
+            onClick = { onToggleForced(!forced) },
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
+            Text(if (forced) "Forced" else "Auto")
+        }
     }
 }
 

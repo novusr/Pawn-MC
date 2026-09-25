@@ -30,6 +30,9 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     var n_forced_compiler_mode by mutableStateOf(config.n_forced_compiler_mode)
         private set
 
+    var n_app_theme by mutableStateOf(config.n_app_theme)
+        private set
+
     val n_include_paths = mutableStateListOf<String>().apply { addAll(config.n_include_paths) }
 
     fun updateCompilerVersion(version: CompilerConfig.CompilerVersion) {
@@ -60,6 +63,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     fun updateForcedCompilerMode(enabled: Boolean) {
         n_forced_compiler_mode = enabled
         config.n_forced_compiler_mode = enabled
+    }
+
+    fun updateAppTheme(theme: CompilerConfig.AppTheme) {
+        n_app_theme = theme
+        config.n_app_theme = theme
     }
 
     fun addIncludePath(path: String) {
