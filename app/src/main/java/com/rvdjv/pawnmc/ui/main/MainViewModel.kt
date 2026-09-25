@@ -17,6 +17,9 @@ import java.io.File
 
 class MainViewModel(private val config: CompilerConfig) : ViewModel() {
 
+    var n_app_theme by mutableStateOf(config.n_app_theme)
+        private set
+
     var selectedFilePath by mutableStateOf<String?>(null)
         private set
 
@@ -31,6 +34,10 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
 
     var lastExitCode by mutableStateOf<Int?>(null)
         private set
+
+    fun refreshTheme() {
+        n_app_theme = config.n_app_theme
+    }
 
     fun loadLastSelectedFile() {
         val lastPath = config.n_last_selected_file_path

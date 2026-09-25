@@ -23,10 +23,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         PawnCompiler.resetSessionState()
         AppUpdateManager(applicationContext).ensureVersionFileWritten()
-        val appTheme = CompilerConfig.getInstance(applicationContext).n_app_theme
         enableEdgeToEdge()
         setContent {
-            PawnMCTheme(darkTheme = resolveDarkTheme(appTheme)) {
+            PawnMCTheme(darkTheme = resolveDarkTheme(viewModel.n_app_theme)) {
                 MainScreen(
                     viewModel = viewModel,
                     onSettingsClick = {
@@ -36,5 +35,10 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshTheme()
     }
 }

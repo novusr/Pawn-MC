@@ -20,10 +20,9 @@ class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppUpdateManager(applicationContext).ensureVersionFileWritten()
-        val appTheme = CompilerConfig.getInstance(applicationContext).n_app_theme
         enableEdgeToEdge()
         setContent {
-            PawnMCTheme(darkTheme = resolveDarkTheme(appTheme)) {
+            PawnMCTheme(darkTheme = resolveDarkTheme(viewModel.n_app_theme)) {
                 SettingsScreen(
                     viewModel = viewModel,
                     onNavigateBack = { finish() },

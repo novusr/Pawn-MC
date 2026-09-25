@@ -69,6 +69,7 @@ private val DarkColorScheme = darkColorScheme(
     outlineVariant = md_theme_dark_outlineVariant,
 )
 
+@Composable
 fun resolveDarkTheme(theme: com.rvdjv.pawnmc.data.config.CompilerConfig.AppTheme): Boolean {
     return when (theme) {
         com.rvdjv.pawnmc.data.config.CompilerConfig.AppTheme.SYSTEM -> isSystemInDarkTheme()

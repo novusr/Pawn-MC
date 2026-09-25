@@ -117,10 +117,11 @@ fun SettingsScreen(
                             withContext(Dispatchers.IO) { updateManager.downloadLatestApk(release) }
                         } else null
 
-                        updateStatus = "Update available: $latestVersion"
+                        val hasValidApk = downloaded != null && downloaded.exists()
+                        updateStatus = if (hasValidApk) "Update available: $latestVersion" else "Update available, but no APK is attached"
                         lastReleaseInfo = release?.releaseUrl
                         downloadedApk = downloaded
-                        updateReady = true
+                        updateReady = hasValidApk
                     }
                     UpdateStatus.UP_TO_DATE -> {
                         updateStatus = "You're on the latest version"
