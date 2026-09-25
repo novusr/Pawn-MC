@@ -2,7 +2,7 @@ PawnMC
 ==========
 
 _PawnMC_ expands the workflow of the Pawn scripting language with a complete, native compilation environment for your mobile device.
-![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/PAWNMC.png)
+![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/content/PAWNMC.png)
 
 With this application, you can use on-the-go development techniques, manage local libraries, and build your projects directly on Android to make programming in Pawn more accessible, flexible, and efficient.
 
@@ -30,11 +30,11 @@ Kami tidak bisa memaksakan untuk memasukan Text Editor luar ke PawnMC yang bisa 
 namun kami memiliki beberapa saran jika memang kalian membutuhkan Text Editor Android yang bisa dikatakan bisa untuk beriringan dengan PawnMC sebagai Compiler<br>
 1. VSCode Dev (Link: https://vscode.dev/)
 VSCode Dev itu seperti website penyuting teks tapi tentunya ini adalah website resmi Microsoft yang menyediakan layanan VSCode dalam peramban atau browser namun dengan batasan tentunya, seperti: tidak bisa mengakses terminal.
-![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/VSCODE.png)
+![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/content/VSCODE.png)
 2. Xed Editor (Link: [Apps](https://github.com/Xed-Editor/Xed-Editor/releases/download/v3.4.5/xed-editor-v3.4.5.apk))
 Xed Editor sendiri itu seperti aplikasi yang secara khusus bisa dikatakan adalah IDE yang cocok untuk dijadikan aplikasi tambahan sebagai penyuting teks dan di sisi lain PawnMC adalah Compiler nya
 Xed Editor memiliki fitur seperti Syntax Highlight (Sintaks berwarna) dan dukungan banyak Bahasa serta mendukung penggunaan Terminal langsung seperti Termux
-![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/XED.png)
+![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/content/XED.png)
 
 English | Notes<br>
 Welcome to the official PawnMC repository.<br>
@@ -49,11 +49,11 @@ We cannot simply integrate an external Text Editor into PawnMC, as doing so coul
 However, we have a few suggestions if you need an Android Text Editor that can work alongside PawnMC as your Compiler:<br>
 1. VSCode Dev (Link: https://vscode.dev/)
 VSCode Dev is essentially a web-based text editor. It is Microsoft's official VSCode service, providing VSCode directly through a web browser, although it comes with certain limitations, such as not having access to a terminal.
-![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/VSCODE.png)
+![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/content/VSCODE.png)
 2. Xed Editor (Link: [Apps](https://github.com/Xed-Editor/Xed-Editor/releases/download/v3.4.5/xed-editor-v3.4.5.apk))
 Xed Editor is an application that can be considered a suitable IDE to use alongside PawnMC as a Text Editor, while PawnMC serves as the Compiler.
 Xed Editor provides features such as Syntax Highlighting, support for multiple programming languages, and direct Terminal access similar to Termux.
-![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/XED.png)
+![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/content/XED.png)
 
 ## Documentation
 See the [configuration folder](//github.com/novusr/Pawn-MC/tree/main/configuration) for documentation and guides on how to use this application and set up your mobile workspace.

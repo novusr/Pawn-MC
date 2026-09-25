@@ -1,9 +1,12 @@
 package com.rvdjv.pawnmc.ui.settings
 
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -59,6 +62,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.data.update.AppUpdateManager
+import com.rvdjv.pawnmc.data.update.UpdateStatus
 import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserMode
 
@@ -70,11 +75,19 @@ fun SettingsScreen(
     onRestartRequested: () -> Unit
 ) {
     val context = LocalContext.current
+    val updateManager = remember { AppUpdateManager(context) }
+    val installLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { }
 
     var showIncludePathDialog by remember { mutableStateOf(false) }
     var showVersionDialog by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
     var pendingVersion by remember { mutableStateOf<CompilerConfig.CompilerVersion?>(null) }
+    var updateStatus by remember { mutableStateOf("Checking for updates...") }
+    var updateReady by remember { mutableStateOf(false) }
+    var downloadedApk by remember { mutableStateOf<java.io.File?>(null) }
+    var lastReleaseInfo by remember { mutableStateOf<String?>(null) }
 
     var appVersion by remember { mutableStateOf("") }
     var buildNumber by remember { mutableStateOf("") }
@@ -93,6 +106,31 @@ fun SettingsScreen(
         } catch (_: PackageManager.NameNotFoundException) {
             appVersion = "v1.0.0"
             buildNumber = "0"
+        }
+
+        runCatching {
+            val result = updateManager.checkForUpdate()
+            when (result.status) {
+                UpdateStatus.UPDATE_AVAILABLE -> {
+                    val latestVersion = result.latestVersion ?: "unknown"
+                    updateStatus = "Update available: $latestVersion"
+                    lastReleaseInfo = result.release?.releaseUrl
+                    val release = result.release ?: return@runCatching
+                    downloadedApk = updateManager.downloadLatestApk(release)
+                    updateReady = true
+                }
+                UpdateStatus.UP_TO_DATE -> {
+                    updateStatus = "You're on the latest version"
+                    updateReady = false
+                }
+                UpdateStatus.ERROR -> {
+                    updateStatus = "Unable to check for updates"
+                    updateReady = false
+                }
+            }
+        }.onFailure {
+            updateStatus = "Unable to check for updates"
+            updateReady = false
         }
     }
 
@@ -363,6 +401,84 @@ fun SettingsScreen(
                             ContextCompat.startActivity(context, intent, null)
                         }
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = updateStatus,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (updateReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (lastReleaseInfo != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Release: $lastReleaseInfo",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val updateButtonText = if (updateReady) "Update PawnMC" else "Check for updates"
+                    TextButton(
+                        onClick = {
+                            if (updateReady) {
+                                if (!updateManager.canRequestUnknownSources()) {
+                                    val unknownSources = updateManager.buildUnknownSourcesIntent()
+                                    ContextCompat.startActivity(context, unknownSources, null)
+                                    return@TextButton
+                                }
+
+                                val apkFile = downloadedApk ?: return@TextButton
+                                val installIntent = updateManager.buildInstallIntent(apkFile)
+                                installLauncher.launch(installIntent)
+                                return@TextButton
+                            }
+
+                            runCatching {
+                                val result = updateManager.checkForUpdate()
+                                when (result.status) {
+                                    UpdateStatus.UPDATE_AVAILABLE -> {
+                                        val release = result.release ?: return@runCatching
+                                        downloadedApk = updateManager.downloadLatestApk(release)
+                                        updateStatus = "Update available: ${result.latestVersion}"
+                                        lastReleaseInfo = release.releaseUrl
+                                        updateReady = true
+                                    }
+                                    UpdateStatus.UP_TO_DATE -> {
+                                        updateStatus = "You're on the latest version"
+                                        lastReleaseInfo = result.release?.releaseUrl
+                                        updateReady = false
+                                    }
+                                    UpdateStatus.ERROR -> {
+                                        updateStatus = "Unable to check for updates"
+                                        updateReady = false
+                                    }
+                                }
+                            }.onFailure {
+                                updateStatus = "Unable to check for updates"
+                                updateReady = false
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(updateButtonText)
+                    }
                 }
             }
         }
