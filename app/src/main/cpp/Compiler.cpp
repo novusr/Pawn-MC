@@ -431,7 +431,7 @@ struct n_compile_args {
 };
 
 static void* n_compiler_thread(void* arg) {
-    auto* n_compile_args = static_cast<n_compile_args*>(arg);
+    auto* n_compile_args = static_cast<struct n_compile_args*>(arg);
 
     auto n_start_time = std::chrono::steady_clock::now();
     n_compile_args->n_result = pc_compile(n_compile_args->n_argc, n_compile_args->n_argv);
