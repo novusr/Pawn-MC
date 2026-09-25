@@ -51,6 +51,7 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
                     selectionError = null
                     lastExitCode = null
                     outputText = "Opened file: $path\n"
+                    applyCompilerAutoDetection(path)
                 } else {
                     selectionError = "Invalid file type! (only: .pawn .pwn .p)"
                 }
@@ -65,9 +66,31 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
             config.n_last_selected_file_path = path
             selectionError = null
             lastExitCode = null
+            applyCompilerAutoDetection(path)
         } else {
             selectionError = "Invalid file type! (only: .pawn .pwn .p)"
         }
+    }
+
+    private fun applyCompilerAutoDetection(sourcePath: String) {
+        // Auto-detect the compiler only when the nearby pawncc.exe metadata matches a supported version.
+        val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
+        val autoIncludePaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath)
+        val mergedPaths = config.n_include_paths.toMutableList()
+        autoIncludePaths.forEach { path ->
+            if (path !in mergedPaths) mergedPaths.add(path)
+        }
+        config.n_include_paths = mergedPaths
+
+        if (detectedVersion != null) {
+            config.n_compiler_version = detectedVersion
+            outputText = "Detected compiler: ${detectedVersion.label}\n"
+            return
+        }
+
+        // Keep the compiler default at 3.10.7 when the EXE is absent or the metadata does not match any known version.
+        config.n_compiler_version = CompilerConfig.CompilerVersion.V3107
+        outputText += "Compiler fallback: ${CompilerConfig.CompilerVersion.V3107.label}\n"
     }
 
     fun compileFile(path: String, isStoragePermissionGranted: Boolean, onPermissionRequired: () -> Unit) {
@@ -76,15 +99,19 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
             return
         }
 
+        val detectedVersion = PawnCompiler.detectCompilerVersionForFile(path)
+        val version = detectedVersion ?: CompilerConfig.CompilerVersion.V3107
+        config.n_compiler_version = version
+
         isCompiling = true
         outputText = ""
         viewModelScope.launch {
             val options = config.buildOptions()
-            val version = config.n_compiler_version
+            val selectedVersion = config.n_compiler_version
 
             val startTime = System.currentTimeMillis()
             val result = withContext(Dispatchers.IO) {
-                PawnCompiler.compile(path, options, version)
+                PawnCompiler.compile(path, options, selectedVersion)
             }
             val duration = System.currentTimeMillis() - startTime
 

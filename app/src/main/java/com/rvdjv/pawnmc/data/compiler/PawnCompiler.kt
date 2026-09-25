@@ -9,12 +9,21 @@ import java.io.File
  */
 object PawnCompiler {
 
+    data class NearbyCompilerMatch(
+        val version: CompilerConfig.CompilerVersion,
+        val filePath: String,
+        val productVersion: String?,
+        val sizeBytes: Long,
+        val md5: String?
+    )
+
     private const val AUTO_FALLBACK_ERROR_THRESHOLD = 5
     private var INITIALIZED_VER: CompilerConfig.CompilerVersion? = null
     private var IS_INITIALIZED = false
     private var FALL_MUTATION = false
     private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
     private val ERROR_COUNT_REGEX = """(?i)(\d+)\s+errors?\.?""".toRegex()
+    private val PRODUCT_VERSION_REGEX = """\b\d+\.\d+\.\d+\b""".toRegex()
 
     fun resetSessionState() {
         FALL_MUTATION = false
@@ -58,6 +67,107 @@ object PawnCompiler {
             .map { it.groupValues[1].toIntOrNull() ?: 0 }
             .maxOrNull() ?: 0
     }
+
+    // Detect the compiler only when the nearby pawncc.exe metadata truly matches one of the known Pawn versions.
+    fun detectCompilerVersionForFile(sourceFile: String): CompilerConfig.CompilerVersion? {
+        val match = detectNearbyCompiler(sourceFile) ?: return null
+        val config = CompilerConfig.getInstanceOrNull()
+        if (config != null) {
+            config.n_detected_compiler_product_version = match.productVersion
+            config.n_detected_compiler_size_bytes = match.sizeBytes
+            config.n_detected_compiler_md5 = match.md5
+        }
+        return match.version
+    }
+
+    // Find the nearest compiler executable around the selected file and return the matching version only if the EXE
+    // metadata clearly matches a supported Pawn compiler. If it is missing or does not match, return null so the app
+    // can safely keep the default compiler at 3.10.7 without forcing a wrong version.
+    fun detectNearbyCompiler(sourceFile: String): NearbyCompilerMatch? {
+        val file = File(sourceFile)
+        if (!file.exists() || file.extension.isBlank()) return null
+
+        val searchRoots = LinkedHashSet<File>()
+        var current: File? = file.parentFile
+        var depth = 0
+        while (current != null && depth < 6) {
+            searchRoots += current
+            searchRoots += File(current, "pawno")
+            searchRoots += File(current, "pawn")
+            current = current.parentFile
+            depth += 1
+        }
+
+        for (dir in searchRoots) {
+            val candidates = listOf(
+                File(dir, "pawncc.exe"),
+                File(dir, "pawncc"),
+                File(dir, "pawncc.exe"),
+                File(dir, "pawno/pawncc.exe"),
+                File(dir, "pawn/pawncc.exe")
+            ).distinctBy { it.absolutePath }
+
+            for (candidate in candidates) {
+                if (!candidate.exists() || !candidate.isFile) continue
+                val metadata = readCompilerMetadata(candidate)
+                val version = metadata.version ?: continue
+                return NearbyCompilerMatch(
+                    version = version,
+                    filePath = candidate.absolutePath,
+                    productVersion = metadata.productVersion,
+                    sizeBytes = metadata.sizeBytes,
+                    md5 = metadata.md5
+                )
+            }
+        }
+
+        return null
+    }
+
+    // Build the include directories that are most useful for a selected source file:
+    // 1. the file's own parent folder, and
+    // 2. the exact folder containing the detected pawncc.exe (for example: .../pawno).
+    fun discoverRelevantIncludePaths(sourceFile: String): List<String> {
+        val result = linkedSetOf<String>()
+        val sourceDir = File(sourceFile).parentFile
+        if (sourceDir != null && sourceDir.exists() && sourceDir.isDirectory) {
+            result += sourceDir.absolutePath
+        }
+
+        val compilerMatch = detectNearbyCompiler(sourceFile)
+        val compilerDir = compilerMatch?.let { File(it.filePath).parentFile }
+        if (compilerDir != null && compilerDir.exists() && compilerDir.isDirectory) {
+            result += compilerDir.absolutePath
+        }
+
+        return result.filter { it.isNotBlank() }
+    }
+
+    private fun readCompilerMetadata(file: File): CompilerMetadata {
+        val bytes = runCatching { file.readBytes() }.getOrElse { byteArrayOf() }
+        val utf16Text = runCatching { String(bytes, Charsets.UTF_16LE) }.getOrElse { "" }
+        val fallbackText = runCatching { String(bytes, Charsets.ISO_8859_1) }.getOrElse { "" }
+        val productVersion = PRODUCT_VERSION_REGEX.find(utf16Text)?.value
+            ?: PRODUCT_VERSION_REGEX.find(fallbackText)?.value
+        val sizeBytes = file.length()
+        val md5 = try {
+            val digest = java.security.MessageDigest.getInstance("MD5")
+            val hash = digest.digest(bytes)
+            hash.joinToString("") { "%02x".format(it) }
+        } catch (_: Exception) {
+            null
+        }
+
+        val version = CompilerConfig.CompilerVersion.entries.firstOrNull { it.matchesDetected(productVersion, sizeBytes, md5) }
+        return CompilerMetadata(version, productVersion, sizeBytes, md5)
+    }
+
+    private data class CompilerMetadata(
+        val version: CompilerConfig.CompilerVersion?,
+        val productVersion: String?,
+        val sizeBytes: Long,
+        val md5: String?
+    )
 
     /**
      * pawn file compilation

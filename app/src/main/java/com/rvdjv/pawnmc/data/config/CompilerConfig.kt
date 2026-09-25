@@ -58,9 +58,29 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getString(KEY_LAST_FILE, null)
         set(value) = prefs.edit { putString(KEY_LAST_FILE, value) }
 
+    var lastSelectedFilePath: String?
+        get() = n_last_selected_file_path
+        set(value) { n_last_selected_file_path = value }
+
     var n_last_opened_dir_path: String?
         get() = prefs.getString(KEY_LAST_DIR, null)
         set(value) = prefs.edit { putString(KEY_LAST_DIR, value) }
+
+    var lastOpenedDirPath: String?
+        get() = n_last_opened_dir_path
+        set(value) { n_last_opened_dir_path = value }
+
+    var n_detected_compiler_product_version: String?
+        get() = prefs.getString(KEY_DETECTED_PRODUCT_VERSION, null)
+        set(value) = prefs.edit { putString(KEY_DETECTED_PRODUCT_VERSION, value) }
+
+    var n_detected_compiler_size_bytes: Long
+        get() = prefs.getLong(KEY_DETECTED_SIZE_BYTES, 0L)
+        set(value) = prefs.edit { putLong(KEY_DETECTED_SIZE_BYTES, value) }
+
+    var n_detected_compiler_md5: String?
+        get() = prefs.getString(KEY_DETECTED_MD5, null)
+        set(value) = prefs.edit { putString(KEY_DETECTED_MD5, value) }
 
     /**
      * Build compiler options list from current configuration.
@@ -99,11 +119,44 @@ class CompilerConfig private constructor(context: Context) {
         }
     }
 
-    enum class CompilerVersion(val value: String, val libraryName: String, val label: String, val description: String) {
-        V3107("3.10.7",   "pawnc3107",  "Pawn 3.10.7",  "Stable"),
-        V31011("3.10.11", "pawnc31011", "Pawn 3.10.11", "Newer");
+    enum class CompilerVersion(
+        val value: String,
+        val libraryName: String,
+        val label: String,
+        val description: String,
+        val expectedMd5: String? = null,
+        val sizeToleranceBytes: Long = 4_096L
+    ) {
+        V3107("3.10.7", "pawnc3107", "Pawn 3.10.7", "Stable", "a48e04d28e8cb77e0361ecb4dced2501", 4_096L),
+        V31011("3.10.11", "pawnc31011", "Pawn 3.10.11", "Newer", "9044b9ef65658c79851b4e2e249e5c75", 4_096L);
 
         fun other(): CompilerVersion = if (this == V3107) V31011 else V3107
+
+        fun matchesDetected(
+            productVersion: String?,
+            sizeBytes: Long?,
+            md5: String?
+        ): Boolean {
+            val normalizedProduct = productVersion?.trim()?.removeSuffix("\u0000")
+            val productMatches = normalizedProduct != null && normalizedProduct.equals(value, ignoreCase = true)
+            val sizeMatches = sizeBytes == null || sizeMatchesExpected(sizeBytes)
+            val md5Matches = !md5.isNullOrBlank() && md5.equals(expectedMd5, ignoreCase = true)
+
+            if (productMatches && sizeMatches) return true
+            if (md5Matches) return true
+            if (productMatches) return true
+
+            return false
+        }
+
+        private fun sizeMatchesExpected(sizeBytes: Long): Boolean {
+            val expected = when (this) {
+                V3107 -> 28_672L
+                V31011 -> 18_944L
+            }
+            return kotlin.math.abs(expected - sizeBytes) <= sizeToleranceBytes ||
+                kotlin.math.abs(expected - sizeBytes) <= expected * 0.20
+        }
 
         companion object {
             fun fromValue(value: String) = entries.find { it.value == value } ?: V3107
@@ -120,6 +173,9 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_CUSTOM_FLAGS     = "custom_flags"
         private const val KEY_INCLUDE_PATHS    = "include_paths"
         private const val KEY_COMPILER_VERSION = "compiler_version"
+        private const val KEY_DETECTED_PRODUCT_VERSION = "detected_compiler_product_version"
+        private const val KEY_DETECTED_SIZE_BYTES = "detected_compiler_size_bytes"
+        private const val KEY_DETECTED_MD5 = "detected_compiler_md5"
 
         @Volatile
         private var instance: CompilerConfig? = null
