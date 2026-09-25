@@ -296,6 +296,84 @@ fun SettingsScreen(
                 }
             }
 
+            CategoryHeader(text = "Updates")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = updateStatus,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (updateReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    if (lastReleaseInfo != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Release: $lastReleaseInfo",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    val updateButtonText = if (updateReady) "Update PawnMC" else "Check for updates"
+                    TextButton(
+                        onClick = {
+                            if (updateReady) {
+                                if (!updateManager.canRequestUnknownSources()) {
+                                    val unknownSources = updateManager.buildUnknownSourcesIntent()
+                                    ContextCompat.startActivity(context, unknownSources, null)
+                                    return@TextButton
+                                }
+
+                                val apkFile = downloadedApk ?: return@TextButton
+                                val installIntent = updateManager.buildInstallIntent(apkFile)
+                                installLauncher.launch(installIntent)
+                                return@TextButton
+                            }
+
+                            runCatching {
+                                val result = updateManager.checkForUpdate()
+                                when (result.status) {
+                                    UpdateStatus.UPDATE_AVAILABLE -> {
+                                        val release = result.release ?: return@runCatching
+                                        downloadedApk = updateManager.downloadLatestApk(release)
+                                        updateStatus = "Update available: ${result.latestVersion}"
+                                        lastReleaseInfo = release.releaseUrl
+                                        updateReady = true
+                                    }
+                                    UpdateStatus.UP_TO_DATE -> {
+                                        updateStatus = "You're on the latest version"
+                                        lastReleaseInfo = result.release?.releaseUrl
+                                        updateReady = false
+                                    }
+                                    UpdateStatus.ERROR -> {
+                                        updateStatus = "Unable to check for updates"
+                                        updateReady = false
+                                    }
+                                }
+                            }.onFailure {
+                                updateStatus = "Unable to check for updates"
+                                updateReady = false
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(updateButtonText)
+                    }
+                }
+            }
+
             CategoryHeader(text = "Include Paths")
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -401,84 +479,6 @@ fun SettingsScreen(
                             ContextCompat.startActivity(context, intent, null)
                         }
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = updateStatus,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = if (updateReady) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    if (lastReleaseInfo != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Release: $lastReleaseInfo",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    val updateButtonText = if (updateReady) "Update PawnMC" else "Check for updates"
-                    TextButton(
-                        onClick = {
-                            if (updateReady) {
-                                if (!updateManager.canRequestUnknownSources()) {
-                                    val unknownSources = updateManager.buildUnknownSourcesIntent()
-                                    ContextCompat.startActivity(context, unknownSources, null)
-                                    return@TextButton
-                                }
-
-                                val apkFile = downloadedApk ?: return@TextButton
-                                val installIntent = updateManager.buildInstallIntent(apkFile)
-                                installLauncher.launch(installIntent)
-                                return@TextButton
-                            }
-
-                            runCatching {
-                                val result = updateManager.checkForUpdate()
-                                when (result.status) {
-                                    UpdateStatus.UPDATE_AVAILABLE -> {
-                                        val release = result.release ?: return@runCatching
-                                        downloadedApk = updateManager.downloadLatestApk(release)
-                                        updateStatus = "Update available: ${result.latestVersion}"
-                                        lastReleaseInfo = release.releaseUrl
-                                        updateReady = true
-                                    }
-                                    UpdateStatus.UP_TO_DATE -> {
-                                        updateStatus = "You're on the latest version"
-                                        lastReleaseInfo = result.release?.releaseUrl
-                                        updateReady = false
-                                    }
-                                    UpdateStatus.ERROR -> {
-                                        updateStatus = "Unable to check for updates"
-                                        updateReady = false
-                                    }
-                                }
-                            }.onFailure {
-                                updateStatus = "Unable to check for updates"
-                                updateReady = false
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(updateButtonText)
-                    }
                 }
             }
         }
