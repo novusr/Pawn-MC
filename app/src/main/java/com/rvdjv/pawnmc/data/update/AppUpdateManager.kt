@@ -14,7 +14,8 @@ import java.net.URL
 import java.util.Locale
 import kotlin.math.max
 
-private const val GITHUB_LATEST_RELEASE_URL = "https://api.github.com/repos/novusr/Pawn-MC/releases/latest"
+private const val _MC_LATEST = "https://api.github.com/repos/" +
+                    "novusr/Pawn-MC/releases/latest"
 
 data class GitHubRelease(
     val version: String,
@@ -36,16 +37,80 @@ data class UpdateCheckResult(
 )
 
 class AppUpdateManager(private val context: Context) {
-    private val versionFile = File(context.filesDir, ".pawnmc_version.txt")
+    private val hiddenBaseDir = File(context.filesDir, ".pawnmc").apply { mkdirs() }
+    private val versionFile = File(hiddenBaseDir, ".pawnmc_version.txt")
+
+    companion object {
+        @Volatile
+        private var didWriteVersionInSession: Boolean = false
+
+        @JvmStatic
+        fun compareVersions(currentVersion: String, targetVersion: String): Int {
+            val currentParts = parseVersionParts(currentVersion)
+            val targetParts = parseVersionParts(targetVersion)
+            val maxSize = max(currentParts.size, targetParts.size)
+
+            for (index in 0 until maxSize) {
+                val currentPart = currentParts.getOrElse(index) { 0 }
+                val targetPart = targetParts.getOrElse(index) { 0 }
+                if (currentPart != targetPart) {
+                    return currentPart.compareTo(targetPart)
+                }
+            }
+
+            val currentSuffix = prereleaseSuffix(currentVersion)
+            val targetSuffix = prereleaseSuffix(targetVersion)
+
+            if (currentSuffix.isEmpty() && targetSuffix.isEmpty()) return 0
+            if (currentSuffix.isEmpty()) return 1
+            if (targetSuffix.isEmpty()) return -1
+            return currentSuffix.compareTo(targetSuffix)
+        }
+
+        private fun parseVersionParts(value: String): List<Int> {
+            val cleaned = value.trim().removePrefix("v")
+            val matches = Regex("\\d+").findAll(cleaned).map { it.value.toInt() }.toList()
+            return if (matches.isEmpty()) listOf(0) else matches
+        }
+
+        private fun prereleaseSuffix(value: String): String {
+            val cleaned = value.trim().removePrefix("v")
+            val symbolIndex = cleaned.indexOfAny(charArrayOf('-', '+', '_'))
+            return if (symbolIndex == -1) "" else cleaned.substring(symbolIndex + 1).trim()
+        }
+    }
 
     fun getCurrentVersion(): String = BuildConfig.VERSION_NAME.trim()
 
     fun storeCurrentVersion(version: String = getCurrentVersion()) {
-        versionFile.writeText(version.trim())
+        val trimmedVersion = version.trim()
+        if (trimmedVersion.isBlank()) return
+
+        val existingVersion = readStoredVersion()
+        if (existingVersion == trimmedVersion) {
+            didWriteVersionInSession = true
+            return
+        }
+
+        runCatching {
+            hiddenBaseDir.mkdirs()
+            versionFile.writeText(trimmedVersion)
+            didWriteVersionInSession = true
+        }
     }
 
     fun ensureVersionFileWritten() {
-        storeCurrentVersion(getCurrentVersion())
+        if (didWriteVersionInSession) return
+        val currentVersion = getCurrentVersion().trim()
+        if (currentVersion.isBlank()) return
+
+        val existingVersion = readStoredVersion()
+        if (existingVersion == currentVersion) {
+            didWriteVersionInSession = true
+            return
+        }
+
+        storeCurrentVersion(currentVersion)
     }
 
     fun readStoredVersion(): String? {
@@ -57,7 +122,7 @@ class AppUpdateManager(private val context: Context) {
     fun checkForUpdate(): UpdateCheckResult {
         val currentVersion = getCurrentVersion()
         val storedVersion = readStoredVersion() ?: currentVersion
-        storeCurrentVersion(currentVersion)
+        ensureVersionFileWritten()
 
         val release = fetchLatestRelease() ?: return UpdateCheckResult(
             currentVersion = currentVersion,
@@ -83,7 +148,7 @@ class AppUpdateManager(private val context: Context) {
     }
 
     fun fetchLatestRelease(): GitHubRelease? {
-        val url = URL(GITHUB_LATEST_RELEASE_URL)
+        val url = URL(_MC_LATEST)
         val connection = url.openConnection() as HttpURLConnection
         connection.requestMethod = "GET"
         connection.setRequestProperty("Accept", "application/vnd.github+json")
@@ -103,7 +168,8 @@ class AppUpdateManager(private val context: Context) {
                 return null
             }
 
-            val releaseUrl = releaseJson.optString("html_url", "https://github.com/novusr/Pawn-MC/releases/latest")
+            val releaseUrl = releaseJson.optString("html_url", "https://github.com/" +
+                                            "novusr/Pawn-MC/releases/latest")
             var apkUrl: String? = null
             val assets = releaseJson.optJSONArray("assets")
             if (assets != null) {
@@ -183,40 +249,4 @@ class AppUpdateManager(private val context: Context) {
         }
     }
 
-    companion object {
-        @JvmStatic
-        fun compareVersions(currentVersion: String, targetVersion: String): Int {
-            val currentParts = parseVersionParts(currentVersion)
-            val targetParts = parseVersionParts(targetVersion)
-            val maxSize = max(currentParts.size, targetParts.size)
-
-            for (index in 0 until maxSize) {
-                val currentPart = currentParts.getOrElse(index) { 0 }
-                val targetPart = targetParts.getOrElse(index) { 0 }
-                if (currentPart != targetPart) {
-                    return currentPart.compareTo(targetPart)
-                }
-            }
-
-            val currentSuffix = prereleaseSuffix(currentVersion)
-            val targetSuffix = prereleaseSuffix(targetVersion)
-
-            if (currentSuffix.isEmpty() && targetSuffix.isEmpty()) return 0
-            if (currentSuffix.isEmpty()) return 1
-            if (targetSuffix.isEmpty()) return -1
-            return currentSuffix.compareTo(targetSuffix)
-        }
-
-        private fun parseVersionParts(value: String): List<Int> {
-            val cleaned = value.trim().removePrefix("v")
-            val matches = Regex("\\d+").findAll(cleaned).map { it.value.toInt() }.toList()
-            return if (matches.isEmpty()) listOf(0) else matches
-        }
-
-        private fun prereleaseSuffix(value: String): String {
-            val cleaned = value.trim().removePrefix("v")
-            val symbolIndex = cleaned.indexOfAny(charArrayOf('-', '+', '_'))
-            return if (symbolIndex == -1) "" else cleaned.substring(symbolIndex + 1).trim()
-        }
-    }
 }

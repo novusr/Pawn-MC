@@ -22,18 +22,32 @@ object PawnCompiler {
     private var IS_INITIALIZED = false
     private var FALL_MUTATION = false
 
+    /**
+     * Checks whether forced mode is enabled by the user.
+     *
+     * @return true if auto-detection and fallback switching are disabled
+     */
     fun isForcedModeEnabled(): Boolean {
         return CompilerConfig.getInstanceOrNull()?.n_forced_compiler_mode == true
     }
+
     private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
     private val ERROR_COUNT_REGEX = """(?i)(\d+)\s+errors?\.?""".toRegex()
     private val PRODUCT_VERSION_REGEX = """\b\d+\.\d+\.\d+\b""".toRegex()
 
+    /**
+     * Resets the current compile fallback mutation state for this session.
+     */
     fun resetSessionState() {
         FALL_MUTATION = false
     }
 
-    // load lib when app is opened
+    /**
+     * Loads the selected native compiler library once per session.
+     *
+     * @param version selected compiler version
+     * @return true when load succeeds, otherwise false
+     */
     private fun ensureInitialized(version: CompilerConfig.CompilerVersion): Boolean {
         if (IS_INITIALIZED) {
             if (INITIALIZED_VER != version) {
@@ -56,75 +70,108 @@ object PawnCompiler {
         }
     }
 
+    /**
+     * Gets the currently loaded Native compiler version.
+     *
+     * @return loaded compiler version, or null if nothing has been initialized yet
+     */
     fun getLoadedVersion(): CompilerConfig.CompilerVersion? = INITIALIZED_VER
 
+    /**
+     * Checks if the app must restart after version switching.
+     *
+     * @param requestedVersion target compiler version
+     * @return true when a restart is needed due to a different loaded library
+     */
     fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean {
         return IS_INITIALIZED && INITIALIZED_VER != requestedVersion
     }
 
+    /**
+     * Decides whether compiler fallback should happen based on the detected error count.
+     *
+     * @param output compiler output text
+     * @param threshold required number of errors before fallback happens
+     * @return true when the threshold is reached
+     */
     internal fun shouldRetryWithFallback(output: String, threshold: Int = AUTO_FALLBACK_ERROR_THRESHOLD): Boolean {
         return extractErrorCount(output) >= threshold
     }
 
+    /**
+     * Counts the highest error total found in compiler output.
+     *
+     * @param output compiler output text
+     * @return highest error count from the log
+     */
     internal fun extractErrorCount(output: String): Int {
         return ERROR_COUNT_REGEX.findAll(output)
             .map { it.groupValues[1].toIntOrNull() ?: 0 }
             .maxOrNull() ?: 0
     }
 
-    // Detect the compiler only when the nearby pawncc.exe metadata truly matches one of the known Pawn versions.
+    /**
+     * Detects a nearby Pawn compiler and maps it to the supported PawnMC version when metadata matches.
+     *
+     * @param sourceFile selected pawn source file path
+     * @return matched compiler version or null when forced mode or no valid match is found
+     */
     fun detectCompilerVersionForFile(sourceFile: String): CompilerConfig.CompilerVersion? {
-        val config = CompilerConfig.getInstanceOrNull()
-        if (config?.n_forced_compiler_mode == true) {
+        val n_config = CompilerConfig.getInstanceOrNull()
+        if (n_config?.n_forced_compiler_mode == true) {
             return null
         }
 
-        val match = detectNearbyCompiler(sourceFile) ?: return null
-        if (config != null) {
-            config.n_detected_compiler_product_version = match.productVersion
-            config.n_detected_compiler_size_bytes = match.sizeBytes
-            config.n_detected_compiler_md5 = match.md5
+        val n_match = detectNearbyCompiler(sourceFile) ?: return null
+        if (n_config != null) {
+            n_config.n_detected_compiler_product_version = n_match.productVersion
+            n_config.n_detected_compiler_size_bytes = n_match.sizeBytes
+            n_config.n_detected_compiler_md5 = n_match.md5
         }
-        return match.version
+        return n_match.version
     }
 
-    // Find the nearest compiler executable around the selected file and return the matching version only if the EXE
-    // metadata clearly matches a supported Pawn compiler. If it is missing or does not match, return null so the app
-    // can safely keep the default compiler at 3.10.7 without forcing a wrong version.
+    /**
+     * Scans nearby folders for a Pawn compiler executable and returns the best detected match.
+     *
+     * @param sourceFile selected Pawn file path
+     * @return compiler match information or null if not found
+     */
     fun detectNearbyCompiler(sourceFile: String): NearbyCompilerMatch? {
-        val file = File(sourceFile)
-        if (!file.exists() || file.extension.isBlank()) return null
+        val n_sourceFile = File(sourceFile)
+        if (!n_sourceFile.exists() || n_sourceFile.extension.isBlank()) return null
 
-        val searchRoots = LinkedHashSet<File>()
-        var current: File? = file.parentFile
-        var depth = 0
-        while (current != null && depth < 6) {
-            searchRoots += current
-            searchRoots += File(current, "pawno")
-            searchRoots += File(current, "pawn")
-            current = current.parentFile
-            depth += 1
+        val n_searchRoots = LinkedHashSet<File>()
+        var n_currentDir = n_sourceFile.parentFile
+        var n_depth = 0
+        while (n_currentDir != null && n_depth < 6) {
+            n_searchRoots += n_currentDir
+            n_searchRoots += File(n_currentDir, "pawno")
+            n_searchRoots += File(n_currentDir, "pawn")
+            n_currentDir = n_currentDir.parentFile
+            n_depth += 1
         }
 
-        for (dir in searchRoots) {
-            val candidates = listOf(
-                File(dir, "pawncc.exe"),
-                File(dir, "pawncc"),
-                File(dir, "pawncc.exe"),
-                File(dir, "pawno/pawncc.exe"),
-                File(dir, "pawn/pawncc.exe")
+        for (n_dir in n_searchRoots) {
+            val n_pawnoDir = File(n_dir, "pawno")
+            val n_pawnDir = File(n_dir, "pawn")
+            val n_candidates = listOf(
+                File(n_dir, "pawncc.exe"),
+                File(n_dir, "pawncc"),
+                File(n_pawnoDir, "pawncc.exe"),
+                File(n_pawnDir, "pawncc.exe")
             ).distinctBy { it.absolutePath }
 
-            for (candidate in candidates) {
-                if (!candidate.exists() || !candidate.isFile) continue
-                val metadata = readCompilerMetadata(candidate)
-                val version = metadata.version ?: continue
+            for (n_candidate in n_candidates) {
+                if (!n_candidate.exists() || !n_candidate.isFile) continue
+                val n_metadata = readCompilerMetadata(n_candidate)
+                val n_version = n_metadata.version ?: continue
                 return NearbyCompilerMatch(
-                    version = version,
-                    filePath = candidate.absolutePath,
-                    productVersion = metadata.productVersion,
-                    sizeBytes = metadata.sizeBytes,
-                    md5 = metadata.md5
+                    version = n_version,
+                    filePath = n_candidate.absolutePath,
+                    productVersion = n_metadata.productVersion,
+                    sizeBytes = n_metadata.sizeBytes,
+                    md5 = n_metadata.md5
                 )
             }
         }
@@ -132,53 +179,62 @@ object PawnCompiler {
         return null
     }
 
-    // Build include paths from the selected source directory and the compiler directory. If the compiler is found at
-    // .../something/pawncc.exe or .../something/pawno/pawncc.exe, we normalize it to the include folder by replacing
-    // the executable path with an include folder, such as .../something/include or .../something/pawno/include.
+    /**
+     * Builds include paths based on the selected file directory and the nearest detected compiler folder.
+     *
+     * @param sourceFile selected Pawn file path
+     * @return include directories that should be added as -i values
+     */
     fun discoverRelevantIncludePaths(sourceFile: String): List<String> {
-        val result = linkedSetOf<String>()
+        val n_result = linkedSetOf<String>()
 
-        val sourceDir = File(sourceFile).parentFile
-        if (sourceDir != null && sourceDir.exists() && sourceDir.isDirectory) {
-            result += sourceDir.absolutePath
+        val n_sourceDir = File(sourceFile).parentFile
+        if (n_sourceDir != null && n_sourceDir.exists() && n_sourceDir.isDirectory) {
+            n_result += n_sourceDir.absolutePath
         }
 
-        val compilerMatch = detectNearbyCompiler(sourceFile)
-        val compilerFile = compilerMatch?.let { File(it.filePath) }
-        if (compilerFile != null && compilerFile.exists() && compilerFile.isFile) {
-            val compilerDir = compilerFile.parentFile
-            val baseDir = compilerDir?.absoluteFile ?: File(sourceFile).parentFile
-            if (baseDir != null && baseDir.exists() && baseDir.isDirectory) {
-                val includeCandidate = File(baseDir, "include")
-                if (!includeCandidate.exists() || includeCandidate.isDirectory) {
-                    result += includeCandidate.absolutePath
+        val n_compilerMatch = detectNearbyCompiler(sourceFile)
+        val n_compilerFile = n_compilerMatch?.let { File(it.filePath) }
+        if (n_compilerFile != null && n_compilerFile.exists() && n_compilerFile.isFile) {
+            val n_compilerDir = n_compilerFile.parentFile
+            val n_baseDir = n_compilerDir?.absoluteFile ?: File(sourceFile).parentFile
+            if (n_baseDir != null && n_baseDir.exists() && n_baseDir.isDirectory) {
+                val n_includeCandidate = File(n_baseDir, "include")
+                if (!n_includeCandidate.exists() || n_includeCandidate.isDirectory) {
+                    n_result += n_includeCandidate.absolutePath
                 }
             }
         }
 
-        return result.filter { it.isNotBlank() }
+        return n_result.filter { it.isNotBlank() }
     }
 
+    /**
+     * Reads metadata from a detected pawncc binary, including product version, size, and MD5 hash.
+     *
+     * @param file compiler executable file
+     * @return extracted metadata wrapper
+     */
     private fun readCompilerMetadata(file: File): CompilerMetadata {
-        val bytes = runCatching { file.readBytes() }.getOrElse { byteArrayOf() }
-        val utf16Text = runCatching { String(bytes, Charsets.UTF_16LE) }.getOrElse { "" }
-        val fallbackText = runCatching { String(bytes, Charsets.ISO_8859_1) }.getOrElse { "" }
-        val productVersion = PRODUCT_VERSION_REGEX.find(utf16Text)?.value
-            ?: PRODUCT_VERSION_REGEX.find(fallbackText)?.value
-        val sizeBytes = file.length()
-        val md5 = try {
-            val digest = java.security.MessageDigest.getInstance("MD5")
-            val hash = digest.digest(bytes)
-            hash.joinToString("") { "%02x".format(it) }
+        val n_bytes = runCatching { file.readBytes() }.getOrElse { byteArrayOf() }
+        val n_utf16Text = runCatching { String(n_bytes, Charsets.UTF_16LE) }.getOrElse { "" }
+        val n_fallbackText = runCatching { String(n_bytes, Charsets.ISO_8859_1) }.getOrElse { "" }
+        val n_productVersion = PRODUCT_VERSION_REGEX.find(n_utf16Text)?.value
+            ?: PRODUCT_VERSION_REGEX.find(n_fallbackText)?.value
+        val n_sizeBytes = file.length()
+        val n_md5 = try {
+            val n_digest = java.security.MessageDigest.getInstance("MD5")
+            val n_hash = n_digest.digest(n_bytes)
+            n_hash.joinToString("") { "%02x".format(it) }
         } catch (_: Exception) {
             null
         }
 
-        val version = CompilerConfig.CompilerVersion.entries.firstOrNull { it.matchesDetected(productVersion, sizeBytes, md5) }
+        val n_version = CompilerConfig.CompilerVersion.entries.firstOrNull { it.matchesDetected(n_productVersion, n_sizeBytes, n_md5) }
             ?: CompilerConfig.CompilerVersion.entries.firstOrNull {
-                it.nearestSupportedEquivalent(productVersion, sizeBytes, md5) != null
-            }?.nearestSupportedEquivalent(productVersion, sizeBytes, md5)
-        return CompilerMetadata(version, productVersion, sizeBytes, md5)
+                it.nearestSupportedEquivalent(n_productVersion, n_sizeBytes, n_md5) != null
+            }?.nearestSupportedEquivalent(n_productVersion, n_sizeBytes, n_md5)
+        return CompilerMetadata(n_version, n_productVersion, n_sizeBytes, n_md5)
     }
 
     private data class CompilerMetadata(
@@ -189,45 +245,53 @@ object PawnCompiler {
     )
 
     /**
-     * pawn file compilation
-     * 
-     * @param sourceFile absolute path to pawn source file
-     * @param options compiler options
-     * @param version compiler versions
-     * @return exitCode capturedOutput
+     * Starts the native Pawn compiler job for the selected source file.
+     *
+     * @param sourceFile path of the Pawn source file
+     * @param options compiler flags to pass through
+     * @param version compiler version to execute
+     * @return exit code and captured output text
      */
     fun compile(
         sourceFile: String,
         options: List<String> = emptyList(),
         version: CompilerConfig.CompilerVersion = CompilerConfig.CompilerVersion.V3107
     ): Pair<Int, String> {
-        val config = CompilerConfig.getInstanceOrNull()
-        val isForced = config?.n_forced_compiler_mode == true
+        val n_config = CompilerConfig.getInstanceOrNull()
+        val n_isForced = n_config?.n_forced_compiler_mode == true
 
-        val result = compileWithVersion(sourceFile, options, version)
+        val n_result = compileWithVersion(sourceFile, options, version)
 
-        if (!isForced && !FALL_MUTATION && shouldRetryWithFallback(result.second)) {
-            val fallbackVersion = version.other()
+        if (!n_isForced && !FALL_MUTATION && shouldRetryWithFallback(n_result.second)) {
+            val n_fallbackVersion = version.other()
             FALL_MUTATION = true
 
-            if (config != null) {
+            if (n_config != null) {
                 Log.w(
                     "PawnCompiler",
-                    "Detected ${extractErrorCount(result.second)} Errors in ${version.label}. " +
-                    "Switching compiler to ${fallbackVersion.label} for the next retry."
+                    "Detected ${extractErrorCount(n_result.second)} Errors in ${version.label}. " +
+                    "Switching compiler to ${n_fallbackVersion.label} for the next retry."
                 )
-                config.n_compiler_version = fallbackVersion
+                n_config.n_compiler_version = n_fallbackVersion
             }
 
-            val retryResult = compileWithVersion(sourceFile, options, fallbackVersion)
-            if (retryResult.first >= 0 || retryResult.second.isNotBlank()) {
-                return retryResult
+            val n_retryResult = compileWithVersion(sourceFile, options, n_fallbackVersion)
+            if (n_retryResult.first >= 0 || n_retryResult.second.isNotBlank()) {
+                return n_retryResult
             }
         }
 
-        return result
+        return n_result
     }
 
+    /**
+     * Runs the selected compiler version with the provided arguments.
+     *
+     * @param sourceFile Pawn source file path
+     * @param options compiler options list
+     * @param version compiler version to use
+     * @return exit code and captured output text
+     */
     private fun compileWithVersion(
         sourceFile: String,
         options: List<String>,
@@ -239,41 +303,58 @@ object PawnCompiler {
 
         Log.d("PawnCompiler", "Compiling with: ${INITIALIZED_VER?.label}")
 
-        val logFile = runCatching {
-            File(sourceFile).let { f ->
-                val base = f.nameWithoutExtension
-                File(f.parent, "$base.log")
+        val n_logFile = runCatching {
+            File(sourceFile).let { n_file ->
+                val n_baseName = n_file.nameWithoutExtension
+                File(n_file.parent, "$n_baseName.log")
             }
         }.getOrNull()
 
-        logFile?.takeIf { it.exists() }?.runCatching { delete() }
-            ?.onFailure { Log.e("PawnCompiler", "Failed to delete old log file: ${logFile.absolutePath}", it) }
+        n_logFile?.takeIf { it.exists() }?.runCatching { delete() }
+            ?.onFailure { Log.e("PawnCompiler", "Failed to delete old log file: ${n_logFile.absolutePath}", it) }
 
-        val args = buildList {
+        val n_args = buildList {
             add("pawncc")
             addAll(options)
             add(sourceFile)
         }
 
-        val output = compile(args.toTypedArray())
-        val parsedResult = parseCompilerOutput(output)
+        val n_output = compile(n_args.toTypedArray())
+        val n_parsedResult = parseCompilerOutput(n_output)
 
-        logFile?.runCatching { writeText(parsedResult.second) }
-            ?.onFailure { Log.e("PawnCompiler", "Failed to write log file: ${logFile.absolutePath}", it) }
+        n_logFile?.runCatching { writeText(n_parsedResult.second) }
+            ?.onFailure { Log.e("PawnCompiler", "Failed to write log file: ${n_logFile.absolutePath}", it) }
 
-        return parsedResult
+        return n_parsedResult
     }
 
+    /**
+     * Parses the compiler exit code and the text output produced by the native runner.
+     *
+     * @param output raw compiler output text
+     * @return exit code and trimmed human readable output
+     */
     private fun parseCompilerOutput(output: String): Pair<Int, String> {
-        val match = EXIT_CODE_REGEX.find(output)
+        val n_match = EXIT_CODE_REGEX.find(output)
 
-        val exitCode = match?.groupValues?.get(1)?.toIntOrNull() ?: -1
-        val actualOutput = output.substringAfter('\n', "")
+        val n_exitCode = n_match?.groupValues?.get(1)?.toIntOrNull() ?: -1
+        val n_actualOutput = output.substringAfter('\n', "")
 
-        return exitCode to actualOutput
+        return n_exitCode to n_actualOutput
     }
 
+    /**
+     * Returns the last captured compiler output from the native layer.
+     *
+     * @return output string or empty when not initialized
+     */
     fun getCapturedOutput(): String = if (IS_INITIALIZED) getOutput() else ""
+
+    /**
+     * Returns the last captured compiler errors from the native layer.
+     *
+     * @return error string or empty when not initialized
+     */
     fun getCapturedErrors(): String = if (IS_INITIALIZED) getErrors() else ""
 
     private external fun compile(args: Array<String>): String

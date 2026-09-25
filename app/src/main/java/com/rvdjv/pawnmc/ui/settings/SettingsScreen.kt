@@ -92,6 +92,34 @@ fun SettingsScreen(
     var appVersion by remember { mutableStateOf("") }
     var buildNumber by remember { mutableStateOf("") }
 
+    fun refreshUpdateStatus() {
+        runCatching {
+            val result = updateManager.checkForUpdate()
+            when (result.status) {
+                UpdateStatus.UPDATE_AVAILABLE -> {
+                    val latestVersion = result.latestVersion ?: "unknown"
+                    updateStatus = "Update available: $latestVersion"
+                    lastReleaseInfo = result.release?.releaseUrl
+                    val release = result.release ?: return@runCatching
+                    downloadedApk = updateManager.downloadLatestApk(release)
+                    updateReady = true
+                }
+                UpdateStatus.UP_TO_DATE -> {
+                    updateStatus = "You're on the latest version"
+                    lastReleaseInfo = result.release?.releaseUrl
+                    updateReady = false
+                }
+                UpdateStatus.ERROR -> {
+                    updateStatus = "Unable to check for updates"
+                    updateReady = false
+                }
+            }
+        }.onFailure {
+            updateStatus = "Unable to check for updates"
+            updateReady = false
+        }
+    }
+
     // loadinfo version
     LaunchedEffect(Unit) {
         try {
@@ -108,30 +136,7 @@ fun SettingsScreen(
             buildNumber = "0"
         }
 
-        runCatching {
-            val result = updateManager.checkForUpdate()
-            when (result.status) {
-                UpdateStatus.UPDATE_AVAILABLE -> {
-                    val latestVersion = result.latestVersion ?: "unknown"
-                    updateStatus = "Update available: $latestVersion"
-                    lastReleaseInfo = result.release?.releaseUrl
-                    val release = result.release ?: return@runCatching
-                    downloadedApk = updateManager.downloadLatestApk(release)
-                    updateReady = true
-                }
-                UpdateStatus.UP_TO_DATE -> {
-                    updateStatus = "You're on the latest version"
-                    updateReady = false
-                }
-                UpdateStatus.ERROR -> {
-                    updateStatus = "Unable to check for updates"
-                    updateReady = false
-                }
-            }
-        }.onFailure {
-            updateStatus = "Unable to check for updates"
-            updateReady = false
-        }
+        refreshUpdateStatus()
     }
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -343,30 +348,7 @@ fun SettingsScreen(
                                 return@TextButton
                             }
 
-                            runCatching {
-                                val result = updateManager.checkForUpdate()
-                                when (result.status) {
-                                    UpdateStatus.UPDATE_AVAILABLE -> {
-                                        val release = result.release ?: return@runCatching
-                                        downloadedApk = updateManager.downloadLatestApk(release)
-                                        updateStatus = "Update available: ${result.latestVersion}"
-                                        lastReleaseInfo = release.releaseUrl
-                                        updateReady = true
-                                    }
-                                    UpdateStatus.UP_TO_DATE -> {
-                                        updateStatus = "You're on the latest version"
-                                        lastReleaseInfo = result.release?.releaseUrl
-                                        updateReady = false
-                                    }
-                                    UpdateStatus.ERROR -> {
-                                        updateStatus = "Unable to check for updates"
-                                        updateReady = false
-                                    }
-                                }
-                            }.onFailure {
-                                updateStatus = "Unable to check for updates"
-                                updateReady = false
-                            }
+                            refreshUpdateStatus()
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
