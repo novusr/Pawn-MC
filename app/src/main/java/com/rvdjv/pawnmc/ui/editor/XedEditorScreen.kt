@@ -1,8 +1,11 @@
 package com.rvdjv.pawnmc.ui.editor
 
 import android.graphics.Typeface
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -102,6 +105,30 @@ fun XedEditorScreen(
     var isWordWrap by remember { mutableStateOf(false) }
     var isReadOnly by remember { mutableStateOf(false) }
     var isLineNumbers by remember { mutableStateOf(true) }
+
+    val saveAsLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri: Uri? ->
+        val targetUri = uri ?: return@rememberLauncherForActivityResult
+        val content = editorRef?.text?.toString() ?: return@rememberLauncherForActivityResult
+
+        try {
+            context.contentResolver.openOutputStream(targetUri)?.use { outputStream ->
+                outputStream.write(content.toByteArray())
+            }
+            Toast.makeText(
+                context,
+                "Saved as: ${targetUri.path ?: viewModel.fileName}",
+                Toast.LENGTH_SHORT
+            ).show()
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Save As failed: ${e.localizedMessage ?: "Unknown error"}",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 
     BackHandler {
         if (viewModel.hasUnsavedChanges) {
@@ -295,6 +322,15 @@ fun XedEditorScreen(
                             contentDescription = "Save file",
                             tint = if (viewModel.hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    TextButton(
+                        onClick = {
+                            saveAsLauncher.launch(viewModel.fileName)
+                        },
+                        modifier = Modifier.testTag("editor_save_as_button")
+                    ) {
+                        Text("Save As")
                     }
 
                     Box {

@@ -517,7 +517,7 @@ private fun CompilerLogsSection(
                 )
                 Spacer(modifier = Modifier.width(SpaceXS + 2.dp))
                 Text(
-                    text = "PAWNMC LOGS",
+                    text = "Compiler Output",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

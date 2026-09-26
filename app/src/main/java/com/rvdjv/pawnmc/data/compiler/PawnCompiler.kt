@@ -283,8 +283,9 @@ object PawnCompiler {
             if (n_config != null) {
                 Log.w(
                     "PawnCompiler",
-                    "Detected ${extractErrorCount(n_result.second)} Errors in ${version.label}. " +
-                    "Switching compiler to ${n_fallbackVersion.label} for the next retry."
+                    "ok! found: ${extractErrorCount(n_result.second)}" +
+                    " errors in ${version.label}. " +
+                    "trying ${n_fallbackVersion.label} for the next retry."
                 )
                 n_config.n_compiler_version = n_fallbackVersion
             }
