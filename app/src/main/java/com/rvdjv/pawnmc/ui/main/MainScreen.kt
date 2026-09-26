@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.AlertDialog
@@ -212,25 +213,18 @@ fun MainScreen(
             ScreenHeader(
                 onEditorClick = {
                     val path = viewModel.selectedFilePath
-                    if (path.isNullOrBlank()) {
+                    if (path.isNullOrBlank() || !File(path).exists()) {
+                        viewModel.ensureTemporaryFileSelected()
                         Toast.makeText(
                             context,
-                            "Please select a Pawn file first to open in Xed Editor",
-                            Toast.LENGTH_SHORT
+                            viewModel.temporaryFileNotice ?: "This is a temporary file because you have not selected your own Pawn file yet.",
+                            Toast.LENGTH_LONG
                         ).show()
+                        onEditorClick()
+                    } else if (!isStoragePermissionGranted && !hasStoragePermission(context)) {
+                        showPermissionDialog = true
                     } else {
-                        val file = File(path)
-                        if (!file.exists()) {
-                            Toast.makeText(
-                                context,
-                                "Selected file does not exist: ${file.name}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else if (!isStoragePermissionGranted && !hasStoragePermission(context)) {
-                            showPermissionDialog = true
-                        } else {
-                            onEditorClick()
-                        }
+                        onEditorClick()
                     }
                 },
                 onSettingsClick = onSettingsClick
@@ -275,6 +269,26 @@ fun MainScreen(
                     Text(
                         text = error,
                         color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            viewModel.temporaryFileNotice?.let { notice ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = SpaceS, start = SpaceXS)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(SpaceXS + 2.dp))
+                    Text(
+                        text = notice,
+                        color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

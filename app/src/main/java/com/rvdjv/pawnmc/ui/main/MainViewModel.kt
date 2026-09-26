@@ -15,7 +15,34 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class MainViewModel(private val config: CompilerConfig) : ViewModel() {
+class MainViewModel(
+    private val config: CompilerConfig,
+    private val appDirectory: File = File(".")
+) : ViewModel() {
+
+    companion object {
+        const val TEMPORARY_FILE_NAME = "main.pwn"
+        const val TEMPORARY_FILE_NOTICE = "This is a temporary file because you have not selected your own Pawn file yet."
+        val TEMPORARY_FILE_CONTENT = """
+            native printf(const format[], {Float,_}:...);
+            main() {
+                printf("Hello, World!");
+            }
+        """.trimIndent()
+
+        fun createTemporaryPawnFile(baseDir: File): File {
+            val directory = File(baseDir, "temporary")
+            if (!directory.exists()) {
+                directory.mkdirs()
+            }
+
+            val tempFile = File(directory, TEMPORARY_FILE_NAME)
+            if (!tempFile.exists()) {
+                tempFile.writeText(TEMPORARY_FILE_CONTENT)
+            }
+            return tempFile
+        }
+    }
 
     var n_app_theme by mutableStateOf(config.n_app_theme)
         private set
@@ -24,6 +51,9 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
         private set
 
     var selectionError by mutableStateOf<String?>(null)
+        private set
+
+    var temporaryFileNotice by mutableStateOf<String?>(null)
         private set
 
     var isCompiling by mutableStateOf(false)
@@ -56,6 +86,7 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
                     selectedFilePath = path
                     config.n_last_selected_file_path = path
                     selectionError = null
+                    temporaryFileNotice = null
                     lastExitCode = null
                     outputText = "Opened file: $path\n"
                     applyCompilerAutoDetection(path)
@@ -66,12 +97,25 @@ class MainViewModel(private val config: CompilerConfig) : ViewModel() {
         }
     }
 
+    fun ensureTemporaryFileSelected(): String {
+        val file = createTemporaryPawnFile(appDirectory)
+        selectedFilePath = file.absolutePath
+        config.n_last_selected_file_path = file.absolutePath
+        temporaryFileNotice = TEMPORARY_FILE_NOTICE
+        selectionError = null
+        lastExitCode = null
+        outputText = "Temporary file created: ${file.absolutePath}\n"
+        applyCompilerAutoDetection(file.absolutePath)
+        return file.absolutePath
+    }
+
     fun selectFile(path: String) {
         val validExtensions = setOf("pawn", "pwn", "p", "inc")
         if (File(path).extension.lowercase() in validExtensions) {
             selectedFilePath = path
             config.n_last_selected_file_path = path
             selectionError = null
+            temporaryFileNotice = null
             lastExitCode = null
             applyCompilerAutoDetection(path)
         } else {
@@ -143,7 +187,7 @@ class MainViewModelFactory(private val context: Context) : ViewModelProvider.Fac
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(CompilerConfig.getInstance(context)) as T
+            return MainViewModel(CompilerConfig.getInstance(context), context.filesDir) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

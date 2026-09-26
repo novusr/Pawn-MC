@@ -1,10 +1,12 @@
 package com.rvdjv.pawnmc.data.compiler
 
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.ui.main.MainViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.File
 
 class PawnCompilerSuccessTest {
     @Test
@@ -28,5 +30,24 @@ class PawnCompilerSuccessTest {
     fun `matches detected compiler metadata by product version and size`() {
         assertTrue(CompilerConfig.CompilerVersion.V31011.matchesDetected("3.10.11", 19_000L, null))
         assertTrue(CompilerConfig.CompilerVersion.V3107.matchesDetected(null, 28_000L, "a48e04d28e8cb77e0361ecb4dced2501"))
+    }
+
+    @Test
+    fun `creates temporary pawn file with hello world snippet`() {
+        val tempDir = File(System.getProperty("java.io.tmpdir"), "pawnmc-${System.nanoTime()}")
+        require(tempDir.mkdirs()) { "Unable to create temp dir for test" }
+
+        val tempFile = MainViewModel.createTemporaryPawnFile(tempDir)
+
+        try {
+            assertTrue(tempFile.exists())
+            assertEquals("main.pwn", tempFile.name)
+            val content = tempFile.readText()
+            assertTrue(content.contains("native printf"))
+            assertTrue(content.contains("printf(\"Hello, World!\");"))
+        } finally {
+            tempFile.delete()
+            tempDir.deleteRecursively()
+        }
     }
 }
