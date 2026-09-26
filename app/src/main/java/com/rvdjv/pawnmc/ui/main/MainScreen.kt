@@ -65,6 +65,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -113,6 +114,7 @@ private fun deriveStatus(isCompiling: Boolean, lastExitCode: Int?): CompileStatu
 fun MainScreen(
     viewModel: MainViewModel,
     onSettingsClick: () -> Unit,
+    onEditorClick: () -> Unit,
     initialUri: Uri? = null
 ) {
     val context = LocalContext.current
@@ -207,7 +209,32 @@ fun MainScreen(
         ) {
             Spacer(modifier = Modifier.height(SpaceM))
 
-            ScreenHeader(onSettingsClick = onSettingsClick)
+            ScreenHeader(
+                onEditorClick = {
+                    val path = viewModel.selectedFilePath
+                    if (path.isNullOrBlank()) {
+                        Toast.makeText(
+                            context,
+                            "Please select a Pawn file first to open in Xed Editor",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        val file = File(path)
+                        if (!file.exists()) {
+                            Toast.makeText(
+                                context,
+                                "Selected file does not exist: ${file.name}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else if (!isStoragePermissionGranted && !hasStoragePermission(context)) {
+                            showPermissionDialog = true
+                        } else {
+                            onEditorClick()
+                        }
+                    }
+                },
+                onSettingsClick = onSettingsClick
+            )
 
             Spacer(modifier = Modifier.height(SpaceL))
 
@@ -293,7 +320,10 @@ fun MainScreen(
 }
 
 @Composable
-private fun ScreenHeader(onSettingsClick: () -> Unit) {
+private fun ScreenHeader(
+    onEditorClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -315,12 +345,30 @@ private fun ScreenHeader(onSettingsClick: () -> Unit) {
             )
         }
 
-        IconButton(onClick = onSettingsClick) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                contentDescription = "Settings",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                onClick = onEditorClick,
+                modifier = Modifier.testTag("xed_button")
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Code,
+                    contentDescription = "Xed Editor",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier.testTag("settings_button")
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
