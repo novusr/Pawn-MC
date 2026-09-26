@@ -15,6 +15,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+data class IncludePathChoice(
+    val options: List<String>,
+    val selected: String? = null
+)
+
 class MainViewModel(
     private val config: CompilerConfig,
     private val appDirectory: File = File(".")
@@ -64,6 +69,8 @@ class MainViewModel(
 
     var lastExitCode by mutableStateOf<Int?>(null)
         private set
+
+    var pendingIncludeChoice by mutableStateOf<IncludePathChoice?>(null)
 
     fun refreshTheme() {
         n_app_theme = config.n_app_theme
@@ -133,6 +140,39 @@ class MainViewModel(
         }
     }
 
+    fun resolvePendingIncludeChoice(sourcePath: String) {
+        val relevantPaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath)
+            .filter { it.contains("pawno", ignoreCase = true) || it.contains("qawno", ignoreCase = true) }
+            .distinct()
+
+        val hasExistingManualChoice = config.n_include_paths.any {
+            it.contains("pawno", ignoreCase = true) || it.contains("qawno", ignoreCase = true)
+        }
+
+        if (relevantPaths.size <= 1 || hasExistingManualChoice) {
+            if (relevantPaths.isNotEmpty()) {
+                val mergedPaths = config.n_include_paths.toMutableList()
+                relevantPaths.forEach { path ->
+                    val normalizedPath = CompilerConfig.normalizeIncludePath(path)
+                    if (normalizedPath !in mergedPaths) mergedPaths.add(normalizedPath)
+                }
+                config.n_include_paths = mergedPaths
+            }
+            pendingIncludeChoice = null
+            return
+        }
+
+        pendingIncludeChoice = IncludePathChoice(relevantPaths)
+    }
+
+    fun confirmIncludeChoice(path: String) {
+        val normalized = CompilerConfig.normalizeIncludePath(path)
+        val mergedPaths = config.n_include_paths.toMutableList()
+        if (normalized !in mergedPaths) mergedPaths.add(normalized)
+        config.n_include_paths = mergedPaths
+        pendingIncludeChoice = null
+    }
+
     private fun applyCompilerAutoDetection(sourcePath: String) {
         // Auto-detect the compiler only when the nearby pawncc.exe metadata matches a supported version.
         val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
@@ -143,6 +183,7 @@ class MainViewModel(
             if (normalizedPath !in mergedPaths) mergedPaths.add(normalizedPath)
         }
         config.n_include_paths = mergedPaths
+        resolvePendingIncludeChoice(sourcePath)
 
         if (detectedVersion != null) {
             config.n_compiler_version = detectedVersion
@@ -193,7 +234,13 @@ class MainViewModel(
                 config.n_last_selected_file_path = restoredPath
             }
 
-            outputText += result.second
+            val compilerOutput = if (config.n_explain_output) {
+                PawnCompiler.explainCompilerOutput(result.second, appDirectory)
+            } else {
+                result.second
+            }
+
+            outputText += compilerOutput
             val timeString = if (duration >= 1000) {
                 String.format("%.2f seconds", duration / 1000.0)
             } else {
@@ -213,7 +260,8 @@ class MainViewModelFactory(private val context: Context) : ViewModelProvider.Fac
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(CompilerConfig.getInstance(context), context.filesDir) as T
+            val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context)
+            return MainViewModel(config, context.filesDir) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

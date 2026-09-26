@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rvdjv.pawnmc.data.compiler.PawnCompiler
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.update.AppUpdateManager
 import com.rvdjv.pawnmc.ui.editor.XedEditorScreen
 import com.rvdjv.pawnmc.ui.editor.XedEditorViewModel
@@ -28,6 +29,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CompilerConfig.getInstance(applicationContext)
         PawnCompiler.resetSessionState()
         AppUpdateManager(applicationContext).ensureVersionFileWritten()
         enableEdgeToEdge()

@@ -35,6 +35,26 @@ object PawnCompiler {
     private val ERROR_COUNT_REGEX = """(?i)(\d+)\s+errors?\.?""".toRegex()
     private val PRODUCT_VERSION_REGEX = """\b\d+\.\d+\.\d+\b""".toRegex()
     private val INCLUDE_DIRECTIVE_REGEX = Regex("""(?i)#include\s*(?:\"([^\"]+)\"|'([^']+)')""")
+    private val COMPILER_MESSAGE_REGEX = Regex("""(?i)(warning|error|fatal)\s+(\d+)""")
+    private val KNOWN_ERROR_EXPLANATIONS = mapOf(
+        "017" to "Undefined symbol. Check that the identifier is declared, included, and spelled exactly the same as the definition.",
+        "021" to "Symbol already defined. A duplicate declaration exists in the same scope.",
+        "100" to "Cannot read from file. The compiler could not open the given source or include file. Check the path, permissions, and file existence.",
+        "101" to "Cannot write to file. The output target could not be created or written to. Check permissions and the destination folder.",
+        "217" to "A value is assigned but never used. Remove the unused assignment or use the variable before it goes out of scope.",
+        "205" to "Redundant code: constant expression is zero. This condition is always false and makes the block unreachable.",
+        "211" to "Possibly unintended assignment. An assignment appears in a condition; use == for comparison instead.",
+        "015" to "Default case must be the last case. Place default after all explicit case blocks.",
+        "016" to "Multiple defaults are not allowed in the same switch statement.",
+        "024" to "Break or continue is out of context. It must be inside a loop or switch block.",
+        "040" to "Duplicate case label. Each case value must be unique within the switch statement.",
+        "061" to "Recursive include detected. Break the include cycle with guards or forward declarations.",
+        "200" to "Identifier is truncated to the implementation limit. Use shorter, unique names to avoid collisions.",
+        "203" to "A symbol is declared but never used. It may be dead code or an unfinished implementation.",
+        "204" to "A value is assigned but never read. This often indicates redundant initialization or a logic bug.",
+        "217" to "Loose indentation. This warning is cosmetic but can hide structural mistakes and make code harder to read.",
+        "214" to "Literal array or string passed to a non-const parameter. Declare the parameter as const or copy the data to a mutable buffer."
+    )
 
     data class PreparedWorkspace(
         val originalDir: File,
@@ -149,24 +169,22 @@ object PawnCompiler {
         val source = File(sourceFile)
         if (!source.exists() || source.extension.isBlank()) return null
 
-        val searchRoots = linkedSetOf<File>()
+        val sr_root = linkedSetOf<File>()
         var dir = source.parentFile
         var depth = 0
         while (dir != null && depth < 6) {
-            searchRoots += dir
-            searchRoots += File(dir, "pawno")
-            searchRoots += File(dir, "pawn")
+            sr_root += dir
+            sr_root += File(dir, "pawno")
+            sr_root += File(dir, "pawn")
             dir = dir.parentFile
             depth += 1
         }
 
         val compilerNames = listOf("pawncc.exe", "pawncc")
 
-        for (root in searchRoots) {
+        for (root in sr_root) {
             val rootCandidates = listOf(
-                root,
-                File(root, "pawno"),
-                File(root, "pawn")
+                root, File(root, "pawno"), File(root, "pawn")
             )
 
             val candidates = rootCandidates.flatMap { baseDir ->
@@ -197,38 +215,64 @@ object PawnCompiler {
      * @return include directories that should be added as -i values
      */
     fun discoverRelevantIncludePaths(sourceFile: String): List<String> {
-        val result = linkedSetOf<String>()
-        val includeFolder = "include"
-        val gameModesFolder = "gamemodes"
+        val n_result = linkedSetOf<String>()
+        val n_include_variants = listOf("pawno/include",
+                                        "qawno/include",
+                                        "include",
+                                        "includes",
+                                        "gamemodes")
+        val n_force_inc_auto = CompilerConfig.getInstanceOrNull()?.n_forced_include_path_auto == true
 
-        val sourceFileObj = File(sourceFile)
-        val sourceDir = sourceFileObj.parentFile
-        if (sourceDir != null && sourceDir.exists() && sourceDir.isDirectory) {
-            val sourceIncludeDir = File(sourceDir, includeFolder)
-            val sourceGameModesDir = File(sourceDir, gameModesFolder)
-
-            if (sourceIncludeDir.exists() || sourceIncludeDir.parentFile != null) {
-                result += CompilerConfig.normalizeIncludePath(sourceIncludeDir.absolutePath)
+        val n_src_file = File(sourceFile)
+        val n_src_dir = n_src_file.parentFile
+        if (
+            n_src_dir != null &&
+            n_src_dir.exists() &&
+            n_src_dir.isDirectory
+        ) {
+            n_include_variants.forEach { n_variant ->
+                val n_candidate = File(n_src_dir, n_variant)
+                if (n_candidate.exists() && n_candidate.isDirectory) {
+                    n_result += CompilerConfig.normalizeIncludePath(n_candidate.absolutePath)
+                }
             }
-            if (sourceGameModesDir.exists() || sourceGameModesDir.parentFile != null) {
-                result += CompilerConfig.normalizeIncludePath(sourceGameModesDir.absolutePath)
+
+            val n_src_g_dir = File(n_src_dir, "gamemodes")
+            if (n_src_g_dir.exists() || n_src_g_dir.parentFile != null) {
+                n_result += CompilerConfig.normalizeIncludePath(n_src_g_dir.absolutePath)
             }
         }
 
-        val compilerMatch = detectNearbyCompiler(sourceFile)
-        val compilerFile = compilerMatch?.let { File(it.filePath) }
-        if (compilerFile != null && compilerFile.exists() && compilerFile.isFile) {
-            val compilerDir = compilerFile.parentFile
-            val baseDir = compilerDir?.absoluteFile ?: sourceDir
-            if (baseDir != null && baseDir.exists() && baseDir.isDirectory) {
-                val includeCandidate = File(baseDir, includeFolder)
-                if (!includeCandidate.exists() || includeCandidate.isDirectory) {
-                    result += CompilerConfig.normalizeIncludePath(includeCandidate.absolutePath)
+        if (!n_force_inc_auto) {
+            val n_match = detectNearbyCompiler(sourceFile)
+            val n_compiler_file = n_match?.let { File(it.filePath) }
+            if (
+                n_compiler_file != null &&
+                n_compiler_file.exists() &&
+                n_compiler_file.isFile
+            ) {
+                val n_compiler_dir = n_compiler_file.parentFile
+                val n_base_dir = n_compiler_dir?.absoluteFile ?: n_src_dir
+                if (
+                    n_base_dir != null &&
+                    n_base_dir.exists() &&
+                    n_base_dir.isDirectory
+                ) {
+                    n_include_variants.forEach { n_variant ->
+                        val n_candidate = File(n_base_dir, n_variant)
+                        if (n_candidate.exists() && n_candidate.isDirectory) {
+                            n_result += CompilerConfig.normalizeIncludePath(n_candidate.absolutePath)
+                        } else if (n_candidate.parentFile != null && n_candidate.parentFile?.exists() == true &&
+                            n_variant.endsWith("/include"))
+                        {
+                            n_result += CompilerConfig.normalizeIncludePath(n_candidate.absolutePath)
+                        }
+                    }
                 }
             }
         }
 
-        return result.filter { it.isNotBlank() }
+        return n_result.filter { it.isNotBlank() }
     }
 
     /**
@@ -266,33 +310,38 @@ object PawnCompiler {
         val md5: String?
     )
 
-    fun prepareCaseInsensitiveWorkspace(sourceFilePath: String): PreparedWorkspace? {
-        val sourceFile = File(sourceFilePath)
-        if (!sourceFile.exists() || sourceFile.isDirectory) return null
+    fun normalizeCaseInsensitiveProject(originalDir: File): File {
+        if (!originalDir.exists() || !originalDir.isDirectory) return originalDir
 
-        val originalDir = sourceFile.parentFile ?: return null
-        val projectRoot = originalDir.parentFile ?: return null
+        val projectRoot = originalDir.parentFile ?: return originalDir
         val normalizedDir = File(projectRoot, "${originalDir.name}2")
 
-        if (normalizedDir.absolutePath == originalDir.absolutePath) return null
+        if (normalizedDir.absolutePath == originalDir.absolutePath) return originalDir
         if (normalizedDir.exists()) normalizedDir.deleteRecursively()
 
         copyDirectoryRecursively(originalDir, normalizedDir)
         normalizeProjectNames(normalizedDir)
-
-        val normalizedSourceCandidate = File(normalizedDir, sourceFile.name.lowercase())
-        val finalSourceFile = if (normalizedSourceCandidate.exists()) normalizedSourceCandidate else normalizedDir.walkTopDown()
-            .firstOrNull { it.isFile && it.name.equals(sourceFile.name, ignoreCase = true) }
-            ?: sourceFile
-
-        val sourcePath = finalSourceFile.absolutePath
         rewriteIncludesInProject(normalizedDir)
 
+        return normalizedDir
+    }
+
+    fun prepareCaseInsensitiveWorkspace(sourceFilePath: String): PreparedWorkspace? {
+        val n_src_file = File(sourceFilePath)
+        if (!n_src_file.exists() || n_src_file.isDirectory) return null
+
+        val n_original_dir = n_src_file.parentFile ?: return null
+        val n_normalized_dir = normalizeCaseInsensitiveProject(n_original_dir)
+
+        val n_final_src_file = n_normalized_dir.walkTopDown()
+            .firstOrNull { it.isFile && it.name.equals(n_src_file.name, ignoreCase = true) }
+            ?: File(n_normalized_dir, n_src_file.name.lowercase())
+
         return PreparedWorkspace(
-            originalDir = originalDir,
-            normalizedDir = normalizedDir,
-            sourceFile = sourcePath,
-            originalSourceFile = sourceFile.absolutePath
+            originalDir = n_original_dir,
+            normalizedDir = n_normalized_dir,
+            sourceFile = n_final_src_file.absolutePath,
+            originalSourceFile = n_src_file.absolutePath
         )
     }
 
@@ -347,21 +396,22 @@ object PawnCompiler {
 
     private fun rewriteIncludesInProject(rootDir: File) {
         rootDir.walkTopDown().filter { it.isFile }.forEach { file ->
-            val extension = file.extension.lowercase()
-            if (extension !in setOf("pawn", "pwn", "p", "inc")) return@forEach
+            val n_ext = file.extension.lowercase()
+            if (n_ext !in setOf("pawn", "pwn", "p", "inc")) return@forEach
 
-            val content = file.readText()
-            val rewritten = INCLUDE_DIRECTIVE_REGEX.replace(content) { match ->
-                val originalValue = match.groupValues[1].ifBlank { match.groupValues[2] }
-                if (originalValue.isBlank()) return@replace match.value
-                val lowered = originalValue.lowercase()
-                val prefix = match.value.substringBefore(originalValue)
-                val suffix = match.value.substringAfterLast(originalValue)
-                "$prefix$lowered$suffix"
+            val n_content = file.readText()
+            val n_rewritten = INCLUDE_DIRECTIVE_REGEX.replace(n_content) { match ->
+                val n_original_value = match.groupValues[1].ifBlank { match.groupValues[2] }
+                if (n_original_value.isBlank()) return@replace match.value
+
+                val n_lowered = n_original_value.lowercase()
+                val n_prefix = match.value.substringBefore(n_original_value)
+                val n_suffix = match.value.substringAfterLast(n_original_value)
+                "$n_prefix$n_lowered$n_suffix"
             }
 
-            if (rewritten != content) {
-                file.writeText(rewritten)
+            if (n_rewritten != n_content) {
+                file.writeText(n_rewritten)
             }
         }
     }
@@ -464,6 +514,31 @@ object PawnCompiler {
         val n_actualOutput = output.substringAfter('\n', "")
 
         return n_exitCode to n_actualOutput
+    }
+
+    fun explainCompilerOutput(rawText: String, cacheDir: File): String {
+        if (rawText.isBlank()) return rawText
+
+        val outputCache = File(cacheDir, "compiler_output_cache_${System.nanoTime()}.log")
+        outputCache.writeText(rawText)
+
+        val builder = StringBuilder()
+        outputCache.useLines { lines ->
+            lines.forEach { line ->
+                builder.appendLine(line)
+                val match = COMPILER_MESSAGE_REGEX.find(line)
+                if (match != null) {
+                    val code = match.groupValues[2].trimStart('0')
+                    val explanation = KNOWN_ERROR_EXPLANATIONS[code]
+                        ?: KNOWN_ERROR_EXPLANATIONS[match.groupValues[2]]
+                        ?: "No local explanation found for this compiler message. Check the Pawn error reference for details."
+                    builder.appendLine("    [explain] $explanation")
+                }
+            }
+        }
+
+        outputCache.delete()
+        return builder.toString()
     }
 
     /**

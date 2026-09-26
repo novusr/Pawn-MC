@@ -198,6 +198,35 @@ fun MainScreen(
         )
     }
 
+    if (viewModel.pendingIncludeChoice != null) {
+        val choices = viewModel.pendingIncludeChoice!!.options
+        AlertDialog(
+            onDismissRequest = { viewModel.pendingIncludeChoice = null },
+            title = { Text("Select include folder") },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("Both Pawno and Qawno include folders were found. Choose one for this session.")
+                    Spacer(modifier = Modifier.height(SpaceS))
+                    choices.forEach { path ->
+                        Button(
+                            onClick = { viewModel.confirmIncludeChoice(path) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(path)
+                        }
+                        Spacer(modifier = Modifier.height(SpaceS))
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { viewModel.pendingIncludeChoice = null }) {
+                    Text("Skip")
+                }
+            }
+        )
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->

@@ -24,6 +24,9 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     var n_ignore_case by mutableStateOf(config.n_ignore_case)
         private set
 
+    var n_explain_output by mutableStateOf(config.n_explain_output)
+        private set
+
     var n_mandatory_semicolons by mutableStateOf(config.n_mandatory_semicolons)
         private set
 
@@ -34,6 +37,9 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         private set
 
     var n_forced_compiler_mode by mutableStateOf(config.n_forced_compiler_mode)
+        private set
+
+    var n_forced_include_path_auto by mutableStateOf(config.n_forced_include_path_auto)
         private set
 
     var n_app_theme by mutableStateOf(config.n_app_theme)
@@ -61,6 +67,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         config.n_ignore_case = enabled
     }
 
+    fun updateExplainOutput(enabled: Boolean) {
+        n_explain_output = enabled
+        config.n_explain_output = enabled
+    }
+
     fun updateMandatorySemicolons(enabled: Boolean) {
         n_mandatory_semicolons = enabled
         config.n_mandatory_semicolons = enabled
@@ -79,6 +90,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     fun updateForcedCompilerMode(enabled: Boolean) {
         n_forced_compiler_mode = enabled
         config.n_forced_compiler_mode = enabled
+    }
+
+    fun updateForcedIncludePathAuto(enabled: Boolean) {
+        n_forced_include_path_auto = enabled
+        config.n_forced_include_path_auto = enabled
     }
 
     fun updateAppTheme(theme: CompilerConfig.AppTheme) {
@@ -126,7 +142,8 @@ class SettingsViewModelFactory(private val context: Context) : ViewModelProvider
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return SettingsViewModel(CompilerConfig.getInstance(context)) as T
+            val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context)
+            return SettingsViewModel(config) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -26,6 +26,10 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getBoolean(KEY_IGNORE_CASE, false)
         set(value) = prefs.edit { putBoolean(KEY_IGNORE_CASE, value) }
 
+    var n_explain_output: Boolean
+        get() = prefs.getBoolean(KEY_EXPLAIN_OUTPUT, false)
+        set(value) = prefs.edit { putBoolean(KEY_EXPLAIN_OUTPUT, value) }
+
     //
     // [code style]
     //
@@ -96,6 +100,10 @@ class CompilerConfig private constructor(context: Context) {
     var n_forced_compiler_mode: Boolean
         get() = prefs.getBoolean(KEY_FORCED_MODE, false)
         set(value) = prefs.edit { putBoolean(KEY_FORCED_MODE, value) }
+
+    var n_forced_include_path_auto: Boolean
+        get() = prefs.getBoolean(KEY_FORCED_INCLUDE_PATH_AUTO, false)
+        set(value) = prefs.edit { putBoolean(KEY_FORCED_INCLUDE_PATH_AUTO, value) }
 
     var n_app_theme: AppTheme
         get() = AppTheme.fromValue(prefs.getString(KEY_APP_THEME, AppTheme.SYSTEM.value) ?: AppTheme.SYSTEM.value)
@@ -221,6 +229,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_DEBUG            = "debug_level"
         private const val KEY_OPTIMIZATION      = "optimization_level"
         private const val KEY_IGNORE_CASE       = "ignore_case"
+        private const val KEY_EXPLAIN_OUTPUT    = "explain_output"
         private const val PREFS_NAME           = "compiler_config"
         private const val KEY_LAST_DIR         = "last_open_dir"
         private const val KEY_LAST_FILE        = "last_sel_file"
@@ -233,6 +242,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_DETECTED_SIZE_BYTES = "detected_compiler_size_bytes"
         private const val KEY_DETECTED_MD5 = "detected_compiler_md5"
         private const val KEY_FORCED_MODE = "forced_compiler_mode"
+        private const val KEY_FORCED_INCLUDE_PATH_AUTO = "forced_include_path_auto"
         private const val KEY_APP_THEME = "app_theme"
 
         fun buildOptionsFor(

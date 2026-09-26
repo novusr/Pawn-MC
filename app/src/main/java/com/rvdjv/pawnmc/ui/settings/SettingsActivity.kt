@@ -19,6 +19,7 @@ class SettingsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CompilerConfig.getInstance(applicationContext)
         AppUpdateManager(applicationContext).ensureVersionFileWritten()
         enableEdgeToEdge()
         setContent {

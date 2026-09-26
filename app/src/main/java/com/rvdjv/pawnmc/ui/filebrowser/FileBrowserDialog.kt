@@ -72,7 +72,7 @@ fun FileBrowserDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val config = remember { CompilerConfig.getInstance(context) }
+    val config = remember { CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context) }
     val rootPath = remember { Environment.getExternalStorageDirectory().absolutePath }
 
     fun listEntries(dir: File): List<FileEntry> {

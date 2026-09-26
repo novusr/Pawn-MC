@@ -112,30 +112,27 @@ fun SettingsScreen(
 
             try {
                 val result = withContext(Dispatchers.IO) { updateManager.checkForUpdate() }
+                val status = result.status
 
-                when (result.status) {
-                    UpdateStatus.UPDATE_AVAILABLE -> {
-                        val latestVersion = result.latestVersion ?: "unknown"
-                        val release = result.release
-                        val downloaded = if (release != null) {
-                            withContext(Dispatchers.IO) { updateManager.downloadLatestApk(release) }
-                        } else null
+                if (status == UpdateStatus.UPDATE_AVAILABLE) {
+                    val latestVersion = result.latestVersion ?: "unknown"
+                    val release = result.release
+                    val downloaded = if (release != null) {
+                        withContext(Dispatchers.IO) { updateManager.downloadLatestApk(release) }
+                    } else null
 
-                        val hasValidApk = downloaded != null && downloaded.exists()
-                        updateStatus = if (hasValidApk) "Update available: $latestVersion" else "Update available, but no APK is attached"
-                        lastReleaseInfo = release?.releaseUrl
-                        downloadedApk = downloaded
-                        updateReady = hasValidApk
-                    }
-                    UpdateStatus.UP_TO_DATE -> {
-                        updateStatus = "You're on the latest version"
-                        lastReleaseInfo = result.release?.releaseUrl
-                        updateReady = false
-                    }
-                    UpdateStatus.ERROR -> {
-                        updateStatus = "Unable to check for updates"
-                        updateReady = false
-                    }
+                    val hasValidApk = downloaded != null && downloaded.exists()
+                    updateStatus = if (hasValidApk) "Update available: $latestVersion" else "Update available, but no APK is attached"
+                    lastReleaseInfo = release?.releaseUrl
+                    downloadedApk = downloaded
+                    updateReady = hasValidApk
+                } else if (status == UpdateStatus.UP_TO_DATE) {
+                    updateStatus = "You're on the latest version"
+                    lastReleaseInfo = result.release?.releaseUrl
+                    updateReady = false
+                } else {
+                    updateStatus = "Unable to check for updates"
+                    updateReady = false
                 }
             } catch (_: Exception) {
                 updateStatus = "Unable to check for updates"
@@ -348,6 +345,18 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
 
+                    SwitchRow(
+                        title = "Explain Compiler Output",
+                        description = "Add human-readable explanations next to warnings, errors, and fatal messages extracted from the compiler log.",
+                        checked = viewModel.n_explain_output,
+                        onCheckedChange = { viewModel.updateExplainOutput(it) }
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -441,6 +450,20 @@ fun SettingsScreen(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column {
+                    CompilerVersionRow(
+                        title = "Include Paths Auto",
+                        version = if (viewModel.n_forced_include_path_auto) "Forced" else "Auto",
+                        forced = viewModel.n_forced_include_path_auto,
+                        onToggleForced = { viewModel.updateForcedIncludePathAuto(it) },
+                        onClick = { viewModel.updateForcedIncludePathAuto(!viewModel.n_forced_include_path_auto) }
+                    )
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+
                     if (viewModel.n_include_paths.isEmpty()) {
                         Text(
                             text = "No include paths added.",
@@ -768,6 +791,7 @@ fun SettingsScreen(
 
 @Composable
 fun CompilerVersionRow(
+    title: String = "Compiler Version",
     version: String,
     forced: Boolean,
     onToggleForced: (Boolean) -> Unit,
@@ -783,7 +807,7 @@ fun CompilerVersionRow(
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = "Compiler Version",
+                text = title,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -792,6 +816,11 @@ fun CompilerVersionRow(
                 text = version,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = if (forced) "Forced" else "Auto",
+                style = MaterialTheme.typography.labelMedium,
+                color = if (forced) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
 
