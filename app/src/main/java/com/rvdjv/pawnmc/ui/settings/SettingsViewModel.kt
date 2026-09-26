@@ -78,6 +78,18 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         }
     }
 
+    fun updateIncludePathAt(index: Int, newPath: String) {
+        if (index !in n_include_paths.indices) return
+        val normalized = CompilerConfig.normalizeIncludePath(newPath)
+        if (normalized.isBlank()) {
+            removeIncludePathAt(index)
+            return
+        }
+
+        n_include_paths[index] = normalized
+        config.n_include_paths = n_include_paths.toList()
+    }
+
     fun removeIncludePathAt(index: Int) {
         if (index in n_include_paths.indices) {
             n_include_paths.removeAt(index)

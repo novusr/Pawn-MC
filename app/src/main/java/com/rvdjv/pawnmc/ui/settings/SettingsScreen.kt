@@ -85,9 +85,13 @@ fun SettingsScreen(
     ) { }
 
     var showIncludePathDialog by remember { mutableStateOf(false) }
+    var showAddIncludePathDialog by remember { mutableStateOf(false) }
+    var newIncludePathInput by remember { mutableStateOf("") }
     var showVersionDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
+    var editingIncludePathIndex by remember { mutableStateOf<Int?>(null) }
+    var editingIncludePathValue by remember { mutableStateOf("") }
     var pendingVersion by remember { mutableStateOf<CompilerConfig.CompilerVersion?>(null) }
     var updateStatus by remember { mutableStateOf("Checking for updates...") }
     var updateReady by remember { mutableStateOf(false) }
@@ -313,7 +317,7 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = viewModel.n_custom_flags,
                             onValueChange = { viewModel.updateCustomFlags(it) },
-                            placeholder = { Text("e.g. -d3 -O2") },
+                            placeholder = { Text("e.g. -C+ -v=0 -w217") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = false,
                             maxLines = 3
@@ -398,6 +402,10 @@ fun SettingsScreen(
                         viewModel.n_include_paths.forEachIndexed { index, path ->
                             PathRow(
                                 path = path,
+                                onClick = {
+                                    editingIncludePathIndex = index
+                                    editingIncludePathValue = path
+                                },
                                 onRemoveClick = { viewModel.removeIncludePathAt(index) }
                             )
                             if (index < viewModel.n_include_paths.size - 1) {
@@ -417,7 +425,10 @@ fun SettingsScreen(
                     ActionRow(
                         text = "Add Include Path",
                         icon = Icons.Default.Add,
-                        onClick = { showIncludePathDialog = true }
+                        onClick = {
+                            newIncludePathInput = ""
+                            showAddIncludePathDialog = true
+                        }
                     )
                 }
             }
@@ -525,7 +536,92 @@ fun SettingsScreen(
         )
     }
 
-    // dialog include path folder picker
+    if (showAddIncludePathDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showAddIncludePathDialog = false
+                newIncludePathInput = ""
+            },
+            title = { Text("Add Include Path") },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = newIncludePathInput,
+                        onValueChange = { newIncludePathInput = it },
+                        singleLine = false,
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("/storage/emulated/0/.../include/") }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val value = newIncludePathInput.trim()
+                        if (value.isNotBlank()) {
+                            viewModel.addIncludePath(value)
+                        }
+                        showAddIncludePathDialog = false
+                        newIncludePathInput = ""
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showAddIncludePathDialog = false
+                        newIncludePathInput = ""
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (editingIncludePathIndex != null) {
+        AlertDialog(
+            onDismissRequest = {
+                editingIncludePathIndex = null
+                editingIncludePathValue = ""
+            },
+            title = { Text("Edit Include Path") },
+            text = {
+                OutlinedTextField(
+                    value = editingIncludePathValue,
+                    onValueChange = { editingIncludePathValue = it },
+                    singleLine = false,
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("/storage/emulated/0/.../include/") }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val index = editingIncludePathIndex ?: return@TextButton
+                        viewModel.updateIncludePathAt(index, editingIncludePathValue)
+                        editingIncludePathIndex = null
+                        editingIncludePathValue = ""
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        editingIncludePathIndex = null
+                        editingIncludePathValue = ""
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     if (showIncludePathDialog) {
         FileBrowserDialog(
             mode = FileBrowserMode.FOLDER,
@@ -786,14 +882,16 @@ fun ActionRow(
 @Composable
 fun PathRow(
     path: String,
+    onClick: () -> Unit,
     onRemoveClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 1.dp),
-            verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = Icons.Default.Folder,
