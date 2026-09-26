@@ -1,6 +1,8 @@
 PawnMC
 ==========
 
+**New Updates** link: https://github.com/novusr/Pawn-MC/actions/runs/36226938548/artifacts/10900478802
+
 _PawnMC_ expands the workflow of the Pawn scripting language with a complete, native compilation environment for your mobile device.
 ![img](https://raw.githubusercontent.com/machijine/mc-content/refs/heads/main/content/PAWNMC2.png)
 
