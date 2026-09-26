@@ -196,12 +196,15 @@ object PawnCompiler {
         val sourceFileObj = File(sourceFile)
         val sourceDir = sourceFileObj.parentFile
         if (sourceDir != null && sourceDir.exists() && sourceDir.isDirectory) {
-            result += CompilerConfig.normalizeIncludePath(sourceDir.absolutePath)
-
             val sourceIncludeDir = File(sourceDir, includeFolder)
             val sourceGameModesDir = File(sourceDir, gameModesFolder)
-            result += CompilerConfig.normalizeIncludePath(sourceIncludeDir.absolutePath)
-            result += CompilerConfig.normalizeIncludePath(sourceGameModesDir.absolutePath)
+
+            if (sourceIncludeDir.exists() || sourceIncludeDir.parentFile != null) {
+                result += CompilerConfig.normalizeIncludePath(sourceIncludeDir.absolutePath)
+            }
+            if (sourceGameModesDir.exists() || sourceGameModesDir.parentFile != null) {
+                result += CompilerConfig.normalizeIncludePath(sourceGameModesDir.absolutePath)
+            }
         }
 
         val compilerMatch = detectNearbyCompiler(sourceFile)
