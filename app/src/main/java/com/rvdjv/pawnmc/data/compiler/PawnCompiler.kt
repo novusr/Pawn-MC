@@ -138,40 +138,43 @@ object PawnCompiler {
      * @return compiler match information or null if not found
      */
     fun detectNearbyCompiler(sourceFile: String): NearbyCompilerMatch? {
-        val n_sourceFile = File(sourceFile)
-        if (!n_sourceFile.exists() || n_sourceFile.extension.isBlank()) return null
+        val source = File(sourceFile)
+        if (!source.exists() || source.extension.isBlank()) return null
 
-        val n_searchRoots = LinkedHashSet<File>()
-        var n_currentDir = n_sourceFile.parentFile
-        var n_depth = 0
-        while (n_currentDir != null && n_depth < 6) {
-            n_searchRoots += n_currentDir
-            n_searchRoots += File(n_currentDir, "pawno")
-            n_searchRoots += File(n_currentDir, "pawn")
-            n_currentDir = n_currentDir.parentFile
-            n_depth += 1
+        val searchRoots = linkedSetOf<File>()
+        var dir = source.parentFile
+        var depth = 0
+        while (dir != null && depth < 6) {
+            searchRoots += dir
+            searchRoots += File(dir, "pawno")
+            searchRoots += File(dir, "pawn")
+            dir = dir.parentFile
+            depth += 1
         }
 
-        for (n_dir in n_searchRoots) {
-            val n_pawnoDir = File(n_dir, "pawno")
-            val n_pawnDir = File(n_dir, "pawn")
-            val n_candidates = listOf(
-                File(n_dir, "pawncc.exe"),
-                File(n_dir, "pawncc"),
-                File(n_pawnoDir, "pawncc.exe"),
-                File(n_pawnDir, "pawncc.exe")
-            ).distinctBy { it.absolutePath }
+        val compilerNames = listOf("pawncc.exe", "pawncc")
 
-            for (n_candidate in n_candidates) {
-                if (!n_candidate.exists() || !n_candidate.isFile) continue
-                val n_metadata = readCompilerMetadata(n_candidate)
-                val n_version = n_metadata.version ?: continue
+        for (root in searchRoots) {
+            val rootCandidates = listOf(
+                root,
+                File(root, "pawno"),
+                File(root, "pawn")
+            )
+
+            val candidates = rootCandidates.flatMap { baseDir ->
+                compilerNames.map { name -> File(baseDir, name) }
+            }.distinctBy { it.absolutePath }
+
+            for (candidate in candidates) {
+                if (!candidate.exists() || !candidate.isFile) continue
+                val metadata = readCompilerMetadata(candidate)
+                val version = metadata.version ?: continue
                 return NearbyCompilerMatch(
-                    version = n_version,
-                    filePath = n_candidate.absolutePath,
-                    productVersion = n_metadata.productVersion,
-                    sizeBytes = n_metadata.sizeBytes,
-                    md5 = n_metadata.md5
+                    version = version,
+                    filePath = candidate.absolutePath,
+                    productVersion = metadata.productVersion,
+                    sizeBytes = metadata.sizeBytes,
+                    md5 = metadata.md5
                 )
             }
         }
@@ -186,27 +189,35 @@ object PawnCompiler {
      * @return include directories that should be added as -i values
      */
     fun discoverRelevantIncludePaths(sourceFile: String): List<String> {
-        val n_result = linkedSetOf<String>()
+        val result = linkedSetOf<String>()
+        val includeFolder = "include"
+        val gameModesFolder = "gamemodes"
 
-        val n_sourceDir = File(sourceFile).parentFile
-        if (n_sourceDir != null && n_sourceDir.exists() && n_sourceDir.isDirectory) {
-            n_result += CompilerConfig.normalizeIncludePath(n_sourceDir.absolutePath)
+        val sourceFileObj = File(sourceFile)
+        val sourceDir = sourceFileObj.parentFile
+        if (sourceDir != null && sourceDir.exists() && sourceDir.isDirectory) {
+            result += CompilerConfig.normalizeIncludePath(sourceDir.absolutePath)
+
+            val sourceIncludeDir = File(sourceDir, includeFolder)
+            val sourceGameModesDir = File(sourceDir, gameModesFolder)
+            result += CompilerConfig.normalizeIncludePath(sourceIncludeDir.absolutePath)
+            result += CompilerConfig.normalizeIncludePath(sourceGameModesDir.absolutePath)
         }
 
-        val n_compilerMatch = detectNearbyCompiler(sourceFile)
-        val n_compilerFile = n_compilerMatch?.let { File(it.filePath) }
-        if (n_compilerFile != null && n_compilerFile.exists() && n_compilerFile.isFile) {
-            val n_compilerDir = n_compilerFile.parentFile
-            val n_baseDir = n_compilerDir?.absoluteFile ?: File(sourceFile).parentFile
-            if (n_baseDir != null && n_baseDir.exists() && n_baseDir.isDirectory) {
-                val n_includeCandidate = File(n_baseDir, "include")
-                if (!n_includeCandidate.exists() || n_includeCandidate.isDirectory) {
-                    n_result += CompilerConfig.normalizeIncludePath(n_includeCandidate.absolutePath)
+        val compilerMatch = detectNearbyCompiler(sourceFile)
+        val compilerFile = compilerMatch?.let { File(it.filePath) }
+        if (compilerFile != null && compilerFile.exists() && compilerFile.isFile) {
+            val compilerDir = compilerFile.parentFile
+            val baseDir = compilerDir?.absoluteFile ?: sourceDir
+            if (baseDir != null && baseDir.exists() && baseDir.isDirectory) {
+                val includeCandidate = File(baseDir, includeFolder)
+                if (!includeCandidate.exists() || includeCandidate.isDirectory) {
+                    result += CompilerConfig.normalizeIncludePath(includeCandidate.absolutePath)
                 }
             }
         }
 
-        return n_result.filter { it.isNotBlank() }
+        return result.filter { it.isNotBlank() }
     }
 
     /**

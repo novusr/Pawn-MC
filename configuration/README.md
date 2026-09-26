@@ -32,7 +32,7 @@
 
 ## PawnMC Basic Usage
 Open a (`.pawn` - `.pwn` - `.p`) script within the application and you are ready to compile.
-![img](https://raw.githubusercontent.com/novusr/Pawn-MC/refs/heads/main/configuration/content/content/PAWNMC.png)
+![img](https://raw.githubusercontent.com/machijine/mc-content/refs/heads/main/content/PAWNMC.png)
 
 ## Custom Flags
 

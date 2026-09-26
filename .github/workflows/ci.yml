@@ -14,29 +14,31 @@ concurrency:
 jobs:
   build:
     name: Build & Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platform-tools
-
-      - name: Install NDK
+        shell: bash
         run: |
-          yes | sdkmanager --install "ndk;29.0.14206865" "cmake;3.22.1"
+          set -e
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            echo "Android SDK cmdline-tools not found at $SDKMANAGER"
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --install "platform-tools" "cmdline-tools;latest" "platforms;android-36" "build-tools;36.0.0" "ndk;29.0.14206865" "cmake;3.22.1"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -47,43 +49,85 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run Lint
-        run: ./gradlew lint
+        shell: bash
+        run: |
+          set +e
+          touch _gh_actions.log
+          echo "=== PawnMC Gradle Lint ===" > _gh_actions.log
+          ./gradlew lint --console=plain --stacktrace >> _gh_actions.log 2>&1
+          status=$?
+          tail -n 200 _gh_actions.log
+          exit $status
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug
+        shell: bash
+        run: |
+          set +e
+          touch _gh_actions.log
+          echo "=== PawnMC Debug Build ===" >> _gh_actions.log
+          ./gradlew assembleDebug --console=plain --stacktrace >> _gh_actions.log 2>&1
+          status=$?
+          tail -n 200 _gh_actions.log
+          exit $status
 
       - name: Upload Debug APK
+        if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
 
-      - name: Upload Lint Report
-        uses: actions/upload-artifact@v4
+      - name: Upload CI Log
         if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: gh-actions-log-build
+          path: _gh_actions.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload Lint Report
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
         with:
           name: lint-report
-          path: app/build/reports/lint-results*.html
+          path: app/build/reports
+          if-no-files-found: ignore
           retention-days: 7
 
   # Optional: Run unit tests if you have them
   test:
     name: Unit Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Setup Android SDK
+        shell: bash
+        run: |
+          set -e
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            echo "Android SDK cmdline-tools not found at $SDKMANAGER"
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --install "platform-tools" "cmdline-tools;latest" "platforms;android-36" "build-tools;36.0.0" "ndk;29.0.14206865" "cmake;3.22.1"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -94,12 +138,32 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run Unit Tests
-        run: ./gradlew test
+        shell: bash
+        run: |
+          set +e
+          touch _gh_actions.log
+          echo "=== PawnMC Unit Tests ===" > _gh_actions.log
+          ./gradlew test --console=plain --stacktrace >> _gh_actions.log 2>&1
+          status=$?
+          tail -n 200 _gh_actions.log
+          exit $status
+
+      - name: Upload CI Log
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: gh-actions-log-test
+          path: _gh_actions.log
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload Test Results
-        uses: actions/upload-artifact@v4
         if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: app/build/reports/tests/
+          if-no-files-found: ignore
           retention-days: 7

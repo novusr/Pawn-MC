@@ -724,7 +724,10 @@ private fun CompilerLogsSectionPreview() {
 private fun MainScreenFullPreview() {
     PawnMCTheme {
         Column(modifier = Modifier.padding(SpaceL)) {
-            ScreenHeader(onSettingsClick = {})
+            ScreenHeader(
+                onEditorClick = {},
+                onSettingsClick = {}
+            )
             Spacer(modifier = Modifier.height(SpaceL))
             CompileActionCard(
                 selectedFileName = "main.p",
