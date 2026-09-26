@@ -272,7 +272,7 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        viewModel.n_debug_level.description?.let { desc ->
+                        viewModel.n_debug_level.description.let { desc ->
                             Text(
                                 text = desc,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -287,6 +287,44 @@ fun SettingsScreen(
                             onValueChange = { floatValue: Float ->
                                 val selectedLevel = entries[floatValue.roundToInt()]
                                 viewModel.updateDebugLevel(selectedLevel)
+                            },
+                            valueRange = 0f..maxIndex.toFloat(),
+                            steps = if (maxIndex > 1) maxIndex - 1 else 0
+                        )
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 16.dp)
+                    ) {
+                        val entries = CompilerConfig.OptimizationLevel.entries
+                        val maxIndex = (entries.size - 1).coerceAtLeast(1)
+                        val currentIndex = entries.indexOf(viewModel.n_optimization_level).coerceIn(0, maxIndex)
+
+                        Text(
+                            text = "Optimization Level: ${viewModel.n_optimization_level.label}",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = viewModel.n_optimization_level.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Slider(
+                            value = currentIndex.toFloat(),
+                            onValueChange = { floatValue: Float ->
+                                val selectedLevel = entries[floatValue.roundToInt()]
+                                viewModel.updateOptimizationLevel(selectedLevel)
                             },
                             valueRange = 0f..maxIndex.toFloat(),
                             steps = if (maxIndex > 1) maxIndex - 1 else 0

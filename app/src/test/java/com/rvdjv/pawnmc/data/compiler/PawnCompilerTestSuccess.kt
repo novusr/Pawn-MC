@@ -33,6 +33,20 @@ class PawnCompilerSuccessTest {
     }
 
     @Test
+    fun `build options include optimization level`() {
+        val options = CompilerConfig.buildOptionsFor(
+            optimizationLevel = CompilerConfig.OptimizationLevel.O2,
+            mandatorySemicolons = true,
+            mandatoryParentheses = true,
+            customFlags = "-v=0"
+        )
+
+        assertTrue(options.contains("-O=2"))
+        assertTrue(options.contains("-v=0"))
+        assertTrue(options.contains("-;+"))
+    }
+
+    @Test
     fun `creates temporary pawn file with hello world snippet`() {
         val tempDir = File(System.getProperty("java.io.tmpdir"), "pawnmc-${System.nanoTime()}")
         require(tempDir.mkdirs()) { "Unable to create temp dir for test" }

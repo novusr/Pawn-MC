@@ -18,6 +18,10 @@ class CompilerConfig private constructor(context: Context) {
         get() = DebugLevel.fromValue(prefs.getInt(KEY_DEBUG, DebugLevel.D3.value))
         set(value) = prefs.edit { putInt(KEY_DEBUG, value.value) }
 
+    var n_optimization_level: OptimizationLevel
+        get() = OptimizationLevel.fromValue(prefs.getInt(KEY_OPTIMIZATION, OptimizationLevel.O1.value))
+        set(value) = prefs.edit { putInt(KEY_OPTIMIZATION, value.value) }
+
     //
     // [code style]
     //
@@ -97,29 +101,14 @@ class CompilerConfig private constructor(context: Context) {
      * Build compiler options list from current configuration.
      */
     fun buildOptions(): List<String> {
-        val options = mutableListOf<String>()
-        //
-        // [debug]
-        //
-        options.add("-d=${n_debug_level.value}")
-        //
-        // [code style]
-        //
-        if (n_mandatory_semicolons) { options.add("-;+") }
-        if (n_mandatory_parentheses) { options.add("-(+") }
-        //
-        // [include paths]
-        //
-        for (path in n_include_paths) {
-            val normalized = normalizeIncludePath(path)
-            if (normalized.isNotBlank()) { options.add("-i=$normalized") }
-        }
-        //
-        // [custom flags]
-        //
-        val custom = n_custom_flags.trim()
-        if (custom.isNotEmpty()) { options.addAll(custom.split("\\s+".toRegex()).filter { it.isNotBlank() }) }
-        return options
+        return buildOptionsFor(
+            debugLevel = n_debug_level,
+            optimizationLevel = n_optimization_level,
+            mandatorySemicolons = n_mandatory_semicolons,
+            mandatoryParentheses = n_mandatory_parentheses,
+            includePaths = n_include_paths,
+            customFlags = n_custom_flags
+        )
     }
 
     enum class DebugLevel(val value: Int, val label: String, val description: String) {
@@ -130,6 +119,16 @@ class CompilerConfig private constructor(context: Context) {
 
         companion object {
             fun fromValue(value: Int) = entries.find { it.value == value } ?: D1
+        }
+    }
+
+    enum class OptimizationLevel(val value: Int, val label: String, val description: String) {
+        O0(0, "Disabled (-O0)", "No optimization; safest but largest output."),
+        O1(1, "Balanced (-O1)", "Default optimization pass for stable behavior. (Default)"),
+        O2(2, "Aggressive (-O2)", "Maximum optimization for speed and size.");
+
+        companion object {
+            fun fromValue(value: Int) = entries.find { it.value == value } ?: O1
         }
     }
 
@@ -216,6 +215,7 @@ class CompilerConfig private constructor(context: Context) {
 
     companion object {
         private const val KEY_DEBUG            = "debug_level"
+        private const val KEY_OPTIMIZATION      = "optimization_level"
         private const val PREFS_NAME           = "compiler_config"
         private const val KEY_LAST_DIR         = "last_open_dir"
         private const val KEY_LAST_FILE        = "last_sel_file"
@@ -229,6 +229,31 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_DETECTED_MD5 = "detected_compiler_md5"
         private const val KEY_FORCED_MODE = "forced_compiler_mode"
         private const val KEY_APP_THEME = "app_theme"
+
+        fun buildOptionsFor(
+            debugLevel: DebugLevel = DebugLevel.D3,
+            optimizationLevel: OptimizationLevel = OptimizationLevel.O1,
+            mandatorySemicolons: Boolean = true,
+            mandatoryParentheses: Boolean = true,
+            includePaths: List<String> = emptyList(),
+            customFlags: String = ""
+        ): List<String> {
+            val options = mutableListOf<String>()
+            options.add("-d=${debugLevel.value}")
+            options.add("-O=${optimizationLevel.value}")
+
+            if (mandatorySemicolons) { options.add("-;+") }
+            if (mandatoryParentheses) { options.add("-(+") }
+
+            for (path in includePaths) {
+                val normalized = normalizeIncludePath(path)
+                if (normalized.isNotBlank()) { options.add("-i=$normalized") }
+            }
+
+            val custom = customFlags.trim()
+            if (custom.isNotEmpty()) { options.addAll(custom.split("\\s+".toRegex()).filter { it.isNotBlank() }) }
+            return options
+        }
 
         fun normalizeIncludePath(path: String): String {
             val trimmed = path.trim().replace('\\', '/')

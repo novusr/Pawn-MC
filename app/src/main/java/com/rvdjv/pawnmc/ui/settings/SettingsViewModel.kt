@@ -18,6 +18,9 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     var n_debug_level by mutableStateOf(config.n_debug_level)
         private set
 
+    var n_optimization_level by mutableStateOf(config.n_optimization_level)
+        private set
+
     var n_mandatory_semicolons by mutableStateOf(config.n_mandatory_semicolons)
         private set
 
@@ -43,6 +46,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     fun updateDebugLevel(level: CompilerConfig.DebugLevel) {
         n_debug_level = level
         config.n_debug_level = level
+    }
+
+    fun updateOptimizationLevel(level: CompilerConfig.OptimizationLevel) {
+        n_optimization_level = level
+        config.n_optimization_level = level
     }
 
     fun updateMandatorySemicolons(enabled: Boolean) {
