@@ -336,6 +336,18 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
 
+                    SwitchRow(
+                        title = "Ignore Case",
+                        description = "Normalize project files and includes so mixed-case filenames and #include references compile reliably.",
+                        checked = viewModel.n_ignore_case,
+                        onCheckedChange = { viewModel.updateIgnoreCase(it) }
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()

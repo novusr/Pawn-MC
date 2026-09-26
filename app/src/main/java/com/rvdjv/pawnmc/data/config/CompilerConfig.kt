@@ -22,6 +22,10 @@ class CompilerConfig private constructor(context: Context) {
         get() = OptimizationLevel.fromValue(prefs.getInt(KEY_OPTIMIZATION, OptimizationLevel.O1.value))
         set(value) = prefs.edit { putInt(KEY_OPTIMIZATION, value.value) }
 
+    var n_ignore_case: Boolean
+        get() = prefs.getBoolean(KEY_IGNORE_CASE, false)
+        set(value) = prefs.edit { putBoolean(KEY_IGNORE_CASE, value) }
+
     //
     // [code style]
     //
@@ -216,6 +220,7 @@ class CompilerConfig private constructor(context: Context) {
     companion object {
         private const val KEY_DEBUG            = "debug_level"
         private const val KEY_OPTIMIZATION      = "optimization_level"
+        private const val KEY_IGNORE_CASE       = "ignore_case"
         private const val PREFS_NAME           = "compiler_config"
         private const val KEY_LAST_DIR         = "last_open_dir"
         private const val KEY_LAST_FILE        = "last_sel_file"

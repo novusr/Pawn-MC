@@ -72,8 +72,12 @@ class MainViewModel(
     fun loadLastSelectedFile() {
         val lastPath = config.n_last_selected_file_path
         if (lastPath != null && File(lastPath).exists()) {
-            selectedFilePath = lastPath
-            outputText = "Loaded file: $lastPath\n"
+            val resolvedPath = if (config.n_ignore_case) {
+                PawnCompiler.prepareCaseInsensitiveWorkspace(lastPath)?.sourceFile ?: lastPath
+            } else lastPath
+            selectedFilePath = resolvedPath
+            config.n_last_selected_file_path = resolvedPath
+            outputText = "Loaded file: $resolvedPath\n"
         }
     }
 
@@ -83,13 +87,16 @@ class MainViewModel(
             if (path != null) {
                 val validExtensions = setOf("pawn", "pwn", "p", "inc")
                 if (File(path).extension.lowercase() in validExtensions) {
-                    selectedFilePath = path
-                    config.n_last_selected_file_path = path
+                    val resolvedPath = if (config.n_ignore_case) {
+                        PawnCompiler.prepareCaseInsensitiveWorkspace(path)?.sourceFile ?: path
+                    } else path
+                    selectedFilePath = resolvedPath
+                    config.n_last_selected_file_path = resolvedPath
                     selectionError = null
                     temporaryFileNotice = null
                     lastExitCode = null
-                    outputText = "Opened file: $path\n"
-                    applyCompilerAutoDetection(path)
+                    outputText = "Opened file: $resolvedPath\n"
+                    applyCompilerAutoDetection(resolvedPath)
                 } else {
                     selectionError = "Invalid file type! (only: .pawn .pwn .p)"
                 }
@@ -112,12 +119,15 @@ class MainViewModel(
     fun selectFile(path: String) {
         val validExtensions = setOf("pawn", "pwn", "p", "inc")
         if (File(path).extension.lowercase() in validExtensions) {
-            selectedFilePath = path
-            config.n_last_selected_file_path = path
+            val resolvedPath = if (config.n_ignore_case) {
+                PawnCompiler.prepareCaseInsensitiveWorkspace(path)?.sourceFile ?: path
+            } else path
+            selectedFilePath = resolvedPath
+            config.n_last_selected_file_path = resolvedPath
             selectionError = null
             temporaryFileNotice = null
             lastExitCode = null
-            applyCompilerAutoDetection(path)
+            applyCompilerAutoDetection(resolvedPath)
         } else {
             selectionError = "Invalid file type! (only: .pawn .pwn .p)"
         }
@@ -155,6 +165,15 @@ class MainViewModel(
         val version = detectedVersion ?: CompilerConfig.CompilerVersion.V3107
         config.n_compiler_version = version
 
+        val preparedWorkspace = if (config.n_ignore_case) {
+            PawnCompiler.prepareCaseInsensitiveWorkspace(path)
+        } else null
+        val compilePath = preparedWorkspace?.sourceFile ?: path
+        if (preparedWorkspace != null) {
+            selectedFilePath = compilePath
+            config.n_last_selected_file_path = compilePath
+        }
+
         isCompiling = true
         outputText = ""
         viewModelScope.launch {
@@ -163,9 +182,16 @@ class MainViewModel(
 
             val startTime = System.currentTimeMillis()
             val result = withContext(Dispatchers.IO) {
-                PawnCompiler.compile(path, options, selectedVersion)
+                PawnCompiler.compile(compilePath, options, selectedVersion)
             }
             val duration = System.currentTimeMillis() - startTime
+
+            if (preparedWorkspace != null) {
+                PawnCompiler.finalizeCaseInsensitiveWorkspace(preparedWorkspace)
+                val restoredPath = preparedWorkspace.originalDir.absolutePath + File.separator + File(compilePath).name
+                selectedFilePath = restoredPath
+                config.n_last_selected_file_path = restoredPath
+            }
 
             outputText += result.second
             val timeString = if (duration >= 1000) {

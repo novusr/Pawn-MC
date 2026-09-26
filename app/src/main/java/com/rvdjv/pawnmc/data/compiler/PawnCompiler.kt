@@ -34,6 +34,14 @@ object PawnCompiler {
     private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
     private val ERROR_COUNT_REGEX = """(?i)(\d+)\s+errors?\.?""".toRegex()
     private val PRODUCT_VERSION_REGEX = """\b\d+\.\d+\.\d+\b""".toRegex()
+    private val INCLUDE_DIRECTIVE_REGEX = Regex("""(?i)#include\s*(?:\"([^\"]+)\"|'([^']+)')""")
+
+    data class PreparedWorkspace(
+        val originalDir: File,
+        val normalizedDir: File,
+        val sourceFile: String,
+        val originalSourceFile: String
+    )
 
     /**
      * Resets the current compile fallback mutation state for this session.
@@ -257,6 +265,106 @@ object PawnCompiler {
         val sizeBytes: Long,
         val md5: String?
     )
+
+    fun prepareCaseInsensitiveWorkspace(sourceFilePath: String): PreparedWorkspace? {
+        val sourceFile = File(sourceFilePath)
+        if (!sourceFile.exists() || sourceFile.isDirectory) return null
+
+        val originalDir = sourceFile.parentFile ?: return null
+        val projectRoot = originalDir.parentFile ?: return null
+        val normalizedDir = File(projectRoot, "${originalDir.name}2")
+
+        if (normalizedDir.absolutePath == originalDir.absolutePath) return null
+        if (normalizedDir.exists()) normalizedDir.deleteRecursively()
+
+        copyDirectoryRecursively(originalDir, normalizedDir)
+        normalizeProjectNames(normalizedDir)
+
+        val normalizedSourceCandidate = File(normalizedDir, sourceFile.name.lowercase())
+        val finalSourceFile = if (normalizedSourceCandidate.exists()) normalizedSourceCandidate else normalizedDir.walkTopDown()
+            .firstOrNull { it.isFile && it.name.equals(sourceFile.name, ignoreCase = true) }
+            ?: sourceFile
+
+        val sourcePath = finalSourceFile.absolutePath
+        rewriteIncludesInProject(normalizedDir)
+
+        return PreparedWorkspace(
+            originalDir = originalDir,
+            normalizedDir = normalizedDir,
+            sourceFile = sourcePath,
+            originalSourceFile = sourceFile.absolutePath
+        )
+    }
+
+    fun finalizeCaseInsensitiveWorkspace(preparedWorkspace: PreparedWorkspace) {
+        val originalDir = preparedWorkspace.originalDir
+        val normalizedDir = preparedWorkspace.normalizedDir
+        val backupDir = File(originalDir.parentFile, "${originalDir.name}.backup")
+
+        if (backupDir.exists()) backupDir.deleteRecursively()
+        if (originalDir.exists()) {
+            originalDir.renameTo(backupDir)
+        }
+        if (normalizedDir.exists()) {
+            normalizedDir.renameTo(originalDir)
+        }
+    }
+
+    private fun copyDirectoryRecursively(source: File, target: File) {
+        if (!source.exists()) return
+        target.mkdirs()
+        source.listFiles()?.forEach { child ->
+            val destination = File(target, child.name)
+            if (child.isDirectory) {
+                copyDirectoryRecursively(child, destination)
+            } else {
+                child.copyTo(destination, overwrite = true)
+            }
+        }
+    }
+
+    private fun normalizeProjectNames(rootDir: File) {
+        val filesToRename = rootDir.walkTopDown().filter { it.isFile }.toList()
+        val seenNames = linkedSetOf<String>()
+
+        filesToRename.forEach { file ->
+            val lowerName = file.name.lowercase()
+            if (lowerName in seenNames) {
+                file.delete()
+                return@forEach
+            }
+            seenNames += lowerName
+
+            if (file.name != lowerName) {
+                val renamedFile = File(file.parentFile, lowerName)
+                if (renamedFile.exists() && renamedFile.absolutePath != file.absolutePath) {
+                    renamedFile.delete()
+                }
+                file.renameTo(renamedFile)
+            }
+        }
+    }
+
+    private fun rewriteIncludesInProject(rootDir: File) {
+        rootDir.walkTopDown().filter { it.isFile }.forEach { file ->
+            val extension = file.extension.lowercase()
+            if (extension !in setOf("pawn", "pwn", "p", "inc")) return@forEach
+
+            val content = file.readText()
+            val rewritten = INCLUDE_DIRECTIVE_REGEX.replace(content) { match ->
+                val originalValue = match.groupValues[1].ifBlank { match.groupValues[2] }
+                if (originalValue.isBlank()) return@replace match.value
+                val lowered = originalValue.lowercase()
+                val prefix = match.value.substringBefore(originalValue)
+                val suffix = match.value.substringAfterLast(originalValue)
+                "$prefix$lowered$suffix"
+            }
+
+            if (rewritten != content) {
+                file.writeText(rewritten)
+            }
+        }
+    }
 
     /**
      * Starts the native Pawn compiler job for the selected source file.

@@ -4,6 +4,7 @@ import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.ui.main.MainViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -44,6 +45,29 @@ class PawnCompilerSuccessTest {
         assertTrue(options.contains("-O=2"))
         assertTrue(options.contains("-v=0"))
         assertTrue(options.contains("-;+"))
+    }
+
+    @Test
+    fun `case-insensitive workspace lowercases filenames and include statements`() {
+        val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-ignore-case-${System.nanoTime()}")
+        val originalDir = File(root, "Gamemodes")
+        val includeFile = File(originalDir, "Aaa.inc")
+        val sourceFile = File(originalDir, "Main.PWN")
+
+        originalDir.mkdirs()
+        includeFile.writeText("stock foo() { return 1; }\n")
+        sourceFile.writeText("#include \"Aaa.inc\"\n#include \"Other.Inc\"\n")
+
+        val normalizedRoot = PawnCompiler.normalizeCaseInsensitiveProject(originalDir)
+        val normalizedSource = File(normalizedRoot, "main.pwn")
+        val normalizedInclude = File(normalizedRoot, "aaa.inc")
+
+        assertNotNull(normalizedRoot)
+        assertTrue(normalizedSource.exists())
+        assertTrue(normalizedInclude.exists())
+        assertTrue(normalizedSource.readText().contains("#include \"aaa.inc\""))
+
+        root.deleteRecursively()
     }
 
     @Test

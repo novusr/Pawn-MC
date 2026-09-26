@@ -21,6 +21,9 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     var n_optimization_level by mutableStateOf(config.n_optimization_level)
         private set
 
+    var n_ignore_case by mutableStateOf(config.n_ignore_case)
+        private set
+
     var n_mandatory_semicolons by mutableStateOf(config.n_mandatory_semicolons)
         private set
 
@@ -51,6 +54,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     fun updateOptimizationLevel(level: CompilerConfig.OptimizationLevel) {
         n_optimization_level = level
         config.n_optimization_level = level
+    }
+
+    fun updateIgnoreCase(enabled: Boolean) {
+        n_ignore_case = enabled
+        config.n_ignore_case = enabled
     }
 
     fun updateMandatorySemicolons(enabled: Boolean) {
