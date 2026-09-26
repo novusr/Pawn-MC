@@ -86,11 +86,11 @@ import java.text.DecimalFormat
 private val SpaceXS = 4.dp
 private val SpaceS = 8.dp
 private val SpaceM = 16.dp
-private val SpaceL = 20.dp
+private val SpaceL = 18.dp
 private val SpaceXL = 32.dp
 private val CardShape = RoundedCornerShape(20.dp)
 private val PillShape = RoundedCornerShape(28.dp)
-private val ActionButtonHeight = 56.dp
+private val ActionButtonHeight = 48.dp
 private const val OUTPUT_PLACEHOLDER = "Ready to compile...\n"
 private val OutputPanelHeight = 240.dp
 
@@ -338,45 +338,37 @@ private fun CompileActionCard(
         shape = CardShape,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Column(modifier = Modifier.padding(SpaceL)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.16f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Code,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
+        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
+            val fileStatusText = if (selectedFileName != null) selectedFileName else "No file selected"
+            val fileMetaText = selectedFileSize ?: "No file selected"
 
-                Spacer(modifier = Modifier.width(SpaceM))
+            Text(
+                text = fileStatusText,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = if (selectedFileName != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "SOURCE FILE",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = selectedFileName ?: "No file selected!",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = selectedFileSize ?: "Tap Change File to begin",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            if (selectedFileName != null) {
+                Text(
+                    text = fileMetaText,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            } else {
+                Text(
+                    text = fileMetaText,
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
 
             Spacer(modifier = Modifier.height(SpaceL))
