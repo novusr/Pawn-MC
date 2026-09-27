@@ -356,7 +356,7 @@ fun SettingsScreen(
                     )
 
                     SwitchRow(
-                        title = "Explain Compiler Output",
+                        title = "Explain Compiler",
                         description = "Add human-readable explanations next to warnings, errors, and fatal messages extracted from the compiler log.",
                         checked = viewModel.n_explain_output,
                         onCheckedChange = { viewModel.updateExplainOutput(it) }
