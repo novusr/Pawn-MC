@@ -163,7 +163,7 @@ class CompilerConfig private constructor(context: Context) {
         EN("en", "English (EN/US)", "English language");
 
         companion object {
-            fun fromValue(value: String?) = entries.find { it.value.equals(value, ignoreCase = true) } ?: EN
+            fun fromValue(value: String?) = entries.find { it.value.equals(value, ignoreCase = true) } ?: ID
         }
     }
 
@@ -295,17 +295,30 @@ class CompilerConfig private constructor(context: Context) {
                 val key = normalized.lowercase()
                 if (key in unique) continue
 
+                val canonicalKey = runCatching {
+                    val file = java.io.File(normalized)
+                    if (file.exists()) normalPath(file.canonicalPath).lowercase() else null
+                }.getOrNull()
+
+                if (canonicalKey != null && canonicalKey in unique) continue
+
                 unique += key
+                if (canonicalKey != null) {
+                    unique += canonicalKey
+                }
                 result += normalized
             }
 
             return result
         }
 
+        fun normalizeIncludePath(path: String): String = normalPath(path)
+
         fun normalPath(path: String): String {
             val trimmed = path.trim().replace('\\', '/')
             if (trimmed.isEmpty()) return ""
-            val withoutTrailingSlash = trimmed.trimEnd('/')
+            val cleanSlashes = trimmed.replace(Regex("/+"), "/")
+            val withoutTrailingSlash = cleanSlashes.trimEnd('/')
             return if (withoutTrailingSlash.isEmpty()) "/" else "$withoutTrailingSlash/"
         }
 

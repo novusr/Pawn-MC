@@ -47,6 +47,9 @@ class MainViewModel(
     var n_app_theme by mutableStateOf(config.n_app_theme)
         private set
 
+    var n_app_language by mutableStateOf(config.n_app_language)
+        private set
+
     var selectedFilePath by mutableStateOf<String?>(null)
         private set
 
@@ -67,6 +70,10 @@ class MainViewModel(
 
     fun refreshTheme() {
         n_app_theme = config.n_app_theme
+    }
+
+    fun refreshLanguage() {
+        n_app_language = config.n_app_language
     }
 
     fun loadLastSelectedFile() {

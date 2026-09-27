@@ -77,6 +77,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import com.rvdjv.pawnmc.data.config.AppLocalization
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserMode
 import com.rvdjv.pawnmc.ui.theme.PawnMCTheme
@@ -85,6 +87,7 @@ import com.rvdjv.pawnmc.ui.theme.status_error_container
 import com.rvdjv.pawnmc.ui.theme.status_idle
 import com.rvdjv.pawnmc.ui.theme.status_success
 import com.rvdjv.pawnmc.ui.theme.status_success_container
+import com.rvdjv.pawnmc.data.config.AppLocalization
 import java.io.File
 import java.text.DecimalFormat
 
@@ -123,6 +126,8 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     val outputScrollState = rememberScrollState()
+    val localizer = remember(context) { AppLocalization.load(context) }
+    val appLanguage = viewModel.n_app_language
 
     // state dialog
     var showFileBrowser by remember { mutableStateOf(false) }
@@ -172,12 +177,9 @@ fun MainScreen(
     if (showPermissionDialog) {
         AlertDialog(
             onDismissRequest = { showPermissionDialog = false },
-            title = { Text("Storage Permission Required!") },
+            title = { Text(localizer.get("main.perm.title", appLanguage, "Storage Permission Required!")) },
             text = {
-                Text(
-                    "This app needs access to all files to compile pawn files " +
-                    "and write amx output to any location."
-                )
+                Text(localizer.get("main.perm.desc", appLanguage, "This app needs access to all files to compile pawn files and write amx output to any location."))
             },
             confirmButton = {
                 TextButton(
@@ -190,12 +192,12 @@ fun MainScreen(
                         )
                     }
                 ) {
-                    Text("Grant")
+                    Text(localizer.get("main.perm.grant", appLanguage, "Grant"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showPermissionDialog = false }) {
-                    Text("Cancel")
+                    Text(localizer.get("main.perm.later", appLanguage, "Cancel"))
                 }
             }
         )
@@ -222,7 +224,7 @@ fun MainScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Self Test Diagnostics")
+                        Text(localizer.get("main.selftest.title", appLanguage, "Self Test Diagnostics"))
                     }
                 }
             },
@@ -234,7 +236,7 @@ fun MainScreen(
                         .verticalScroll(rememberScrollState())
                 ) {
                     Text(
-                        text = "Run application diagnostics to verify internal compilers, auto-detection, and include directories. Scroll up/down to view all test modules.",
+                        text = localizer.get("main.selftest.desc", appLanguage, "Run application diagnostics to verify internal compilers, auto-detection, and include directories. Scroll up/down to view all test modules."),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -250,12 +252,12 @@ fun MainScreen(
                         Button(
                             onClick = {
                                 selfTestResults = AppSelfTestCatalog.runAll()
-                                Toast.makeText(context, "All tests completed", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, localizer.get("main.selftest.completed", appLanguage, "All tests completed"), Toast.LENGTH_SHORT).show()
                             }
                         ) {
                             Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Run All")
+                            Text(localizer.get("main.selftest.run_all", appLanguage, "Run All"))
                         }
 
                         if (selfTestResults.isNotEmpty()) {
@@ -264,7 +266,7 @@ fun MainScreen(
                                     selfTestResults = emptyList()
                                 }
                             ) {
-                                Text("Clear")
+                                Text(localizer.get("main.selftest.clear", appLanguage, "Clear"))
                             }
                         }
                     }
@@ -272,8 +274,12 @@ fun MainScreen(
                     Spacer(modifier = Modifier.height(SpaceM))
 
                     if (selfTestResults.isNotEmpty()) {
+                        val passedCount = selfTestResults.count { it.passed }
+                        val totalCount = selfTestResults.size
+                        val passedWord = localizer.get("main.selftest.passed", appLanguage, "Passed")
+                        val resultsTitle = localizer.get("main.selftest.results", appLanguage, "Test Results")
                         Text(
-                            text = "Test Results (${selfTestResults.count { it.passed }}/${selfTestResults.size} Passed):",
+                            text = "$resultsTitle ($passedCount/$totalCount $passedWord):",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -323,7 +329,7 @@ fun MainScreen(
                     }
 
                     Text(
-                        text = "Test Module Catalog (scroll down):",
+                        text = localizer.get("main.selftest.catalog", appLanguage, "Test Module Catalog (scroll down):"),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -363,11 +369,12 @@ fun MainScreen(
                                     onClick = {
                                         val singleRes = AppSelfTestCatalog.run(test.id)
                                         selfTestResults = (selfTestResults.filterNot { it.name == singleRes.name } + singleRes)
-                                        Toast.makeText(context, "${test.title}: ${if (singleRes.passed) "PASSED" else "FAILED"}", Toast.LENGTH_SHORT).show()
+                                        val statusLabel = if (singleRes.passed) localizer.get("main.selftest.passed", appLanguage, "PASSED") else "FAILED"
+                                        Toast.makeText(context, "${test.title}: $statusLabel", Toast.LENGTH_SHORT).show()
                                     },
                                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                 ) {
-                                    Text("Run")
+                                    Text(localizer.get("main.selftest.run", appLanguage, "Run"))
                                 }
                             }
                         }
@@ -380,7 +387,7 @@ fun MainScreen(
                         showSelfTestDialog = false
                     }
                 ) {
-                    Text("Close")
+                    Text(localizer.get("main.selftest.close", appLanguage, "Close"))
                 }
             }
         )
@@ -416,7 +423,9 @@ fun MainScreen(
                     }
                 },
                 onSettingsClick = onSettingsClick,
-                onSelfTestClick = { showSelfTestDialog = true }
+                onSelfTestClick = { showSelfTestDialog = true },
+                localizer = localizer,
+                appLanguage = appLanguage
             )
 
             if (selfTestResults.isNotEmpty()) {
@@ -434,17 +443,19 @@ fun MainScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            val cardTitle = localizer.get("main.selftest.card_title", appLanguage, "Self-Test Results")
+                            val passedWord = localizer.get("main.selftest.passed", appLanguage, "Passed")
                             Text(
-                                text = "Self-Test Results (${selfTestResults.count { it.passed }}/${selfTestResults.size} Passed)",
+                                text = "$cardTitle (${selfTestResults.count { it.passed }}/${selfTestResults.size} $passedWord)",
                                 style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Row {
                                 TextButton(onClick = { showSelfTestDialog = true }) {
-                                    Text("Open Tests")
+                                    Text(localizer.get("main.selftest.open", appLanguage, "Open Tests"))
                                 }
                                 TextButton(onClick = { selfTestResults = emptyList() }) {
-                                    Text("Dismiss")
+                                    Text(localizer.get("main.selftest.dismiss", appLanguage, "Dismiss"))
                                 }
                             }
                         }
@@ -493,7 +504,9 @@ fun MainScreen(
                             onPermissionRequired = { showPermissionDialog = true }
                         )
                     }
-                }
+                },
+                localizer = localizer,
+                appLanguage = appLanguage
             )
 
             viewModel.selectionError?.let { error ->
@@ -555,7 +568,9 @@ fun MainScreen(
                         )
                         Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
                     }
-                }
+                },
+                localizer = localizer,
+                appLanguage = appLanguage
             )
 
             Spacer(modifier = Modifier.height(SpaceL))
@@ -579,7 +594,9 @@ fun MainScreen(
 private fun ScreenHeader(
     onEditorClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onSelfTestClick: () -> Unit
+    onSelfTestClick: () -> Unit,
+    localizer: AppLocalization? = null,
+    appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -611,7 +628,7 @@ private fun ScreenHeader(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Description,
-                    contentDescription = "Self tests",
+                    contentDescription = localizer?.get("main.header.selftest", appLanguage, "Self tests") ?: "Self tests",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -622,7 +639,7 @@ private fun ScreenHeader(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Code,
-                    contentDescription = "Xed Editor",
+                    contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -633,7 +650,7 @@ private fun ScreenHeader(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings",
+                    contentDescription = localizer?.get("main.header.settings", appLanguage, "Settings") ?: "Settings",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

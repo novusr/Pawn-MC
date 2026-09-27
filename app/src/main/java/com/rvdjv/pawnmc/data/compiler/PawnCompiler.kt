@@ -9,27 +9,29 @@ import java.io.File
  */
 object PawnCompiler {
 
-    private const val PAWNO_DIR_NAME = "pawno"
-    private const val PAWN_DIR_NAME = "pawn"
-    private const val PAWNCC_BINARY_NAME = "pawncc"
-    private const val PAWNCC_WINDOWS_BINARY_NAME = "pawncc.exe"
-    private const val GAMEMODES_DIR_NAME = "gamemodes"
-    private const val INCLUDE_DIR_NAME = "include"
-    private const val FILE_PATH_SEPARATOR = "/"
-    private const val INCLUDE_PATH_SUFFIX = "/include"
-    private const val PAWN_FILE_EXTENSION = "pawn"
-    private const val PWN_FILE_EXTENSION = "pwn"
-    private const val PAWN_SOURCE_SHORT_EXTENSION = "p"
-    private const val PAWN_INCLUDE_EXTENSION = "inc"
+    private const val STR_PAWNO_DIR_NAME              = "pawno"
+
+    private const val STR_PAWNCC_BINARY_NAME          = "pawncc"
+    private const val STR_PAWNCC_FILE_NAME            = "pawncc.exe"
+
+    private const val STR_MODES_DIR_NAME              = "gamemodes"
+    private const val STR_INCLUDE_DIR_NAME            = "include"
+    private const val STR_PATH_SEPARATOR              = "/"
+    private const val STR_INCLUDE_PATH_SUFFIX         = "/include"
+    
+    private const val STR_PAWN_FILE_EXTENSION         = "pawn"
+    private const val STR_PWN_FILE_EXTENSION          = "pwn"
+    private const val STR_PAWN_SOURCE_SHORT_EXTENSION = "p"
+    private const val STR_PAWN_INCLUDE_EXTENSION      = "inc"
 
     private val INCLUDE_PATH_VARIANTS = listOf(
-        "$PAWNO_DIR_NAME/$INCLUDE_DIR_NAME",
-        GAMEMODES_DIR_NAME
+        "$STR_PAWNO_DIR_NAME/$STR_INCLUDE_DIR_NAME",
+        STR_MODES_DIR_NAME
     )
 
     private val COMPILER_BINARY_NAMES = listOf(
-        PAWNCC_WINDOWS_BINARY_NAME,
-        PAWNCC_BINARY_NAME
+        STR_PAWNCC_FILE_NAME,
+        STR_PAWNCC_BINARY_NAME
     )
 
     data class NearbyCompilerMatch(
@@ -197,8 +199,7 @@ object PawnCompiler {
         var depth = 0
         while (dir != null && depth < 6) {
             sr_root += dir
-            sr_root += File(dir, PAWNO_DIR_NAME)
-            sr_root += File(dir, PAWN_DIR_NAME)
+            sr_root += File(dir, STR_PAWNO_DIR_NAME)
             dir = dir.parentFile
             depth += 1
         }
@@ -208,8 +209,7 @@ object PawnCompiler {
         for (root in sr_root) {
             val rootCandidates = listOf(
                 root,
-                File(root, PAWNO_DIR_NAME),
-                File(root, PAWN_DIR_NAME)
+                File(root, STR_PAWNO_DIR_NAME)
             )
 
             val candidates = rootCandidates.flatMap { baseDir ->
@@ -267,15 +267,15 @@ object PawnCompiler {
 
         val sourceParent = sourceDir?.absoluteFile
         if (sourceParent != null) {
-            val sourceGamemodes = File(sourceParent, GAMEMODES_DIR_NAME)
+            val sourceGamemodes = File(sourceParent, STR_MODES_DIR_NAME)
             result += CompilerConfig.normalPath(sourceGamemodes.absolutePath)
         }
 
         val baseCandidate = sourceParent ?: File(System.getProperty("java.io.tmpdir"))
-        result += CompilerConfig.normalPath(File(baseCandidate, "$PAWNO_DIR_NAME/$INCLUDE_DIR_NAME").absolutePath)
-        result += CompilerConfig.normalPath(File(baseCandidate, GAMEMODES_DIR_NAME).absolutePath)
+        result += CompilerConfig.normalPath(File(baseCandidate, "$STR_PAWNO_DIR_NAME/$STR_INCLUDE_DIR_NAME").absolutePath)
+        result += CompilerConfig.normalPath(File(baseCandidate, STR_MODES_DIR_NAME).absolutePath)
 
-        return result.filter { it.isNotBlank() }
+        return CompilerConfig.dedupePaths(result)
     }
 
     /**
@@ -403,7 +403,7 @@ object PawnCompiler {
         rootDir.walkTopDown().filter { it.isFile }.forEach { file ->
             val n_ext = file.extension.lowercase()
             if (n_ext !in setOf(
-                    PAWN_FILE_EXTENSION,
+                    STR_PAWN_FILE_EXTENSION,
                     PWN_FILE_EXTENSION,
                     PAWN_SOURCE_SHORT_EXTENSION,
                     PAWN_INCLUDE_EXTENSION
@@ -500,7 +500,7 @@ object PawnCompiler {
             "Failed to delete old log file: ${n_logFile.absolutePath}", it) }
 
         val n_args = buildList {
-            add(PAWNCC_BINARY_NAME)
+            add(STR_PAWNCC_BINARY_NAME)
             addAll(options)
             add(sourceFile)
         }

@@ -27,4 +27,31 @@ class AppLocalizationTest {
         assertEquals("Tema", parsed["settings.theme.id"])
         assertEquals("Theme", parsed["settings.theme.en"])
     }
+
+    @Test
+    fun `localization translates English words to Indonesian when ID is selected`() {
+        val data = """
+            0x01:settings.general.id:0x02:Umum
+            0x01:settings.general.en:0x02:General
+            0x01:settings.language.id:0x02:Bahasa
+            0x01:settings.language.en:0x02:Language
+            0x01:settings.title.id:0x02:Pengaturan
+            0x01:settings.title.en:0x02:Settings
+        """.trimIndent()
+
+        val parsed = AppLocalization.parseLocalizationData(data)
+        val constructor = AppLocalization::class.java.getDeclaredConstructor(Map::class.java)
+        constructor.isAccessible = true
+        val localizer = constructor.newInstance(parsed)
+
+        // Key-based translation
+        assertEquals("Umum", localizer.get("settings.general", CompilerConfig.AppLanguage.ID))
+        assertEquals("General", localizer.get("settings.general", CompilerConfig.AppLanguage.EN))
+
+        // Phrase / word-based translation
+        assertEquals("Umum", localizer.get("General", CompilerConfig.AppLanguage.ID))
+        assertEquals("Bahasa", localizer.get("Language", CompilerConfig.AppLanguage.ID))
+        assertEquals("Pengaturan", localizer.get("Settings", CompilerConfig.AppLanguage.ID))
+        assertEquals("Settings", localizer.get("Pengaturan", CompilerConfig.AppLanguage.EN))
+    }
 }

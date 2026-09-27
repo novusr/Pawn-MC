@@ -82,6 +82,7 @@ class PawnCompilerSuccessTest {
             assertTrue(paths.any { it.contains("gamemodes", ignoreCase = true) })
             assertTrue(paths.any { it.contains("pawno/include", ignoreCase = true) })
             assertTrue(paths.any { it.contains("qawno/include", ignoreCase = true) })
+            assertEquals("No two include paths can have the same location", paths.size, paths.map { CompilerConfig.normalPath(it).lowercase() }.distinct().size)
         } finally {
             root.deleteRecursively()
         }

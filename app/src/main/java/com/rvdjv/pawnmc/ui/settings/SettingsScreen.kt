@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import com.rvdjv.pawnmc.data.config.AppLocalization
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -90,6 +91,7 @@ fun SettingsScreen(
     var newIncludePathInput by remember { mutableStateOf("") }
     var showVersionDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
     var editingIncludePathIndex by remember { mutableStateOf<Int?>(null) }
     var editingIncludePathValue by remember { mutableStateOf("") }
@@ -172,6 +174,13 @@ fun SettingsScreen(
         refreshUpdateStatus()
     }
 
+    val localizer = remember(context) { AppLocalization.load(context) }
+    val appLanguage = viewModel.n_app_language
+    val generalTitle = localizer.get("settings.general", appLanguage, "General")
+    val languageTitle = localizer.get("settings.language", appLanguage, "Language")
+    val themeTitle = localizer.get("settings.theme", appLanguage, "Theme")
+    val compilerTitle = localizer.get("settings.compiler.version", appLanguage, "Compiler Version")
+
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     // scaffold
@@ -179,12 +188,12 @@ fun SettingsScreen(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             MediumTopAppBar(
-                title = { Text("Settings") },
+                title = { Text(localizer.get("settings.title", appLanguage, "Settings")) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = localizer.get("settings.back", appLanguage, "Back")
                         )
                     }
                 },
@@ -206,12 +215,6 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
         ) {
-            val localizer = remember(context) { AppLocalization.load(context) }
-            val appLanguage = viewModel.n_app_language
-            val generalTitle = localizer.get("settings.general", appLanguage, "General")
-            val languageTitle = localizer.get("settings.language", appLanguage, "Language")
-            val themeTitle = localizer.get("settings.theme", appLanguage, "Theme")
-            val compilerTitle = localizer.get("settings.compiler.version", appLanguage, "Compiler Version")
             CategoryHeader(text = generalTitle)
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -222,15 +225,7 @@ fun SettingsScreen(
                     NavigationRow(
                         title = languageTitle,
                         subtitle = viewModel.n_app_language.label,
-                        onClick = {
-                            viewModel.updateAppLanguage(
-                                if (viewModel.n_app_language == CompilerConfig.AppLanguage.ID) {
-                                    CompilerConfig.AppLanguage.EN
-                                } else {
-                                    CompilerConfig.AppLanguage.ID
-                                }
-                            )
-                        }
+                        onClick = { showLanguageDialog = true }
                     )
 
                     HorizontalDivider(
@@ -261,7 +256,7 @@ fun SettingsScreen(
                 }
             }
 
-            CategoryHeader(text = "Compiler Options")
+            CategoryHeader(text = localizer.get("settings.compiler.options", appLanguage, "Compiler Options"))
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -269,8 +264,8 @@ fun SettingsScreen(
             ) {
                 Column {
                     SwitchRow(
-                        title = "Mandatory Semicolons",
-                        description = "Require semicolons at the end of statements",
+                        title = localizer.get("settings.option.semicolons", appLanguage, "Mandatory Semicolons"),
+                        description = localizer.get("settings.option.semicolons.desc", appLanguage, "Require semicolons at the end of statements"),
                         checked = viewModel.n_mandatory_semicolons,
                         onCheckedChange = { viewModel.updateMandatorySemicolons(it) }
                     )
@@ -281,8 +276,8 @@ fun SettingsScreen(
                     )
 
                     SwitchRow(
-                        title = "Mandatory Parentheses",
-                        description = "Require parentheses in control statements",
+                        title = localizer.get("settings.option.parentheses", appLanguage, "Mandatory Parentheses"),
+                        description = localizer.get("settings.option.parentheses.desc", appLanguage, "Require parentheses in control statements"),
                         checked = viewModel.n_mandatory_parentheses,
                         onCheckedChange = { viewModel.updateMandatoryParentheses(it) }
                     )
@@ -371,8 +366,8 @@ fun SettingsScreen(
                     )
 
                     SwitchRow(
-                        title = "Ignore Case",
-                        description = "Normalize project files and includes so mixed-case filenames and #include references compile reliably.",
+                        title = localizer.get("settings.option.ignorecase", appLanguage, "Ignore Case"),
+                        description = localizer.get("settings.option.ignorecase.desc", appLanguage, "Normalize project files and includes so mixed-case filenames and #include references compile reliably."),
                         checked = viewModel.n_ignore_case,
                         onCheckedChange = { viewModel.updateIgnoreCase(it) }
                     )
@@ -383,8 +378,8 @@ fun SettingsScreen(
                     )
 
                     SwitchRow(
-                        title = "Explain Compiler",
-                        description = "Add human-readable explanations next to warnings, errors, and fatal messages extracted from the compiler log.",
+                        title = localizer.get("settings.option.explain", appLanguage, "Explain Compiler"),
+                        description = localizer.get("settings.option.explain.desc", appLanguage, "Add human-readable explanations next to warnings, errors, and fatal messages extracted from the compiler log."),
                         checked = viewModel.n_explain_output,
                         onCheckedChange = { viewModel.updateExplainOutput(it) }
                     )
@@ -400,12 +395,12 @@ fun SettingsScreen(
                             .padding(horizontal = 16.dp, vertical = 16.dp)
                     ) {
                         Text(
-                            text = "Custom Flags",
+                            text = localizer.get("settings.option.customflags", appLanguage, "Custom Flags"),
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Extra compiler parameters, space separated",
+                            text = localizer.get("settings.option.customflags.desc", appLanguage, "Extra compiler parameters, space separated"),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -422,7 +417,7 @@ fun SettingsScreen(
                 }
             }
 
-            CategoryHeader(text = "Updates")
+            CategoryHeader(text = localizer.get("settings.updates", appLanguage, "Updates"))
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -452,7 +447,11 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    val updateButtonText = if (updateReady) "Update PawnMC" else "Check for updates"
+                    val updateButtonText = if (updateReady) {
+                        localizer.get("settings.updates.ready", appLanguage, "Update PawnMC")
+                    } else {
+                        localizer.get("settings.updates.check", appLanguage, "Check for updates")
+                    }
                     TextButton(
                         onClick = {
                             if (updateReady) {
@@ -485,7 +484,7 @@ fun SettingsScreen(
                 }
             }
 
-            CategoryHeader(text = "Include Paths")
+            CategoryHeader(text = localizer.get("settings.include.paths", appLanguage, "Include Paths"))
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -493,7 +492,7 @@ fun SettingsScreen(
             ) {
                 Column {
                     CompilerVersionRow(
-                        title = "Include Paths",
+                        title = localizer.get("settings.include.paths", appLanguage, "Include Paths"),
                         version = if (viewModel.n_forced_include_path_auto) "Forced" else "Auto",
                         forced = viewModel.n_forced_include_path_auto,
                         onToggleForced = { viewModel.updateForcedIncludePathAuto(it) },
@@ -538,7 +537,7 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
                     ActionRow(
-                        text = "Add Include Path",
+                        text = localizer.get("settings.include.add", appLanguage, "Add Include Path"),
                         icon = Icons.Default.Add,
                         onClick = {
                             newIncludePathInput = ""
@@ -548,7 +547,7 @@ fun SettingsScreen(
                 }
             }
 
-            CategoryHeader(text = "About")
+            CategoryHeader(text = localizer.get("settings.about", appLanguage, "About"))
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -650,7 +649,7 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showReleaseNotesDialog = false }) {
-                    Text("Close")
+                    Text(localizer.get("settings.close", appLanguage, "Close"))
                 }
             }
         )
@@ -659,7 +658,7 @@ fun SettingsScreen(
     if (showThemeDialog) {
         AlertDialog(
             onDismissRequest = { showThemeDialog = false },
-            title = { Text("Select Theme") },
+            title = { Text(localizer.get("settings.theme.selector", appLanguage, "Select Theme")) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     CompilerConfig.AppTheme.entries.forEachIndexed { index, theme ->
@@ -685,7 +684,7 @@ fun SettingsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showThemeDialog = false }) {
-                    Text("Close")
+                    Text(localizer.get("settings.close", appLanguage, "Close"))
                 }
             }
         )
@@ -697,7 +696,7 @@ fun SettingsScreen(
                 showAddIncludePathDialog = false
                 newIncludePathInput = ""
             },
-            title = { Text("Add Include Path") },
+            title = { Text(localizer.get("settings.include.add", appLanguage, "Add Include Path")) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
@@ -720,7 +719,7 @@ fun SettingsScreen(
                         newIncludePathInput = ""
                     }
                 ) {
-                    Text("Save")
+                    Text(localizer.get("settings.save", appLanguage, "Save"))
                 }
             },
             dismissButton = {
@@ -730,7 +729,7 @@ fun SettingsScreen(
                         newIncludePathInput = ""
                     }
                 ) {
-                    Text("Cancel")
+                    Text(localizer.get("settings.cancel", appLanguage, "Cancel"))
                 }
             }
         )

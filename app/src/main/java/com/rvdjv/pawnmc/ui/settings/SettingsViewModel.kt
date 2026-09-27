@@ -114,15 +114,15 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         val normalizedPath = CompilerConfig.normalPath(path)
         if (normalizedPath.isBlank()) return
 
-        val updated = n_include_paths.toMutableList()
-        val existingKeys = updated.map { CompilerConfig.normalPath(it).lowercase() }
-        if (normalizedPath.lowercase() in existingKeys) return
+        val candidateList = n_include_paths + normalizedPath
+        val deduped = CompilerConfig.dedupePaths(candidateList)
+        if (deduped.size == n_include_paths.size) {
+            return
+        }
 
-        updated += normalizedPath
-        val deduped = CompilerConfig.dedupePaths(updated)
         n_include_paths.clear()
         n_include_paths.addAll(deduped)
-        config.n_include_paths = n_include_paths.toList()
+        config.n_include_paths = deduped
     }
 
     fun updateIncludePathAt(index: Int, newPath: String) {

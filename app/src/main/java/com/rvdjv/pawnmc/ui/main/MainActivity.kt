@@ -70,5 +70,6 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         viewModel.refreshTheme()
+        viewModel.refreshLanguage()
     }
 }
