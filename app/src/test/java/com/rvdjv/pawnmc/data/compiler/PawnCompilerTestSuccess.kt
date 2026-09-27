@@ -71,6 +71,23 @@ class PawnCompilerSuccessTest {
     }
 
     @Test
+    fun `discovers default include roots without checking whether folders exist`() {
+        val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-include-discovery-${System.nanoTime()}")
+        val sourceFile = File(root, "gamemodes/main.pwn")
+        sourceFile.parentFile?.mkdirs()
+        sourceFile.writeText("main() { return; }\n")
+
+        try {
+            val paths = PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
+            assertTrue(paths.any { it.contains("gamemodes", ignoreCase = true) })
+            assertTrue(paths.any { it.contains("pawno/include", ignoreCase = true) })
+            assertTrue(paths.any { it.contains("qawno/include", ignoreCase = true) })
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
     fun `creates temporary pawn file with hello world snippet`() {
         val tempDir = File(System.getProperty("java.io.tmpdir"), "pawnmc-${System.nanoTime()}")
         require(tempDir.mkdirs()) { "Unable to create temp dir for test" }

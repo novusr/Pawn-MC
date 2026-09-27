@@ -27,6 +27,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.Surface
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -198,35 +201,6 @@ fun MainScreen(
         )
     }
 
-    if (viewModel.pendingIncludeChoice != null) {
-        val choices = viewModel.pendingIncludeChoice!!.options
-        AlertDialog(
-            onDismissRequest = { viewModel.pendingIncludeChoice = null },
-            title = { Text("Select include folder") },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text("Both Pawno and Qawno include folders were found. Choose one for this session.")
-                    Spacer(modifier = Modifier.height(SpaceS))
-                    choices.forEach { path ->
-                        Button(
-                            onClick = { viewModel.confirmIncludeChoice(path) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(path)
-                        }
-                        Spacer(modifier = Modifier.height(SpaceS))
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = { viewModel.pendingIncludeChoice = null }) {
-                    Text("Skip")
-                }
-            }
-        )
-    }
-
     var showSelfTestDialog by remember { mutableStateOf(false) }
     var selfTestResults by remember { mutableStateOf<List<AppSelfTestResult>>(emptyList()) }
 
@@ -234,43 +208,109 @@ fun MainScreen(
         AlertDialog(
             onDismissRequest = {
                 showSelfTestDialog = false
-                selfTestResults = emptyList()
             },
-            title = { Text("Self tests") },
+            title = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Filled.Description,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Self Test Diagnostics")
+                    }
+                }
+            },
             text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text("Run the app-level validation checks for include path handling and compiler detection.")
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 500.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = "Run application diagnostics to verify internal compilers, auto-detection, and include directories. Scroll up/down to view all test modules.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Spacer(modifier = Modifier.height(SpaceM))
 
-                    Button(
-                        onClick = {
-                            selfTestResults = AppSelfTestCatalog.runAll()
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                    // Horizontally scrollable action row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("Run all checks")
+                        Button(
+                            onClick = {
+                                selfTestResults = AppSelfTestCatalog.runAll()
+                                Toast.makeText(context, "All tests completed", Toast.LENGTH_SHORT).show()
+                            }
+                        ) {
+                            Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Run All")
+                        }
+
+                        if (selfTestResults.isNotEmpty()) {
+                            TextButton(
+                                onClick = {
+                                    selfTestResults = emptyList()
+                                }
+                            ) {
+                                Text("Clear")
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(SpaceM))
 
                     if (selfTestResults.isNotEmpty()) {
+                        Text(
+                            text = "Test Results (${selfTestResults.count { it.passed }}/${selfTestResults.size} Passed):",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(SpaceXS))
                         selfTestResults.forEach { result ->
                             Card(
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                                modifier = Modifier.fillMaxWidth()
+                                shape = RoundedCornerShape(10.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (result.passed)
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                                    else
+                                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 3.dp)
                             ) {
                                 Column(modifier = Modifier.padding(SpaceS)) {
-                                    Text(
-                                        text = result.name,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = if (result.passed) "PASS" else "FAIL",
-                                        color = if (result.passed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                                        style = MaterialTheme.typography.labelMedium
-                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = result.name,
+                                            fontWeight = FontWeight.SemiBold,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Text(
+                                            text = if (result.passed) "PASS" else "FAIL",
+                                            color = if (result.passed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(2.dp))
                                     Text(
                                         text = result.message,
                                         style = MaterialTheme.typography.bodySmall,
@@ -278,15 +318,25 @@ fun MainScreen(
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(SpaceS))
                         }
+                        Spacer(modifier = Modifier.height(SpaceM))
                     }
+
+                    Text(
+                        text = "Test Module Catalog (scroll down):",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(SpaceXS))
 
                     AppSelfTestCatalog.list().forEach { test ->
                         Card(
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
                         ) {
                             Row(
                                 modifier = Modifier
@@ -299,6 +349,7 @@ fun MainScreen(
                                     Text(
                                         text = test.title,
                                         fontWeight = FontWeight.SemiBold,
+                                        style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
@@ -307,17 +358,19 @@ fun MainScreen(
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
-
-                                Button(
+                                Spacer(modifier = Modifier.width(8.dp))
+                                FilledTonalButton(
                                     onClick = {
-                                        selfTestResults = listOf(AppSelfTestCatalog.run(test.id))
-                                    }
+                                        val singleRes = AppSelfTestCatalog.run(test.id)
+                                        selfTestResults = (selfTestResults.filterNot { it.name == singleRes.name } + singleRes)
+                                        Toast.makeText(context, "${test.title}: ${if (singleRes.passed) "PASSED" else "FAILED"}", Toast.LENGTH_SHORT).show()
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                 ) {
                                     Text("Run")
                                 }
                             }
                         }
-                        Spacer(modifier = Modifier.height(SpaceS))
                     }
                 }
             },
@@ -325,7 +378,6 @@ fun MainScreen(
                 TextButton(
                     onClick = {
                         showSelfTestDialog = false
-                        selfTestResults = emptyList()
                     }
                 ) {
                     Text("Close")
@@ -366,6 +418,59 @@ fun MainScreen(
                 onSettingsClick = onSettingsClick,
                 onSelfTestClick = { showSelfTestDialog = true }
             )
+
+            if (selfTestResults.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(SpaceS))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(SpaceS)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Self-Test Results (${selfTestResults.count { it.passed }}/${selfTestResults.size} Passed)",
+                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Row {
+                                TextButton(onClick = { showSelfTestDialog = true }) {
+                                    Text("Open Tests")
+                                }
+                                TextButton(onClick = { selfTestResults = emptyList() }) {
+                                    Text("Dismiss")
+                                }
+                            }
+                        }
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            selfTestResults.forEach { res ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (res.passed) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
+                                ) {
+                                    Text(
+                                        text = "${res.name.removePrefix("Self test: ")}: ${if (res.passed) "PASS" else "FAIL"}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        color = if (res.passed) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(SpaceL))
 

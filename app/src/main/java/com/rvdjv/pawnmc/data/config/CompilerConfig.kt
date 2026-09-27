@@ -109,6 +109,10 @@ class CompilerConfig private constructor(context: Context) {
         get() = AppTheme.fromValue(prefs.getString(KEY_APP_THEME, AppTheme.SYSTEM.value) ?: AppTheme.SYSTEM.value)
         set(value) = prefs.edit { putString(KEY_APP_THEME, value.value) }
 
+    var n_app_language: AppLanguage
+        get() = AppLanguage.fromValue(prefs.getString(KEY_APP_LANGUAGE, AppLanguage.EN.value) ?: AppLanguage.EN.value)
+        set(value) = prefs.edit { putString(KEY_APP_LANGUAGE, value.value) }
+
     /**
      * Build compiler options list from current configuration.
      */
@@ -151,6 +155,15 @@ class CompilerConfig private constructor(context: Context) {
 
         companion object {
             fun fromValue(value: String?) = entries.find { it.value == value } ?: SYSTEM
+        }
+    }
+
+    enum class AppLanguage(val value: String, val label: String, val description: String) {
+        ID("id", "Indonesia", "Bahasa Indonesia"),
+        EN("en", "English (EN/US)", "English language");
+
+        companion object {
+            fun fromValue(value: String?) = entries.find { it.value.equals(value, ignoreCase = true) } ?: EN
         }
     }
 
@@ -244,6 +257,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_FORCED_MODE = "forced_compiler_mode"
         private const val KEY_FORCED_INCLUDE_PATH_AUTO = "forced_include_path_auto"
         private const val KEY_APP_THEME = "app_theme"
+        private const val KEY_APP_LANGUAGE = "app_language"
 
         fun buildOptionsFor(
             debugLevel: DebugLevel = DebugLevel.D3,

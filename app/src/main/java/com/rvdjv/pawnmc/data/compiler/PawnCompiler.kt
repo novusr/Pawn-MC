@@ -15,8 +15,6 @@ object PawnCompiler {
     private const val PAWNCC_WINDOWS_BINARY_NAME = "pawncc.exe"
     private const val GAMEMODES_DIR_NAME = "gamemodes"
     private const val INCLUDE_DIR_NAME = "include"
-    private const val INCLUDES_DIR_NAME = "includes"
-    private const val QAWNO_INCLUDE_DIR_NAME = "qawno/include"
     private const val FILE_PATH_SEPARATOR = "/"
     private const val INCLUDE_PATH_SUFFIX = "/include"
     private const val PAWN_FILE_EXTENSION = "pawn"
@@ -26,9 +24,6 @@ object PawnCompiler {
 
     private val INCLUDE_PATH_VARIANTS = listOf(
         "$PAWNO_DIR_NAME/$INCLUDE_DIR_NAME",
-        QAWNO_INCLUDE_DIR_NAME,
-        INCLUDE_DIR_NAME,
-        INCLUDES_DIR_NAME,
         GAMEMODES_DIR_NAME
     )
 
@@ -245,61 +240,42 @@ object PawnCompiler {
      * @return include directories that should be added as -i values
      */
     fun discoverRelevantIncludePaths(sourceFile: String): List<String> {
-        val n_result = linkedSetOf<String>()
-        val n_include_variants = INCLUDE_PATH_VARIANTS
-        val n_force_inc_auto = CompilerConfig.getInstanceOrNull()?.n_forced_include_path_auto == true
+        val result = linkedSetOf<String>()
+        val sourceDir = File(sourceFile).parentFile
+        val baseDirs = linkedSetOf<File>()
 
-        val n_src_file = File(sourceFile)
-        val n_src_dir = n_src_file.parentFile
-        if (
-            n_src_dir != null &&
-            n_src_dir.exists() &&
-            n_src_dir.isDirectory
-        ) {
-            n_include_variants.forEach { n_variant ->
-                val n_candidate = File(n_src_dir, n_variant)
-                if (n_candidate.exists() && n_candidate.isDirectory) {
-                    n_result += CompilerConfig.normalPath(n_candidate.absolutePath)
-                }
-            }
-
-            val n_src_g_dir = File(n_src_dir, GAMEMODES_DIR_NAME)
-            if (n_src_g_dir.exists() || n_src_g_dir.parentFile != null) {
-                n_result += CompilerConfig.normalPath(n_src_g_dir.absolutePath)
-            }
+        if (sourceDir != null && sourceDir.exists() && sourceDir.isDirectory) {
+            baseDirs += sourceDir
+            baseDirs += sourceDir.parentFile
         }
 
-        if (!n_force_inc_auto) {
-            val n_match = detectNearbyCompiler(sourceFile)
-            val n_compiler_file = n_match?.let { File(it.filePath) }
-            if (
-                n_compiler_file != null &&
-                n_compiler_file.exists() &&
-                n_compiler_file.isFile
-            ) {
-                val n_compiler_dir = n_compiler_file.parentFile
-                val n_base_dir = n_compiler_dir?.absoluteFile ?: n_src_dir
-                if (
-                    n_base_dir != null &&
-                    n_base_dir.exists() &&
-                    n_base_dir.isDirectory
-                ) {
-                    n_include_variants.forEach { n_variant ->
-                        val n_candidate = File(n_base_dir, n_variant)
-                        if (n_candidate.exists() && n_candidate.isDirectory) {
-                            n_result += CompilerConfig.normalPath(n_candidate.absolutePath)
-                        } else if (n_candidate.parentFile != null &&
-                        n_candidate.parentFile?.exists() == true &&
-                            n_variant.endsWith(INCLUDE_PATH_SUFFIX))
-                        {
-                            n_result += CompilerConfig.normalPath(n_candidate.absolutePath)
-                        }
-                    }
+        val detectedCompiler = detectNearbyCompiler(sourceFile)
+        detectedCompiler?.filePath?.let { compilerPath ->
+            val compilerFile = File(compilerPath)
+            compilerFile.parentFile?.let { baseDirs += it }
+        }
+
+        baseDirs.forEach { baseDir ->
+            INCLUDE_PATH_VARIANTS.forEach { variant ->
+                val candidate = File(baseDir, variant)
+                val absolutePath = CompilerConfig.normalPath(candidate.absolutePath)
+                if (absolutePath.isNotBlank()) {
+                    result += absolutePath
                 }
             }
         }
 
-        return n_result.filter { it.isNotBlank() }
+        val sourceParent = sourceDir?.absoluteFile
+        if (sourceParent != null) {
+            val sourceGamemodes = File(sourceParent, GAMEMODES_DIR_NAME)
+            result += CompilerConfig.normalPath(sourceGamemodes.absolutePath)
+        }
+
+        val baseCandidate = sourceParent ?: File(System.getProperty("java.io.tmpdir"))
+        result += CompilerConfig.normalPath(File(baseCandidate, "$PAWNO_DIR_NAME/$INCLUDE_DIR_NAME").absolutePath)
+        result += CompilerConfig.normalPath(File(baseCandidate, GAMEMODES_DIR_NAME).absolutePath)
+
+        return result.filter { it.isNotBlank() }
     }
 
     /**

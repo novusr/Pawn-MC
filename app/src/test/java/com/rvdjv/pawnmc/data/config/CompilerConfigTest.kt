@@ -7,20 +7,20 @@ class CompilerConfigTest {
     @Test
     fun dedupePaths_ignoresCaseAndDuplicateSegments() {
         val input = listOf(
-            "C:/Projects/MyServer/pawno/include/",
-            "c:/projects/myserver/pawno/include",
-            "C:/Projects/MyServer/qawno/include/",
-            "c:/projects/myserver/qawno/include",
-            "C:/Projects/MyServer/includes/"
+            "com.android/MyServer/pawno/include/",
+            "com.android/myserver/pawno/include",
+            "com.android/MyServer/qawno/include/",
+            "com.android/myserver/qawno/include",
+            "com.android/MyServer/includes/"
         )
 
         val result = CompilerConfig.dedupePaths(input)
 
         assertEquals(
             listOf(
-                "C:/Projects/MyServer/pawno/include/",
-                "C:/Projects/MyServer/qawno/include/",
-                "C:/Projects/MyServer/includes/"
+                "com.android/MyServer/pawno/include/",
+                "com.android/MyServer/qawno/include/",
+                "com.android/MyServer/includes/"
             ),
             result
         )

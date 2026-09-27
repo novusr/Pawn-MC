@@ -206,14 +206,41 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
         ) {
-            CategoryHeader(text = "General")
+            val localizer = remember(context) { AppLocalization.load(context) }
+            val appLanguage = viewModel.n_app_language
+            val generalTitle = localizer.get("settings.general", appLanguage, "General")
+            val languageTitle = localizer.get("settings.language", appLanguage, "Language")
+            val themeTitle = localizer.get("settings.theme", appLanguage, "Theme")
+            val compilerTitle = localizer.get("settings.compiler.version", appLanguage, "Compiler Version")
+            CategoryHeader(text = generalTitle)
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column {
+                    NavigationRow(
+                        title = languageTitle,
+                        subtitle = viewModel.n_app_language.label,
+                        onClick = {
+                            viewModel.updateAppLanguage(
+                                if (viewModel.n_app_language == CompilerConfig.AppLanguage.ID) {
+                                    CompilerConfig.AppLanguage.EN
+                                } else {
+                                    CompilerConfig.AppLanguage.ID
+                                }
+                            )
+                        }
+                    )
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+
                     CompilerVersionRow(
+                        title = compilerTitle,
                         version = viewModel.n_compiler_version.label,
                         forced = viewModel.n_forced_compiler_mode,
                         onToggleForced = { viewModel.updateForcedCompilerMode(it) },
@@ -227,7 +254,7 @@ fun SettingsScreen(
                     )
 
                     NavigationRow(
-                        title = "Theme",
+                        title = themeTitle,
                         subtitle = viewModel.n_app_theme.label,
                         onClick = { showThemeDialog = true }
                     )

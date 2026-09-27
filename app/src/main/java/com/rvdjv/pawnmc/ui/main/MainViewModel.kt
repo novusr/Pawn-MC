@@ -15,11 +15,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-data class IncludePathChoice(
-    val options: List<String>,
-    val selected: String? = null
-)
-
 class MainViewModel(
     private val config: CompilerConfig,
     private val appDirectory: File = File(".")
@@ -69,8 +64,6 @@ class MainViewModel(
 
     var lastExitCode by mutableStateOf<Int?>(null)
         private set
-
-    var pendingIncludeChoice by mutableStateOf<IncludePathChoice?>(null)
 
     fun refreshTheme() {
         n_app_theme = config.n_app_theme
@@ -140,46 +133,11 @@ class MainViewModel(
         }
     }
 
-    fun resolvePendingIncludeChoice(sourcePath: String) {
-        val relevantPaths = CompilerConfig.dedupePaths(
-            PawnCompiler.discoverRelevantIncludePaths(sourcePath)
-                .filter { it.contains("pawno", ignoreCase = true) || it.contains("qawno", ignoreCase = true) }
-        )
-
-        val hasExistingManualChoice = config.n_include_paths.any {
-            it.contains("pawno", ignoreCase = true) || it.contains("qawno", ignoreCase = true)
-        }
-
-        if (relevantPaths.size <= 1 || hasExistingManualChoice) {
-            if (relevantPaths.isNotEmpty()) {
-                val mergedPaths = CompilerConfig.dedupePaths(config.n_include_paths + relevantPaths)
-                config.n_include_paths = mergedPaths
-            }
-            pendingIncludeChoice = null
-            return
-        }
-
-        pendingIncludeChoice = IncludePathChoice(relevantPaths)
-    }
-
-    fun confirmIncludeChoice(path: String) {
-        val normalized = CompilerConfig.normalPath(path)
-        val mergedPaths = CompilerConfig.dedupePaths(config.n_include_paths + normalized)
-        config.n_include_paths = mergedPaths
-        pendingIncludeChoice = null
-    }
-
     private fun applyCompilerAutoDetection(sourcePath: String) {
         // Auto-detect the compiler only when the nearby pawncc.exe metadata matches a supported version.
         val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
         val autoIncludePaths = CompilerConfig.dedupePaths(PawnCompiler.discoverRelevantIncludePaths(sourcePath))
-        val hasAmbiguousPawnoChoice = autoIncludePaths.count { it.contains("pawno", ignoreCase = true) || it.contains("qawno", ignoreCase = true) } > 1
-
-        if (!hasAmbiguousPawnoChoice) {
-            config.n_include_paths = CompilerConfig.dedupePaths(config.n_include_paths + autoIncludePaths)
-        }
-
-        resolvePendingIncludeChoice(sourcePath)
+        config.n_include_paths = CompilerConfig.dedupePaths(config.n_include_paths + autoIncludePaths)
 
         if (detectedVersion != null) {
             config.n_compiler_version = detectedVersion

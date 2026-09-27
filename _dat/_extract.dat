@@ -1,0 +1,29 @@
+# External compile-time localization data for PawnMC
+0x01:settings.title.id:0x02:Pengaturan
+0x01:settings.title.en:0x02:Settings
+0x01:settings.general.id:0x02:Umum
+0x01:settings.general.en:0x02:General
+0x01:settings.compiler.version.id:0x02:Versi Compiler
+0x01:settings.compiler.version.en:0x02:Compiler Version
+0x01:settings.language.id:0x02:Bahasa
+0x01:settings.language.en:0x02:Language
+0x01:settings.language.selector.id:0x02:Pilih Bahasa
+0x01:settings.language.selector.en:0x02:Select Language
+0x01:settings.theme.id:0x02:Tema
+0x01:settings.theme.en:0x02:Theme
+0x01:settings.compiler.options.id:0x02:Opsi Compiler
+0x01:settings.compiler.options.en:0x02:Compiler Options
+0x01:settings.include.paths.id:0x02:Path Include
+0x01:settings.include.paths.en:0x02:Include Paths
+0x01:settings.updates.id:0x02:Pembaruan
+0x01:settings.updates.en:0x02:Updates
+0x01:settings.about.id:0x02:Tentang
+0x01:settings.about.en:0x02:About
+0x01:settings.close.id:0x02:Tutup
+0x01:settings.close.en:0x02:Close
+0x01:settings.cancel.id:0x02:Batal
+0x01:settings.cancel.en:0x02:Cancel
+0x01:settings.save.id:0x02:Simpan
+0x01:settings.save.en:0x02:Save
+0x01:settings.back.id:0x02:Kembali
+0x01:settings.back.en:0x02:Back
