@@ -54,10 +54,10 @@ class CompilerConfig private constructor(context: Context) {
         get() {
             val stored = prefs.getString(KEY_INCLUDE_PATHS, "") ?: ""
             if (stored.isEmpty()) return emptyList()
-            return stored.split(";").map { normalPath(it) }.filter { it.isNotBlank() }
+            return dedupePaths(stored.split(";"))
         }
         set(value) = prefs.edit {
-            putString(KEY_INCLUDE_PATHS, value.map { normalPath(it) }.filter { it.isNotBlank() }.distinct().joinToString(";"))
+            putString(KEY_INCLUDE_PATHS, dedupePaths(value).joinToString(";"))
         }
 
     //
@@ -260,7 +260,7 @@ class CompilerConfig private constructor(context: Context) {
             if (mandatorySemicolons) { options.add("-;+") }
             if (mandatoryParentheses) { options.add("-(+") }
 
-            for (path in includePaths) {
+            for (path in dedupePaths(includePaths)) {
                 val normalized = normalPath(path)
                 if (normalized.isNotBlank()) { options.add("-i=$normalized") }
             }
@@ -268,6 +268,24 @@ class CompilerConfig private constructor(context: Context) {
             val custom = customFlags.trim()
             if (custom.isNotEmpty()) { options.addAll(custom.split("\\s+".toRegex()).filter { it.isNotBlank() }) }
             return options
+        }
+
+        fun dedupePaths(paths: Iterable<String>): List<String> {
+            val unique = linkedSetOf<String>()
+            val result = mutableListOf<String>()
+
+            for (path in paths) {
+                val normalized = normalPath(path)
+                if (normalized.isBlank()) continue
+
+                val key = normalized.lowercase()
+                if (key in unique) continue
+
+                unique += key
+                result += normalized
+            }
+
+            return result
         }
 
         fun normalPath(path: String): String {

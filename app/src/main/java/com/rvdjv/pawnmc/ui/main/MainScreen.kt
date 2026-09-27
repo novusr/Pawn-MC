@@ -227,6 +227,113 @@ fun MainScreen(
         )
     }
 
+    var showSelfTestDialog by remember { mutableStateOf(false) }
+    var selfTestResults by remember { mutableStateOf<List<AppSelfTestResult>>(emptyList()) }
+
+    if (showSelfTestDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showSelfTestDialog = false
+                selfTestResults = emptyList()
+            },
+            title = { Text("Self tests") },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text("Run the app-level validation checks for include path handling and compiler detection.")
+                    Spacer(modifier = Modifier.height(SpaceM))
+
+                    Button(
+                        onClick = {
+                            selfTestResults = AppSelfTestCatalog.runAll()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Run all checks")
+                    }
+
+                    Spacer(modifier = Modifier.height(SpaceM))
+
+                    if (selfTestResults.isNotEmpty()) {
+                        selfTestResults.forEach { result ->
+                            Card(
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(SpaceS)) {
+                                    Text(
+                                        text = result.name,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = if (result.passed) "PASS" else "FAIL",
+                                        color = if (result.passed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                    Text(
+                                        text = result.message,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(SpaceS))
+                        }
+                    }
+
+                    AppSelfTestCatalog.list().forEach { test ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(SpaceS),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = test.title,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = test.description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                Button(
+                                    onClick = {
+                                        selfTestResults = listOf(AppSelfTestCatalog.run(test.id))
+                                    }
+                                ) {
+                                    Text("Run")
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(SpaceS))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSelfTestDialog = false
+                        selfTestResults = emptyList()
+                    }
+                ) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
@@ -256,7 +363,8 @@ fun MainScreen(
                         onEditorClick()
                     }
                 },
-                onSettingsClick = onSettingsClick
+                onSettingsClick = onSettingsClick,
+                onSelfTestClick = { showSelfTestDialog = true }
             )
 
             Spacer(modifier = Modifier.height(SpaceL))
@@ -365,7 +473,8 @@ fun MainScreen(
 @Composable
 private fun ScreenHeader(
     onEditorClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onSelfTestClick: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -391,6 +500,17 @@ private fun ScreenHeader(
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
+            IconButton(
+                onClick = onSelfTestClick,
+                modifier = Modifier.testTag("self_test_button")
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Description,
+                    contentDescription = "Self tests",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
             IconButton(
                 onClick = onEditorClick,
                 modifier = Modifier.testTag("xed_button")
@@ -769,7 +889,8 @@ private fun MainScreenFullPreview() {
         Column(modifier = Modifier.padding(SpaceL)) {
             ScreenHeader(
                 onEditorClick = {},
-                onSettingsClick = {}
+                onSettingsClick = {},
+                onSelfTestClick = {}
             )
             Spacer(modifier = Modifier.height(SpaceL))
             CompileActionCard(

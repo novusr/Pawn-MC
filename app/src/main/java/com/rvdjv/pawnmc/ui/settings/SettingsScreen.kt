@@ -466,7 +466,7 @@ fun SettingsScreen(
             ) {
                 Column {
                     CompilerVersionRow(
-                        title = "Include Paths Auto",
+                        title = "Include Paths",
                         version = if (viewModel.n_forced_include_path_auto) "Forced" else "Auto",
                         forced = viewModel.n_forced_include_path_auto,
                         onToggleForced = { viewModel.updateForcedIncludePathAuto(it) },
@@ -901,18 +901,13 @@ fun CompilerVersionRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Text(
-                text = if (forced) "Forced" else "Auto",
-                style = MaterialTheme.typography.labelMedium,
-                color = if (forced) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
 
         TextButton(
             onClick = { onToggleForced(!forced) },
             modifier = Modifier.padding(start = 8.dp)
         ) {
-            Text(if (forced) "Forced" else "Auto")
+            Text(if (forced) "Set Auto" else "Set Forced")
         }
     }
 }

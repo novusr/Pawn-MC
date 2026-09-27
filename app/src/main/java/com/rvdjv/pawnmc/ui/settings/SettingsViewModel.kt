@@ -45,7 +45,7 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     var n_app_theme by mutableStateOf(config.n_app_theme)
         private set
 
-    val n_include_paths = mutableStateListOf<String>().apply { addAll(config.n_include_paths) }
+    val n_include_paths = mutableStateListOf<String>().apply { addAll(CompilerConfig.dedupePaths(config.n_include_paths)) }
 
     fun updateCompilerVersion(version: CompilerConfig.CompilerVersion) {
         n_compiler_version = version
@@ -104,10 +104,17 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
 
     fun addIncludePath(path: String) {
         val normalizedPath = CompilerConfig.normalPath(path)
-        if (normalizedPath !in n_include_paths) {
-            n_include_paths.add(normalizedPath)
-            config.n_include_paths = n_include_paths.toList()
-        }
+        if (normalizedPath.isBlank()) return
+
+        val updated = n_include_paths.toMutableList()
+        val existingKeys = updated.map { CompilerConfig.normalPath(it).lowercase() }
+        if (normalizedPath.lowercase() in existingKeys) return
+
+        updated += normalizedPath
+        val deduped = CompilerConfig.dedupePaths(updated)
+        n_include_paths.clear()
+        n_include_paths.addAll(deduped)
+        config.n_include_paths = n_include_paths.toList()
     }
 
     fun updateIncludePathAt(index: Int, newPath: String) {
@@ -118,13 +125,21 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
             return
         }
 
-        n_include_paths[index] = normalized
+        val updated = n_include_paths.toMutableList()
+        updated[index] = normalized
+        val deduped = CompilerConfig.dedupePaths(updated)
+
+        n_include_paths.clear()
+        n_include_paths.addAll(deduped)
         config.n_include_paths = n_include_paths.toList()
     }
 
     fun removeIncludePathAt(index: Int) {
         if (index in n_include_paths.indices) {
-            n_include_paths.removeAt(index)
+            val updated = n_include_paths.toMutableList()
+            updated.removeAt(index)
+            n_include_paths.clear()
+            n_include_paths.addAll(CompilerConfig.dedupePaths(updated))
             config.n_include_paths = n_include_paths.toList()
         }
     }

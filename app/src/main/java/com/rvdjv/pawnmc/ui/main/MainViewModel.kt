@@ -141,9 +141,10 @@ class MainViewModel(
     }
 
     fun resolvePendingIncludeChoice(sourcePath: String) {
-        val relevantPaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath)
-            .filter { it.contains("pawno", ignoreCase = true) || it.contains("qawno", ignoreCase = true) }
-            .distinct()
+        val relevantPaths = CompilerConfig.dedupePaths(
+            PawnCompiler.discoverRelevantIncludePaths(sourcePath)
+                .filter { it.contains("pawno", ignoreCase = true) || it.contains("qawno", ignoreCase = true) }
+        )
 
         val hasExistingManualChoice = config.n_include_paths.any {
             it.contains("pawno", ignoreCase = true) || it.contains("qawno", ignoreCase = true)
@@ -151,11 +152,7 @@ class MainViewModel(
 
         if (relevantPaths.size <= 1 || hasExistingManualChoice) {
             if (relevantPaths.isNotEmpty()) {
-                val mergedPaths = config.n_include_paths.toMutableList()
-                relevantPaths.forEach { path ->
-                    val normalizedPath = CompilerConfig.normalPath(path)
-                    if (normalizedPath !in mergedPaths) mergedPaths.add(normalizedPath)
-                }
+                val mergedPaths = CompilerConfig.dedupePaths(config.n_include_paths + relevantPaths)
                 config.n_include_paths = mergedPaths
             }
             pendingIncludeChoice = null
@@ -167,8 +164,7 @@ class MainViewModel(
 
     fun confirmIncludeChoice(path: String) {
         val normalized = CompilerConfig.normalPath(path)
-        val mergedPaths = config.n_include_paths.toMutableList()
-        if (normalized !in mergedPaths) mergedPaths.add(normalized)
+        val mergedPaths = CompilerConfig.dedupePaths(config.n_include_paths + normalized)
         config.n_include_paths = mergedPaths
         pendingIncludeChoice = null
     }
@@ -176,13 +172,13 @@ class MainViewModel(
     private fun applyCompilerAutoDetection(sourcePath: String) {
         // Auto-detect the compiler only when the nearby pawncc.exe metadata matches a supported version.
         val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
-        val autoIncludePaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath)
-        val mergedPaths = config.n_include_paths.toMutableList()
-        autoIncludePaths.forEach { path ->
-            val normalizedPath = CompilerConfig.normalPath(path)
-            if (normalizedPath !in mergedPaths) mergedPaths.add(normalizedPath)
+        val autoIncludePaths = CompilerConfig.dedupePaths(PawnCompiler.discoverRelevantIncludePaths(sourcePath))
+        val hasAmbiguousPawnoChoice = autoIncludePaths.count { it.contains("pawno", ignoreCase = true) || it.contains("qawno", ignoreCase = true) } > 1
+
+        if (!hasAmbiguousPawnoChoice) {
+            config.n_include_paths = CompilerConfig.dedupePaths(config.n_include_paths + autoIncludePaths)
         }
-        config.n_include_paths = mergedPaths
+
         resolvePendingIncludeChoice(sourcePath)
 
         if (detectedVersion != null) {
