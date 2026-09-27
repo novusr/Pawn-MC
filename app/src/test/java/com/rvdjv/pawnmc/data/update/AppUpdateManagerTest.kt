@@ -1,5 +1,7 @@
 package com.rvdjv.pawnmc.data.update
 
+import org.json.JSONObject
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -10,5 +12,31 @@ class AppUpdateManagerTest {
         assertTrue(AppUpdateManager.compareVersions("v1.4.0", "1.4.0") == 0)
         assertTrue(AppUpdateManager.compareVersions("1.4.1", "1.4.0") > 0)
         assertTrue(AppUpdateManager.compareVersions("1.4.0-beta", "1.4.0") < 0)
+    }
+
+    @Test
+    fun parseGitHubRelease_readsReleaseNotesAndApkAsset() {
+        val json = JSONObject(
+            """
+            {
+              "tag_name": "v1.5.2",
+              "html_url": "https://github.com/novusr/Pawn-MC/releases/tag/v1.5.2",
+              "body": "# Changelog\n\n- fixed crash\n\n**important**",
+              "assets": [
+                {
+                  "name": "pawnmc-1.5.2-debug.apk",
+                  "browser_download_url": "https://example.com/pawnmc-1.5.2-debug.apk"
+                }
+              ]
+            }
+            """.trimIndent()
+        )
+
+        val release = parseGitHubRelease(json)
+
+        assertEquals("v1.5.2", release.version)
+        assertEquals("https://example.com/pawnmc-1.5.2-debug.apk", release.apkUrl)
+        assertTrue(release.bodyMarkdown.contains("fixed crash"))
+        assertTrue(release.bodyMarkdown.contains("important"))
     }
 }

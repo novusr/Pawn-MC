@@ -82,6 +82,36 @@ android {
     ndkVersion = "29.0.14206865"
 }
 
+val appApkNamePrefix = "pawnmc"
+
+afterEvaluate {
+    tasks.matching { task ->
+        task.name.startsWith("assemble") || task.name.startsWith("package")
+    }.configureEach {
+        doLast {
+            val variantName = when {
+                name.contains("Debug", ignoreCase = true) -> "debug"
+                name.contains("Release", ignoreCase = true) -> "release"
+                else -> "debug"
+            }
+            val versionName = android.defaultConfig.versionName
+            val targetName = "$appApkNamePrefix-$versionName-$variantName.apk"
+            val outputsDir = File(project.layout.buildDirectory.asFile.get(), "outputs/apk")
+
+            if (!outputsDir.exists()) return@doLast
+
+            outputsDir.walkTopDown()
+                .filter { it.isFile && it.extension.equals("apk", ignoreCase = true) }
+                .forEach { apkFile ->
+                    val desiredFile = File(apkFile.parentFile, targetName)
+                    if (apkFile.absolutePath != desiredFile.absolutePath && !desiredFile.exists()) {
+                        apkFile.renameTo(desiredFile)
+                    }
+                }
+        }
+    }
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)

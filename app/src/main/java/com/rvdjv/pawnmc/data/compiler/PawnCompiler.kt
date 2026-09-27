@@ -9,6 +9,34 @@ import java.io.File
  */
 object PawnCompiler {
 
+    private const val PAWNO_DIR_NAME = "pawno"
+    private const val PAWN_DIR_NAME = "pawn"
+    private const val PAWNCC_BINARY_NAME = "pawncc"
+    private const val PAWNCC_WINDOWS_BINARY_NAME = "pawncc.exe"
+    private const val GAMEMODES_DIR_NAME = "gamemodes"
+    private const val INCLUDE_DIR_NAME = "include"
+    private const val INCLUDES_DIR_NAME = "includes"
+    private const val QAWNO_INCLUDE_DIR_NAME = "qawno/include"
+    private const val FILE_PATH_SEPARATOR = "/"
+    private const val INCLUDE_PATH_SUFFIX = "/include"
+    private const val PAWN_FILE_EXTENSION = "pawn"
+    private const val PWN_FILE_EXTENSION = "pwn"
+    private const val PAWN_SOURCE_SHORT_EXTENSION = "p"
+    private const val PAWN_INCLUDE_EXTENSION = "inc"
+
+    private val INCLUDE_PATH_VARIANTS = listOf(
+        "$PAWNO_DIR_NAME/$INCLUDE_DIR_NAME",
+        QAWNO_INCLUDE_DIR_NAME,
+        INCLUDE_DIR_NAME,
+        INCLUDES_DIR_NAME,
+        GAMEMODES_DIR_NAME
+    )
+
+    private val COMPILER_BINARY_NAMES = listOf(
+        PAWNCC_WINDOWS_BINARY_NAME,
+        PAWNCC_BINARY_NAME
+    )
+
     data class NearbyCompilerMatch(
         val version: CompilerConfig.CompilerVersion,
         val filePath: String,
@@ -174,17 +202,19 @@ object PawnCompiler {
         var depth = 0
         while (dir != null && depth < 6) {
             sr_root += dir
-            sr_root += File(dir, "pawno")
-            sr_root += File(dir, "pawn")
+            sr_root += File(dir, PAWNO_DIR_NAME)
+            sr_root += File(dir, PAWN_DIR_NAME)
             dir = dir.parentFile
             depth += 1
         }
 
-        val compilerNames = listOf("pawncc.exe", "pawncc")
+        val compilerNames = COMPILER_BINARY_NAMES
 
         for (root in sr_root) {
             val rootCandidates = listOf(
-                root, File(root, "pawno"), File(root, "pawn")
+                root,
+                File(root, PAWNO_DIR_NAME),
+                File(root, PAWN_DIR_NAME)
             )
 
             val candidates = rootCandidates.flatMap { baseDir ->
@@ -216,11 +246,7 @@ object PawnCompiler {
      */
     fun discoverRelevantIncludePaths(sourceFile: String): List<String> {
         val n_result = linkedSetOf<String>()
-        val n_include_variants = listOf("pawno/include",
-                                        "qawno/include",
-                                        "include",
-                                        "includes",
-                                        "gamemodes")
+        val n_include_variants = INCLUDE_PATH_VARIANTS
         val n_force_inc_auto = CompilerConfig.getInstanceOrNull()?.n_forced_include_path_auto == true
 
         val n_src_file = File(sourceFile)
@@ -233,13 +259,13 @@ object PawnCompiler {
             n_include_variants.forEach { n_variant ->
                 val n_candidate = File(n_src_dir, n_variant)
                 if (n_candidate.exists() && n_candidate.isDirectory) {
-                    n_result += CompilerConfig.normalizeIncludePath(n_candidate.absolutePath)
+                    n_result += CompilerConfig.normalPath(n_candidate.absolutePath)
                 }
             }
 
-            val n_src_g_dir = File(n_src_dir, "gamemodes")
+            val n_src_g_dir = File(n_src_dir, GAMEMODES_DIR_NAME)
             if (n_src_g_dir.exists() || n_src_g_dir.parentFile != null) {
-                n_result += CompilerConfig.normalizeIncludePath(n_src_g_dir.absolutePath)
+                n_result += CompilerConfig.normalPath(n_src_g_dir.absolutePath)
             }
         }
 
@@ -261,11 +287,12 @@ object PawnCompiler {
                     n_include_variants.forEach { n_variant ->
                         val n_candidate = File(n_base_dir, n_variant)
                         if (n_candidate.exists() && n_candidate.isDirectory) {
-                            n_result += CompilerConfig.normalizeIncludePath(n_candidate.absolutePath)
-                        } else if (n_candidate.parentFile != null && n_candidate.parentFile?.exists() == true &&
-                            n_variant.endsWith("/include"))
+                            n_result += CompilerConfig.normalPath(n_candidate.absolutePath)
+                        } else if (n_candidate.parentFile != null &&
+                        n_candidate.parentFile?.exists() == true &&
+                            n_variant.endsWith(INCLUDE_PATH_SUFFIX))
                         {
-                            n_result += CompilerConfig.normalizeIncludePath(n_candidate.absolutePath)
+                            n_result += CompilerConfig.normalPath(n_candidate.absolutePath)
                         }
                     }
                 }
@@ -386,7 +413,9 @@ object PawnCompiler {
 
             if (file.name != lowerName) {
                 val renamedFile = File(file.parentFile, lowerName)
-                if (renamedFile.exists() && renamedFile.absolutePath != file.absolutePath) {
+                if (renamedFile.exists() &&
+                renamedFile.absolutePath != file.absolutePath)
+                {
                     renamedFile.delete()
                 }
                 file.renameTo(renamedFile)
@@ -397,7 +426,12 @@ object PawnCompiler {
     private fun rewriteIncludesInProject(rootDir: File) {
         rootDir.walkTopDown().filter { it.isFile }.forEach { file ->
             val n_ext = file.extension.lowercase()
-            if (n_ext !in setOf("pawn", "pwn", "p", "inc")) return@forEach
+            if (n_ext !in setOf(
+                    PAWN_FILE_EXTENSION,
+                    PWN_FILE_EXTENSION,
+                    PAWN_SOURCE_SHORT_EXTENSION,
+                    PAWN_INCLUDE_EXTENSION
+                )) return@forEach
 
             val n_content = file.readText()
             val n_rewritten = INCLUDE_DIRECTIVE_REGEX.replace(n_content) { match ->
@@ -441,7 +475,7 @@ object PawnCompiler {
             if (n_config != null) {
                 Log.w(
                     "PawnCompiler",
-                    "ok! found: ${extractErrorCount(n_result.second)}" +
+                    "fail! found: ${extractErrorCount(n_result.second)}" +
                     " errors in ${version.label}. " +
                     "trying ${n_fallbackVersion.label} for the next retry."
                 )
@@ -449,7 +483,9 @@ object PawnCompiler {
             }
 
             val n_retryResult = compileWithVersion(sourceFile, options, n_fallbackVersion)
-            if (n_retryResult.first >= 0 || n_retryResult.second.isNotBlank()) {
+            if (n_retryResult.first >= 0 ||
+            n_retryResult.second.isNotBlank())
+            {
                 return n_retryResult
             }
         }
@@ -484,10 +520,11 @@ object PawnCompiler {
         }.getOrNull()
 
         n_logFile?.takeIf { it.exists() }?.runCatching { delete() }
-            ?.onFailure { Log.e("PawnCompiler", "Failed to delete old log file: ${n_logFile.absolutePath}", it) }
+            ?.onFailure { Log.e("PawnCompiler",
+            "Failed to delete old log file: ${n_logFile.absolutePath}", it) }
 
         val n_args = buildList {
-            add("pawncc")
+            add(PAWNCC_BINARY_NAME)
             addAll(options)
             add(sourceFile)
         }
@@ -496,7 +533,8 @@ object PawnCompiler {
         val n_parsedResult = parseCompilerOutput(n_output)
 
         n_logFile?.runCatching { writeText(n_parsedResult.second) }
-            ?.onFailure { Log.e("PawnCompiler", "Failed to write log file: ${n_logFile.absolutePath}", it) }
+            ?.onFailure { Log.e("PawnCompiler",
+            "Failed to write log file: ${n_logFile.absolutePath}", it) }
 
         return n_parsedResult
     }
@@ -531,7 +569,8 @@ object PawnCompiler {
                     val code = match.groupValues[2].trimStart('0')
                     val explanation = KNOWN_ERROR_EXPLANATIONS[code]
                         ?: KNOWN_ERROR_EXPLANATIONS[match.groupValues[2]]
-                        ?: "No local explanation found for this compiler message. Check the Pawn error reference for details."
+                        ?: "No local explanation found for this compiler message. " +
+                        "Check the Pawn error reference for details."
                     builder.appendLine("    [explain] $explanation")
                 }
             }

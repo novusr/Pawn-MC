@@ -14,14 +14,52 @@ import java.net.URL
 import java.util.Locale
 import kotlin.math.max
 
-private const val _MC_LATEST = "https://api.github.com/repos/" +
-                    "novusr/Pawn-MC/releases/latest"
+private const val GITHUB_OWNER = "novusr"
+private const val GITHUB_REPO = "Pawn-MC"
+private const val GITHUB_API_PATH = "/releases/latest"
+private const val GITHUB_LATEST_RELEASE_URL = "https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
+private const val GITHUB_API_RELEASES_URL = "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO$GITHUB_API_PATH"
+private const val APK_FILE_EXTENSION = ".apk"
+private const val PACKAGE_ARCHIVE_MIME_TYPE = "application/vnd.android.package-archive"
+private const val LATEST_APK_FILE_NAME = "pawnmc-latest.apk"
+private const val UNKNOWN_APP_SOURCES_PACKAGE_PREFIX = "package:"
+
+private const val _MC_LATEST = GITHUB_API_RELEASES_URL
 
 data class GitHubRelease(
     val version: String,
     val apkUrl: String?,
-    val releaseUrl: String
+    val releaseUrl: String,
+    val bodyMarkdown: String = ""
 )
+
+internal fun parseGitHubRelease(releaseJson: JSONObject): GitHubRelease {
+    val version = releaseJson.optString("tag_name", "").trim()
+    val releaseUrl = releaseJson.optString(
+        "html_url",
+        GITHUB_LATEST_RELEASE_URL
+    )
+
+    var apkUrl: String? = null
+    val assets = releaseJson.optJSONArray("assets")
+    if (assets != null) {
+        for (index in 0 until assets.length()) {
+            val asset = assets.getJSONObject(index)
+            val filename = asset.optString("name", "").lowercase(Locale.US)
+            if (filename.endsWith(APK_FILE_EXTENSION)) {
+                apkUrl = asset.optString("browser_download_url")
+                break
+            }
+        }
+    }
+
+    return GitHubRelease(
+        version = version,
+        apkUrl = apkUrl ?: releaseUrl,
+        releaseUrl = releaseUrl,
+        bodyMarkdown = releaseJson.optString("body", "").trim()
+    )
+}
 
 enum class UpdateStatus {
     UPDATE_AVAILABLE,
@@ -168,26 +206,7 @@ class AppUpdateManager(private val context: Context) {
                 return null
             }
 
-            val releaseUrl = releaseJson.optString("html_url", "https://github.com/" +
-                                            "novusr/Pawn-MC/releases/latest")
-            var apkUrl: String? = null
-            val assets = releaseJson.optJSONArray("assets")
-            if (assets != null) {
-                for (index in 0 until assets.length()) {
-                    val asset = assets.getJSONObject(index)
-                    val filename = asset.optString("name", "").lowercase(Locale.US)
-                    if (filename.endsWith(".apk")) {
-                        apkUrl = asset.optString("browser_download_url")
-                        break
-                    }
-                }
-            }
-
-            GitHubRelease(
-                version = version,
-                apkUrl = apkUrl ?: releaseUrl,
-                releaseUrl = releaseUrl
-            )
+            parseGitHubRelease(releaseJson)
         } finally {
             connection.disconnect()
         }
@@ -195,7 +214,7 @@ class AppUpdateManager(private val context: Context) {
 
     fun downloadLatestApk(release: GitHubRelease): File {
         val apkUrl = release.apkUrl ?: throw IllegalStateException("No APK asset found for latest release.")
-        val targetFile = File(context.cacheDir, "pawnmc-latest.apk")
+        val targetFile = File(context.cacheDir, LATEST_APK_FILE_NAME)
         if (targetFile.exists()) {
             targetFile.delete()
         }
@@ -230,7 +249,7 @@ class AppUpdateManager(private val context: Context) {
         )
 
         return Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(apkUri, "application/vnd.android.package-archive")
+            setDataAndType(apkUri, PACKAGE_ARCHIVE_MIME_TYPE)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
@@ -243,7 +262,7 @@ class AppUpdateManager(private val context: Context) {
     fun buildUnknownSourcesIntent(): Intent {
         return Intent(
             Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-            Uri.parse("package:${context.packageName}")
+            Uri.parse("${UNKNOWN_APP_SOURCES_PACKAGE_PREFIX}${context.packageName}")
         ).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }

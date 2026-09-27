@@ -54,10 +54,10 @@ class CompilerConfig private constructor(context: Context) {
         get() {
             val stored = prefs.getString(KEY_INCLUDE_PATHS, "") ?: ""
             if (stored.isEmpty()) return emptyList()
-            return stored.split(";").map { normalizeIncludePath(it) }.filter { it.isNotBlank() }
+            return stored.split(";").map { normalPath(it) }.filter { it.isNotBlank() }
         }
         set(value) = prefs.edit {
-            putString(KEY_INCLUDE_PATHS, value.map { normalizeIncludePath(it) }.filter { it.isNotBlank() }.distinct().joinToString(";"))
+            putString(KEY_INCLUDE_PATHS, value.map { normalPath(it) }.filter { it.isNotBlank() }.distinct().joinToString(";"))
         }
 
     //
@@ -261,7 +261,7 @@ class CompilerConfig private constructor(context: Context) {
             if (mandatoryParentheses) { options.add("-(+") }
 
             for (path in includePaths) {
-                val normalized = normalizeIncludePath(path)
+                val normalized = normalPath(path)
                 if (normalized.isNotBlank()) { options.add("-i=$normalized") }
             }
 
@@ -270,7 +270,7 @@ class CompilerConfig private constructor(context: Context) {
             return options
         }
 
-        fun normalizeIncludePath(path: String): String {
+        fun normalPath(path: String): String {
             val trimmed = path.trim().replace('\\', '/')
             if (trimmed.isEmpty()) return ""
             val withoutTrailingSlash = trimmed.trimEnd('/')

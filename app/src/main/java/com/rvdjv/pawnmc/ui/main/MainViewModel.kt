@@ -153,7 +153,7 @@ class MainViewModel(
             if (relevantPaths.isNotEmpty()) {
                 val mergedPaths = config.n_include_paths.toMutableList()
                 relevantPaths.forEach { path ->
-                    val normalizedPath = CompilerConfig.normalizeIncludePath(path)
+                    val normalizedPath = CompilerConfig.normalPath(path)
                     if (normalizedPath !in mergedPaths) mergedPaths.add(normalizedPath)
                 }
                 config.n_include_paths = mergedPaths
@@ -166,7 +166,7 @@ class MainViewModel(
     }
 
     fun confirmIncludeChoice(path: String) {
-        val normalized = CompilerConfig.normalizeIncludePath(path)
+        val normalized = CompilerConfig.normalPath(path)
         val mergedPaths = config.n_include_paths.toMutableList()
         if (normalized !in mergedPaths) mergedPaths.add(normalized)
         config.n_include_paths = mergedPaths
@@ -179,7 +179,7 @@ class MainViewModel(
         val autoIncludePaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath)
         val mergedPaths = config.n_include_paths.toMutableList()
         autoIncludePaths.forEach { path ->
-            val normalizedPath = CompilerConfig.normalizeIncludePath(path)
+            val normalizedPath = CompilerConfig.normalPath(path)
             if (normalizedPath !in mergedPaths) mergedPaths.add(normalizedPath)
         }
         config.n_include_paths = mergedPaths

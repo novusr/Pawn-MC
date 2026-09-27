@@ -52,6 +52,27 @@ import java.text.DecimalFormat
 
 enum class FileBrowserMode { FILE, FOLDER }
 
+private const val FILE_BROWSER_HIDDEN_PREFIX = "."
+private const val FILE_BROWSER_DEFAULT_STORAGE_NAME = "Internal Storage"
+private const val FILE_BROWSER_PARENT_LABEL = ".."
+private const val FILE_BROWSER_SEPARATOR = " / "
+private const val FILE_BROWSER_EMPTY_FOLDER_TEXT = "Empty Folder"
+private const val FILE_BROWSER_NO_MATCHING_FILES_TEXT = "No Matching Files"
+private const val FILE_BROWSER_NO_MATCHING_DESCRIPTION = "There are no files with the required extension."
+private const val FILE_BROWSER_EMPTY_FOLDER_DESCRIPTION = "There are no files in this folder."
+private const val FILE_BROWSER_DEFAULT_FILE_EXTENSIONS = "pawn, pwn, p, inc"
+private const val FILE_BROWSER_FILE_EXTENSION_PAWN = "pawn"
+private const val FILE_BROWSER_FILE_EXTENSION_PWN = "pwn"
+private const val FILE_BROWSER_FILE_EXTENSION_SHORT = "p"
+private const val FILE_BROWSER_FILE_EXTENSION_INC = "inc"
+
+private val DEFAULT_FILE_EXTENSIONS = setOf(
+    FILE_BROWSER_FILE_EXTENSION_PAWN,
+    FILE_BROWSER_FILE_EXTENSION_PWN,
+    FILE_BROWSER_FILE_EXTENSION_SHORT,
+    FILE_BROWSER_FILE_EXTENSION_INC
+)
+
 data class FileEntry(val file: File, val isParent: Boolean = false)
 
 private fun formatFileSize(size: Long): String {
@@ -66,7 +87,7 @@ private fun formatFileSize(size: Long): String {
 @Composable
 fun FileBrowserDialog(
     mode: FileBrowserMode,
-    fileExtensions: Set<String> = setOf("pawn", "pwn", "p", "inc"),
+    fileExtensions: Set<String> = DEFAULT_FILE_EXTENSIONS,
     onFileSelected: (String) -> Unit,
     onFolderSelected: (String) -> Unit = {},
     onDismiss: () -> Unit
@@ -85,7 +106,7 @@ fun FileBrowserDialog(
         }
         val files = dir.listFiles() ?: emptyArray()
         val filtered = files
-            .filter { !it.name.startsWith(".") }
+            .filter { !it.name.startsWith(FILE_BROWSER_HIDDEN_PREFIX) }
             .filter { file ->
                 if (file.isDirectory) true
                 else if (mode == FileBrowserMode.FILE) file.extension.lowercase() in fileExtensions
@@ -159,7 +180,7 @@ fun FileBrowserDialog(
                 ) {
                     itemsIndexed(breadcrumbs) { index, dir ->
                         val isLast = index == breadcrumbs.lastIndex
-                        val label = if (dir.absolutePath == rootPath) "Internal Storage" else dir.name
+                        val label = if (dir.absolutePath == rootPath) FILE_BROWSER_DEFAULT_STORAGE_NAME else dir.name
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = label,
@@ -168,7 +189,7 @@ fun FileBrowserDialog(
                                 modifier = Modifier.clickable(enabled = !isLast) { navigateTo(dir) }
                             )
                             if (!isLast) {
-                                Text(" / ", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(FILE_BROWSER_SEPARATOR, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
                     }
@@ -195,12 +216,12 @@ fun FileBrowserDialog(
                         )
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            text = if (hasAnyFilesAtAll) "No Matching Files" else "Empty Folder",
+                            text = if (hasAnyFilesAtAll) FILE_BROWSER_NO_MATCHING_FILES_TEXT else FILE_BROWSER_EMPTY_FOLDER_TEXT,
                             style = MaterialTheme.typography.titleLarge
                         )
                         Text(
-                            text = if (hasAnyFilesAtAll) "There are no files with the required extension."
-                                   else "There are no files in this folder.",
+                            text = if (hasAnyFilesAtAll) FILE_BROWSER_NO_MATCHING_DESCRIPTION
+                                   else FILE_BROWSER_EMPTY_FOLDER_DESCRIPTION,
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -269,7 +290,7 @@ private fun FileEntryRow(entry: FileEntry, onClick: () -> Unit) {
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = if (entry.isParent) ".." else entry.file.name,
+                text = if (entry.isParent) FILE_BROWSER_PARENT_LABEL else entry.file.name,
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

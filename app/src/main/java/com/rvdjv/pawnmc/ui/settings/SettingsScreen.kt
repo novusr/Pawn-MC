@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -98,6 +99,9 @@ fun SettingsScreen(
     var isCheckingUpdates by remember { mutableStateOf(false) }
     var downloadedApk by remember { mutableStateOf<java.io.File?>(null) }
     var lastReleaseInfo by remember { mutableStateOf<String?>(null) }
+    var releaseNotesMarkdown by remember { mutableStateOf("") }
+    var showReleaseNotesDialog by remember { mutableStateOf(false) }
+    var pendingReleaseVersion by remember { mutableStateOf<String?>(null) }
 
     var appVersion by remember { mutableStateOf("") }
     var buildNumber by remember { mutableStateOf("") }
@@ -124,14 +128,20 @@ fun SettingsScreen(
                     val hasValidApk = downloaded != null && downloaded.exists()
                     updateStatus = if (hasValidApk) "Update available: $latestVersion" else "Update available, but no APK is attached"
                     lastReleaseInfo = release?.releaseUrl
+                    releaseNotesMarkdown = release?.bodyMarkdown.orEmpty().ifBlank { "No release notes provided." }
+                    pendingReleaseVersion = latestVersion
                     downloadedApk = downloaded
                     updateReady = hasValidApk
                 } else if (status == UpdateStatus.UP_TO_DATE) {
                     updateStatus = "You're on the latest version"
                     lastReleaseInfo = result.release?.releaseUrl
+                    releaseNotesMarkdown = ""
+                    pendingReleaseVersion = null
                     updateReady = false
                 } else {
                     updateStatus = "Unable to check for updates"
+                    releaseNotesMarkdown = ""
+                    pendingReleaseVersion = null
                     updateReady = false
                 }
             } catch (_: Exception) {
@@ -419,6 +429,11 @@ fun SettingsScreen(
                     TextButton(
                         onClick = {
                             if (updateReady) {
+                                if (releaseNotesMarkdown.isNotBlank()) {
+                                    showReleaseNotesDialog = true
+                                    return@TextButton
+                                }
+
                                 if (!updateManager.canRequestUnknownSources()) {
                                     val unknownSources = updateManager.buildUnknownSourcesIntent()
                                     ContextCompat.startActivity(context, unknownSources, null)
@@ -572,6 +587,46 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    if (showReleaseNotesDialog) {
+        AlertDialog(
+            onDismissRequest = { showReleaseNotesDialog = false },
+            title = { Text("Update ${pendingReleaseVersion ?: "available"}") },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    MarkdownPreviewText(releaseNotesMarkdown)
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showReleaseNotesDialog = false
+                        if (!updateManager.canRequestUnknownSources()) {
+                            val unknownSources = updateManager.buildUnknownSourcesIntent()
+                            ContextCompat.startActivity(context, unknownSources, null)
+                            return@TextButton
+                        }
+
+                        val apkFile = downloadedApk ?: return@TextButton
+                        val installIntent = updateManager.buildInstallIntent(apkFile)
+                        installLauncher.launch(installIntent)
+                    }
+                ) {
+                    Text("Install")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReleaseNotesDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
     }
 
     if (showThemeDialog) {
@@ -787,6 +842,35 @@ fun SettingsScreen(
             }
         )
     }
+}
+
+@Composable
+fun MarkdownPreviewText(markdown: String, modifier: Modifier = Modifier) {
+    val rendered = remember(markdown) {
+        markdown
+            .replace("\r\n", "\n")
+            .split("\n")
+            .joinToString("\n") { line ->
+                when {
+                    line.trimStart().startsWith("### ") -> line.trimStart().removePrefix("### ")
+                    line.trimStart().startsWith("## ") -> line.trimStart().removePrefix("## ")
+                    line.trimStart().startsWith("# ") -> line.trimStart().removePrefix("# ")
+                    line.trimStart().startsWith("- ") -> "• ${line.trimStart().removePrefix("- ")}"
+                    line.trimStart().startsWith("* ") -> "• ${line.trimStart().removePrefix("* ")}"
+                    else -> line
+                }
+            }
+            .replace("**", "")
+            .replace("__", "")
+            .replace("_", "")
+    }
+
+    Text(
+        text = rendered.ifBlank { "No release notes provided." },
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = modifier
+    )
 }
 
 @Composable
