@@ -82,7 +82,7 @@ From a manual review of the repository, the current project focuses on:
 |---|---|
 | app/src/main/java/com/rvdjv/pawnmc/data/config/CompilerConfig.kt | Stores all compiler settings and app preferences in SharedPreferences; builds compile option lists |
 | app/src/main/java/com/rvdjv/pawnmc/data/compiler/PawnCompiler.kt | Native compiler wrapper; compiles Pawn files, reads output, handles fallback strategy |
-| app/src/main/java/com/rvdjv/pawnmc/data/update/AppUpdateManager.kt | GitHub release fetcher, semantic version comparison, APK download, install intent preparation |
+| app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | GitHub release fetcher, semantic version comparison, APK download, install intent preparation |
 
 ### 5.2 UI Layer
 
@@ -103,7 +103,7 @@ From a manual review of the repository, the current project focuses on:
 
 | File / Path | Purpose |
 |---|---|
-| app/src/test/java/com/rvdjv/pawnmc/data/update/AppUpdateManagerTest.kt | Regression tests for version comparison logic |
+| app/src/test/java/com/rvdjv/pawnmc/data/update/UpdateManagerTest.kt | Regression tests for version comparison logic |
 
 ---
 
@@ -115,7 +115,7 @@ From a manual review of the repository, the current project focuses on:
 | Native compiler | app/src/main/cpp/CMakeLists.txt, app/src/main/cpp/Compiler.cpp | JNI/native bridge and native compile support |
 | Compiler config | app/src/main/java/com/rvdjv/pawnmc/data/config/CompilerConfig.kt | Persistent compile configuration |
 | Compile engine | app/src/main/java/com/rvdjv/pawnmc/data/compiler/PawnCompiler.kt | Compile logic, output capture, fallback retry |
-| Update flow | app/src/main/java/com/rvdjv/pawnmc/data/update/AppUpdateManager.kt | GitHub API interactions and APK update install pipeline |
+| Update flow | app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | GitHub API interactions and APK update install pipeline |
 | Main app UI | app/src/main/java/com/rvdjv/pawnmc/ui/main/MainScreen.kt | Main compile entry point |
 | Settings UI | app/src/main/java/com/rvdjv/pawnmc/ui/settings/SettingsScreen.kt | App configuration and update controls |
 | File browser | app/src/main/java/com/rvdjv/pawnmc/ui/filebrowser/FileBrowserDialog.kt | Storage browsing and file selection |
@@ -230,7 +230,7 @@ The most relevant files to understand the project are:
 | app/src/main/java/com/rvdjv/pawnmc/data/compiler/PawnCompiler.kt | Native compile engine |
 | app/src/main/java/com/rvdjv/pawnmc/ui/main/MainScreen.kt | Main user workflow |
 | app/src/main/java/com/rvdjv/pawnmc/ui/settings/SettingsScreen.kt | Settings and update actions |
-| app/src/main/java/com/rvdjv/pawnmc/data/update/AppUpdateManager.kt | Release update logic |
+| app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | Release update logic |
 | app/src/main/cpp/Compiler.cpp | Native bridge implementation |
 
 ---

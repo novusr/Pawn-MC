@@ -1,6 +1,6 @@
 package com.rvdjv.pawnmc.ui.editor
 
-import com.rvdjv.pawnmc.data.pawn.PawnLanguageRegistry
+import com.rvdjv.pawnmc.data.pawn.PawnRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -16,44 +16,44 @@ class XedEditorTest {
 
     @Test
     fun `verifies Pawn keywords and directives in registry`() {
-        assertTrue(PawnLanguageRegistry.isKeyword("new"))
-        assertTrue(PawnLanguageRegistry.isKeyword("stock"))
-        assertTrue(PawnLanguageRegistry.isKeyword("public"))
-        assertTrue(PawnLanguageRegistry.isKeyword("forward"))
-        assertTrue(PawnLanguageRegistry.isKeyword("return"))
+        assertTrue(PawnRegistry.isKeyword("new"))
+        assertTrue(PawnRegistry.isKeyword("stock"))
+        assertTrue(PawnRegistry.isKeyword("public"))
+        assertTrue(PawnRegistry.isKeyword("forward"))
+        assertTrue(PawnRegistry.isKeyword("return"))
 
-        assertTrue(PawnLanguageRegistry.isDirective("include"))
-        assertTrue(PawnLanguageRegistry.isDirective("#include"))
-        assertTrue(PawnLanguageRegistry.isDirective("define"))
-        assertTrue(PawnLanguageRegistry.isDirective("#pragma"))
+        assertTrue(PawnRegistry.isDirective("include"))
+        assertTrue(PawnRegistry.isDirective("#include"))
+        assertTrue(PawnRegistry.isDirective("define"))
+        assertTrue(PawnRegistry.isDirective("#pragma"))
 
-        assertTrue(PawnLanguageRegistry.isType("Float"))
-        assertTrue(PawnLanguageRegistry.isType("bool"))
+        assertTrue(PawnRegistry.isType("Float"))
+        assertTrue(PawnRegistry.isType("bool"))
 
-        assertTrue(PawnLanguageRegistry.isConstant("INVALID_PLAYER_ID"))
-        assertTrue(PawnLanguageRegistry.isConstant("MAX_PLAYERS"))
+        assertTrue(PawnRegistry.isConstant("INVALID_PLAYER_ID"))
+        assertTrue(PawnRegistry.isConstant("MAX_PLAYERS"))
     }
 
     @Test
     fun `verifies official SA-MP functions and callbacks`() {
-        assertTrue(PawnLanguageRegistry.isFunction("OnGameModeInit"))
-        assertTrue(PawnLanguageRegistry.isFunction("OnPlayerConnect"))
-        assertTrue(PawnLanguageRegistry.isFunction("SendClientMessage"))
-        assertTrue(PawnLanguageRegistry.isFunction("SetPlayerPos"))
-        assertTrue(PawnLanguageRegistry.isFunction("format"))
-        assertTrue(PawnLanguageRegistry.isFunction("strlen"))
+        assertTrue(PawnRegistry.isFunction("OnGameModeInit"))
+        assertTrue(PawnRegistry.isFunction("OnPlayerConnect"))
+        assertTrue(PawnRegistry.isFunction("SendClientMessage"))
+        assertTrue(PawnRegistry.isFunction("SetPlayerPos"))
+        assertTrue(PawnRegistry.isFunction("format"))
+        assertTrue(PawnRegistry.isFunction("strlen"))
 
-        assertFalse(PawnLanguageRegistry.isFunction("nonExistentFakeFunction123"))
+        assertFalse(PawnRegistry.isFunction("nonExistentFakeFunction123"))
     }
 
     @Test
     fun `verifies autocompletion suggestions from registry`() {
-        val sendCompletions = PawnLanguageRegistry.getCompletions("Send")
+        val sendCompletions = PawnRegistry.getCompletions("Send")
         assertTrue(sendCompletions.isNotEmpty())
         assertTrue(sendCompletions.any { it.name == "SendClientMessage" })
         assertTrue(sendCompletions.any { it.name == "SendClientMessageToAll" })
 
-        val directiveCompletions = PawnLanguageRegistry.getCompletions("#inc")
+        val directiveCompletions = PawnRegistry.getCompletions("#inc")
         assertTrue(directiveCompletions.any { it.name == "#include" })
     }
 

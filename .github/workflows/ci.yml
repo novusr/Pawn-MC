@@ -51,24 +51,16 @@ jobs:
       - name: Run Lint
         shell: bash
         run: |
-          set +e
-          touch _gh_actions.log
-          echo "=== PawnMC Gradle Lint ===" > _gh_actions.log
-          ./gradlew lint --console=plain --stacktrace >> _gh_actions.log 2>&1
-          status=$?
-          tail -n 200 _gh_actions.log
-          exit $status
+          echo "::group::PawnMC Gradle Lint"
+          ./gradlew lint --console=plain --stacktrace
+          echo "::endgroup::"
 
       - name: Build Debug APK
         shell: bash
         run: |
-          set +e
-          touch _gh_actions.log
-          echo "=== PawnMC Debug Build ===" >> _gh_actions.log
-          ./gradlew assembleDebug --console=plain --stacktrace >> _gh_actions.log 2>&1
-          status=$?
-          tail -n 200 _gh_actions.log
-          exit $status
+          echo "::group::PawnMC Debug Build"
+          ./gradlew assembleDebug --console=plain --stacktrace
+          echo "::endgroup::"
 
       - name: Upload Debug APK
         if: always()
@@ -79,16 +71,6 @@ jobs:
           path: app/build/outputs/**/*.apk
           if-no-files-found: warn
           retention-days: 14
-
-      - name: Upload CI Log
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: gh-actions-log-build
-          path: _gh_actions.log
-          if-no-files-found: ignore
-          retention-days: 7
 
       - name: Upload Lint Report
         if: always()
@@ -141,23 +123,9 @@ jobs:
       - name: Run Unit Tests
         shell: bash
         run: |
-          set +e
-          touch _gh_actions.log
-          echo "=== PawnMC Unit Tests ===" > _gh_actions.log
-          ./gradlew test --console=plain --stacktrace >> _gh_actions.log 2>&1
-          status=$?
-          tail -n 200 _gh_actions.log
-          exit $status
-
-      - name: Upload CI Log
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: gh-actions-log-test
-          path: _gh_actions.log
-          if-no-files-found: ignore
-          retention-days: 7
+          echo "::group::PawnMC Unit Tests"
+          ./gradlew test --console=plain --stacktrace
+          echo "::endgroup::"
 
       - name: Upload Test Results
         if: always()

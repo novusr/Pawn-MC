@@ -65,7 +65,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.rvdjv.pawnmc.data.config.CompilerConfig
-import com.rvdjv.pawnmc.data.update.AppUpdateManager
+import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.data.update.UpdateStatus
 import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserMode
@@ -81,7 +81,7 @@ fun SettingsScreen(
     onRestartRequested: () -> Unit
 ) {
     val context = LocalContext.current
-    val updateManager = remember { AppUpdateManager(context) }
+    val updateManager = remember { UpdateManager(context) }
     val installLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { }
@@ -378,7 +378,7 @@ fun SettingsScreen(
                     )
 
                     SwitchRow(
-                        title = localizer.get("settings.option.explain", appLanguage, "Explain Compiler"),
+                        title = localizer.get("settings.option.explain", appLanguage, "Explain Output"),
                         description = localizer.get("settings.option.explain.desc", appLanguage, "Add human-readable explanations next to warnings, errors, and fatal messages extracted from the compiler log."),
                         checked = viewModel.n_explain_output,
                         onCheckedChange = { viewModel.updateExplainOutput(it) }

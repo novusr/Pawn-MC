@@ -2,7 +2,7 @@ package com.rvdjv.pawnmc.ui.editor.pawn
 
 import android.os.Bundle
 import com.rvdjv.pawnmc.data.pawn.PawnItemKind
-import com.rvdjv.pawnmc.data.pawn.PawnLanguageRegistry
+import com.rvdjv.pawnmc.data.pawn.PawnRegistry
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
@@ -21,7 +21,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch
  */
 class PawnLanguage : Language {
 
-    private val analyzeManager = PawnAnalyzeManager()
+    private val analyzeManager = PawnManager()
     private val symbolPairs = SymbolPairMatch.DefaultSymbolPairs()
 
     override fun getAnalyzeManager(): AnalyzeManager = analyzeManager
@@ -41,7 +41,7 @@ class PawnLanguage : Language {
         if (prefix.isBlank()) return
         publisher.checkCancelled()
 
-        val matchingItems = PawnLanguageRegistry.getCompletions(prefix)
+        val matchingItems = PawnRegistry.getCompletions(prefix)
         for (item in matchingItems) {
             publisher.checkCancelled()
             val itemKind = when (item.kind) {

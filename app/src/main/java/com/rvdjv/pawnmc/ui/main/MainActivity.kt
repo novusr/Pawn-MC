@@ -13,7 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rvdjv.pawnmc.data.compiler.PawnCompiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
-import com.rvdjv.pawnmc.data.update.AppUpdateManager
+import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.ui.editor.XedEditorScreen
 import com.rvdjv.pawnmc.ui.editor.XedEditorViewModel
 import com.rvdjv.pawnmc.ui.editor.XedEditorViewModelFactory
@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         CompilerConfig.getInstance(applicationContext)
         PawnCompiler.resetSessionState()
-        AppUpdateManager(applicationContext).ensureVersionFileWritten()
+        UpdateManager(applicationContext).ensureVersionFileWritten()
         enableEdgeToEdge()
         setContent {
             PawnMCTheme(darkTheme = resolveDarkTheme(viewModel.n_app_theme)) {

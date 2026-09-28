@@ -19,6 +19,7 @@ private const val GITHUB_REPO = "Pawn-MC"
 private const val GITHUB_API_PATH = "/releases/latest"
 private const val GITHUB_LATEST_RELEASE_URL = "https://github.com/$GITHUB_OWNER/$GITHUB_REPO/releases/latest"
 private const val GITHUB_API_RELEASES_URL = "https://api.github.com/repos/$GITHUB_OWNER/$GITHUB_REPO$GITHUB_API_PATH"
+
 private const val APK_FILE_EXTENSION = ".apk"
 private const val PACKAGE_ARCHIVE_MIME_TYPE = "application/vnd.android.package-archive"
 private const val LATEST_APK_FILE_NAME = "pawnmc-latest.apk"
@@ -74,7 +75,7 @@ data class UpdateCheckResult(
     val release: GitHubRelease?
 )
 
-class AppUpdateManager(private val context: Context) {
+class UpdateManager(private val context: Context) {
     private val hiddenBaseDir = File(context.filesDir, ".pawnmc").apply { mkdirs() }
     private val versionFile = File(hiddenBaseDir, ".pawnmc_version.txt")
 
