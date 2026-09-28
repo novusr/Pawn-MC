@@ -71,18 +71,39 @@ class PawnCompilerSuccessTest {
     }
 
     @Test
-    fun `discovers default include roots without checking whether folders exist`() {
+    fun `discovers only include roots that exist on disk`() {
         val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-include-discovery-${System.nanoTime()}")
         val sourceFile = File(root, "gamemodes/main.pwn")
         sourceFile.parentFile?.mkdirs()
         sourceFile.writeText("main() { return; }\n")
+        File(root, "qawno/include").mkdirs()
 
         try {
             val paths = PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
             assertTrue(paths.any { it.contains("gamemodes", ignoreCase = true) })
-            assertTrue(paths.any { it.contains("pawno/include", ignoreCase = true) })
             assertTrue(paths.any { it.contains("qawno/include", ignoreCase = true) })
+            // Absent conventional folders must not be registered.
+            assertFalse(paths.any { it.contains("pawno/include", ignoreCase = true) })
             assertEquals("No two include paths can have the same location", paths.size, paths.map { CompilerConfig.normalPath(it).lowercase() }.distinct().size)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `skips include roots that are already registered`() {
+        val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-include-known-${System.nanoTime()}")
+        val sourceFile = File(root, "gamemodes/main.pwn")
+        sourceFile.parentFile?.mkdirs()
+        sourceFile.writeText("main() { return; }\n")
+        File(root, "qawno/include").mkdirs()
+
+        try {
+            val known = listOf(CompilerConfig.normalPath(File(root, "qawno/include").absolutePath))
+            val paths = PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath, known)
+
+            assertTrue(paths.any { it.contains("gamemodes", ignoreCase = true) })
+            assertFalse(paths.any { it.contains("qawno/include", ignoreCase = true) })
         } finally {
             root.deleteRecursively()
         }

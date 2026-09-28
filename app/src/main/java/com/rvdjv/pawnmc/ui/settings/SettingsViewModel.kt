@@ -48,7 +48,9 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     var n_app_language by mutableStateOf(config.n_app_language)
         private set
 
-    val n_include_paths = mutableStateListOf<String>().apply { addAll(CompilerConfig.dedupePaths(config.n_include_paths)) }
+    val n_include_paths = mutableStateListOf<String>().apply {
+        addAll(CompilerConfig.pruneMissingIncludePaths(config.n_include_paths))
+    }
 
     fun updateCompilerVersion(version: CompilerConfig.CompilerVersion) {
         n_compiler_version = version
@@ -110,46 +112,71 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         config.n_app_language = language
     }
 
-    fun addIncludePath(path: String) {
+    /**
+     * Adds an include path from Settings (manual entry or the folder picker).
+     *
+     * Returns false when the folder is already registered or is not a real directory, so
+     * the caller can skip the write entirely instead of re-filtering the whole list.
+     */
+    fun addIncludePath(path: String): Boolean {
         val normalizedPath = CompilerConfig.normalPath(path)
-        if (normalizedPath.isBlank()) return
+        if (normalizedPath.isBlank()) return false
 
-        val candidateList = n_include_paths + normalizedPath
-        val deduped = CompilerConfig.dedupePaths(candidateList)
-        if (deduped.size == n_include_paths.size) {
-            return
-        }
+        if (CompilerConfig.containsIncludePath(n_include_paths, normalizedPath)) return false
 
-        n_include_paths.clear()
-        n_include_paths.addAll(deduped)
-        config.n_include_paths = deduped
+        val file = java.io.File(normalizedPath)
+        if (!runCatching { file.isDirectory }.getOrDefault(false)) return false
+
+        n_include_paths.add(normalizedPath)
+        config.n_include_paths = n_include_paths.toList()
+        return true
     }
 
-    fun updateIncludePathAt(index: Int, newPath: String) {
-        if (index !in n_include_paths.indices) return
+    /**
+     * Replaces the entry at [index]. Blank input removes the entry, and a value that
+     * collides with another row (or is not a real folder) is rejected.
+     */
+    fun updateIncludePathAt(index: Int, newPath: String): Boolean {
+        if (index !in n_include_paths.indices) return false
         val normalized = CompilerConfig.normalPath(newPath)
         if (normalized.isBlank()) {
             removeIncludePathAt(index)
-            return
+            return false
         }
 
-        val updated = n_include_paths.toMutableList()
-        updated[index] = normalized
-        val deduped = CompilerConfig.dedupePaths(updated)
+        val others = n_include_paths.filterIndexed { i, _ -> i != index }
+        if (CompilerConfig.containsIncludePath(others, normalized)) return false
 
-        n_include_paths.clear()
-        n_include_paths.addAll(deduped)
+        val file = java.io.File(normalized)
+        if (!runCatching { file.isDirectory }.getOrDefault(false)) return false
+
+        n_include_paths[index] = normalized
         config.n_include_paths = n_include_paths.toList()
+        return true
     }
 
     fun removeIncludePathAt(index: Int) {
         if (index in n_include_paths.indices) {
-            val updated = n_include_paths.toMutableList()
-            updated.removeAt(index)
-            n_include_paths.clear()
-            n_include_paths.addAll(CompilerConfig.dedupePaths(updated))
+            n_include_paths.removeAt(index)
             config.n_include_paths = n_include_paths.toList()
         }
+    }
+
+    /**
+     * Drops stored paths whose folder disappeared (removed SD card, deleted folder) and
+     * mirrors the result into the visible list.
+     *
+     * @return how many entries were removed
+     */
+    fun pruneMissingIncludePaths(): Int {
+        val before = n_include_paths.toList()
+        val survivors = CompilerConfig.pruneMissingIncludePaths(before)
+        if (survivors.size == before.size) return 0
+
+        n_include_paths.clear()
+        n_include_paths.addAll(survivors)
+        config.n_include_paths = survivors
+        return before.size - survivors.size
     }
 
     fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean {

@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,12 +30,21 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        CompilerConfig.getInstance(applicationContext)
+        val config = CompilerConfig.getInstance(applicationContext)
+        // Include paths can point at folders the user deleted or an unmounted SD card.
+        // Drop them once on startup so the list never shows dead entries and the compiler
+        // is not handed stale -i values.
+        config.pruneMissingIncludePaths()
         PawnCompiler.resetSessionState()
         UpdateManager(applicationContext).ensureVersionFileWritten()
         enableEdgeToEdge()
         setContent {
             PawnMCTheme(darkTheme = resolveDarkTheme(viewModel.n_app_theme)) {
+                // Covers SettingsActivity, which is a separate entry point.
+                SideEffect {
+                    config.pruneMissingIncludePaths()
+                }
+
                 var isEditorOpen by remember { mutableStateOf(false) }
                 val currentFilePath = viewModel.selectedFilePath
 

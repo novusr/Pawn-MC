@@ -236,11 +236,33 @@ object PawnCompiler {
     /**
      * Builds include paths based on the selected file directory and the nearest detected compiler folder.
      *
+     * Every candidate is compared against [knownPaths] first and dropped when that folder is
+     * already registered, so re-discovering the same project does not repeat work the
+     * configuration already holds. Only genuinely new folders are returned, which means
+     * callers can append the result without running another filter pass.
+     *
      * @param sourceFile selected Pawn file path
+     * @param knownPaths include paths already registered, used to skip duplicates early
      * @return include directories that should be added as -i values
      */
-    fun discoverRelevantIncludePaths(sourceFile: String): List<String> {
+    fun discoverRelevantIncludePaths(sourceFile: String, knownPaths: List<String> = emptyList()): List<String> {
         val result = linkedSetOf<String>()
+        val resultKeys = mutableSetOf<String>()
+        val known = knownPaths.asSequence()
+            .map { CompilerConfig.includePathKey(it) }
+            .filter { it.isNotBlank() && it != "/" }
+            .toSet()
+
+        fun offer(candidate: File) {
+            val absolutePath = CompilerConfig.normalPath(candidate.absolutePath)
+            if (absolutePath.isBlank()) return
+            val key = CompilerConfig.includePathKey(absolutePath)
+            if (key.isBlank() || key == "/") return
+            if (key in known) return
+            if (!resultKeys.add(key)) return
+            result += absolutePath
+        }
+
         val sourceDir = File(sourceFile).parentFile
         val baseDirs = linkedSetOf<File>()
 
@@ -258,24 +280,25 @@ object PawnCompiler {
         baseDirs.forEach { baseDir ->
             INCLUDE_PATH_VARIANTS.forEach { variant ->
                 val candidate = File(baseDir, variant)
-                val absolutePath = CompilerConfig.normalPath(candidate.absolutePath)
-                if (absolutePath.isNotBlank()) {
-                    result += absolutePath
-                }
+                offer(candidate)
             }
         }
 
         val sourceParent = sourceDir?.absoluteFile
         if (sourceParent != null) {
             val sourceGamemodes = File(sourceParent, STR_MODES_DIR_NAME)
-            result += CompilerConfig.normalPath(sourceGamemodes.absolutePath)
+            offer(sourceGamemodes)
         }
 
         val baseCandidate = sourceParent ?: File(System.getProperty("java.io.tmpdir"))
-        result += CompilerConfig.normalPath(File(baseCandidate, "$STR_PAWNO_DIR_NAME/$STR_INCLUDE_DIR_NAME").absolutePath)
-        result += CompilerConfig.normalPath(File(baseCandidate, STR_MODES_DIR_NAME).absolutePath)
+        offer(File(baseCandidate, "$STR_PAWNO_DIR_NAME/$STR_INCLUDE_DIR_NAME"))
+        offer(File(baseCandidate, STR_MODES_DIR_NAME))
 
-        return CompilerConfig.dedupePaths(result)
+        // Discovery probes several conventional locations that are usually absent, so
+        // keep only folders that really exist on disk.
+        return result.filter { path ->
+            runCatching { File(path).isDirectory }.getOrDefault(false)
+        }
     }
 
     /**

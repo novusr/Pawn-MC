@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.rvdjv.pawnmc.data.config.AppLocalization
@@ -176,6 +177,21 @@ fun SettingsScreen(
 
     val localizer = remember(context) { AppLocalization.load(context) }
     val appLanguage = viewModel.n_app_language
+
+    // Safety net for paths that vanished while the app was running (e.g. the SD card was
+    // ejected). MainActivity already prunes on startup; this keeps the visible list honest
+    // if a removable volume disappears later.
+    LaunchedEffect(Unit) {
+        val removed = viewModel.pruneMissingIncludePaths()
+        if (removed > 0) {
+            Toast.makeText(
+                context,
+                localizer.get("settings.include.pruned", appLanguage, "Include paths that no longer exist were removed"),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     val generalTitle = localizer.get("settings.general", appLanguage, "General")
     val languageTitle = localizer.get("settings.language", appLanguage, "Language")
     val themeTitle = localizer.get("settings.theme", appLanguage, "Theme")
@@ -712,8 +728,12 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         val value = newIncludePathInput.trim()
-                        if (value.isNotBlank()) {
-                            viewModel.addIncludePath(value)
+                        if (value.isNotBlank() && !viewModel.addIncludePath(value)) {
+                            Toast.makeText(
+                                context,
+                                localizer.get("settings.include.rejected", appLanguage, "Path already added or folder not found"),
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                         showAddIncludePathDialog = false
                         newIncludePathInput = ""
@@ -755,7 +775,13 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         val index = editingIncludePathIndex ?: return@TextButton
-                        viewModel.updateIncludePathAt(index, editingIncludePathValue)
+                        if (!viewModel.updateIncludePathAt(index, editingIncludePathValue)) {
+                            Toast.makeText(
+                                context,
+                                localizer.get("settings.include.rejected", appLanguage, "Path already added or folder not found"),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                         editingIncludePathIndex = null
                         editingIncludePathValue = ""
                     }
@@ -781,7 +807,13 @@ fun SettingsScreen(
             mode = FileBrowserMode.FOLDER,
             onFileSelected = {},
             onFolderSelected = { path ->
-                viewModel.addIncludePath(path)
+                if (!viewModel.addIncludePath(path)) {
+                    Toast.makeText(
+                        context,
+                        localizer.get("settings.include.rejected", appLanguage, "Path already added or folder not found"),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
                 showIncludePathDialog = false
             },
             onDismiss = { showIncludePathDialog = false }

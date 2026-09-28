@@ -59,7 +59,6 @@ class CompilerConfig private constructor(context: Context) {
         set(value) = prefs.edit {
             putString(KEY_INCLUDE_PATHS, dedupePaths(value).joinToString(";"))
         }
-
     //
     // [compiler version]
     //
@@ -112,6 +111,23 @@ class CompilerConfig private constructor(context: Context) {
     var n_app_language: AppLanguage
         get() = AppLanguage.fromValue(prefs.getString(KEY_APP_LANGUAGE, AppLanguage.EN.value) ?: AppLanguage.EN.value)
         set(value) = prefs.edit { putString(KEY_APP_LANGUAGE, value.value) }
+
+    /**
+     * Removes stored include paths that no longer point at an existing folder and
+     * rewrites the stored value when something was dropped.
+     *
+     * Called once on app start (see `MainActivity.onCreate`).
+     *
+     * @return the cleaned list
+     */
+    fun pruneMissingIncludePaths(): List<String> {
+        val stored = n_include_paths
+        val survivors = pruneMissingIncludePaths(stored)
+        if (survivors != stored) {
+            n_include_paths = survivors
+        }
+        return survivors
+    }
 
     /**
      * Build compiler options list from current configuration.
@@ -313,6 +329,81 @@ class CompilerConfig private constructor(context: Context) {
         }
 
         fun normalizeIncludePath(path: String): String = normalPath(path)
+
+        /**
+         * Case-insensitive, separator-normalised key used to decide whether two include
+         * paths point at the same folder.
+         *
+         * This is a pure string operation: it never touches the filesystem, so it stays
+         * cheap enough to run on every incoming candidate before any real work happens.
+         */
+        fun includePathKey(path: String): String = normalPath(path).lowercase()
+
+        /**
+         * Cheap duplicate check used by every include path entry point (Settings manual
+         * add/edit, folder picker, and [PawnCompiler] auto-discovery).
+         *
+         * Returns true when [candidate] resolves to a folder already present in
+         * [existing] (same path, different case, or same canonical location through a
+         * symlink/relative alias), meaning the caller should skip it entirely instead of
+         * re-scanning and re-filtering the whole list.
+         */
+        fun containsIncludePath(existing: Iterable<String>, candidate: String): Boolean {
+            val key = includePathKey(candidate)
+            if (key.isBlank() || key == "/") return false
+
+            for (path in existing) {
+                if (includePathKey(path) == key) return true
+            }
+
+            // Second pass: only pay for canonicalisation when the cheap comparison
+            // failed. This keeps the common "new path" case filesystem-free.
+            val candidateFile = java.io.File(normalPath(candidate))
+            if (!candidateFile.exists()) return false
+
+            val canonicalKey = runCatching {
+                CompilerConfig.includePathKey(candidateFile.canonicalPath)
+            }.getOrNull() ?: return false
+
+            for (path in existing) {
+                val file = java.io.File(normalPath(path))
+                if (!file.exists()) continue
+                val otherCanonical = runCatching {
+                    CompilerConfig.includePathKey(file.canonicalPath)
+                }.getOrNull() ?: continue
+                if (otherCanonical == canonicalKey) return true
+            }
+            return false
+        }
+
+        /**
+         * Drops every stored include path whose folder no longer exists on disk.
+         *
+         * Runs once when the app starts so the list shown in Settings can never point at
+         * deleted SD-card folders, and so the compiler is not handed dead `-i` values.
+         * Also re-dedupes, guarding against a list that went stale through a manual edit
+         * of the stored value.
+         *
+         * @return the surviving paths, already normalised and unique
+         */
+        fun pruneMissingIncludePaths(existing: Iterable<String>): List<String> {
+            val survivors = mutableListOf<String>()
+
+            for (path in existing) {
+                val normalized = normalPath(path)
+                if (normalized.isBlank() || normalized == "/") continue
+
+                val file = java.io.File(normalized)
+                val usable = runCatching { file.isDirectory }.getOrDefault(false)
+                if (!usable) continue
+
+                if (containsIncludePath(survivors, normalized)) continue
+
+                survivors += normalized
+            }
+
+            return survivors
+        }
 
         fun normalPath(path: String): String {
             val trimmed = path.trim().replace('\\', '/')

@@ -109,13 +109,22 @@ object AppSelfTestCatalog {
             chosen
         )
 
+        // The add flow must reject a folder that is already registered, matching what the
+        // Settings manual add, folder picker, and auto-discovery all do.
+        val known = listOf(
+            CompilerConfig.normalPath("C:/Game/pawno/include/"),
+            CompilerConfig.normalPath("C:/Game/qawno/include")
+        )
+        val rejectedDuplicate = CompilerConfig.containsIncludePath(known, chosen)
+
         val deduped = CompilerConfig.dedupePaths(values)
-        val passed = deduped.size == 2 && deduped.any { it.contains("pawno", ignoreCase = true) }
+        val passed = rejectedDuplicate && deduped.size == 2 && deduped.any { it.contains("pawno", ignoreCase = true) }
 
         val message = if (passed) {
             "Selected include path integrated cleanly without duplicates in the settings flow."
         } else {
-            "Settings include-path integration should be unique; actual values: $deduped"
+            "Settings include-path integration should reject duplicates and stay unique; " +
+                "duplicate rejected=$rejectedDuplicate, actual values: $deduped"
         }
 
         return AppSelfTestResult("$TEST_PREFIX: settings_integration", passed, message)

@@ -104,6 +104,10 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
 0x01:settings.include.add.en:0x02:Add Include Path
 0x01:settings.include.empty.id:0x02:Belum ada path include yang dikonfigurasi
 0x01:settings.include.empty.en:0x02:No include paths configured
+0x01:settings.include.rejected.id:0x02:Path sudah terdaftar atau folder tidak ditemukan
+0x01:settings.include.rejected.en:0x02:Path already added or folder not found
+0x01:settings.include.pruned.id:0x02:Path include yang tidak ada lagi telah dihapus
+0x01:settings.include.pruned.en:0x02:Include paths that no longer exist were removed
 0x01:settings.updates.id:0x02:Pembaruan
 0x01:settings.updates.en:0x02:Updates
 0x01:settings.updates.check.id:0x02:Periksa Pembaruan

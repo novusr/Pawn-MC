@@ -143,8 +143,14 @@ class MainViewModel(
     private fun applyCompilerAutoDetection(sourcePath: String) {
         // Auto-detect the compiler only when the nearby pawncc.exe metadata matches a supported version.
         val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
-        val autoIncludePaths = CompilerConfig.dedupePaths(PawnCompiler.discoverRelevantIncludePaths(sourcePath))
-        config.n_include_paths = CompilerConfig.dedupePaths(config.n_include_paths + autoIncludePaths)
+
+        // discoverRelevantIncludePaths already skips every folder the config holds, so the
+        // result only contains new entries and needs no follow-up filter pass.
+        val currentPaths = config.n_include_paths
+        val autoIncludePaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath, currentPaths)
+        if (autoIncludePaths.isNotEmpty()) {
+            config.n_include_paths = currentPaths + autoIncludePaths
+        }
 
         if (detectedVersion != null) {
             config.n_compiler_version = detectedVersion
