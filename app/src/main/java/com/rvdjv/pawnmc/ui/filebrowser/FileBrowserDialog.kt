@@ -161,7 +161,7 @@ fun FileBrowserDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
             Column(modifier = Modifier.fillMaxSize()) {
                 TopAppBar(
                     title = { Text(if (mode == FileBrowserMode.FILE) "Select File" else "Select Folder") },
@@ -277,7 +277,7 @@ private fun FileEntryRow(entry: FileEntry, onClick: () -> Unit) {
         val bgTint = if (entry.file.isDirectory && !entry.isParent) {
             MaterialTheme.colorScheme.primaryContainer
         } else {
-            MaterialTheme.colorScheme.surfaceVariant
+            MaterialTheme.colorScheme.surfaceContainerHigh
         }
 
         Surface(shape = RoundedCornerShape(8.dp), color = bgTint, modifier = Modifier.size(40.dp)) {

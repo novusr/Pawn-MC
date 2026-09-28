@@ -198,10 +198,10 @@ fun SettingsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.mediumTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onBackground
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 scrollBehavior = scrollBehavior
             )
@@ -366,7 +366,7 @@ fun SettingsScreen(
                     )
 
                     SwitchRow(
-                        title = localizer.get("settings.option.ignorecase", appLanguage, "Ignore Case"),
+                        title = localizer.get("settings.option.ignorecase", appLanguage, "Filesystem"),
                         description = localizer.get("settings.option.ignorecase.desc", appLanguage, "Normalize project files and includes so mixed-case filenames and #include references compile reliably."),
                         checked = viewModel.n_ignore_case,
                         onCheckedChange = { viewModel.updateIgnoreCase(it) }

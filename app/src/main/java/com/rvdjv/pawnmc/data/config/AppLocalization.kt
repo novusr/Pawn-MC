@@ -87,7 +87,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
 0x01:settings.option.parentheses.desc.id:0x02:Wajibkan tanda kurung pada pernyataan kontrol
 0x01:settings.option.parentheses.desc.en:0x02:Require parentheses in control statements
 0x01:settings.option.ignorecase.id:0x02:Abaikan Huruf Besar/Kecil
-0x01:settings.option.ignorecase.en:0x02:Ignore Case
+0x01:settings.option.ignorecase.en:0x02:Filesystem
 0x01:settings.option.ignorecase.desc.id:0x02:Normalisasi file proyek dan include agar referensi huruf besar/kecil dapat dikompilasi dengan andal.
 0x01:settings.option.ignorecase.desc.en:0x02:Normalize project files and includes so mixed-case filenames and #include references compile reliably.
 0x01:settings.option.explain.id:0x02:Jelaskan Output
