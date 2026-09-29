@@ -206,6 +206,14 @@ fun MainScreen(
     var showSelfTestDialog by remember { mutableStateOf(false) }
     var selfTestResults by remember { mutableStateOf<List<AppSelfTestResult>>(emptyList()) }
 
+    fun showCompilingBlockedToast() {
+        Toast.makeText(
+            context,
+            localizer.get("main.busy.toast", appLanguage, "Settings, editor, and self-test are unavailable while compiling"),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
     if (showSelfTestDialog) {
         AlertDialog(
             onDismissRequest = {
@@ -406,7 +414,12 @@ fun MainScreen(
             Spacer(modifier = Modifier.height(SpaceM))
 
             ScreenHeader(
+                isCompiling = viewModel.isCompiling,
                 onEditorClick = {
+                    if (viewModel.isCompiling) {
+                        showCompilingBlockedToast()
+                        return@ScreenHeader
+                    }
                     val path = viewModel.selectedFilePath
                     if (path.isNullOrBlank() || !File(path).exists()) {
                         viewModel.ensureTemporaryFileSelected()
@@ -422,11 +435,31 @@ fun MainScreen(
                         onEditorClick()
                     }
                 },
-                onSettingsClick = onSettingsClick,
-                onSelfTestClick = { showSelfTestDialog = true },
+                onSettingsClick = {
+                    if (viewModel.isCompiling) {
+                        showCompilingBlockedToast()
+                    } else {
+                        onSettingsClick()
+                    }
+                },
+                onSelfTestClick = {
+                    if (viewModel.isCompiling) {
+                        showCompilingBlockedToast()
+                    } else {
+                        showSelfTestDialog = true
+                    }
+                },
                 localizer = localizer,
                 appLanguage = appLanguage
             )
+
+            if (viewModel.isCompiling) {
+                Spacer(modifier = Modifier.height(SpaceS))
+                CompilingBlockedNotice(
+                    localizer = localizer,
+                    appLanguage = appLanguage
+                )
+            }
 
             if (selfTestResults.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(SpaceS))
@@ -595,6 +628,7 @@ private fun ScreenHeader(
     onEditorClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSelfTestClick: () -> Unit,
+    isCompiling: Boolean = false,
     localizer: AppLocalization? = null,
     appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
 ) {
@@ -624,6 +658,7 @@ private fun ScreenHeader(
         ) {
             IconButton(
                 onClick = onSelfTestClick,
+                enabled = !isCompiling,
                 modifier = Modifier.testTag("self_test_button")
             ) {
                 Icon(
@@ -635,6 +670,7 @@ private fun ScreenHeader(
 
             IconButton(
                 onClick = onEditorClick,
+                enabled = !isCompiling,
                 modifier = Modifier.testTag("xed_button")
             ) {
                 Icon(
@@ -646,6 +682,7 @@ private fun ScreenHeader(
 
             IconButton(
                 onClick = onSettingsClick,
+                enabled = !isCompiling,
                 modifier = Modifier.testTag("settings_button")
             ) {
                 Icon(
@@ -655,6 +692,36 @@ private fun ScreenHeader(
                 )
             }
         }
+    }
+}
+@Composable
+private fun CompilingBlockedNotice(
+    localizer: AppLocalization,
+    appLanguage: CompilerConfig.AppLanguage
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = SpaceXS)
+            .testTag("compiling_blocked_notice"),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Info,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.width(SpaceXS + 2.dp))
+        Text(
+            text = localizer.get(
+                "main.busy.notice",
+                appLanguage,
+                "Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete."
+            ),
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }
 @Composable

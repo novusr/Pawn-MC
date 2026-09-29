@@ -100,6 +100,10 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
 0x01:settings.option.customflags.desc.en:0x02:Extra compiler parameters, space separated (See: /novusr/configuration)
 0x01:settings.include.paths.id:0x02:Path Include
 0x01:settings.include.paths.en:0x02:Include Paths
+0x01:main.busy.notice.id:0x02:Pengaturan, Xed Editor, dan Self-Test sementara tidak tersedia sampai proses kompilasi selesai.
+0x01:main.busy.notice.en:0x02:Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete.
+0x01:main.busy.toast.id:0x02:Pengaturan, editor, dan self-test tidak tersedia saat proses kompilasi berjalan
+0x01:main.busy.toast.en:0x02:Settings, editor, and self-test are unavailable while compiling
 0x01:settings.include.paths.notice.title.id:0x02:Catatan
 0x01:settings.include.paths.notice.title.en:0x02:Note
 0x01:settings.include.paths.notice.desc.id:0x02:Hindari menumpuk beberapa path include yang memuat include yang sama. Misalnya, jika path include A sudah memuat include C, path include B sebaiknya tidak ikut memuat include C. Penumpukan ini menimbulkan redundansi yang tidak perlu dan dapat membuang-buang sumber daya sistem, serta berpotensi memengaruhi ukuran AMX hasil kompilasi.
