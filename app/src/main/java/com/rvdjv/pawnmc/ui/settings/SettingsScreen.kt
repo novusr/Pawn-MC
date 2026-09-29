@@ -552,6 +552,36 @@ fun SettingsScreen(
                         thickness = 1.2.dp,
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Text(
+                            text = localizer.get("settings.include.paths.notice.title", appLanguage, "Note"),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = localizer.get(
+                                "settings.include.paths.notice.desc",
+                                appLanguage,
+                                "Avoid stacking multiple include paths that contain the same includes. " +
+                                    "For example, if include path A already contains include C, include path B " +
+                                    "should not contain include C as well. This creates unnecessary redundancy " +
+                                    "and can waste system resources, potentially affecting the resulting AMX size."
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
                     ActionRow(
                         text = localizer.get("settings.include.add", appLanguage, "Add Include Path"),
                         icon = Icons.Default.Add,
