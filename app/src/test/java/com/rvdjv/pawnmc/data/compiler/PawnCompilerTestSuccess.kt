@@ -29,7 +29,7 @@ class PawnCompilerSuccessTest {
 
     @Test
     fun `matches detected compiler metadata by product version and size`() {
-        assertTrue(CompilerConfig.CompilerVersion.V31011.matchesDetected("3.10.11", 19_000L, null))
+        assertTrue(CompilerConfig.CompilerVersion.V31011.matchesDetected(CompilerConfig.STR_V31011, 19_000L, null))
         assertTrue(CompilerConfig.CompilerVersion.V3107.matchesDetected(null, 28_000L, "a48e04d28e8cb77e0361ecb4dced2501"))
     }
 

@@ -84,7 +84,7 @@ object AppSelfTestCatalog {
             sourceFile.parentFile?.mkdirs()
             compilerDir.mkdirs()
             sourceFile.writeText("main() { return; }\n")
-            val payload = "3.10.11".toByteArray(Charsets.UTF_16LE)
+            val payload = CompilerConfig.STR_V31011.toByteArray(Charsets.UTF_16LE)
             compilerFile.writeBytes(payload)
 
             val match = PawnCompiler.detectNearbyCompiler(sourceFile.absolutePath)
@@ -92,7 +92,7 @@ object AppSelfTestCatalog {
             val message = if (passed) {
                 "Nearby compiler detection matched a supported Pawn compiler version."
             } else {
-                "Nearby compiler metadata should resolve to Pawn 3.10.11 but returned ${match?.version ?: "null"}."
+                "Nearby compiler metadata should resolve to ${CompilerConfig.STR_VERSION_31011} but returned ${match?.version ?: "null"}."
             }
 
             AppSelfTestResult("$TEST_PREFIX: nearby_compiler", passed, message)

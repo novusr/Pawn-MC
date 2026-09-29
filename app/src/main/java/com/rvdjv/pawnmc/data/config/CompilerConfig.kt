@@ -230,8 +230,8 @@ class CompilerConfig private constructor(context: Context) {
         val sizeToleranceBytes: Long = 4_096L,
         val fallbackEquivalent: CompilerVersion? = null
     ) {
-        V3107("3.10.7", "pawnc3107", "Pawn 3.10.7", "Stable", "a48e04d28e8cb77e0361ecb4dced2501", 4_096L, null),
-        V31011("3.10.11", "pawnc31011", "Pawn 3.10.11", "Newer", "9044b9ef65658c79851b4e2e249e5c75", 4_096L, null);
+        V3107(STR_V3107, STR_PAWN_3107, STR_VERSION_3107, "Stable", "a48e04d28e8cb77e0361ecb4dced2501", 4_096L, null),
+        V31011(STR_V31011, STR_PAWN_31011, STR_VERSION_31011, "Newer", "9044b9ef65658c79851b4e2e249e5c75", 4_096L, null);
 
         fun other(): CompilerVersion = if (this == V3107) V31011 else V3107
 
@@ -293,6 +293,25 @@ class CompilerConfig private constructor(context: Context) {
     }
 
     companion object {
+        /**
+         * Version strings for the two bundled Pawn compilers.
+         *
+         * Every place that mentions a Pawn release refers to these constants
+         * instead of repeating the literal, so a version bump only has to happen
+         * here and the enum, the settings label and the library name can never
+         * drift apart.
+         */
+        const val STR_V3107 = "3.10.7"
+        const val STR_V31011 = "3.10.11"
+
+        /** Human readable labels shown in Settings. */
+        const val STR_VERSION_3107 = "Pawn 3.10.7"
+        const val STR_VERSION_31011 = "Pawn 3.10.11"
+
+        /** Names of the native libraries built from the compiler submodules. */
+        const val STR_PAWN_3107 = "pawnc3107"
+        const val STR_PAWN_31011 = "pawnc31011"
+
         private const val KEY_DEBUG            = "debug_level"
         private const val KEY_OPTIMIZATION      = "optimization_level"
         private const val KEY_IGNORE_CASE       = "ignore_case"
