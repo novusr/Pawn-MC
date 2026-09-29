@@ -153,6 +153,8 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
 0x01:settings.about.restart.id:0x02:Mulai Ulang Aplikasi
 0x01:settings.about.restart.en:0x02:Restart Application
 0x01:settings.about.restart.desc.id:0x02:Menutup lalu membuka kembali PawnMC agar seluruh pengaturan diterapkan dari awal. Proses kompilasi yang sedang berjalan akan dibatalkan.
+0x01:settings.thanks.id:0x02:Terima Kasih
+0x01:settings.thanks.en:0x02:Thank You
 0x01:settings.about.restart.desc.en:0x02:Closes and reopens PawnMC so every setting is applied from scratch. A compilation that is currently running is cancelled.
 0x01:settings.restart.confirm.title.id:0x02:Mulai Ulang Aplikasi
 0x01:settings.restart.confirm.title.en:0x02:Restart Application

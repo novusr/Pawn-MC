@@ -81,6 +81,26 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+private val THANK_YOU_ID_LINES = listOf(
+    "Selamat datang di repositori resmi PawnMC.",
+    "Di sini adalah tempat di mana PawnMC beroperasi, dan kami sangat menyambut kedatangan Anda dengan penuh rasa syukur.",
+    "PawnMC adalah aplikasi Android yang secara khusus dibuat untuk mempermudah dan mempercepat proses pengembangan Anda sebagai developer Android.",
+    "Kami juga ingin mengucapkan terima kasih yang sebesar-besarnya kepada para tester yang telah meluangkan waktu, tenaga, dan masukan berharga untuk membantu meningkatkan kualitas aplikasi ini.",
+    "Apresiasi kami juga ditujukan kepada seluruh pengguna PawnMC yang telah mempercayai, menggunakan, dan mendukung perkembangan aplikasi ini dari waktu ke waktu.",
+    "Semoga PawnMC terus bermanfaat, berkembang, dan menjadi tools yang membantu Anda dalam membuat proyek Pawn dengan lebih efisien.",
+    "Discord Kami: https://discord.gg/2YqkmDvTch"
+)
+
+private val THANK_YOU_EN_LINES = listOf(
+    "Welcome to the official PawnMC repository.",
+    "This is the place where PawnMC operates, and we warmly welcome you with great appreciation.",
+    "PawnMC is an Android application specifically designed to make your work as an Android developer easier, faster, and more efficient.",
+    "We would also like to express our sincere gratitude to all testers who have given their time, feedback, and support to help improve the quality of this app.",
+    "Our appreciation also goes to all PawnMC users who have trusted, used, and supported this application throughout its development.",
+    "We hope PawnMC will continue to be useful, grow further, and become a valuable tool for your Pawn development workflow.",
+    "Official Community: https://discord.gg/2YqkmDvTch"
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -783,6 +803,54 @@ fun SettingsScreen(
                         icon = Icons.Default.Refresh,
                         onClick = { showManualRestartDialog = true }
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            CategoryHeader(text = localizer.get("settings.thanks", appLanguage, "Thank You"))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "Indonesian | Notes",
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    THANK_YOU_ID_LINES.forEach { line ->
+                        Text(
+                            text = line,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 12.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    Text(
+                        text = "English | Notes",
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    THANK_YOU_EN_LINES.forEach { line ->
+                        Text(
+                            text = line,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
                 }
             }
         }
