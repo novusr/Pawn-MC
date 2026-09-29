@@ -150,6 +150,16 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
 0x01:settings.about.github.en:0x02:View on GitHub
 0x01:settings.about.github.desc.id:0x02:Buka repositori sumber resmi untuk melihat riwayat rilis, melaporkan masalah, atau menyalin dan membangun sendiri.
 0x01:settings.about.github.desc.en:0x02:Opens the official source repository for release history, issue reports, and building your own copy.
+0x01:settings.about.restart.id:0x02:Mulai Ulang Aplikasi
+0x01:settings.about.restart.en:0x02:Restart Application
+0x01:settings.about.restart.desc.id:0x02:Menutup lalu membuka kembali PawnMC agar seluruh pengaturan diterapkan dari awal. Proses kompilasi yang sedang berjalan akan dibatalkan.
+0x01:settings.about.restart.desc.en:0x02:Closes and reopens PawnMC so every setting is applied from scratch. A compilation that is currently running is cancelled.
+0x01:settings.restart.confirm.title.id:0x02:Mulai Ulang Aplikasi
+0x01:settings.restart.confirm.title.en:0x02:Restart Application
+0x01:settings.restart.confirm.text.id:0x02:PawnMC akan segera ditutup lalu dibuka kembali. Simpan dulu berkas yang sedang dibuka di Xed Editor, karena proses kompilasi yang sedang berjalan akan dibatalkan. Apakah Anda ingin memulai ulang sekarang?
+0x01:settings.restart.confirm.text.en:0x02:PawnMC will close and reopen immediately. Save any open file in the Xed Editor first, because a compilation that is currently running is cancelled. Would you like to restart now?
+0x01:settings.restart.confirm.button.id:0x02:Mulai Ulang Sekarang
+0x01:settings.restart.confirm.button.en:0x02:Restart Now
 0x01:main.busy.notice.id:0x02:Pengaturan, Xed Editor, dan Self-Test sementara tidak tersedia sampai proses kompilasi selesai.
 0x01:main.busy.notice.en:0x02:Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete.
 0x01:main.busy.toast.id:0x02:Pengaturan, editor, dan self-test tidak tersedia saat proses kompilasi berjalan

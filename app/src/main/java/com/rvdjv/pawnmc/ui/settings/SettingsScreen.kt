@@ -102,6 +102,7 @@ fun SettingsScreen(
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showEditorBackgroundDialog by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
+    var showManualRestartDialog by remember { mutableStateOf(false) }
     var editingIncludePathIndex by remember { mutableStateOf<Int?>(null) }
     var editingIncludePathValue by remember { mutableStateOf("") }
     var pendingVersion by remember { mutableStateOf<CompilerConfig.CompilerVersion?>(null) }
@@ -757,6 +758,31 @@ fun SettingsScreen(
                             ContextCompat.startActivity(context, intent, null)
                         }
                     )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Text(
+                            text = localizer.get(
+                                "settings.about.restart.desc",
+                                appLanguage,
+                                "Closes and reopens PawnMC so every setting is applied from scratch. A compilation that is currently running is cancelled."
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    ActionRow(
+                        text = localizer.get("settings.about.restart", appLanguage, "Restart Application"),
+                        icon = Icons.Default.Refresh,
+                        onClick = { showManualRestartDialog = true }
+                    )
                 }
             }
         }
@@ -995,6 +1021,40 @@ fun SettingsScreen(
             dismissButton = {
                 TextButton(onClick = { showRestartDialog = false }) {
                     Text("Later")
+                }
+            }
+        )
+    }
+
+    // dialog manual restart
+    if (showManualRestartDialog) {
+        AlertDialog(
+            onDismissRequest = { showManualRestartDialog = false },
+            title = { Text(localizer.get("settings.restart.confirm.title", appLanguage, "Restart Application")) },
+            text = {
+                Text(
+                    localizer.get(
+                        "settings.restart.confirm.text",
+                        appLanguage,
+                        "PawnMC will close and reopen immediately. Save any open file in the Xed Editor first, " +
+                            "because a compilation that is currently running is cancelled. " +
+                            "Would you like to restart now?"
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showManualRestartDialog = false
+                        onRestartRequested()
+                    }
+                ) {
+                    Text(localizer.get("settings.restart.confirm.button", appLanguage, "Restart Now"))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showManualRestartDialog = false }) {
+                    Text(localizer.get("settings.cancel", appLanguage, "Cancel"))
                 }
             }
         )
