@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
                             isEditorOpen = false
                             viewModel.loadLastSelectedFile()
                         },
-                        darkTheme = resolveDarkTheme(viewModel.n_app_theme)
+                        editorBackgroundColor = viewModel.n_editor_background_color
                     )
                 } else {
                     MainScreen(
@@ -81,5 +81,6 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         viewModel.refreshTheme()
         viewModel.refreshLanguage()
+        viewModel.refreshEditorBackgroundColor()
     }
 }

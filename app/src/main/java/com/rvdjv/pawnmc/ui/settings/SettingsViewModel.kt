@@ -48,6 +48,9 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     var n_app_language by mutableStateOf(config.n_app_language)
         private set
 
+    var n_editor_background_color by mutableStateOf(config.n_editor_background_color)
+        private set
+
     val n_include_paths = mutableStateListOf<String>().apply {
         addAll(CompilerConfig.pruneMissingIncludePaths(config.n_include_paths))
     }
@@ -112,6 +115,16 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         config.n_app_language = language
     }
 
+    /**
+     * Stores a custom Xed editor background colour, or clears it (pass `null`)
+     * so the editor falls back to the app theme surface ramp.
+     */
+    fun updateEditorBackgroundColor(hex: String?) {
+        val normalized = config.normalizeEditorBackgroundColor(hex)
+        if (hex != null && normalized == null) return
+        n_editor_background_color = normalized
+        config.n_editor_background_color = normalized
+    }
     /**
      * Adds an include path from Settings (manual entry or the folder picker).
      *

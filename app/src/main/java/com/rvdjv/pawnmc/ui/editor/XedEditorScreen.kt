@@ -32,7 +32,6 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -62,6 +61,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -72,6 +73,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.rvdjv.pawnmc.ui.PawnIcons
 import com.rvdjv.pawnmc.ui.editor.pawn.PawnLanguage
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
@@ -86,12 +88,12 @@ import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
 fun XedEditorScreen(
     viewModel: XedEditorViewModel,
     onNavigateBack: () -> Unit,
-    darkTheme: Boolean
+    editorBackgroundColor: String? = null
 ) {
     val context = LocalContext.current
     val appColorScheme = MaterialTheme.colorScheme
-    val editorScheme = remember(appColorScheme, darkTheme) {
-        buildEditorScheme(appColorScheme, darkTheme)
+    val editorScheme = remember(appColorScheme, editorBackgroundColor) {
+        buildEditorScheme(appColorScheme, editorBackgroundColor)
     }
     // Tracks which scheme instance is currently applied to the native CodeEditor so
     // `update` only re-tints when the theme actually changed. Deliberately a plain
@@ -332,7 +334,7 @@ fun XedEditorScreen(
                         modifier = Modifier.testTag("editor_save_button")
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Save,
+                            imageVector = PawnIcons.Save,
                             contentDescription = "Save file",
                             tint = if (viewModel.hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -574,12 +576,9 @@ fun XedEditorScreen(
             QuickSymbolBar(
                 onSymbolClick = { symbol ->
                     val editor = editorRef ?: return@QuickSymbolBar
-                    if (symbol == "TAB") {
-                        editor.text.insert(editor.cursor.leftLine, editor.cursor.leftColumn, "    ")
-                    } else {
-                        editor.text.insert(editor.cursor.leftLine, editor.cursor.leftColumn, symbol)
-                    }
-                }
+                    editor.text.insert(editor.cursor.leftLine, editor.cursor.leftColumn, symbol)
+                },
+                onTabClick = ::insertIndentAtCursor
             )
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -614,10 +613,66 @@ fun XedEditorScreen(
     }
 }
 
+/**
+ * Indents the line the caret currently sits on.
+ *
+ * The caret is read from the live editor at the moment of the tap instead of
+ * from the cached `cursorLine`/`cursorCol` state, so the [TAB] key always acts
+ * on the active selection even when the editor has not reported a selection
+ * change yet (right after a paste, an undo, or when the editor is restored).
+ *
+ * The caret is the one the *user* placed, so the indent is inserted at the
+ * caret rather than at the end of the line; that keeps [TAB] usable for
+ * indenting a partially typed line. Sora advances the caret by itself after
+ * `text.insert`, so no follow-up selection call is needed.
+ */
+private fun insertIndentAtCursor(editor: CodeEditor?) {
+    val target = editor ?: return
+    val line = target.cursor.leftLine
+    val column = target.cursor.leftColumn
+    val lineText = target.text.getLine(line)
+
+    // Match the leading whitespace of the current line and add one level on top,
+    // so consecutive [TAB] presses walk in cleanly instead of drifting right by
+    // a fixed amount every time.
+    val leading = lineText.take(column).indexOfFirst { !it.isWhitespace() }
+        .let { if (it < 0) column else it }
+    val baseIndent = lineText.take(leading)
+    target.text.insert(line, column, baseIndent + "    ")
+}
+
+/** One key in the quick symbol row. */
 @Composable
-private fun QuickSymbolBar(onSymbolClick: (String) -> Unit) {
+private fun QuickSymbolKey(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(6.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        modifier = modifier.clickable(onClick = onClick)
+    ) {
+        Text(
+            text = label,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 13.sp,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+        )
+    }
+}
+
+@Composable
+private fun QuickSymbolBar(
+    onSymbolClick: (String) -> Unit,
+    onTabClick: () -> Unit
+) {
+    // The [TAB] key is a structural key, not a character, so it is rendered as
+    // its own button ahead of the symbol keys instead of being the last entry of
+    // a horizontally scrolling row, where it was easy to miss.
     val symbols = listOf(
-        "{", "}", "(", ")", "[", "]", ";", ":", ",", "\"", "'", "#", "=", ">", "<", "!", "&", "|", "TAB"
+        "{", "}", "(", ")", "[", "]", ";", ":", ",", "\"", "'", "#", "=", ">", "<", "!", "&", "|"
     )
     val digits = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 
@@ -635,20 +690,18 @@ private fun QuickSymbolBar(onSymbolClick: (String) -> Unit) {
                     .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                QuickSymbolKey(
+                    label = "TAB",
+                    onClick = onTabClick,
+                    modifier = Modifier.testTag("editor_tab_button")
+                )
+
                 symbols.forEach { sym ->
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerLowest,
-                        modifier = Modifier.clickable { onSymbolClick(sym) }
-                    ) {
-                        Text(
-                            text = sym,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                        )
-                    }
+                    QuickSymbolKey(
+                        label = sym,
+                        onClick = { onSymbolClick(sym) },
+                        modifier = if (sym == "{") Modifier.testTag("editor_symbol_brace_open") else Modifier
+                    )
                 }
             }
 
@@ -698,14 +751,48 @@ private class EditorSchemeHolder {
  * syntax highlighting of the chosen scheme, but re-tint the surface family (code
  * background, current line, line-number panel, dividers, scrollbars) from the app
  * color scheme so the editor sits on the same elevation step as the surrounding UI.
+ *
+ * [customBackground] lets the user override the canvas with any `#RRGGBB` colour.
+ * When it is set, the whole surface family is re-derived from that single colour so
+ * the panel stays internally consistent (gutter, current line and dividers) instead
+ * of clashing with a colour picked for the canvas alone.
+ *
+ * Every decision is driven by the canvas that will actually be painted rather than
+ * by the app theme, so a user who pins a dark canvas while the app is in light mode
+ * still gets a light-on-dark editor and vice versa.
  */
-private fun buildEditorScheme(colorScheme: ColorScheme, darkTheme: Boolean): EditorColorScheme {
-    val base: EditorColorScheme = if (darkTheme) SchemeDarcula() else SchemeEclipse()
+private fun buildEditorScheme(
+    colorScheme: ColorScheme,
+    customBackground: String? = null
+): EditorColorScheme {
+    val customArgb = customBackground?.let { parseHexColor(it) }
 
-    val background = colorScheme.surfaceContainerLowest.toArgb()
-    val lineNumberBackground = colorScheme.surfaceContainerLow.toArgb()
-    val outline = colorScheme.outlineVariant.toArgb()
-    val faint = colorScheme.onSurface.copy(alpha = 0.10f).toArgb()
+    // Re-derive the gutter and the accents from whichever canvas is in play, so
+    // a custom colour produces a coherent editor instead of a mismatched one.
+    val background: Int
+    val lineNumberBackground: Int
+    val outline: Int
+    val faint: Int
+    if (customArgb != null) {
+        val onCustom = readableForegroundOn(customArgb)
+        background = customArgb
+        lineNumberBackground = blend(customArgb, onCustom, 0.06f)
+        outline = blend(customArgb, onCustom, 0.22f)
+        faint = blend(customArgb, onCustom, 0.10f)
+    } else {
+        background = colorScheme.surfaceContainerLowest.toArgb()
+        lineNumberBackground = colorScheme.surfaceContainerLow.toArgb()
+        outline = colorScheme.outlineVariant.toArgb()
+        faint = colorScheme.onSurface.copy(alpha = 0.10f).toArgb()
+    }
+
+    // Pick the base scheme from the canvas rather than the app theme, so slots
+    // the palette below does not explicitly set (selection, cursors, search
+    // highlights) also follow the canvas.
+    val darkCanvas = isDarkCanvas(background)
+    val base: EditorColorScheme = if (darkCanvas) SchemeDarcula() else SchemeEclipse()
+
+    applyVividSyntaxPalette(base, darkCanvas)
 
     base.setColor(EditorColorScheme.WHOLE_BACKGROUND, background)
     base.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, lineNumberBackground)
@@ -716,4 +803,133 @@ private fun buildEditorScheme(colorScheme: ColorScheme, darkTheme: Boolean): Edi
     base.setColor(EditorColorScheme.SCROLL_BAR_TRACK, lineNumberBackground)
     base.setColor(EditorColorScheme.SCROLL_BAR_THUMB, outline)
     return base
+}
+
+/**
+ * High-contrast, high-chroma syntax palette.
+ *
+ * Darcula and Eclipse ship muted token colours that are hard to tell apart at
+ * a glance: `IDENTIFIER_NAME`, `TYPE` and `OPERATOR` in particular all sit
+ * within a couple of shades of the plain text colour, so the editor reads as a
+ * wall of grey. This palette replaces every token slot the Pawn analyzer uses
+ * with a clearly separated hue, while keeping each hue on the correct side of
+ * the background so contrast holds in both light and dark mode.
+ *
+ * The assignment is stable per token kind, so a given line never changes colour
+ * between re-analyses (the analyzer runs asynchronously on every keystroke).
+ */
+private fun applyVividSyntaxPalette(scheme: EditorColorScheme, darkCanvas: Boolean) {
+    val p = if (darkCanvas) DarkPalette else LightPalette
+
+    scheme.setColor(EditorColorScheme.KEYWORD, p.keyword)
+    scheme.setColor(EditorColorScheme.IDENTIFIER_NAME, p.type)
+    scheme.setColor(EditorColorScheme.LITERAL, p.literal)
+    scheme.setColor(EditorColorScheme.FUNCTION_NAME, p.function)
+    scheme.setColor(EditorColorScheme.OPERATOR, p.operator)
+    scheme.setColor(EditorColorScheme.ANNOTATION, p.annotation)
+    scheme.setColor(EditorColorScheme.COMMENT, p.comment)
+    scheme.setColor(EditorColorScheme.LINE_NUMBER, p.lineNumber)
+    // Plain identifiers (variables, labels) inherit the scheme's text colour, so
+    // it has to be re-pointed at the canvas as well. Without this a custom dark
+    // canvas under a light app theme would render every variable dark-on-dark.
+    scheme.setColor(
+        EditorColorScheme.TEXT_NORMAL,
+        if (darkCanvas) 0xFFE6E9EF.toInt() else 0xFF1A1C1E.toInt()
+    )
+}
+
+/**
+ * Token colours for the dark canvas.
+ *
+ * Hues are chosen so adjacent kinds never share a family: keywords are amber,
+ * types are cyan, literals are orange, functions are green, operators are
+ * magenta, annotations are violet and comments are a desaturated slate.
+ */
+private data class SyntaxPalette(
+    val keyword: Int,
+    val type: Int,
+    val literal: Int,
+    val function: Int,
+    val operator: Int,
+    val annotation: Int,
+    val comment: Int,
+    val lineNumber: Int
+)
+
+private val DarkPalette = SyntaxPalette(
+    keyword = 0xFFFFC66D.toInt(),
+    type = 0xFF4DD0E1.toInt(),
+    literal = 0xFFFFAB70.toInt(),
+    function = 0xFF69F0AE.toInt(),
+    operator = 0xFFCE93D8.toInt(),
+    annotation = 0xFFB39DFF.toInt(),
+    comment = 0xFF7E8AA0.toInt(),
+    lineNumber = 0xFF5C6B80.toInt()
+)
+
+/**
+ * Token colours for the light canvas.
+ *
+ * The same hue assignment as [DarkPalette] but darkened so the contrast ratio
+ * against a white canvas stays readable.
+ */
+private val LightPalette = SyntaxPalette(
+    keyword = 0xFFB45309.toInt(),
+    type = 0xFF00697A.toInt(),
+    literal = 0xFFC2410C.toInt(),
+    function = 0xFF15803D.toInt(),
+    operator = 0xFF7E22CE.toInt(),
+    annotation = 0xFF5B21B6.toInt(),
+    comment = 0xFF5A6B7F.toInt(),
+    lineNumber = 0xFF8A97A8.toInt()
+)
+
+/**
+ * Parses a `#RRGGBB` string into an ARGB int, returning `null` for anything else.
+ *
+ * The stored preference is already validated by
+ * [com.rvdjv.pawnmc.data.config.CompilerConfig.normalizeEditorBackgroundColor];
+ * this is the second gate that keeps a malformed value from reaching the
+ * editor scheme, and it never throws.
+ */
+private fun parseHexColor(hex: String): Int? {
+    val digits = hex.trim().removePrefix("#")
+    if (digits.length != 6) return null
+    val value = digits.toIntOrNull(16) ?: return null
+    return 0xFF000000.toInt() or value
+}
+
+/**
+ * Picks black or white — whichever contrasts more with [background].
+ *
+ * Uses the ITU-R BT.601 luma approximation, which is the same weighting the
+ * Material colour system uses for `onColor` decisions, so a custom background
+ * the user picked for a dark project still gets light text.
+ */
+private fun readableForegroundOn(background: Int): Int {
+    val r = (background shr 16) and 0xFF
+    val g = (background shr 8) and 0xFF
+    val b = background and 0xFF
+    val luma = (0.299f * r + 0.587f * g + 0.114f * b) / 255f
+    return if (luma > 0.5f) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
+}
+
+/**
+ * True when an opaque ARGB canvas is dark enough to need the light-on-dark
+ * token colours.
+ *
+ * The same BT.601 luma threshold as [readableForegroundOn], so the token
+ * palette and the automatically chosen foreground can never disagree.
+ */
+private fun isDarkCanvas(argb: Int): Boolean = readableForegroundOn(argb) == 0xFFFFFFFF.toInt()
+
+/** Linearly mixes [amount] of [tint] into [base]; `amount` is clamped to 0..1. */
+private fun blend(base: Int, tint: Int, amount: Float): Int {
+    val t = amount.coerceIn(0f, 1f)
+    fun mix(shift: Int): Int {
+        val b = (base shr shift) and 0xFF
+        val c = (tint shr shift) and 0xFF
+        return (b + (c - b) * t).toInt().coerceIn(0, 255)
+    }
+    return 0xFF000000.toInt() or (mix(16) shl 16) or (mix(8) shl 8) or mix(0)
 }

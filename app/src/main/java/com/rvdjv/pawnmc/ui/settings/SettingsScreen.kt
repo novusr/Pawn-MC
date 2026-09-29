@@ -4,12 +4,14 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
+import android.widget.Toastimport androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.rvdjv.pawnmc.data.config.AppLocalization
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +30,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
@@ -58,12 +61,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.update.UpdateManager
@@ -93,6 +100,7 @@ fun SettingsScreen(
     var showVersionDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showEditorBackgroundDialog by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
     var editingIncludePathIndex by remember { mutableStateOf<Int?>(null) }
     var editingIncludePathValue by remember { mutableStateOf("") }
@@ -107,7 +115,6 @@ fun SettingsScreen(
     var pendingReleaseVersion by remember { mutableStateOf<String?>(null) }
 
     var appVersion by remember { mutableStateOf("") }
-    var buildNumber by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
     fun refreshUpdateStatus() {
@@ -161,15 +168,8 @@ fun SettingsScreen(
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             appVersion = "v${packageInfo.versionName}"
-            buildNumber = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                packageInfo.longVersionCode.toString()
-            } else {
-                @Suppress("DEPRECATION")
-                packageInfo.versionCode.toString()
-            }
         } catch (_: PackageManager.NameNotFoundException) {
             appVersion = "v1.0.0"
-            buildNumber = "0"
         }
 
         refreshUpdateStatus()
@@ -231,6 +231,14 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
         ) {
+            SectionIntro(
+                text = localizer.get(
+                    "settings.general.desc",
+                    appLanguage,
+                    "Core preferences applied across the whole app: interface language, colour theme, and which compiler is used to build your scripts."
+                )
+            )
+
             CategoryHeader(text = generalTitle)
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -241,6 +249,11 @@ fun SettingsScreen(
                     NavigationRow(
                         title = languageTitle,
                         subtitle = viewModel.n_app_language.label,
+                        description = localizer.get(
+                            "settings.language.desc",
+                            appLanguage,
+                            "Language used for every piece of interface text, including compiler messages and settings descriptions."
+                        ),
                         onClick = { showLanguageDialog = true }
                     )
 
@@ -254,6 +267,16 @@ fun SettingsScreen(
                         title = compilerTitle,
                         version = viewModel.n_compiler_version.label,
                         forced = viewModel.n_forced_compiler_mode,
+                        description = localizer.get(
+                            "settings.compiler.version.desc",
+                            appLanguage,
+                            "Chooses which pawncc release performs the compilation. Switching versions reloads the compiler library, so the app has to restart once the change is applied."
+                        ),
+                        forcedDescription = localizer.get(
+                            "settings.compiler.forced.desc",
+                            appLanguage,
+                            "When forced, the version picked above is always used. When automatic, a compiler sitting next to the file you are editing is preferred whenever its version matches."
+                        ),
                         onToggleForced = { viewModel.updateForcedCompilerMode(it) },
                         onClick = { showVersionDialog = true }
                     )
@@ -267,12 +290,24 @@ fun SettingsScreen(
                     NavigationRow(
                         title = themeTitle,
                         subtitle = viewModel.n_app_theme.label,
+                        description = localizer.get(
+                            "settings.theme.desc",
+                            appLanguage,
+                            "Controls whether the app follows the system theme, or is pinned to light or dark. This choice also drives the Xed editor background."
+                        ),
                         onClick = { showThemeDialog = true }
                     )
                 }
             }
 
             CategoryHeader(text = localizer.get("settings.compiler.options", appLanguage, "Compiler Options"))
+            SectionIntro(
+                text = localizer.get(
+                    "settings.compiler.options.desc",
+                    appLanguage,
+                    "Flags passed straight through to pawncc when a script is built. Changes here take effect on the next compilation."
+                )
+            )
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -313,17 +348,19 @@ fun SettingsScreen(
                         val currentIndex = entries.indexOf(viewModel.n_debug_level).coerceIn(0, maxIndex)
 
                         Text(
-                            text = "Debug Level: ${viewModel.n_debug_level.label}",
+                            text = localizer.get("settings.option.debug", appLanguage, "Debug Level") + ": ${viewModel.n_debug_level.label}",
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        viewModel.n_debug_level.description.let { desc ->
-                            Text(
-                                text = desc,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Text(
+                            text = localizer.get(
+                                "settings.option.debug.desc",
+                                appLanguage,
+                                "Controls how much debug information and runtime checking the compiler generates."
+                            ) + " " + viewModel.n_debug_level.description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
 
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -353,12 +390,16 @@ fun SettingsScreen(
                         val currentIndex = entries.indexOf(viewModel.n_optimization_level).coerceIn(0, maxIndex)
 
                         Text(
-                            text = "Optimization Level: ${viewModel.n_optimization_level.label}",
+                            text = localizer.get("settings.option.optimization", appLanguage, "Optimization Level") + ": ${viewModel.n_optimization_level.label}",
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = viewModel.n_optimization_level.description,
+                            text = localizer.get(
+                                "settings.option.optimization.desc",
+                                appLanguage,
+                                "Determines how aggressively the compiler simplifies the bytecode."
+                            ) + " " + viewModel.n_optimization_level.description,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -434,6 +475,13 @@ fun SettingsScreen(
             }
 
             CategoryHeader(text = localizer.get("settings.updates", appLanguage, "Updates"))
+            SectionIntro(
+                text = localizer.get(
+                    "settings.updates.desc",
+                    appLanguage,
+                    "Checks GitHub for a newer release and downloads the APK when one is attached. Updates are installed through the standard Android system dialog."
+                )
+            )
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -501,6 +549,13 @@ fun SettingsScreen(
             }
 
             CategoryHeader(text = localizer.get("settings.include.paths", appLanguage, "Include Paths"))
+            SectionIntro(
+                text = localizer.get(
+                    "settings.include.paths.desc",
+                    appLanguage,
+                    "Folders the compiler searches when resolving #include. Paths that no longer exist are pruned automatically on app start."
+                )
+            )
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -523,7 +578,7 @@ fun SettingsScreen(
 
                     if (viewModel.n_include_paths.isEmpty()) {
                         Text(
-                            text = "No include paths added.",
+                            text = localizer.get("settings.include.empty", appLanguage, "No include paths configured"),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(16.dp)
@@ -593,7 +648,52 @@ fun SettingsScreen(
                 }
             }
 
+            CategoryHeader(text = localizer.get("settings.editor", appLanguage, "Xed Editor"))
+            SectionIntro(
+                text = localizer.get(
+                    "settings.editor.desc",
+                    appLanguage,
+                    "Appearance preferences for the built-in code editor. Changes apply to the open editor immediately."
+                )
+            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column {
+                    NavigationRow(
+                        title = localizer.get("settings.editor.background", appLanguage, "Editor Background"),
+                        subtitle = viewModel.n_editor_background_color
+                            ?: localizer.get("settings.editor.background.default", appLanguage, "Default"),
+                        description = localizer.get(
+                            "settings.editor.background.desc",
+                            appLanguage,
+                            "Pick the editor canvas colour. The default follows the app theme, while a custom pick replaces it completely."
+                        ),
+                        onClick = { showEditorBackgroundDialog = true }
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    ActionRow(
+                        text = localizer.get("settings.editor.background.reset", appLanguage, "Reset to default"),
+                        icon = Icons.Default.Refresh,
+                        onClick = { viewModel.updateEditorBackgroundColor(null) }
+                    )
+                }
+            }
+
             CategoryHeader(text = localizer.get("settings.about", appLanguage, "About"))
+            SectionIntro(
+                text = localizer.get(
+                    "settings.about.desc",
+                    appLanguage,
+                    "Application version information and a link to the source repository."
+                )
+            )
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -608,7 +708,7 @@ fun SettingsScreen(
                     ) {
                         Column {
                             Text(
-                                text = "App Version",
+                                text = localizer.get("settings.about.version", appLanguage, "App Version"),
                                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -617,28 +717,14 @@ fun SettingsScreen(
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                        }
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        thickness = 1.2.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Build Number",
-                                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = buildNumber,
-                                style = MaterialTheme.typography.bodyMedium,
+                                text = localizer.get(
+                                    "settings.about.version.desc",
+                                    appLanguage,
+                                    "The PawnMC release currently installed on this device."
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -648,8 +734,23 @@ fun SettingsScreen(
                         thickness = 1.2.dp,
                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                     )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Text(
+                            text = localizer.get(
+                                "settings.about.github.desc",
+                                appLanguage,
+                                "Opens the official source repository for release history, issue reports, and building your own copy."
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     ActionRow(
-                        text = "View on GitHub",
+                        text = localizer.get("settings.about.github", appLanguage, "View on GitHub"),
                         icon = Icons.AutoMirrored.Filled.OpenInNew,
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/novusr/Pawn-MC"))
@@ -732,6 +833,19 @@ fun SettingsScreen(
                 TextButton(onClick = { showThemeDialog = false }) {
                     Text(localizer.get("settings.close", appLanguage, "Close"))
                 }
+            }
+        )
+    }
+
+    if (showEditorBackgroundDialog) {
+        EditorBackgroundDialog(
+            initialHex = viewModel.n_editor_background_color,
+            language = appLanguage,
+            context = context,
+            onDismiss = { showEditorBackgroundDialog = false },
+            onApply = { hex ->
+                viewModel.updateEditorBackgroundColor(hex)
+                showEditorBackgroundDialog = false
             }
         )
     }
@@ -968,7 +1082,9 @@ fun CompilerVersionRow(
     forced: Boolean,
     onToggleForced: (Boolean) -> Unit,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    forcedDescription: String? = null
 ) {
     Row(
         modifier = modifier
@@ -989,6 +1105,14 @@ fun CompilerVersionRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            if (description != null) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
 
         TextButton(
@@ -997,6 +1121,15 @@ fun CompilerVersionRow(
         ) {
             Text(if (forced) "Set Auto" else "Set Forced")
         }
+    }
+
+    if (forcedDescription != null) {
+        Text(
+            text = forcedDescription,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+        )
     }
 }
 
@@ -1008,6 +1141,25 @@ fun CategoryHeader(text: String, modifier: Modifier = Modifier) {
         color = MaterialTheme.colorScheme.primary,
         modifier = modifier
             .padding(start = 16.dp, top = 24.dp, bottom = 8.dp)
+            .fillMaxWidth()
+    )
+}
+
+/**
+ * Explanatory paragraph rendered directly under a [CategoryHeader].
+ *
+ * Settings used to jump from a section title straight into its card, which left
+ * every entry a bare title. This gives each section a short lead-in so the group
+ * reads as a labelled area rather than a list of toggles.
+ */
+@Composable
+fun SectionIntro(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier
+            .padding(start = 16.dp, end = 16.dp)
             .fillMaxWidth()
     )
 }
@@ -1169,7 +1321,8 @@ fun NavigationRow(
     title: String,
     subtitle: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    description: String? = null
 ) {
     Row(
         modifier = modifier
@@ -1190,6 +1343,14 @@ fun NavigationRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            if (description != null) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
         Icon(
             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -1198,3 +1359,187 @@ fun NavigationRow(
         )
     }
 }
+
+/**
+ * Picker for the Xed editor canvas colour.
+ *
+ * Free-form hex entry plus a swatch grid, rather than a fixed list, so any
+ * colour the user wants is reachable. The typed value is only committed once it
+ * parses, so an in-progress or malformed `#` never reaches the preference; the
+ * `Default` action clears the override and hands the canvas back to the theme.
+ */
+@Composable
+private fun EditorBackgroundDialog(
+    initialHex: String?,
+    language: CompilerConfig.AppLanguage,
+    context: Context,
+    onDismiss: () -> Unit,
+    onApply: (String?) -> Unit
+) {
+    val localizer = remember(context) { AppLocalization.load(context) }
+    val presets = EditorBackgroundPresets
+
+    // The typed text is the single source of truth for the dialog: an empty
+    // field means "follow the app theme", so there is no separate selection
+    // state that could drift away from what the user actually sees.
+    var input by remember { mutableStateOf(initialHex?.removePrefix("#").orEmpty()) }
+    val parsed = remember(input) { CompilerConfig.normalizeEditorBackgroundColor(input) }
+    val invalid = input.isNotBlank() && parsed == null
+    val previewArgb = remember(parsed) { parsed?.let(::hexToArgb) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(localizer.get("settings.editor.background", language, "Editor Background")) },
+        text = {
+            // Scrollable because the swatch grid plus the hex field can exceed
+            // the dialog height on a compact screen or with a large font scale.
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = localizer.get(
+                        "settings.editor.background.desc",
+                        language,
+                        "Pick the editor canvas colour. The default follows the app theme, while a custom pick replaces it completely."
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Live preview of the canvas behind a short sample line.
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            previewArgb?.let { Color(it) } ?: MaterialTheme.colorScheme.surfaceContainerLowest
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                            shape = RoundedCornerShape(12.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "new Float:x = 1.0;",
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 13.sp,
+                        color = previewArgb?.let {
+                            if (luminance(it) > 0.5f) Color.Black else Color.White
+                        } ?: MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = input,
+                    onValueChange = { raw ->
+                        input = raw.filter { it.isDigit() || it.lowercaseChar() in 'a'..'f' }.take(6)
+                    },
+                    label = { Text(localizer.get("settings.editor.background.hex", language, "Hex colour code")) },
+                    prefix = { Text("#") },
+                    singleLine = true,
+                    isError = invalid,
+                    supportingText = if (invalid) {
+                        {
+                            Text(
+                                localizer.get(
+                                    "settings.editor.background.invalid",
+                                    language,
+                                    "Invalid colour code, expected the #RRGGBB format"
+                                )
+                            )
+                        }
+                    } else null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Preset swatches, laid out as a fixed 5-column grid.
+                presets.chunked(EDITOR_BACKGROUND_SWATCH_COLUMNS).forEach { rowColors ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        rowColors.forEach { preset ->
+                            val isSelected = previewArgb == preset
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(32.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(preset))
+                                    .border(
+                                        width = if (isSelected) 2.dp else 1.dp,
+                                        color = if (isSelected) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.outlineVariant
+                                        },
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable {
+                                        input = String.format("%06X", preset and 0xFFFFFF)
+                                    }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                TextButton(onClick = { input = "" }) {
+                    Text(localizer.get("settings.editor.background.default", language, "Default"))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onApply(parsed) },
+                enabled = !invalid
+            ) {
+                Text(localizer.get("settings.save", language, "Save"))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(localizer.get("settings.cancel", language, "Cancel"))
+            }
+        }
+    )
+}
+
+/** Columns in the editor-background swatch grid. */
+private const val EDITOR_BACKGROUND_SWATCH_COLUMNS = 5
+
+/**
+ * Swatches offered by [EditorBackgroundDialog].
+ *
+ * Light and dark variants are balanced so the grid covers both ends of the
+ * brightness range, which is what a user actually needs when matching a code
+ * editor to a project or a screenshot. The count is a multiple of
+ * [EDITOR_BACKGROUND_SWATCH_COLUMNS] so the grid has no ragged last row.
+ */
+private val EditorBackgroundPresets = listOf(
+    0xFFFFFFFF.toInt(), 0xFFFBF7EF.toInt(), 0xFFEAF2FF.toInt(), 0xFFF1EDFF.toInt(), 0xFFE9F7EF.toInt(),
+    0xFFD6DCE3.toInt(), 0xFF1E1E1E.toInt(), 0xFF1B1B2F.toInt(), 0xFF0D1B2A.toInt(), 0xFF111D13.toInt()
+)
+
+/** BT.601 luma of an ARGB colour, used to pick readable preview text. */
+private fun luminance(argb: Int): Float {
+    val r = (argb shr 16) and 0xFF
+    val g = (argb shr 8) and 0xFF
+    val b = argb and 0xFF
+    return (0.299f * r + 0.587f * g + 0.114f * b) / 255f
+}
+
+/** Converts a validated `#RRGGBB` string to an opaque ARGB int. */
+private fun hexToArgb(hex: String): Int =
+    0xFF000000.toInt() or (hex.removePrefix("#").toIntOrNull(16) ?: 0)

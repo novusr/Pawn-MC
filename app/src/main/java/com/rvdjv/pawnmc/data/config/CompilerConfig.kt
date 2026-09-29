@@ -112,6 +112,44 @@ class CompilerConfig private constructor(context: Context) {
         get() = AppLanguage.fromValue(prefs.getString(KEY_APP_LANGUAGE, AppLanguage.EN.value) ?: AppLanguage.EN.value)
         set(value) = prefs.edit { putString(KEY_APP_LANGUAGE, value.value) }
 
+    //
+    // [xed editor appearance]
+    //
+
+    /**
+     * Custom Xed editor canvas colour as `#RRGGBB`, or `null` when the editor
+     * should follow the app theme (the default behaviour).
+     *
+     * Stored as a string because SharedPreferences has no colour type, and the
+     * value is validated on read so a hand-edited or stale preference can never
+     * hand an invalid colour to the editor.
+     */
+    var n_editor_background_color: String?
+        get() = prefs.getString(KEY_EDITOR_BG_COLOR, null)?.let(::normalizeEditorBackgroundColor)
+        set(value) = prefs.edit {
+            val normalized = normalizeEditorBackgroundColor(value)
+            if (normalized == null) remove(KEY_EDITOR_BG_COLOR) else putString(KEY_EDITOR_BG_COLOR, normalized)
+        }
+
+    /**
+     * Normalises a user supplied editor background colour to uppercase `#RRGGBB`.
+     *
+     * Returns `null` for anything that is not exactly six hexadecimal digits, so
+     * both the writer and the reader treat an invalid value as "no custom colour"
+     * instead of propagating a broken value into the editor scheme. A blank
+     * string means "clear the override", which is why it is distinct from a
+     * malformed value here but collapses to the same stored result.
+     */
+    fun normalizeEditorBackgroundColor(raw: String?): String? {
+        if (raw == null) return null
+        val digits = raw.trim().removePrefix("#")
+        if (digits.isEmpty()) return null
+        if (digits.length != 6 || digits.any { !it.isDigit() && it.lowercaseChar() !in 'a'..'f' }) {
+            return null
+        }
+        return "#" + digits.uppercase()
+    }
+
     /**
      * Removes stored include paths that no longer point at an existing folder and
      * rewrites the stored value when something was dropped.
@@ -274,6 +312,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_FORCED_INCLUDE_PATH_AUTO = "forced_include_path_auto"
         private const val KEY_APP_THEME = "app_theme"
         private const val KEY_APP_LANGUAGE = "app_language"
+    private const val KEY_EDITOR_BG_COLOR = "editor_background_color"
 
         fun buildOptionsFor(
             debugLevel: DebugLevel = DebugLevel.D3,

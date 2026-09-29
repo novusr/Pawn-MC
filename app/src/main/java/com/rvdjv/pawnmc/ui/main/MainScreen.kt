@@ -36,7 +36,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ErrorOutline
@@ -79,6 +78,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.ui.PawnIcons
 import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserMode
 import com.rvdjv.pawnmc.ui.theme.PawnMCTheme
@@ -674,7 +674,7 @@ private fun ScreenHeader(
                 modifier = Modifier.testTag("xed_button")
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Code,
+                    imageVector = PawnIcons.CodeEdit,
                     contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -50,6 +50,9 @@ class MainViewModel(
     var n_app_language by mutableStateOf(config.n_app_language)
         private set
 
+    var n_editor_background_color by mutableStateOf(config.n_editor_background_color)
+        private set
+
     var selectedFilePath by mutableStateOf<String?>(null)
         private set
 
@@ -74,6 +77,16 @@ class MainViewModel(
 
     fun refreshLanguage() {
         n_app_language = config.n_app_language
+    }
+
+    /**
+     * Re-reads the Xed editor background preference.
+     *
+     * Settings lives in its own activity, so the editor has to pick the value up
+     * when the main activity resumes after the user changes it.
+     */
+    fun refreshEditorBackgroundColor() {
+        n_editor_background_color = config.n_editor_background_color
     }
 
     fun loadLastSelectedFile() {
