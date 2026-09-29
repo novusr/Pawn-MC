@@ -31,8 +31,15 @@ import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SelectAll
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.FormatListNumbered
+import androidx.compose.material.icons.filled.WrapText
+import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -351,7 +358,7 @@ fun XedEditorScreen(
 
                     Box {
                         IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                            Icon(Icons.Filled.Tune, contentDescription = "Editor options")
                         }
                         DropdownMenu(
                             expanded = showMenu,
@@ -359,6 +366,9 @@ fun XedEditorScreen(
                         ) {
                             DropdownMenuItem(
                                 text = { Text("Select All") },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.SelectAll, contentDescription = null)
+                                },
                                 onClick = {
                                     showMenu = false
                                     editorRef?.selectAll()
@@ -366,6 +376,9 @@ fun XedEditorScreen(
                             )
                             DropdownMenuItem(
                                 text = { Text("Jump to Line...") },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.KeyboardArrowRight, contentDescription = null)
+                                },
                                 onClick = {
                                     showMenu = false
                                     showJumpDialog = true
@@ -373,6 +386,9 @@ fun XedEditorScreen(
                             )
                             DropdownMenuItem(
                                 text = { Text(if (isWordWrap) "Disable Word Wrap" else "Enable Word Wrap") },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.WrapText, contentDescription = null)
+                                },
                                 onClick = {
                                     showMenu = false
                                     isWordWrap = !isWordWrap
@@ -381,6 +397,12 @@ fun XedEditorScreen(
                             )
                             DropdownMenuItem(
                                 text = { Text(if (isReadOnly) "Enable Editing" else "Read-Only Mode") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (isReadOnly) Icons.Filled.EditNote else Icons.Filled.Visibility,
+                                        contentDescription = null
+                                    )
+                                },
                                 onClick = {
                                     showMenu = false
                                     isReadOnly = !isReadOnly
@@ -389,6 +411,12 @@ fun XedEditorScreen(
                             )
                             DropdownMenuItem(
                                 text = { Text(if (isLineNumbers) "Hide Line Numbers" else "Show Line Numbers") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (isLineNumbers) Icons.Filled.FormatListNumbered else Icons.Filled.VisibilityOff,
+                                        contentDescription = null
+                                    )
+                                },
                                 onClick = {
                                     showMenu = false
                                     isLineNumbers = !isLineNumbers
