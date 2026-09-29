@@ -6,7 +6,8 @@ enum class PawnItemKind {
     TYPE,
     CONSTANT,
     FUNCTION,
-    CALLBACK
+    CALLBACK,
+    OPERATOR
 }
 
 data class _item(
@@ -17,8 +18,10 @@ data class _item(
 
 /**
  * Dedicated Pawn language registry holding official Pawn specifications,
- * keywords, preprocessor directives, types, constants, SA-MP callbacks and native functions.
- * Stored in the data layer separately from the UI.
+ * keywords, preprocessor directives, types, constants, operators, SA-MP
+ * callbacks and native functions. Stored in the data layer separately from
+ * the UI, and used by both the syntax highlighter and the autocompletion
+ * popup so the two can never drift apart.
  */
 object PawnRegistry {
 
@@ -31,6 +34,10 @@ object PawnRegistry {
         _item("#else", "Default conditional compilation branch", PawnItemKind.DIRECTIVE),
         _item("#endif", "End of conditional compilation block", PawnItemKind.DIRECTIVE),
         _item("#endinput", "Stops reading the current file", PawnItemKind.DIRECTIVE),
+        _item("#tryinclude", "Include a file only if it has not been included yet", PawnItemKind.DIRECTIVE),
+        _item("#endscript", "Stop reading the current file without an error", PawnItemKind.DIRECTIVE),
+        _item("#file", "Set the file name reported by diagnostics", PawnItemKind.DIRECTIVE),
+        _item("#warning", "Enable, disable or raise a compiler warning", PawnItemKind.DIRECTIVE),
         _item("#assert", "Compile-time assertion check", PawnItemKind.DIRECTIVE),
         _item("#error", "Emit user-defined compilation error", PawnItemKind.DIRECTIVE),
         _item("#pragma", "Compiler control directive", PawnItemKind.DIRECTIVE),
@@ -40,8 +47,7 @@ object PawnRegistry {
         _item("dynamic", "Pragma to set AMX stack/heap memory size", PawnItemKind.DIRECTIVE),
         _item("ctrlchar", "Pragma to change escape character", PawnItemKind.DIRECTIVE),
         _item("deprecated", "Pragma to mark symbol as deprecated", PawnItemKind.DIRECTIVE),
-        _item("semicolon", "Pragma to enforce or relax semicolons", PawnItemKind.DIRECTIVE),
-        _item("warning", "Pragma to enable/disable specific warnings", PawnItemKind.DIRECTIVE)
+        _item("semicolon", "Pragma to enforce or relax semicolons", PawnItemKind.DIRECTIVE)
     )
 
     val KEYWORDS: List<_item> = listOf(
@@ -70,7 +76,69 @@ object PawnRegistry {
         _item("tagof", "Returns tag integer representing data type", PawnItemKind.KEYWORD),
         _item("assert", "Runtime assertion condition", PawnItemKind.KEYWORD),
         _item("sleep", "Pawn abstract machine sleep call", PawnItemKind.KEYWORD),
-        _item("char", "Sub-cell character packing indexer", PawnItemKind.KEYWORD)
+        _item("char", "Sub-cell character packing indexer", PawnItemKind.KEYWORD),
+        _item("defined", "Preprocessor check for a defined macro", PawnItemKind.KEYWORD),
+        _item("emit", "Inline AMX bytecode opcode", PawnItemKind.KEYWORD),
+        _item("__emit", "Argument list marker for a raw EMIT", PawnItemKind.KEYWORD),
+        _item("exit", "Terminate the script immediately", PawnItemKind.KEYWORD),
+        _item("operator", "User defined operator overload declaration", PawnItemKind.KEYWORD),
+        _item("*begin", "Start of a multi-line block comment", PawnItemKind.KEYWORD),
+        _item("*end", "End of a multi-line block comment", PawnItemKind.KEYWORD),
+        _item("*then", "Block comment continuation of the previous line", PawnItemKind.KEYWORD)
+    )
+
+    /**
+     * Multi-character and single-character Pawn operators, ordered so that
+     * longer sequences are matched before their own prefixes.
+     *
+     * The same list drives syntax highlighting (the lexer greedily consumes the
+     * longest entry at the cursor) and the autocompletion popup, so both stay
+     * consistent by construction.
+     */
+    val OPERATORS: List<_item> = listOf(
+        _item(">>>=", "Unsigned right shift assignment", PawnItemKind.OPERATOR),
+        _item("<<=", "Left shift assignment", PawnItemKind.OPERATOR),
+        _item(">>=", "Arithmetic right shift assignment", PawnItemKind.OPERATOR),
+        _item("*=", "Multiplication assignment", PawnItemKind.OPERATOR),
+        _item("/=", "Division assignment", PawnItemKind.OPERATOR),
+        _item("%=", "Modulo assignment", PawnItemKind.OPERATOR),
+        _item("+=", "Addition assignment", PawnItemKind.OPERATOR),
+        _item("-=", "Subtraction assignment", PawnItemKind.OPERATOR),
+        _item("&=", "Bitwise AND assignment", PawnItemKind.OPERATOR),
+        _item("^=", "Bitwise XOR assignment", PawnItemKind.OPERATOR),
+        _item("|=", "Bitwise OR assignment", PawnItemKind.OPERATOR),
+        _item(">>>", "Unsigned right shift", PawnItemKind.OPERATOR),
+        _item(">>", "Arithmetic right shift", PawnItemKind.OPERATOR),
+        _item("<<", "Left shift", PawnItemKind.OPERATOR),
+        _item("||", "Logical OR", PawnItemKind.OPERATOR),
+        _item("&&", "Logical AND", PawnItemKind.OPERATOR),
+        _item("==", "Equality comparison", PawnItemKind.OPERATOR),
+        _item("!=", "Inequality comparison", PawnItemKind.OPERATOR),
+        _item("<=", "Less than or equal comparison", PawnItemKind.OPERATOR),
+        _item(">=", "Greater than or equal comparison", PawnItemKind.OPERATOR),
+        _item("++", "Pre/post increment", PawnItemKind.OPERATOR),
+        _item("--", "Pre/post decrement", PawnItemKind.OPERATOR),
+        _item("...", "Ellipsis / argument spread", PawnItemKind.OPERATOR),
+        _item("..", "Argument range marker", PawnItemKind.OPERATOR),
+        _item("::", "Tag scope separator", PawnItemKind.OPERATOR),
+        _item("+", "Addition", PawnItemKind.OPERATOR),
+        _item("-", "Subtraction or negation", PawnItemKind.OPERATOR),
+        _item("*", "Multiplication", PawnItemKind.OPERATOR),
+        _item("/", "Division", PawnItemKind.OPERATOR),
+        _item("%", "Modulo", PawnItemKind.OPERATOR),
+        _item("=", "Assignment", PawnItemKind.OPERATOR),
+        _item("!", "Logical NOT", PawnItemKind.OPERATOR),
+        _item("<", "Less than comparison", PawnItemKind.OPERATOR),
+        _item(">", "Greater than comparison", PawnItemKind.OPERATOR),
+        _item("&", "Bitwise AND", PawnItemKind.OPERATOR),
+        _item("|", "Bitwise OR", PawnItemKind.OPERATOR),
+        _item("^", "Bitwise XOR", PawnItemKind.OPERATOR),
+        _item("~", "Bitwise NOT", PawnItemKind.OPERATOR),
+        _item("?", "Ternary conditional marker", PawnItemKind.OPERATOR),
+        _item(":", "Ternary else marker", PawnItemKind.OPERATOR),
+        _item(".", "Array member or argument range separator", PawnItemKind.OPERATOR),
+        _item(",", "Argument separator", PawnItemKind.OPERATOR),
+        _item(";", "Statement terminator", PawnItemKind.OPERATOR)
     )
 
     val TYPES: List<_item> = listOf(
@@ -267,11 +335,55 @@ object PawnRegistry {
             addAll(CONSTANTS)
             addAll(CALLBACKS)
             addAll(NATIVES)
+            addAll(OPERATORS)
+            addAll(includeItems())
         }
+    }
+
+    /**
+     * Include symbols that are not already described by [NATIVES]/[CALLBACKS].
+     *
+     * They are synthesised from [PawnIncludeIndex] so autocompletion offers the
+     * complete SA-MP surface, while the curated lists keep their richer
+     * descriptions for the symbols they already own.
+     */
+    private fun includeItems(): List<_item> = buildList {
+        val natives = PawnIncludeIndex.INCLUDES.flatMap { it.natives }
+            .filterNot { it in nativeSet || it in keywordSet }
+            .distinct()
+        addAll(natives.map { _item(it, PawnIncludeIndex.NATIVE_DESCRIPTION, PawnItemKind.FUNCTION) })
+
+        val forwards = PawnIncludeIndex.INCLUDES.flatMap { it.forwards }
+            .filterNot { it in callbackSet || it in keywordSet }
+            .distinct()
+        addAll(forwards.map { _item(it, PawnIncludeIndex.CALLBACK_DESCRIPTION, PawnItemKind.CALLBACK) })
     }
 
     private val keywordSet: Set<String> by lazy {
         KEYWORDS.map { it.name }.toSet()
+    }
+
+    /** Include-derived natives, used for highlighting and completion. */
+    private val includeNativeSet: Set<String> by lazy {
+        PawnIncludeIndex.INCLUDES.flatMap { it.natives }.toSet()
+    }
+
+    /** Include-derived forwards, used for highlighting and completion. */
+    private val includeForwardSet: Set<String> by lazy {
+        PawnIncludeIndex.INCLUDES.flatMap { it.forwards }.toSet()
+    }
+
+    /**
+     * Multi-character operators, longest first so the lexer can consume a
+     * greedy match without leaving a dangling suffix behind.
+     */
+    val LONG_OPERATORS: List<String> by lazy {
+        OPERATORS.map { it.name }.filter { it.length > 1 }.sortedByDescending { it.length }
+    }
+
+    /** First characters of any known operator. */
+    val OPERATOR_HEADS: Set<Char> by lazy {
+        OPERATORS.mapTo(mutableSetOf()) { it.name[0] }
     }
 
     private val directiveSet: Set<String> by lazy {
@@ -298,7 +410,20 @@ object PawnRegistry {
     fun isDirective(word: String): Boolean = word in directiveSet || word.removePrefix("#") in directiveSet
     fun isType(word: String): Boolean = word in typeSet || word.removeSuffix(":") in typeSet
     fun isConstant(word: String): Boolean = word in constantSet
-    fun isFunction(word: String): Boolean = word in nativeSet || word in callbackSet
+
+    /**
+     * True for every known callable symbol, including the natives and forwards
+     * that only come from the include table.
+     */
+    fun isFunction(word: String): Boolean =
+        word in nativeSet || word in callbackSet || word in includeNativeSet || word in includeForwardSet
+
+    /** True when [text] is a complete operator at the start of a token. */
+    fun isOperator(text: String): Boolean = text in operatorSet
+
+    private val operatorSet: Set<String> by lazy {
+        OPERATORS.mapTo(mutableSetOf()) { it.name }
+    }
 
     fun getCompletions(prefix: String): List<_item> {
         val query = prefix.trim()

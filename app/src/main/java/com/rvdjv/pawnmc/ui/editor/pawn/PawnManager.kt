@@ -16,6 +16,14 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
  * the hot loop tidy: each token kind owns its own helper function, so
  * [PawnLexer.run] is just a `when` dispatch on the current character — no
  * giant index loop with deeply nested `if/continue` branches.
+ *
+ * Highlighting is not list-only. Registry lookups (keywords, directives,
+ * types, constants, known natives and forwards) are the first pass, but a
+ * contextual rule runs afterwards: any identifier directly followed by `(`
+ * is a function call site, so `halodunia()` paints the name as a function
+ * while the `()` themselves stay uncoloured. Operators are matched as whole
+ * tokens from [PawnRegistry.LONG_OPERATORS], so `>>>=` is a single span
+ * instead of three.
  */
 class PawnManager : SimpleAnalyzeManager<Any?>() {
 
@@ -116,10 +124,13 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
                     c == '"' || c == '\'' -> emitString(c)
                     c.isDigit() || (c == '.' && peekChar(1)?.isDigit() == true) -> skipNumber()
                     c.isLetter() || c == '_' -> emitIdentifier()
+                    c == '*' && tryEmitBlockCommentKeyword() -> Unit
                     c == '{' -> emitSingle(SpanKind.BraceOpen)
                     c == '}' -> emitSingle(SpanKind.BraceClose)
-                    c in Operators -> emitSingle(SpanKind.Operator)
-                    else -> emitSingle(SpanKind.Identifier)
+                    c in PawnRegistry.OPERATOR_HEADS -> emitOperator()
+                    // Parentheses and any other punctuation carry no colour:
+                    // the caller name before `(` is what gets highlighted.
+                    else -> skipPunctuation()
                 }
             }
         }
@@ -192,18 +203,18 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
 
         private fun emitDirective() {
             val startColumn = column
+            val startIndex = index
             index++
             column++
             while (hasMore() && (text[index].isLetterOrDigit() || text[index] == '_')) {
                 index++
                 column++
             }
-            // NOTE: slicing uses column-relative indices to mirror the legacy
-            // lexer exactly; behaviour is preserved on purpose during the
-            // refactor. Replace with `text.substring(startIndex + 1, index)`
-            // if you want directives to resolve on every line.
-            val word = text.subSequence(startColumn + 1, index).toString()
-            if (PawnRegistry.isDirective(word) || PawnRegistry.isDirective("#$word")) {
+            // Slice by absolute offset: the column only tracks the start of the
+            // current line, so a column-relative slice would read the wrong
+            // characters on every line but the first.
+            val word = text.substring(startIndex + 1, index)
+            if (PawnRegistry.isDirective(word)) {
                 emit(Span(line, startColumn, SpanKind.Directive))
             }
         }
@@ -274,20 +285,84 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
             PawnRegistry.isType(word) -> SpanKind.Type
             PawnRegistry.isConstant(word) -> SpanKind.Constant
             PawnRegistry.isFunction(word) -> SpanKind.Function
-            else -> {
-                // Peek past same-line whitespace to spot call sites: `foo (`.
-                var peek = lookFrom
-                while (peek < size) {
-                    val c = text[peek]
-                    if (c == '\n' || c == '\r' || !c.isWhitespace()) break
-                    peek++
-                }
-                if (peek < size && text[peek] == '(') SpanKind.Function else SpanKind.Identifier
+            isCallSite(lookFrom) -> SpanKind.Function
+            else -> SpanKind.Identifier
+        }
+
+        /**
+         * True when the identifier starting at [from] is immediately used as a
+         * call, i.e. followed by `()` with nothing but whitespace in between.
+         *
+         * This is what makes an undeclared name such as `halodunia()` render as
+         * a function, which is the whole point of the call-site rule: the
+         * parenthesised argument list itself stays unstyled.
+         */
+        private fun isCallSite(from: Int): Boolean {
+            var peek = from
+            while (peek < size) {
+                val c = text[peek]
+                if (c == '\n' || c == '\r') return false
+                if (!c.isWhitespace()) return c == '('
+                peek++
             }
+            return false
         }
 
         // --- Operators & catch-all --------------------------------------------------
 
+        /**
+         * Consume the longest operator starting at the cursor.
+         *
+         * Falling back to a single character keeps unknown punctuation styled as
+         * an operator instead of leaking an unstyled gap into the buffer.
+         */
+        private fun emitOperator() {
+            val startColumn = column
+            var length = 1
+            for (candidate in PawnRegistry.LONG_OPERATORS) {
+                if (matchesAt(index, candidate)) {
+                    length = candidate.length
+                    break
+                }
+            }
+            index += length
+            column += length
+            emit(Span(line, startColumn, SpanKind.Operator))
+        }
+
+        private fun matchesAt(start: Int, token: String): Boolean {
+            if (start + token.length > size) return false
+            for (i in token.indices) {
+                if (text[start + i] != token[i]) return false
+            }
+            return true
+        }
+
+        /**
+         * Pawn block comments are opened with a lone `*` on its own line, but
+         * the language spells the delimiters `*begin`, `*end` and `*then` in
+         * its keyword table, so the registry entries would otherwise be dead
+         * weight. Match them here and emit a single keyword span.
+         */
+        private fun tryEmitBlockCommentKeyword(): Boolean {
+            for (keyword in BlockCommentKeywords) {
+                if (!matchesAt(index, keyword)) continue
+                val startColumn = column
+                index += keyword.length
+                column += keyword.length
+                emit(Span(line, startColumn, SpanKind.Keyword))
+                return true
+            }
+            return false
+        }
+
+        /** Advance over a character that carries no styling of its own. */
+        private fun skipPunctuation() {
+            index++
+            column++
+        }
+
+        /** Emit a single-character token such as `{` or `}`. */
         private fun emitSingle(kind: SpanKind) {
             emit(Span(line, column, kind))
             index++
@@ -295,7 +370,7 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
         }
 
         private companion object {
-            private const val Operators = "+-*/%!=<>&|^~?:,;"
+            private val BlockCommentKeywords = listOf("*begin", "*end", "*then")
         }
     }
 }

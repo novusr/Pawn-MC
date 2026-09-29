@@ -18,6 +18,10 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch
 
 /**
  * Official Pawn language implementation for the internal Sora/Xed editor engine.
+ *
+ * Autocompletion is served from [PawnRegistry], which now also carries the
+ * operator table and the include-derived natives and forwards, so the popup
+ * and the syntax highlighter always agree on what the language contains.
  */
 class PawnLanguage : Language {
 
@@ -34,13 +38,44 @@ class PawnLanguage : Language {
         publisher: CompletionPublisher,
         extraArguments: Bundle
     ) {
+        val operatorPrefix = operatorPrefixAt(content, position)
+        if (operatorPrefix != null) {
+            publisher.checkCancelled()
+            publish(publisher, operatorPrefix)
+            return
+        }
+
         val prefix = CompletionHelper.computePrefix(content, position) { ch ->
             Character.isJavaIdentifierPart(ch) || ch == '#' || ch == ':'
         }
 
         if (prefix.isBlank()) return
         publisher.checkCancelled()
+        publish(publisher, prefix)
+    }
 
+    /**
+     * The operator token the cursor sits at the end of, or `null` when the
+     * position is not on an operator.
+     *
+     * [CompletionHelper.computePrefix] only walks identifier characters, so
+     * without this the operator entries in the registry would never be
+     * reachable from the popup. The scan stops as soon as an identifier
+     * character is reached so that `a+` keeps offering symbols for `a`.
+     */
+    private fun operatorPrefixAt(content: ContentReference, position: CharPosition): String? {
+        val line = content.getLine(position.line)
+        var start = position.column
+        while (start > 0 && line[start - 1] in PawnRegistry.OPERATOR_HEADS) {
+            start--
+        }
+        if (start == position.column) return null
+        if (start > 0 && Character.isJavaIdentifierPart(line[start - 1])) return null
+        val candidate = line.substring(start, position.column)
+        return if (PawnRegistry.isOperator(candidate)) candidate else null
+    }
+
+    private fun publish(publisher: CompletionPublisher, prefix: String) {
         val matchingItems = PawnRegistry.getCompletions(prefix)
         for (item in matchingItems) {
             publisher.checkCancelled()
@@ -51,6 +86,7 @@ class PawnLanguage : Language {
                 PawnItemKind.CONSTANT -> CompletionItemKind.Constant
                 PawnItemKind.FUNCTION -> CompletionItemKind.Function
                 PawnItemKind.CALLBACK -> CompletionItemKind.Interface
+                PawnItemKind.OPERATOR -> CompletionItemKind.Keyword
             }
 
             val completion = SimpleCompletionItem(
