@@ -1,22 +1,35 @@
 package com.rvdjv.pawnmc.ui.editor
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
 class XedEditorViewModel(
-    val filePath: String
+    initialFilePath: String
 ) : ViewModel() {
 
-    val file = File(filePath)
-    val fileName: String = file.name
+    /**
+     * Single file opened from the app, i.e. the file that was active outside any
+     * workspace. Mutable so the host can attach another file without recreating
+     * the view model, which would drop the open workspaces.
+     */
+    var filePath by mutableStateOf(initialFilePath)
+        private set
+
+    val file: File get() = File(filePath)
+    val fileName: String get() = file.name
+
+    /** Path currently held in [fileContent], used to skip redundant reloads. */
+    private var loadedFilePath: String? = null
 
     /**
      * Workspace opened from the editor. Empty until the user picks a folder, so
@@ -46,16 +59,36 @@ class XedEditorViewModel(
         private set
 
     init {
-        loadFile()
+        if (filePath.isNotBlank()) loadFile()
+    }
+
+    /**
+     * Points the editor at [path], which is the file the main screen has selected.
+     *
+     * The workspace list is deliberately left untouched: the workspaces and their
+     * opened files have to survive closing and reopening the editor.
+     */
+    fun attachFile(path: String) {
+        if (path.isBlank() || (path == filePath && loadedFilePath == path)) return
+        filePath = path
+        // Inside a workspace the editor shows workspace buffers, so reloading the
+        // single-file content would only cost time.
+        if (!workspace.isWorkspaceOpen) loadFile()
     }
 
     fun loadFile() {
+        val n_path = filePath
+        if (n_path.isBlank()) {
+            isLoading = false
+            return
+        }
+        loadedFilePath = n_path
         isLoading = true
         loadError = null
         viewModelScope.launch {
             try {
                 if (!file.exists()) {
-                    loadError = "File not found: $filePath"
+                    loadError = "File not found: $n_path"
                     isLoading = false
                     return@launch
                 }
@@ -125,6 +158,24 @@ class XedEditorViewModelFactory(private val filePath: String) : ViewModelProvide
         if (modelClass.isAssignableFrom(XedEditorViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
             return XedEditorViewModel(filePath) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+/**
+ * Builds the editor view model for the whole activity.
+ *
+ * The instance is created once and reused, so the workspaces opened in the Xed
+ * editor survive the editor being closed (for example after a compile) and are
+ * still there the next time it is opened.
+ */
+class XedEditorViewModelFactoryForActivity(context: Context) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(XedEditorViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            val path = CompilerConfig.getInstance(context).n_last_selected_file_path.orEmpty()
+            return XedEditorViewModel(path) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

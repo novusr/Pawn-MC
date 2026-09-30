@@ -9,10 +9,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,9 +22,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -61,8 +66,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarimport androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -80,11 +84,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -99,13 +106,15 @@ import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
 import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
 import kotlinx.coroutines.launch
 import java.io.File
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun XedEditorScreen(
     viewModel: XedEditorViewModel,
     onNavigateBack: () -> Unit,
-    editorBackgroundColor: String? = null
+    editorBackgroundColor: String? = null,
+    onCompileRequest: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val appColorScheme = MaterialTheme.colorScheme
@@ -935,6 +944,26 @@ fun XedEditorScreen(
                             .padding(12.dp)
                     )
                 }
+
+                FloatingCompileButton(
+                    enabled = activeDocument != null || viewModel.filePath.isNotBlank(),
+                    onClick = {
+                        val n_target = activeDocument?.file?.path ?: viewModel.filePath
+                        if (n_target.isBlank()) {
+                            Toast.makeText(context, "Open a file first", Toast.LENGTH_SHORT).show()
+                        } else {
+                            // Unsaved buffers are written first so the compiler
+                            // sees exactly what is on screen.
+                            scope.launch {
+                                workspace.openWorkspaces.forEach { n_ws ->
+                                    workspace.saveAll(n_ws)
+                                }
+                                onCompileRequest(n_target)
+                            }
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.TopStart)
+                )
             }
 
             QuickSymbolBar(
@@ -979,6 +1008,90 @@ fun XedEditorScreen(
         onDispose {
             editorRef?.release()
             editorRef = null
+        }
+    }
+}
+
+/**
+ * Floating compile button of the editor.
+ *
+ * The button is dragged anywhere inside the editor area and stays where the user
+ * put it, and a plain tap hands the currently active file to the compiler. The
+ * offset is remembered in pixels, so it survives recomposition and theme changes.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FloatingCompileButton(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val n_density = LocalDensity.current
+    val n_diameter: Dp = 58.dp
+
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val n_maxWidth = with(n_density) { maxWidth.toPx() }
+        val n_maxHeight = with(n_density) { maxHeight.toPx() }
+        val n_diameterPx = with(n_density) { n_diameter.toPx() }
+
+        // `null` means "not dragged yet", so the button starts in the bottom end
+        // corner and follows the panel whenever it has not been moved.
+        var n_draggedOffset by remember { mutableStateOf<IntOffset?>(null) }
+        val n_restOffset = IntOffset(
+            x = (n_maxWidth - n_diameterPx - with(n_density) { 16.dp.toPx() })
+                .coerceAtLeast(0f)
+                .roundToInt(),
+            y = (n_maxHeight - n_diameterPx - with(n_density) { 16.dp.toPx() })
+                .coerceAtLeast(0f)
+                .roundToInt()
+        )
+        val n_offset = n_draggedOffset ?: n_restOffset
+
+        Surface(
+            onClick = onClick,
+            enabled = enabled,
+            shape = CircleShape,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHighest
+            },
+            contentColor = if (enabled) {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            shadowElevation = 6.dp,
+            modifier = Modifier
+                .offset { n_offset }
+                .size(n_diameter)
+                .pointerInput(enabled) {
+                    detectDragGestures(
+                        onDragEnd = { },
+                        onDragCancel = { },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val n_current = n_draggedOffset ?: n_restOffset
+                            val n_newX = (n_current.x + dragAmount.x)
+                                .coerceIn(0f, (n_maxWidth - n_diameterPx).coerceAtLeast(0f))
+                            val n_newY = (n_current.y + dragAmount.y)
+                                .coerceIn(0f, (n_maxHeight - n_diameterPx).coerceAtLeast(0f))
+                            n_draggedOffset = IntOffset(n_newX.roundToInt(), n_newY.roundToInt())
+                        }
+                    )
+                }
+                .testTag("editor_compile_fab")
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = PawnIcons.Flower,
+                    contentDescription = "Compile active file",
+                    modifier = Modifier.size(30.dp)
+                )
+            }
         }
     }
 }

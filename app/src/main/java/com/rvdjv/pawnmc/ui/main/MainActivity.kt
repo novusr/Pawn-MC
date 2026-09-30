@@ -6,18 +6,18 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.rvdjv.pawnmc.data.compiler.PawnCompiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.ui.editor.XedEditorScreen
 import com.rvdjv.pawnmc.ui.editor.XedEditorViewModel
-import com.rvdjv.pawnmc.ui.editor.XedEditorViewModelFactory
+import com.rvdjv.pawnmc.ui.editor.XedEditorViewModelFactoryForActivity
 import com.rvdjv.pawnmc.ui.settings.SettingsActivity
 import com.rvdjv.pawnmc.ui.theme.PawnMCTheme
 import com.rvdjv.pawnmc.ui.theme.resolveDarkTheme
@@ -26,6 +26,16 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(applicationContext)
+    }
+
+    /**
+     * Editor view model scoped to the activity, not to the editor screen.
+     *
+     * Keeping one instance alive means the opened workspaces and their recent
+     * files survive leaving the editor, for example after compiling from it.
+     */
+    private val editorViewModel: XedEditorViewModel by viewModels {
+        XedEditorViewModelFactoryForActivity(applicationContext)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,18 +58,28 @@ class MainActivity : ComponentActivity() {
                 var isEditorOpen by remember { mutableStateOf(false) }
                 val currentFilePath = viewModel.selectedFilePath
 
+                // The editor follows the file chosen on the main screen, without
+                // recreating its view model so the workspaces stay intact.
+                LaunchedEffect(currentFilePath) {
+                    if (!currentFilePath.isNullOrBlank()) {
+                        editorViewModel.attachFile(currentFilePath)
+                    }
+                }
+
                 if (isEditorOpen && !currentFilePath.isNullOrBlank()) {
-                    val editorViewModel: XedEditorViewModel = viewModel(
-                        key = currentFilePath,
-                        factory = XedEditorViewModelFactory(currentFilePath)
-                    )
                     XedEditorScreen(
                         viewModel = editorViewModel,
                         onNavigateBack = {
                             isEditorOpen = false
                             viewModel.loadLastSelectedFile()
                         },
-                        editorBackgroundColor = viewModel.n_editor_background_color
+                        editorBackgroundColor = viewModel.n_editor_background_color,
+                        onCompileRequest = { path ->
+                            // Register the file with the compiler system right away,
+                            // then return to the main screen where the output shows.
+                            viewModel.requestCompileFromEditor(path)
+                            isEditorOpen = false
+                        }
                     )
                 } else {
                     MainScreen(

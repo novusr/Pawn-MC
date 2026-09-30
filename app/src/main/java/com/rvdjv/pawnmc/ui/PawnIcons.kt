@@ -260,4 +260,59 @@ object PawnIcons {
             }
         }.build()
     }
+
+    /**
+     * Flower icon: six round petals around a punched-out centre, the glyph of the
+     * floating compile button in the Xed editor.
+     *
+     * Each petal is a circle drawn with four cubic curves and every circle shares
+     * one even-odd path, so the six petals read as a single silhouette while the
+     * centre stays a hole.
+     */
+    val Flower: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.Flower",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillType = PathFillType.EvenOdd
+            ) {
+                // --- Six petals, radius 3.2, orbiting the centre at 5.2. ---
+                petal(cx = 17.2f, cy = 12f)
+                petal(cx = 14.6f, cy = 16.5f)
+                petal(cx = 9.4f, cy = 16.5f)
+                petal(cx = 6.8f, cy = 12f)
+                petal(cx = 9.4f, cy = 7.5f)
+                petal(cx = 14.6f, cy = 7.5f)
+
+                // --- Hole: the centre of the flower. ---
+                circle(cx = 12f, cy = 12f, r = 2.3f)
+            }
+        }.build()
+    }
+}
+
+/** Adds one circular petal to the current even-odd path. */
+private fun androidx.compose.ui.graphics.vector.PathBuilder.petal(
+    cx: Float,
+    cy: Float,
+    r: Float = 3.2f
+) {
+    circle(cx = cx, cy = cy, r = r)
+}
+
+/** Adds a circle to the path, built from four cubic curves. */
+private fun androidx.compose.ui.graphics.vector.PathBuilder.circle(cx: Float, cy: Float, r: Float) {
+    // Magic constant of the quarter-circle cubic approximation.
+    val k = r * 0.5523f
+    moveTo(cx + r, cy)
+    curveTo(cx + r, cy + k, cx + k, cy + r, cx, cy + r)
+    curveTo(cx - k, cy + r, cx - r, cy + k, cx - r, cy)
+    curveTo(cx - r, cy - k, cx - k, cy - r, cx, cy - r)
+    curveTo(cx + k, cy - r, cx + r, cy - k, cx + r, cy)
+    close()
 }

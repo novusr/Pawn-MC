@@ -90,6 +90,7 @@ import com.rvdjv.pawnmc.ui.theme.status_success
 import com.rvdjv.pawnmc.ui.theme.status_success_container
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import java.io.File
+import kotlinx.coroutines.delay
 import java.text.DecimalFormat
 
 private val SpaceXS = 4.dp
@@ -167,6 +168,30 @@ fun MainScreen(
 
     LaunchedEffect(initialUri) {
         viewModel.handleInitialUri(initialUri)
+    }
+
+    // A compile requested from the Xed editor flower button: the editor already
+    // closed itself, so the queued request is picked up here where the output and
+    // the log live.
+    LaunchedEffect(Unit) {
+        viewModel.consumePendingCompile()?.let { pendingPath ->
+            if (!hasStoragePermission(context)) {
+                showPermissionDialog = true
+            } else {
+                // The main screen also re-registers the last selected file, which
+                // may still be running the ignore-case conversion for that folder.
+                var n_waited = 0
+                while (viewModel.isPreparingFilesystem && n_waited < 100) {
+                    delay(200)
+                    n_waited++
+                }
+                viewModel.compileFile(
+                    path = pendingPath,
+                    isStoragePermissionGranted = true,
+                    onPermissionRequired = { showPermissionDialog = true }
+                )
+            }
+        }
     }
 
     // autoscroll output

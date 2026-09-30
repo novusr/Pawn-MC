@@ -298,6 +298,33 @@ class MainViewModel(
     }
 
     fun getCompilerConfig(): CompilerConfig = config
+
+    /**
+     * Registers [path] as the file to compile and queues the compilation.
+     *
+     * The file is validated and registered with the compiler system exactly like a
+     * file chosen through Browse File, so auto-detection and the ignore-case
+     * handling stay identical, and the queued request is consumed by the main
+     * screen when it becomes visible again.
+     */
+    fun requestCompileFromEditor(path: String) {
+        val n_validExtensions = setOf("pawn", "pwn", "p", "inc")
+        if (File(path).extension.lowercase() !in n_validExtensions) {
+            outputText = "Cannot compile '${File(path).name}': unsupported file type.\n"
+            return
+        }
+        selectedFilePath = path
+        config.n_last_selected_file_path = path
+        applyCompilerAutoDetection(path)
+        pendingCompilePath = path
+    }
+
+    /** Returns the queued editor compile request once, or `null` when there is none. */
+    fun consumePendingCompile(): String? {
+        val n_path = pendingCompilePath
+        pendingCompilePath = null
+        return n_path
+    }
 }
 
 class MainViewModelFactory(private val context: Context) : ViewModelProvider.Factory {

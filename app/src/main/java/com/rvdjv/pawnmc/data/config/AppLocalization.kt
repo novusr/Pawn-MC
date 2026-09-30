@@ -168,8 +168,8 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
 0x01:main.busy.toast.en:0x02:Settings, editor, and self-test are unavailable while compiling
 0x01:settings.include.paths.notice.title.id:0x02:Catatan
 0x01:settings.include.paths.notice.title.en:0x02:Note
-0x01:settings.include.paths.notice.desc.id:0x02:Hindari menumpuk beberapa path include yang memuat include yang sama. Misalnya, jika path include A sudah memuat include C, path include B sebaiknya tidak ikut memuat include C. Penumpukan ini menimbulkan redundansi yang tidak perlu dan dapat membuang-buang sumber daya sistem, serta berpotensi memengaruhi ukuran AMX hasil kompilasi.
-0x01:settings.include.paths.notice.desc.en:0x02:Avoid stacking multiple include paths that contain the same includes. For example, if include path A already contains include C, include path B should not contain include C as well. This creates unnecessary redundancy and can waste system resources, potentially affecting the resulting AMX size.
+0x01:settings.include.paths.notice.desc.id:0x02:PawnMC v.1.5.1 mulai menerapkan sistem baru, kini kamu tidak harus menambahkan include path manual jika kamu pengguna 'pawno/include', sistem akan menerapkan otomatis 'pawno/include' 'gamemodes' di saat kamu memilih file atau browse file untuk kompilasi.
+0x01:settings.include.paths.notice.desc.en:0x02:PawnMC v1.5.1 introduces a new system. You no longer need to manually add an include path if you use 'pawno/include'. The system will automatically apply 'pawno/include' and 'gamemodes' when you select or browse a file for compilation.
 0x01:settings.include.add.id:0x02:Tambah Path Include
 0x01:settings.include.add.en:0x02:Add Include Path
 0x01:settings.include.empty.id:0x02:Belum ada path include yang dikonfigurasi
