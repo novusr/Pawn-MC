@@ -9,12 +9,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,11 +31,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ChevronLeft
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.FindReplace
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SelectAll
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.FormatListNumbered
@@ -62,15 +67,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
@@ -89,6 +97,8 @@ import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
 import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
+import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -126,6 +136,123 @@ fun XedEditorScreen(
     var isReadOnly by remember { mutableStateOf(false) }
     var isLineNumbers by remember { mutableStateOf(true) }
 
+    // ------------------------------------------------------------------
+    // Workspace: several files/folders open at once, Visual Studio style.
+    // ------------------------------------------------------------------
+    val workspace = viewModel.workspace
+    val scope = rememberCoroutineScope()
+
+    var isExplorerVisible by remember { mutableStateOf(false) }
+    var explorerWidth by remember { mutableFloatStateOf(320f) }
+    var toolPanelMode by remember { mutableStateOf<XedToolPanelMode?>(null) }
+    var toolFind by remember { mutableStateOf("") }
+    var toolReplace by remember { mutableStateOf("") }
+    var isToolBusy by remember { mutableStateOf(false) }
+    // Bumped when a tool rewrote the file behind the editor, so the widget is
+    // reloaded even though the document instance itself did not change.
+    var editorReloadToken by remember { mutableIntStateOf(0) }
+    // Tracks which buffer the native editor is showing, so switching workspace
+    // files pushes new text only when the file really changed.
+    val loadedBuffer = remember { LoadedBufferHolder() }
+
+    val activeDocument = workspace.activeDocument
+    val hasUnsavedChanges =
+        if (workspace.isWorkspaceOpen) workspace.hasDirtyDocuments else viewModel.hasUnsavedChanges
+
+    val folderPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val pickedUri = result.data?.data ?: return@rememberLauncherForActivityResult
+        scope.launch {
+            val folder = resolveTreeToFile(context, pickedUri)
+            if (folder != null) {
+                // Opening a folder replaces whatever single file was open before.
+                workspace.openWorkspace(folder)
+                isExplorerVisible = true
+            } else {
+                Toast.makeText(
+                    context,
+                    "That folder is not on local storage, Xed cannot browse it",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    LaunchedEffect(workspace.statusMessage) {
+        workspace.statusMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            workspace.clearStatusMessage()
+        }
+    }
+
+    /** Saves the file shown in the editor, in whichever mode is active. */
+    val saveActiveFile: () -> Unit = {
+        val document = workspace.activeDocument
+        if (document != null) {
+            scope.launch {
+                workspace.saveDocument(document)
+                workspace.refreshTree()
+            }
+        } else {
+            viewModel.saveFile(editorRef?.text?.toString() ?: "")
+        }
+    }
+
+    val openWorkspaceFile: (File) -> Unit = { file ->
+        workspace.openFile(file)
+        isExplorerVisible = true
+    }
+
+    /** Searches the whole workspace; hits are listed in the explorer panel. */
+    val runWorkspaceSearch: () -> Unit = {
+        isExplorerVisible = true
+        workspace.search(toolFind)
+    }
+
+    /**
+     * Replaces inside the file currently open.
+     *
+     * In single-file mode the editor's own searcher is used so the change lands in
+     * the undo history; in workspace mode the file is rewritten on disk and the
+     * editor buffer is refreshed from it.
+     */
+    val runReplacePerFile: (Boolean) -> Unit = { allOccurrences ->
+        if (toolFind.isNotEmpty()) {
+            val editor = editorRef
+            val document = workspace.activeDocument
+            if (document == null) {
+                // Single-file mode: go through the editor searcher so the change
+                // stays in the undo history.
+                editor?.searcher?.apply {
+                    search(toolFind, EditorSearcher.SearchOptions(false, false))
+                    if (allOccurrences) replaceAll(toolReplace) else replaceThis(toolReplace)
+                    stopSearch()
+                }
+            } else {
+                isToolBusy = true
+                scope.launch {
+                    workspace.replaceInFile(document.file, toolFind, toolReplace, allOccurrences)
+                    editorReloadToken++
+                    isToolBusy = false
+                }
+            }
+        }
+    }
+
+    /** Replaces inside every file of the workspace and reloads the open buffer. */
+    val runReplaceAllFiles: () -> Unit = {
+        if (toolFind.isNotEmpty()) {
+            isToolBusy = true
+            scope.launch {
+                workspace.replaceInAllFiles(toolFind, toolReplace)
+                workspace.refreshTree()
+                editorReloadToken++
+                isToolBusy = false
+            }
+        }
+    }
+
     val saveAsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/plain")
     ) { uri: Uri? ->
@@ -151,7 +278,7 @@ fun XedEditorScreen(
     }
 
     BackHandler {
-        if (viewModel.hasUnsavedChanges) {
+        if (hasUnsavedChanges) {
             showExitDialog = true
         } else {
             onNavigateBack()
@@ -170,22 +297,37 @@ fun XedEditorScreen(
             onDismissRequest = { showExitDialog = false },
             title = { Text("Unsaved Changes") },
             text = {
-                Text("File '${viewModel.fileName}' has unsaved modifications. Do you want to save before closing?")
+                Text(
+                    if (workspace.isWorkspaceOpen) {
+                        "Some files of this workspace have unsaved modifications. Do you want to save them before closing?"
+                    } else {
+                        "File '${viewModel.fileName}' has unsaved modifications. Do you want to save before closing?"
+                    }
+                )
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        val currentText = editorRef?.text?.toString() ?: ""
-                        viewModel.saveFile(currentText) { success ->
-                            showExitDialog = false
-                            if (success) {
+                        if (workspace.isWorkspaceOpen) {
+                            scope.launch {
+                                // Every open workspace, not just the one in front.
+                                workspace.openWorkspaces.forEach { workspace.saveAll(it) }
+                                showExitDialog = false
                                 onNavigateBack()
+                            }
+                        } else {
+                            val currentText = editorRef?.text?.toString() ?: ""
+                            viewModel.saveFile(currentText) { success ->
+                                showExitDialog = false
+                                if (success) {
+                                    onNavigateBack()
+                                }
                             }
                         }
                     },
                     modifier = Modifier.testTag("dialog_save_button")
                 ) {
-                    Text("Save")
+                    Text(if (workspace.isWorkspaceOpen) "Save All" else "Save")
                 }
             },
             dismissButton = {
@@ -255,13 +397,14 @@ fun XedEditorScreen(
                 title = {
                     Column {
                         Text(
-                            text = viewModel.fileName + if (viewModel.hasUnsavedChanges) " *" else "",
+                            text = (activeDocument?.name ?: viewModel.fileName) +
+                                if (hasUnsavedChanges) " *" else "",
                             style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = viewModel.filePath,
+                            text = activeDocument?.file?.path ?: viewModel.filePath,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -272,7 +415,7 @@ fun XedEditorScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            if (viewModel.hasUnsavedChanges) {
+                            if (hasUnsavedChanges) {
                                 showExitDialog = true
                             } else {
                                 onNavigateBack()
@@ -333,37 +476,140 @@ fun XedEditorScreen(
                     }
 
                     IconButton(
-                        onClick = {
-                            val text = editorRef?.text?.toString() ?: ""
-                            viewModel.saveFile(text)
-                        },
+                        onClick = { folderPickerLauncher.launch(buildOpenFolderIntent()) },
+                        modifier = Modifier.testTag("editor_workspace_button")
+                    ) {
+                        Icon(
+                            imageVector = PawnIcons.Workspace,
+                            contentDescription = "Open workspace folder"
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { saveActiveFile() },
                         enabled = !viewModel.isSaving,
                         modifier = Modifier.testTag("editor_save_button")
                     ) {
                         Icon(
                             imageVector = PawnIcons.Save,
                             contentDescription = "Save file",
-                            tint = if (viewModel.hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = if (hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
+                    // Without a workspace this stays "Save As"; inside a workspace
+                    // the same slot becomes "Save All" for every modified file.
                     TextButton(
                         onClick = {
-                            saveAsLauncher.launch(viewModel.fileName)
-                        },
-                        modifier = Modifier.testTag("editor_save_as_button")
+                            if (workspace.isWorkspaceOpen) {
+                                scope.launch {
+                                    workspace.saveAll()
+                                    workspace.refreshTree()
+                                }
+                            } else {
+                                saveAsLauncher.launch(viewModel.fileName)
+                            }
+                        },                        modifier = Modifier.testTag("editor_save_as_button")
                     ) {
-                        Text("Save As")
+                        Text(if (workspace.isWorkspaceOpen) "Save All" else "Save As")
                     }
 
                     Box {
                         IconButton(onClick = { showMenu = true }) {
-                            Icon(Icons.Filled.Tune, contentDescription = "Editor options")
+                            Icon(PawnIcons.Settings, contentDescription = "Editor options")
                         }
                         DropdownMenu(
                             expanded = showMenu,
                             onDismissRequest = { showMenu = false }
                         ) {
+                            DropdownMenuItem(
+                                text = { Text("Open Workspace Folder...") },
+                                leadingIcon = {
+                                    Icon(PawnIcons.Workspace, contentDescription = null)
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    folderPickerLauncher.launch(buildOpenFolderIntent())
+                                }
+                            )
+                            if (workspace.openWorkspaces.isNotEmpty()) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (workspace.openWorkspaces.size >= MAX_OPEN_WORKSPACES) {
+                                                "Close Workspace (max $MAX_OPEN_WORKSPACES reached)"
+                                            } else {
+                                                "Close Workspace"
+                                            }
+                                        )
+                                    },
+                                    leadingIcon = {
+                                        Icon(Icons.Filled.FolderOpen, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        showMenu = false
+                                        val closing = workspace.activeWorkspace
+                                        if (closing != null) {
+                                            workspace.closeWorkspace(closing)
+                                        }
+                                        isExplorerVisible = workspace.isWorkspaceOpen
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Close All Workspaces") },
+                                    leadingIcon = {
+                                        Icon(Icons.Filled.Close, contentDescription = null)
+                                    },
+                                    onClick = {
+                                        showMenu = false
+                                        workspace.closeAllWorkspaces()
+                                        isExplorerVisible = false
+                                    }
+                                )
+                            }
+                            DropdownMenuItem(
+                                text = { Text("Search in Workspace") },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.Search, contentDescription = null)
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    toolPanelMode = XedToolPanelMode.SearchWorkspace
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Replace Words per File") },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.FindReplace, contentDescription = null)
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    toolPanelMode = XedToolPanelMode.ReplacePerFile
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Replace Words All Files") },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.FindReplace, contentDescription = null)
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    toolPanelMode = XedToolPanelMode.ReplaceAllFiles
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(if (isExplorerVisible) "Hide Workspace Panel" else "Show Workspace Panel") },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (isExplorerVisible) Icons.Filled.ChevronRight else Icons.Filled.ChevronLeft,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    showMenu = false
+                                    isExplorerVisible = !isExplorerVisible
+                                }
+                            )
                             DropdownMenuItem(
                                 text = { Text("Select All") },
                                 leadingIcon = {
@@ -529,8 +775,14 @@ fun XedEditorScreen(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                when {
-                    viewModel.isLoading -> {
+                Row(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()
+                ) {
+                    when {
+                    viewModel.isLoading && !workspace.isWorkspaceOpen -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
@@ -538,7 +790,7 @@ fun XedEditorScreen(
                             CircularProgressIndicator()
                         }
                     }
-                    viewModel.loadError != null -> {
+                    viewModel.loadError != null && !workspace.isWorkspaceOpen -> {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -569,7 +821,7 @@ fun XedEditorScreen(
                                     setTextSize(14f)
                                     colorScheme = editorScheme
                                     setEditorLanguage(PawnLanguage())
-                                    setText(viewModel.fileContent ?: "")
+                                    setText(workspace.activeDocument?.content ?: viewModel.fileContent ?: "")
                                     // Reserve room for the " - <column>" suffix now
                                     // that the document is loaded; later edits are
                                     // cheap enough to re-measure on the fly.
@@ -582,7 +834,12 @@ fun XedEditorScreen(
                                         // Longest line may have changed, so the
                                         // reserved column-label width is re-measured.
                                         refreshColumnSuffixWidth()
-                                        viewModel.onContentChanged(text.toString())
+                                        val document = workspace.activeDocument
+                                        if (document != null) {
+                                            workspace.updateContent(document.file, text.toString())
+                                        } else {
+                                            viewModel.onContentChanged(text.toString())
+                                        }
                                     }
 
                                     subscribeEvent(SelectionChangeEvent::class.java) { _, _ ->
@@ -602,10 +859,81 @@ fun XedEditorScreen(
                                     editor.colorScheme = editorScheme
                                     appliedScheme.current = editorScheme
                                 }
+                                // Push the buffer of the file the workspace panel
+                                // activated, or of the single file opened from the
+                                // browser. Only runs when the shown buffer changed,
+                                // so typing is never interrupted.
+                                val document = workspace.activeDocument
+                                if (loadedBuffer.document !== document || loadedBuffer.token != editorReloadToken) {
+                                    editor.setText(
+                                        document?.content
+                                            ?: if (workspace.isWorkspaceOpen) "" else (viewModel.fileContent ?: "")
+                                    )
+                                    loadedBuffer.document = document
+                                    loadedBuffer.token = editorReloadToken
+                                    cursorLine = 1
+                                    cursorCol = 1
+                                }
                             },
                             modifier = Modifier.fillMaxSize()
                         )
                     }
+                }
+
+                if (isExplorerVisible) {
+                    XedWorkspacePanel(
+                        session = workspace,
+                        onOpenFile = openWorkspaceFile,
+                        onCloseFile = { file -> workspace.closeDocument(file) },
+                        onSelectFile = { file -> workspace.setActive(file) },
+                        onOpenHit = { hit ->
+                            workspace.openFile(hit.file)
+                            // The buffer is filled asynchronously, so the jump has
+                            // to wait for the reload to land in the widget.
+                            editorRef?.postDelayed({
+                                editorRef?.jumpToLine((hit.line - 1).coerceAtLeast(0))
+                            }, 250)
+                        },
+                        modifier = Modifier.width(explorerWidth.dp)
+                    )
+                }
+
+                WorkspacePanelToggle(
+                    isPanelVisible = isExplorerVisible,
+                    onToggle = { isExplorerVisible = !isExplorerVisible },
+                    onResize = { delta ->
+                        if (isExplorerVisible) {
+                            explorerWidth = (explorerWidth + delta).coerceIn(MIN_EXPLORER_WIDTH, MAX_EXPLORER_WIDTH)
+                        }
+                    }
+                )
+                }
+
+                toolPanelMode?.let { mode ->
+                    XedToolPanel(
+                        mode = mode,
+                        find = toolFind,
+                        replace = toolReplace,
+                        isBusy = isToolBusy,
+                        onFindChange = { toolFind = it },
+                        onReplaceChange = { toolReplace = it },
+                        onRun = {
+                            when (mode) {
+                                XedToolPanelMode.SearchWorkspace -> runWorkspaceSearch()
+                                XedToolPanelMode.ReplacePerFile -> runReplacePerFile(true)
+                                XedToolPanelMode.ReplaceAllFiles -> runReplaceAllFiles()
+                            }
+                        },
+                        onRunSecondary = if (mode == XedToolPanelMode.ReplacePerFile) {
+                            { runReplacePerFile(false) }
+                        } else {
+                            null
+                        },
+                        onClose = { toolPanelMode = null },
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp)
+                    )
                 }
             }
 
@@ -627,9 +955,15 @@ fun XedEditorScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (viewModel.hasUnsavedChanges) "Modified" else "Pawn (${viewModel.file.extension.uppercase()})",
+                    text = if (hasUnsavedChanges) {
+                        "Modified"
+                    } else {
+                        val extension = activeDocument?.file?.extension?.uppercase()
+                            ?: viewModel.file.extension.uppercase()
+                        workspace.activeWorkspace?.name?.let { "$it - $extension" } ?: "Pawn ($extension)"
+                    },
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (viewModel.hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "Ln $cursorLine, Col $cursorCol",
@@ -647,6 +981,62 @@ fun XedEditorScreen(
             editorRef = null
         }
     }
+}
+
+/** Narrowest width the workspace panel may be dragged to. */
+private const val MIN_EXPLORER_WIDTH = 200f
+
+/** Widest width the workspace panel may be dragged to. */
+private const val MAX_EXPLORER_WIDTH = 640f
+
+/**
+ * Slim strip on the right edge that toggles the workspace panel and, while the
+ * panel is open, resizes it by dragging sideways — the Visual Studio arrangement.
+ */
+@Composable
+private fun WorkspacePanelToggle(
+    isPanelVisible: Boolean,
+    onToggle: () -> Unit,
+    onResize: (Float) -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(40.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .pointerInput(isPanelVisible) {
+                detectHorizontalDragGestures(
+                    onDragEnd = { },
+                    onDragCancel = { },
+                    onHorizontalDrag = { change, dragAmount ->
+                        if (isPanelVisible) {
+                            change.consume()
+                            // Dragging left pulls the panel wider.
+                            onResize(-dragAmount)
+                        }
+                    }
+                )
+            }
+    ) {
+        IconButton(
+            onClick = onToggle,
+            modifier = Modifier.testTag("editor_explorer_toggle")
+        ) {
+            Icon(
+                imageVector = if (isPanelVisible) Icons.Filled.ChevronRight else Icons.Filled.ChevronLeft,
+                contentDescription = if (isPanelVisible) "Hide workspace panel" else "Show workspace panel",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    }
+}
+
+/** Remembers which buffer the native editor widget is currently showing. */
+private class LoadedBufferHolder {
+    var document: OpenDocument? = null
+    var token: Int = 0
 }
 
 /**

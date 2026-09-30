@@ -18,6 +18,12 @@ class XedEditorViewModel(
     val file = File(filePath)
     val fileName: String = file.name
 
+    /**
+     * Workspace opened from the editor. Empty until the user picks a folder, so
+     * the single-file flow keeps working exactly as before.
+     */
+    val workspace = XedWorkspaceViewModel()
+
     var isLoading by mutableStateOf(true)
         private set
 

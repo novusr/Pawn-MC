@@ -140,4 +140,124 @@ object PawnIcons {
             }
         }.build()
     }
+
+    /**
+     * Workspace icon: three sheets stacked with a small offset, the Visual Studio
+     * style cue for "more than one document".
+     *
+     * The back two sheets are plain silhouettes and the front sheet carries the
+     * folded-corner and text-baseline holes, so the glyph stays readable at 24dp
+     * while still reading as several documents rather than a single page.
+     */
+    val Workspace: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.Workspace",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillType = PathFillType.EvenOdd
+            ) {
+                // --- Back sheet. ---
+                moveTo(4f, 3f)
+                lineTo(18.6f, 3f)
+                lineTo(18.6f, 15.2f)
+                lineTo(16.8f, 13.4f)
+                lineTo(4f, 13.4f)
+                close()
+
+                // --- Middle sheet, offset down-right. ---
+                moveTo(6.4f, 7.2f)
+                lineTo(21f, 7.2f)
+                lineTo(21f, 18.2f)
+                lineTo(19.2f, 16.4f)
+                lineTo(6.4f, 16.4f)
+                close()
+
+                // --- Front sheet, offset again, with a folded corner. ---
+                moveTo(3.2f, 11.2f)
+                lineTo(14.2f, 11.2f)
+                lineTo(14.2f, 17.0f)
+                lineTo(20f, 17.0f)
+                lineTo(20f, 21.4f)
+                lineTo(3.2f, 21.4f)
+                close()
+
+                // --- Hole: the fold of the front sheet. ---
+                moveTo(16.2f, 13.0f)
+                lineTo(18.0f, 14.8f)
+                lineTo(16.2f, 14.8f)
+                close()
+
+                // --- Hole: text baseline of the front sheet. ---
+                moveTo(5.8f, 19.2f)
+                lineTo(13.0f, 19.2f)
+                lineTo(13.0f, 20.2f)
+                lineTo(5.8f, 20.2f)
+                close()
+            }
+        }.build()
+    }
+
+    /**
+     * Settings icon: a gear, used for the Xed editor options menu.
+     *
+     * Drawn as an even-odd silhouette so the eight teeth read as part of one
+     * shape and the hub is a punched hole. A gear is unmistakably "settings",
+     * which the three-dot overflow glyph never was.
+     */
+    val Settings: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.Settings",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillType = PathFillType.EvenOdd
+            ) {
+                // --- Gear silhouette: eight teeth around a hub of radius 5.6,
+                // tips at 9.4, generated from 45° steps so the teeth are even. ---
+                moveTo(21.26f, 10.37f)
+                lineTo(21.26f, 13.63f)
+                lineTo(17.34f, 13.68f)
+                lineTo(16.97f, 14.59f)
+                lineTo(17.39f, 19.70f)
+                lineTo(14.59f, 16.97f)
+                lineTo(13.68f, 17.34f)
+                lineTo(10.37f, 21.26f)
+                lineTo(10.32f, 17.34f)
+                lineTo(9.41f, 16.97f)
+                lineTo(4.30f, 17.39f)
+                lineTo(7.03f, 14.59f)
+                lineTo(6.66f, 13.68f)
+                lineTo(2.74f, 10.37f)
+                lineTo(6.66f, 10.32f)
+                lineTo(7.03f, 9.41f)
+                lineTo(6.61f, 4.30f)
+                lineTo(9.41f, 7.03f)
+                lineTo(10.32f, 6.66f)
+                lineTo(13.63f, 2.74f)
+                lineTo(13.68f, 6.66f)
+                lineTo(14.59f, 7.03f)
+                lineTo(19.70f, 6.61f)
+                lineTo(16.97f, 9.41f)
+                lineTo(17.34f, 10.32f)
+                close()
+
+                // --- Hole: the hub of the gear. ---
+                moveTo(12f, 9.4f)
+                lineTo(14.6f, 9.4f)
+                lineTo(14.6f, 12f)
+                lineTo(9.4f, 12f)
+                lineTo(9.4f, 9.4f)
+                close()
+            }
+        }.build()
+    }
 }
