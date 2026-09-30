@@ -343,20 +343,20 @@ object PawnRegistry {
     /**
      * Include symbols that are not already described by [NATIVES]/[CALLBACKS].
      *
-     * They are synthesised from [PawnIncludeIndex] so autocompletion offers the
+     * They are synthesised from [PawnIndex] so autocompletion offers the
      * complete SA-MP surface, while the curated lists keep their richer
      * descriptions for the symbols they already own.
      */
     private fun includeItems(): List<_item> = buildList {
-        val natives = PawnIncludeIndex.INCLUDES.flatMap { it.natives }
+        val natives = PawnIndex.INCLUDES.flatMap { it.natives }
             .filterNot { it in nativeSet || it in keywordSet }
             .distinct()
-        addAll(natives.map { _item(it, PawnIncludeIndex.NATIVE_DESCRIPTION, PawnItemKind.FUNCTION) })
+        addAll(natives.map { _item(it, PawnIndex.NATIVE_DESCRIPTION, PawnItemKind.FUNCTION) })
 
-        val forwards = PawnIncludeIndex.INCLUDES.flatMap { it.forwards }
+        val forwards = PawnIndex.INCLUDES.flatMap { it.forwards }
             .filterNot { it in callbackSet || it in keywordSet }
             .distinct()
-        addAll(forwards.map { _item(it, PawnIncludeIndex.CALLBACK_DESCRIPTION, PawnItemKind.CALLBACK) })
+        addAll(forwards.map { _item(it, PawnIndex.CALLBACK_DESCRIPTION, PawnItemKind.CALLBACK) })
     }
 
     private val keywordSet: Set<String> by lazy {
@@ -365,12 +365,12 @@ object PawnRegistry {
 
     /** Include-derived natives, used for highlighting and completion. */
     private val includeNativeSet: Set<String> by lazy {
-        PawnIncludeIndex.INCLUDES.flatMap { it.natives }.toSet()
+        PawnIndex.INCLUDES.flatMap { it.natives }.toSet()
     }
 
     /** Include-derived forwards, used for highlighting and completion. */
     private val includeForwardSet: Set<String> by lazy {
-        PawnIncludeIndex.INCLUDES.flatMap { it.forwards }.toSet()
+        PawnIndex.INCLUDES.flatMap { it.forwards }.toSet()
     }
 
     /**

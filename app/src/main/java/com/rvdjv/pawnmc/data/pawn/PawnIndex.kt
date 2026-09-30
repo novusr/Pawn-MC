@@ -17,7 +17,7 @@ internal data class PawnIncludeSymbols(
     val forwards: List<String>,
 )
 
-internal object PawnIncludeIndex {
+internal object PawnIndex {
 
     /** Description shown for a symbol that only exists in the include table. */
     const val NATIVE_DESCRIPTION = "Native provided by the Pawn/SA-MP include set"

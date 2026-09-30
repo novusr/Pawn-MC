@@ -19,3 +19,4 @@ release-key.jks
 RELEASE_NOTES_DRAFT.md
 TODO.txt
 COMMIT.txt
+.env
