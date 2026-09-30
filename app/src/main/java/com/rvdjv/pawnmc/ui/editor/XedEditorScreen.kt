@@ -561,7 +561,7 @@ fun XedEditorScreen(
                     else -> {
                         AndroidView(
                             factory = { ctx ->
-                                CodeEditor(ctx).apply {
+                                XedCodeEditor(ctx).apply {
                                     typefaceText = Typeface.MONOSPACE
                                     isLineNumberEnabled = isLineNumbers
                                     isWordwrap = isWordWrap
@@ -570,10 +570,18 @@ fun XedEditorScreen(
                                     colorScheme = editorScheme
                                     setEditorLanguage(PawnLanguage())
                                     setText(viewModel.fileContent ?: "")
+                                    // Reserve room for the " - <column>" suffix now
+                                    // that the document is loaded; later edits are
+                                    // cheap enough to re-measure on the fly.
+                                    refreshColumnSuffixWidth()
+                                    invalidate()
 
                                     subscribeEvent(ContentChangeEvent::class.java) { _, _ ->
                                         canUndo = canUndo()
                                         canRedo = canRedo()
+                                        // Longest line may have changed, so the
+                                        // reserved column-label width is re-measured.
+                                        refreshColumnSuffixWidth()
                                         viewModel.onContentChanged(text.toString())
                                     }
 
