@@ -36,6 +36,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ErrorOutline
@@ -521,7 +522,7 @@ fun MainScreen(
             CompileActionCard(
                 selectedFileName = viewModel.selectedFilePath?.let { File(it).name },
                 selectedFileSize = viewModel.selectedFilePath?.let { formatFileSize(File(it).length()) },
-                isCompiling = viewModel.isCompiling,
+                isCompiling = viewModel.isCompiling || viewModel.isPreparingFilesystem,
                 onChangeFileClick = {
                     if (!isStoragePermissionGranted) {
                         showPermissionDialog = true
@@ -577,6 +578,38 @@ fun MainScreen(
                     Text(
                         text = notice,
                         color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            viewModel.filesystemNotice?.let { notice ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = SpaceS, start = SpaceXS)
+                ) {
+                    Icon(
+                        imageVector = if (viewModel.isPreparingFilesystem) {
+                            Icons.Filled.Info
+                        } else {
+                            Icons.Filled.CheckCircle
+                        },
+                        contentDescription = null,
+                        tint = if (viewModel.isPreparingFilesystem) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(SpaceXS + 2.dp))
+                    Text(
+                        text = notice,
+                        color = if (viewModel.isPreparingFilesystem) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

@@ -4,7 +4,6 @@ import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.ui.main.MainViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -58,16 +57,19 @@ class PawnCompilerSuccessTest {
         includeFile.writeText("stock foo() { return 1; }\n")
         sourceFile.writeText("#include \"Aaa.inc\"\n#include \"Other.Inc\"\n")
 
-        val normalizedRoot = PawnCompiler.normalizeCaseInsensitiveProject(originalDir)
-        val normalizedSource = File(normalizedRoot, "main.pwn")
-        val normalizedInclude = File(normalizedRoot, "aaa.inc")
+        try {
+            val result = PawnCompiler.convertFolderToLowerCase(sourceFile.absolutePath)
+            val workingDir = result.workingDir
 
-        assertNotNull(normalizedRoot)
-        assertTrue(normalizedSource.exists())
-        assertTrue(normalizedInclude.exists())
-        assertTrue(normalizedSource.readText().contains("#include \"aaa.inc\""))
-
-        root.deleteRecursively()
+            assertEquals(PawnCompiler.ConversionStatus.CONVERTED, result.status)
+            assertTrue(File(workingDir, "Main.PWN").exists())
+            assertTrue(File(workingDir, "aaa.inc").exists())
+            assertTrue(File(workingDir, "Main.PWN").readText().contains("#include \"aaa.inc\""))
+            assertTrue(File(workingDir, "Main.PWN").readText().contains("#include \"other.inc\""))
+            assertTrue(PawnCompiler.backupDirFor(workingDir).isDirectory)
+        } finally {
+            root.deleteRecursively()
+        }
     }
 
     @Test

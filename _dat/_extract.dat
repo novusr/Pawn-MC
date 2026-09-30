@@ -45,8 +45,8 @@
 0x01:settings.option.optimization.desc.en:0x02:Determines how aggressively the compiler simplifies the bytecode. Higher levels yield a smaller and faster AMX, but make debugging traces harder to follow.
 0x01:settings.option.ignorecase.id:0x02:Abaikan Huruf Besar/Kecil
 0x01:settings.option.ignorecase.en:0x02:Filesystem
-0x01:settings.option.ignorecase.desc.id:0x02:Normalisasi file proyek dan include agar referensi huruf besar/kecil dapat dikompilasi dengan andal.
-0x01:settings.option.ignorecase.desc.en:0x02:Normalize project files and includes so mixed-case filenames and #include references compile reliably.
+0x01:settings.option.ignorecase.desc.id:0x02:Membuat salinan cadangan folder (\"nama-folder.backup\"), lalu mengubah semua nama file selain file yang dipilih dan seluruh referensi #include menjadi huruf kecil. Dijalankan sekali per folder, karena melewati Android yang peka huruf besar/kecil.
+0x01:settings.option.ignorecase.desc.en:0x02:Backs the folder up as \"folder.backup\", then lowercases every file name except the one you selected and rewrites every #include reference to lowercase. It runs once per folder because Android storage is case sensitive.
 0x01:settings.option.explain.id:0x02:Jelaskan Output
 0x01:settings.option.explain.en:0x02:Explain Output
 0x01:settings.option.explain.desc.id:0x02:Tambahkan penjelasan yang mudah dipahami di samping peringatan, pesan error, dan pesan fatal.

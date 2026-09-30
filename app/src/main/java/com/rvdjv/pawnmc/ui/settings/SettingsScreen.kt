@@ -445,7 +445,7 @@ fun SettingsScreen(
 
                     SwitchRow(
                         title = localizer.get("settings.option.ignorecase", appLanguage, "Filesystem"),
-                        description = localizer.get("settings.option.ignorecase.desc", appLanguage, "Normalize project files and includes so mixed-case filenames and #include references compile reliably."),
+                        description = localizer.get("settings.option.ignorecase.desc", appLanguage, "Backs the folder up as \"folder.backup\", then lowercases every file name except the one you selected and rewrites every #include reference to lowercase. It runs once per folder because Android storage is case sensitive."),
                         checked = viewModel.n_ignore_case,
                         onCheckedChange = { viewModel.updateIgnoreCase(it) }
                     )

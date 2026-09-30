@@ -38,6 +38,13 @@ object AppSelfTestCatalog {
             title = "Settings include path integration",
             description = "Simulates adding a chosen include path to the settings config and verifies it stays unique.",
             runner = ::runSettingsIntegrationTest
+        ),
+        AppSelfTestCase(
+            id = "ignore_case_workflow",
+            title = "Ignore case filesystem workflow",
+            description = "Creates a mixed case project, verifies the .backup copy, the lowercased names, " +
+                "the lowercased #include references, and that a second run is skipped while the backup exists.",
+            runner = ::runIgnoreCaseWorkflowTest
         )
     )
 
@@ -127,6 +134,105 @@ object AppSelfTestCatalog {
                 "duplicate rejected=$rejectedDuplicate, actual values: $deduped"
         }
 
-        return AppSelfTestResult("$TEST_PREFIX: settings_integration", passed, message)
-    }
-}
+        return     /**
+             * Replays the whole "Ignore case" workflow on files the test creates itself:
+             * browse a file, back the folder up, lowercase every other name, lowercase every
+             * static include reference, and finally confirm the instructions are not repeated
+             * while the backup folder is still there.
+             */
+            private fun runIgnoreCaseWorkflowTest(): AppSelfTestResult {
+                val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-ignore-case-${System.nanoTime()}")
+                val gamemodes = File(root, "Gamemodes")
+                val sourceFile = File(gamemodes, "Stock.pwn")
+                val nestedDir = File(gamemodes, "Library")
+                val includeFile = File(gamemodes, "Warung.pwn")
+                val incFile = File(nestedDir, "Ekosistem.inc")
+
+                val checks = mutableListOf<Triple<String, Boolean, String>>()
+
+                fun check(label: String, passed: Boolean, detail: String) {
+                    checks += Triple(label, passed, detail)
+                }
+
+                return try {
+                    gamemodes.mkdirs()
+                    nestedDir.mkdirs()
+                    sourceFile.writeText("#include \"Warung.pwn\"\n#include \"Library/Ekosistem.inc\"\nmain() { return; }\n")
+                    includeFile.writeText("#include \"Aaaa.inc\"\nstock Warung() { return 1; }\n")
+                    incFile.writeText("stock Ekosistem() { return 2; }\n")
+
+                    val backupDir = PawnCompiler.backupDirFor(gamemodes)
+                    val firstRun = PawnCompiler.convertFolderToLowerCase(sourceFile.absolutePath)
+                    check(
+                        "first run converts",
+                        firstRun.status == PawnCompiler.ConversionStatus.CONVERTED,
+                        "status=${firstRun.status}"
+                    )
+                    check(
+                        "backup folder created",
+                        backupDir.isDirectory && File(backupDir, "Stock.pwn").exists(),
+                        "backup=${backupDir.absolutePath}"
+                    )
+                    check(
+                        "selected file keeps its name",
+                        File(gamemodes, "Stock.pwn").exists(),
+                        "Stock.pwn missing in working folder"
+                    )
+                    check(
+                        "other files lowercased",
+                        File(gamemodes, "warung.pwn").exists() && File(nestedDir, "ekosistem.inc").exists() &&
+                            File(gamemodes, "library").isDirectory,
+                        "expected warung.pwn, library/ekosistem.inc"
+                    )
+                    val sourceText = File(gamemodes, "Stock.pwn").readText()
+                    check(
+                        "includes lowercased",
+                        sourceText.contains("#include \"warung.pwn\"") &&
+                            sourceText.contains("#include \"library/ekosistem.inc\""),
+                        "source=$sourceText"
+                    )
+                    val includeText = File(gamemodes, "warung.pwn").readText()
+                    check(
+                        "nested includes lowercased",
+                        includeText.contains("#include \"aaaa.inc\""),
+                        "warung.pwn=$includeText"
+                    )
+
+                    // Second browse with the backup folder present: the instructions must be skipped.
+                    val needsConversion = PawnCompiler.needsConversion(gamemodes, backupDir.absolutePath)
+                    val secondRun = PawnCompiler.convertFolderToLowerCase(
+                        selectedFilePath = firstRun.sourceFile,
+                        rememberedBackupDir = backupDir.absolutePath
+                    )
+                    check(
+                        "second run skipped",
+                        !needsConversion && secondRun.status == PawnCompiler.ConversionStatus.ALREADY_CONVERTED,
+                        "needs=$needsConversion status=${secondRun.status}"
+                    )
+
+                    // Deleting the backup folder makes the instructions run again.
+                    backupDir.deleteRecursively()
+                    check(
+                        "runs again without backup",
+                        PawnCompiler.needsConversion(gamemodes, backupDir.absolutePath),
+                        "conversion should be required again"
+                    )
+
+                    val failed = checks.firstOrNull { !it.second }
+                    val message = if (failed == null) {
+                        "Ignore case workflow verified: backup created, names and includes lowercased, repeat run skipped."
+                    } else {
+                        "Ignore case workflow failed at '${failed.first}': ${failed.third}"
+                    }
+                    AppSelfTestResult("$TEST_PREFIX: ignore_case_workflow", failed == null, message)
+                } catch (e: Exception) {
+                    AppSelfTestResult(
+                        "$TEST_PREFIX: ignore_case_workflow",
+                        false,
+                        "Ignore case workflow threw ${e.javaClass.simpleName}: ${e.message}"
+                    )
+                } finally {
+                    root.deleteRecursively()
+                }
+            }
+        }

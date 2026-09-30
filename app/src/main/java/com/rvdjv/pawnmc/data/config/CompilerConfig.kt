@@ -72,6 +72,22 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getString(KEY_LAST_FILE, null)
         set(value) = prefs.edit { putString(KEY_LAST_FILE, value) }
 
+    /**
+     * Folder that already went through the ignore-case conversion.
+     *
+     * The conversion leaves a `<folder>.backup` copy next to the working folder,
+     * so the backup folder is the marker that tells the app the conversion for
+     * this folder is already done and must not run again.
+     */
+    var n_case_insensitive_backup_dir: String?
+        get() = prefs.getString(KEY_CASE_BACKUP_DIR, null)
+        set(value) = prefs.edit { putString(KEY_CASE_BACKUP_DIR, value) }
+
+    /** Forgets the stored backup folder, e.g. when it was deleted manually. */
+    fun clearCaseInsensitiveBackupDir() {
+        prefs.edit { remove(KEY_CASE_BACKUP_DIR) }
+    }
+
     var lastSelectedFilePath: String?
         get() = n_last_selected_file_path
         set(value) { n_last_selected_file_path = value }
@@ -319,6 +335,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val PREFS_NAME           = "compiler_config"
         private const val KEY_LAST_DIR         = "last_open_dir"
         private const val KEY_LAST_FILE        = "last_sel_file"
+        private const val KEY_CASE_BACKUP_DIR  = "case_insensitive_backup_dir"
         private const val KEY_SEMICOLONS       = "semicolons"
         private const val KEY_PARENTHESES      = "parentheses"
         private const val KEY_CUSTOM_FLAGS     = "custom_flags"

@@ -23,6 +23,14 @@ class MainViewModel(
     companion object {
         const val TEMPORARY_FILE_NAME = "main.pwn"
         const val TEMPORARY_FILE_NOTICE = "This is a temporary file because you have not selected your own Pawn file yet."
+        const val IGNORE_CASE_BUSY_NOTICE =
+            "Ignore case is enabled. Backing up this folder and converting every file name and #include reference to lowercase..."
+        const val IGNORE_CASE_DONE_NOTICE =
+            "Ignore case applied: a backup copy of the folder was created as \"%s\" and every other file name plus its #include references were lowercased."
+        const val IGNORE_CASE_SKIPPED_NOTICE =
+            "Ignore case already applied: the backup folder \"%s\" exists, so the conversion was skipped."
+        const val IGNORE_CASE_FAILED_NOTICE =
+            "Ignore case could not finish for this folder. The original files were left untouched."
         val TEMPORARY_FILE_CONTENT = """
             native printf(const format[], {Float,_}:...);
             main() {
@@ -62,6 +70,14 @@ class MainViewModel(
     var temporaryFileNotice by mutableStateOf<String?>(null)
         private set
 
+    /** Notice shown while the ignore-case conversion rewrites the folder. */
+    var filesystemNotice by mutableStateOf<String?>(null)
+        private set
+
+    /** Compile stays disabled until the conversion has finished. */
+    var isPreparingFilesystem by mutableStateOf(false)
+        private set
+
     var isCompiling by mutableStateOf(false)
         private set
 
@@ -92,12 +108,7 @@ class MainViewModel(
     fun loadLastSelectedFile() {
         val lastPath = config.n_last_selected_file_path
         if (lastPath != null && File(lastPath).exists()) {
-            val resolvedPath = if (config.n_ignore_case) {
-                PawnCompiler.prepareCaseInsensitiveWorkspace(lastPath)?.sourceFile ?: lastPath
-            } else lastPath
-            selectedFilePath = resolvedPath
-            config.n_last_selected_file_path = resolvedPath
-            outputText = "Loaded file: $resolvedPath\n"
+            selectFile(lastPath, isStartupLoad = true)
         }
     }
 
@@ -107,16 +118,7 @@ class MainViewModel(
             if (path != null) {
                 val validExtensions = setOf("pawn", "pwn", "p", "inc")
                 if (File(path).extension.lowercase() in validExtensions) {
-                    val resolvedPath = if (config.n_ignore_case) {
-                        PawnCompiler.prepareCaseInsensitiveWorkspace(path)?.sourceFile ?: path
-                    } else path
-                    selectedFilePath = resolvedPath
-                    config.n_last_selected_file_path = resolvedPath
-                    selectionError = null
-                    temporaryFileNotice = null
-                    lastExitCode = null
-                    outputText = "Opened file: $resolvedPath\n"
-                    applyCompilerAutoDetection(resolvedPath)
+                    selectFile(path, openedFromIntent = true)
                 } else {
                     selectionError = "Invalid file type! (only: .pawn .pwn .p)"
                 }
@@ -129,6 +131,7 @@ class MainViewModel(
         selectedFilePath = file.absolutePath
         config.n_last_selected_file_path = file.absolutePath
         temporaryFileNotice = TEMPORARY_FILE_NOTICE
+        filesystemNotice = null
         selectionError = null
         lastExitCode = null
         outputText = "Temporary file created: ${file.absolutePath}\n"
@@ -136,20 +139,80 @@ class MainViewModel(
         return file.absolutePath
     }
 
-    fun selectFile(path: String) {
+    fun selectFile(
+        path: String,
+        isStartupLoad: Boolean = false,
+        openedFromIntent: Boolean = false
+    ) {
         val validExtensions = setOf("pawn", "pwn", "p", "inc")
-        if (File(path).extension.lowercase() in validExtensions) {
-            val resolvedPath = if (config.n_ignore_case) {
-                PawnCompiler.prepareCaseInsensitiveWorkspace(path)?.sourceFile ?: path
-            } else path
-            selectedFilePath = resolvedPath
-            config.n_last_selected_file_path = resolvedPath
+        val n_source = File(path)
+        if (n_source.extension.lowercase() !in validExtensions) {
+            selectionError = "Invalid file type! (only: .pawn .pwn .p)"
+            return
+        }
+
+        if (!config.n_ignore_case) {
             selectionError = null
             temporaryFileNotice = null
+            filesystemNotice = null
             lastExitCode = null
-            applyCompilerAutoDetection(resolvedPath)
-        } else {
-            selectionError = "Invalid file type! (only: .pawn .pwn .p)"
+            selectedFilePath = path
+            config.n_last_selected_file_path = path
+            outputText = if (openedFromIntent) "Opened file: $path\n" else "Loaded file: $path\n"
+            applyCompilerAutoDetection(path)
+            return
+        }
+
+        // "Ignore case" backs the folder up and lowercases it in the background,
+        // so the compile action stays disabled until the folder is consistent.
+        selectionError = null
+        temporaryFileNotice = null
+        lastExitCode = null
+        selectedFilePath = path
+        config.n_last_selected_file_path = path
+        if (!isStartupLoad) {
+            outputText = "Selected file: $path\n"
+        }
+        isPreparingFilesystem = true
+        filesystemNotice = IGNORE_CASE_BUSY_NOTICE
+
+        viewModelScope.launch {
+            val n_result = withContext(Dispatchers.IO) {
+                PawnCompiler.convertFolderToLowerCase(
+                    selectedFilePath = path,
+                    rememberedBackupDir = config.n_case_insensitive_backup_dir
+                )
+            }
+
+            when (n_result.status) {
+                PawnCompiler.ConversionStatus.CONVERTED -> {
+                    config.n_case_insensitive_backup_dir = n_result.backupDir.absolutePath
+                    filesystemNotice = IGNORE_CASE_DONE_NOTICE.format(n_result.backupDir.name)
+                    outputText +=
+                        "Ignore case: renamed ${n_result.renamedEntries} entries, " +
+                            "rewrote includes in ${n_result.rewrittenIncludes} file(s), " +
+                            "backup at ${n_result.backupDir.absolutePath}\n"
+                }
+                PawnCompiler.ConversionStatus.ALREADY_CONVERTED -> {
+                    config.n_case_insensitive_backup_dir = n_result.backupDir.absolutePath
+                    filesystemNotice = IGNORE_CASE_SKIPPED_NOTICE.format(n_result.backupDir.name)
+                    outputText += "Ignore case: skipped, ${n_result.backupDir.name} already exists\n"
+                }
+                PawnCompiler.ConversionStatus.NOT_NEEDED -> {
+                    filesystemNotice = null
+                    outputText += "Ignore case: nothing to convert in ${n_result.workingDir.name}\n"
+                }
+                PawnCompiler.ConversionStatus.FAILED -> {
+                    config.clearCaseInsensitiveBackupDir()
+                    filesystemNotice = IGNORE_CASE_FAILED_NOTICE
+                    outputText += "Ignore case: conversion failed for ${n_result.workingDir.absolutePath}\n"
+                }
+            }
+
+            selectedFilePath = n_result.sourceFile
+            config.n_last_selected_file_path = n_result.sourceFile
+            isPreparingFilesystem = false
+            applyCompilerAutoDetection(n_result.sourceFile)
         }
     }
 
@@ -167,7 +230,7 @@ class MainViewModel(
 
         if (detectedVersion != null) {
             config.n_compiler_version = detectedVersion
-            outputText = "Detected compiler: ${detectedVersion.label}\n"
+            outputText += "Detected compiler: ${detectedVersion.label}\n"
             return
         }
 
@@ -177,6 +240,10 @@ class MainViewModel(
     }
 
     fun compileFile(path: String, isStoragePermissionGranted: Boolean, onPermissionRequired: () -> Unit) {
+        if (isPreparingFilesystem) {
+            outputText = "Wait for the ignore-case conversion to finish before compiling.\n"
+            return
+        }
         if (!isStoragePermissionGranted) {
             onPermissionRequired()
             return
@@ -186,13 +253,17 @@ class MainViewModel(
         val version = detectedVersion ?: CompilerConfig.CompilerVersion.V3107
         config.n_compiler_version = version
 
-        val preparedWorkspace = if (config.n_ignore_case) {
-            PawnCompiler.prepareCaseInsensitiveWorkspace(path)
-        } else null
-        val compilePath = preparedWorkspace?.sourceFile ?: path
-        if (preparedWorkspace != null) {
-            selectedFilePath = compilePath
-            config.n_last_selected_file_path = compilePath
+        // The conversion already happened when the file was browsed, so compiling
+        // only has to make sure the folder is still consistent.
+        if (config.n_ignore_case) {
+            val n_needsConversion = PawnCompiler.needsConversion(
+                workingDir = File(path).parentFile ?: File("."),
+                rememberedBackupDir = config.n_case_insensitive_backup_dir
+            )
+            if (n_needsConversion) {
+                selectFile(path)
+                return
+            }
         }
 
         isCompiling = true
@@ -203,16 +274,9 @@ class MainViewModel(
 
             val startTime = System.currentTimeMillis()
             val result = withContext(Dispatchers.IO) {
-                PawnCompiler.compile(compilePath, options, selectedVersion)
+                PawnCompiler.compile(path, options, selectedVersion)
             }
             val duration = System.currentTimeMillis() - startTime
-
-            if (preparedWorkspace != null) {
-                PawnCompiler.finalizeCaseInsensitiveWorkspace(preparedWorkspace)
-                val restoredPath = preparedWorkspace.originalDir.absolutePath + File.separator + File(compilePath).name
-                selectedFilePath = restoredPath
-                config.n_last_selected_file_path = restoredPath
-            }
 
             val compilerOutput = if (config.n_explain_output) {
                 PawnCompiler.explainCompilerOutput(result.second, appDirectory)
