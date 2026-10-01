@@ -30,6 +30,7 @@ class XedEditorViewModel(
 
     /** Path currently held in [fileContent], used to skip redundant reloads. */
     private var loadedFilePath: String? = null
+    private var latestEditorContent: String = ""
 
     /**
      * Workspace opened from the editor. Empty until the user picks a folder, so
@@ -97,6 +98,7 @@ class XedEditorViewModel(
                 }
                 fileContent = content
                 lastSavedContent = content
+                latestEditorContent = content
                 hasUnsavedChanges = false
                 isLoading = false
                 // The file the user picked on the main screen becomes the first tab of
@@ -113,21 +115,25 @@ class XedEditorViewModel(
     }
 
     fun onContentChanged(newContent: String) {
+        latestEditorContent = newContent
         val original = lastSavedContent ?: ""
         hasUnsavedChanges = (newContent != original)
     }
 
-    fun saveFile(currentContent: String, onSaved: (Boolean) -> Unit = {}) {
-        if (isSaving) return
+    fun saveFile(contentToSave: String, onSaved: (Boolean) -> Unit = {}) {
+        if (isSaving) {
+            statusMessage = "Save already in progress"
+            return
+        }
         isSaving = true
         statusMessage = "Saving..."
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    file.writeText(currentContent)
+                    file.writeText(contentToSave)
                 }
-                lastSavedContent = currentContent
-                hasUnsavedChanges = false
+                lastSavedContent = contentToSave
+                hasUnsavedChanges = latestEditorContent != contentToSave
                 isSaving = false
                 statusMessage = "Saved successfully"
                 onSaved(true)
@@ -145,7 +151,7 @@ class XedEditorViewModel(
                 file.writeText(currentContent)
             }
             lastSavedContent = currentContent
-            hasUnsavedChanges = false
+            hasUnsavedChanges = latestEditorContent != currentContent
             statusMessage = "Saved successfully"
             true
         } catch (e: Exception) {

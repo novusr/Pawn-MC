@@ -78,8 +78,8 @@ import androidx.core.content.ContextCompat
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.data.update.UpdateStatus
-import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserDialog
-import com.rvdjv.pawnmc.ui.filebrowser.FileBrowserMode
+import com.rvdjv.pawnmc.ui.editor.buildOpenFolderIntent
+import com.rvdjv.pawnmc.ui.editor.resolveTreeToFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -117,9 +117,6 @@ fun SettingsScreen(
         ActivityResultContracts.StartActivityForResult()
     ) { }
 
-    var showIncludePathDialog by remember { mutableStateOf(false) }
-    var showAddIncludePathDialog by remember { mutableStateOf(false) }
-    var newIncludePathInput by remember { mutableStateOf("") }
     var showVersionDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
@@ -127,7 +124,7 @@ fun SettingsScreen(
     var showRestartDialog by remember { mutableStateOf(false) }
     var showManualRestartDialog by remember { mutableStateOf(false) }
     var editingIncludePathIndex by remember { mutableStateOf<Int?>(null) }
-    var editingIncludePathValue by remember { mutableStateOf("") }
+    var addingIncludePath by remember { mutableStateOf(false) }
     var pendingVersion by remember { mutableStateOf<CompilerConfig.CompilerVersion?>(null) }
     var updateStatus by remember { mutableStateOf("Checking for updates...") }
     var updateReady by remember { mutableStateOf(false) }
@@ -201,6 +198,57 @@ fun SettingsScreen(
 
     val localizer = remember(context) { AppLocalization.load(context) }
     val appLanguage = viewModel.n_app_language
+    val includeFolderPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val pickedUri = result.data?.data
+        val editingIndex = editingIncludePathIndex
+        val isAdding = addingIncludePath
+        editingIncludePathIndex = null
+        addingIncludePath = false
+        if (result.resultCode != Activity.RESULT_OK || pickedUri == null) return@rememberLauncherForActivityResult
+
+        val resultFlags = result.data?.flags ?: 0
+        if (resultFlags and Intent.FLAG_GRANT_READ_URI_PERMISSION != 0) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    pickedUri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+        }
+        if (resultFlags and Intent.FLAG_GRANT_WRITE_URI_PERMISSION != 0) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    pickedUri,
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            }
+        }
+        coroutineScope.launch {
+            val folder = resolveTreeToFile(context, pickedUri)
+            val accepted = when {
+                folder == null -> false
+                editingIndex != null -> viewModel.updateIncludePathAt(editingIndex, folder.absolutePath)
+                isAdding -> viewModel.addIncludePath(folder.absolutePath)
+                else -> false
+            }
+            if (!accepted) {
+                Toast.makeText(
+                    context,
+                    localizer.get("settings.include.rejected", appLanguage, "Folder unavailable, already added, or not on local storage"),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    fun openIncludeFolderPicker(index: Int? = null) {
+        editingIncludePathIndex = index
+        addingIncludePath = index == null
+        viewModel.clearIncludePathExtensionNotice()
+        includeFolderPickerLauncher.launch(buildOpenFolderIntent())
+    }
 
     // Safety net for paths that vanished while the app was running (e.g. the SD card was
     // ejected). MainActivity already prunes on startup; this keeps the visible list honest
@@ -612,10 +660,8 @@ fun SettingsScreen(
                             PathRow(
                                 path = path,
                                 onClick = {
-                                editingIncludePathIndex = index
-                                editingIncludePathValue = path
-                                viewModel.clearIncludePathExtensionNotice()
-                            },
+                                    openIncludeFolderPicker(index)
+                                },
                                 onRemoveClick = { viewModel.removeIncludePathAt(index) }
                             )
                             if (index < viewModel.n_include_paths.size - 1) {
@@ -692,11 +738,7 @@ fun SettingsScreen(
                     ActionRow(
                         text = localizer.get("settings.include.add", appLanguage, "Add Include Path"),
                         icon = Icons.Default.Add,
-                        onClick = {
-                            newIncludePathInput = ""
-                            viewModel.clearIncludePathExtensionNotice()
-                            showAddIncludePathDialog = true
-                        }
+                        onClick = { openIncludeFolderPicker() }
                     )
                 }
             }
@@ -975,10 +1017,10 @@ fun SettingsScreen(
                             description = language.description,
                             selected = viewModel.n_app_language == language,
                             onClick = {
-                                // Persisted through CompilerConfig, so the choice
-                                // immediately applies to every screen.
+                                val languageChanged = viewModel.n_app_language != language
                                 viewModel.updateAppLanguage(language)
                                 showLanguageDialog = false
+                                if (languageChanged) onRestartRequested()
                             }
                         )
 
@@ -1010,120 +1052,6 @@ fun SettingsScreen(
                 viewModel.updateEditorBackgroundColor(hex)
                 showEditorBackgroundDialog = false
             }
-        )
-    }
-
-    if (showAddIncludePathDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showAddIncludePathDialog = false
-                newIncludePathInput = ""
-            },
-            title = { Text(localizer.get("settings.include.add", appLanguage, "Add Include Path")) },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    OutlinedTextField(
-                        value = newIncludePathInput,
-                        onValueChange = { newIncludePathInput = it },
-                        singleLine = false,
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("/storage/emulated/0/.../include/") }
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                                val value = newIncludePathInput.trim()
-                                if (value.isNotBlank() && !viewModel.addIncludePath(value)) {
-                                    Toast.makeText(
-                                        context,
-                                        localizer.get("settings.include.rejected", appLanguage, "Path already added or folder not found"),
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                                showAddIncludePathDialog = false
-                                newIncludePathInput = ""
-                            }
-                ) {
-                    Text(localizer.get("settings.save", appLanguage, "Save"))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        showAddIncludePathDialog = false
-                        newIncludePathInput = ""
-                    }
-                ) {
-                    Text(localizer.get("settings.cancel", appLanguage, "Cancel"))
-                }
-            }
-        )
-    }
-
-    if (editingIncludePathIndex != null) {
-        AlertDialog(
-            onDismissRequest = {
-                editingIncludePathIndex = null
-                editingIncludePathValue = ""
-            },
-            title = { Text("Edit Include Path") },
-            text = {
-                OutlinedTextField(
-                    value = editingIncludePathValue,
-                    onValueChange = { editingIncludePathValue = it },
-                    singleLine = false,
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("/storage/emulated/0/.../include/") }
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        val index = editingIncludePathIndex ?: return@TextButton
-                        if (!viewModel.updateIncludePathAt(index, editingIncludePathValue)) {
-                            Toast.makeText(
-                                context,
-                                localizer.get("settings.include.rejected", appLanguage, "Path already added or folder not found"),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        editingIncludePathIndex = null
-                        editingIncludePathValue = ""
-                    }
-                ) {
-                    Text("Save")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        editingIncludePathIndex = null
-                        editingIncludePathValue = ""
-                    }
-                ) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
-
-    if (showIncludePathDialog) {
-        FileBrowserDialog(
-            mode = FileBrowserMode.FOLDER,
-            onFileSelected = {},
-            onFolderSelected = { path ->
-                if (!viewModel.addIncludePath(path)) {
-                    Toast.makeText(
-                        context,
-                        localizer.get("settings.include.rejected", appLanguage, "Path already added or folder not found"),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-                showIncludePathDialog = false
-            },
-            onDismiss = { showIncludePathDialog = false }
         )
     }
 

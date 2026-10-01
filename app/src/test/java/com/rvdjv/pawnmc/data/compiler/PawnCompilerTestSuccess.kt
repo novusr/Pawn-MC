@@ -27,6 +27,26 @@ class PawnCompilerSuccessTest {
     }
 
     @Test
+    fun `forced compiler keeps the configured version instead of detection or fallback`() {
+        assertEquals(
+            CompilerConfig.CompilerVersion.V31011,
+            PawnCompiler.compilerVersionForMode(
+                forcedMode = true,
+                selectedVersion = CompilerConfig.CompilerVersion.V31011,
+                detectedVersion = CompilerConfig.CompilerVersion.V3107
+            )
+        )
+        assertEquals(
+            CompilerConfig.CompilerVersion.V3107,
+            PawnCompiler.compilerVersionForMode(
+                forcedMode = false,
+                selectedVersion = CompilerConfig.CompilerVersion.V31011,
+                detectedVersion = null
+            )
+        )
+    }
+
+    @Test
     fun `matches detected compiler metadata by product version and size`() {
         assertTrue(CompilerConfig.CompilerVersion.V31011.matchesDetected(CompilerConfig.STR_V31011, 19_000L, null))
         assertTrue(CompilerConfig.CompilerVersion.V3107.matchesDetected(null, 28_000L, "a48e04d28e8cb77e0361ecb4dced2501"))
@@ -47,20 +67,42 @@ class PawnCompilerSuccessTest {
     }
 
     @Test
-    fun `adds sscanf compatibility flag last only for pawn 3 10 7`() {
+    fun `adds sscanf compatibility define as final compiler argument for pawn 3 10 7`() {
         val options = listOf("-d=3", "-i=/project/include", "-i=/project/gamemodes", "-v=0")
 
         val options3107 = PawnCompiler.compilerOptionsForVersion(
-            options + "SSCANF_NO_NICE_FEATURES=1",
+            options,
             CompilerConfig.CompilerVersion.V3107
         )
-        assertEquals(options + "SSCANF_NO_NICE_FEATURES=1", options3107)
+        assertEquals(
+            options + "SSCANF_NO_NICE_FEATURES=1",
+            options3107
+        )
 
         val options31011 = PawnCompiler.compilerOptionsForVersion(
             options,
             CompilerConfig.CompilerVersion.V31011
         )
         assertEquals(options, options31011)
+
+        val compilerArguments = PawnCompiler.compilerArgumentsForVersion(
+            "/project/main.pwn",
+            options,
+            CompilerConfig.CompilerVersion.V3107
+        )
+        assertEquals("pawncc", compilerArguments.first())
+        assertEquals("/project/main.pwn", compilerArguments[1])
+        assertEquals("SSCANF_NO_NICE_FEATURES=1", compilerArguments.last())
+    }
+
+    @Test
+    fun `sscanf compatibility define is moved to the end without duplicates`() {
+        val options = listOf("-i=/project/include", "SSCANF_NO_NICE_FEATURES=1", "-v=0", "SSCANF_NO_NICE_FEATURES=1")
+
+        assertEquals(
+            listOf("-i=/project/include", "-v=0", "SSCANF_NO_NICE_FEATURES=1"),
+            PawnCompiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V3107)
+        )
     }
 
     @Test

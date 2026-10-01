@@ -126,7 +126,7 @@ class CompilerConfig private constructor(context: Context) {
 
     var n_app_language: AppLanguage
         get() = AppLanguage.fromValue(prefs.getString(KEY_APP_LANGUAGE, AppLanguage.EN.value) ?: AppLanguage.EN.value)
-        set(value) = prefs.edit { putString(KEY_APP_LANGUAGE, value.value) }
+        set(value) = prefs.edit(commit = true) { putString(KEY_APP_LANGUAGE, value.value) }
 
     //
     // [xed editor appearance]

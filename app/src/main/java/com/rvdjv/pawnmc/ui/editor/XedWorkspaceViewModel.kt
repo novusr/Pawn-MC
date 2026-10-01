@@ -136,7 +136,7 @@ class OpenDocument(val file: File) {
     var content by mutableStateOf("")
         private set
 
-    private var savedContent: String = ""
+    private var savedContent by mutableStateOf("")
 
     /** False while the first read from disk is still in flight. */
     var isLoaded by mutableStateOf(false)
@@ -150,8 +150,8 @@ class OpenDocument(val file: File) {
         content = text
     }
 
-    fun markSaved() {
-        savedContent = content
+    fun markSaved(contentWritten: String = content) {
+        savedContent = contentWritten
     }
 
     suspend fun loadFromDisk() {
@@ -391,11 +391,14 @@ class XedWorkspaceViewModel : ViewModel() {
     // ------------------------------------------------------------------
 
     /** Writes one document back to disk. */
-    suspend fun saveDocument(document: OpenDocument): Boolean = withContext(Dispatchers.IO) {
-        try {
-            document.file.parentFile?.mkdirs()
-            document.file.writeText(document.content)
-            document.markSaved()
+    suspend fun saveDocument(document: OpenDocument): Boolean {
+        val contentToWrite = document.content
+        return try {
+            withContext(Dispatchers.IO) {
+                document.file.parentFile?.mkdirs()
+                document.file.writeText(contentToWrite)
+            }
+            document.markSaved(contentToWrite)
             true
         } catch (e: Exception) {
             statusMessage = "Save failed for ${document.name}: ${e.localizedMessage}"

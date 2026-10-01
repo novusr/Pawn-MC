@@ -54,6 +54,7 @@ object PawnRegistry {
         _item("stock", "Declares variable or function compiled only if used", PawnItemKind.KEYWORD),
         _item("public", "Declares an exported function callable by AMX", PawnItemKind.KEYWORD),
         _item("forward", "Forward declaration for public functions", PawnItemKind.KEYWORD),
+        _item("hook", "Hooks a callback or function so multiple handlers can be chained", PawnItemKind.KEYWORD),
         _item("native", "Declares a C/C++ native plugin or host function", PawnItemKind.KEYWORD),
         _item("new", "Declares a local or global variable", PawnItemKind.KEYWORD),
         _item("static", "Declares static scoped variable or private function", PawnItemKind.KEYWORD),

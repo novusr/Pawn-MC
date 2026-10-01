@@ -164,7 +164,7 @@ class MainViewModel(
             lastExitCode = null
             selectedFilePath = path
             config.n_last_selected_file_path = path
-            outputText = if (openedFromIntent) "Opened file: $path\n" else "Loaded file: $path\n"
+            outputText = if (openedFromIntent) "Opened file: $path\n" else "Opened file: $path\n"
             applyCompilerAutoDetection(path)
             return
         }
@@ -223,17 +223,19 @@ class MainViewModel(
     }
 
     private fun applyCompilerAutoDetection(sourcePath: String) {
-        // Auto-detect the compiler only when the nearby pawncc.exe metadata matches a supported version.
-        val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
-
-        // discoverRelevantIncludePaths already skips every folder the config holds, so the
-        // result only contains new entries and needs no follow-up filter pass.
-        val currentPaths = config.n_include_paths
-        val autoIncludePaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath, currentPaths)
-        if (autoIncludePaths.isNotEmpty()) {
-            config.n_include_paths = currentPaths + autoIncludePaths
+        if (!config.n_forced_include_path_auto) {
+            // Discovery skips every folder the config already holds.
+            val currentPaths = config.n_include_paths
+            val autoIncludePaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath, currentPaths)
+            if (autoIncludePaths.isNotEmpty()) {
+                config.n_include_paths = currentPaths + autoIncludePaths
+            }
         }
 
+        if (config.n_forced_compiler_mode) return
+
+        // Auto-detect only when automatic compiler selection is enabled.
+        val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
         if (detectedVersion != null) {
             config.n_compiler_version = detectedVersion
             outputText += "Detected compiler: ${detectedVersion.label}\n"
@@ -259,9 +261,14 @@ class MainViewModel(
             return
         }
 
+        val forcedCompilerMode = config.n_forced_compiler_mode
         val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
-        val version = detectedVersion ?: CompilerConfig.CompilerVersion.V3107
-        config.n_compiler_version = version
+        val version = PawnCompiler.compilerVersionForMode(
+            forcedMode = forcedCompilerMode,
+            selectedVersion = config.n_compiler_version,
+            detectedVersion = detectedVersion
+        )
+        if (!forcedCompilerMode) config.n_compiler_version = version
 
         // The conversion already happened when the file was browsed, so compiling
         // only has to make sure the folder is still consistent.

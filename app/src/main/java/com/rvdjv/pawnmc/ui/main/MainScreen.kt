@@ -107,10 +107,10 @@ private const val OUTPUT_PLACEHOLDER = "Ready to compile...\n"
 private val OutputPanelHeight = 240.dp
 
 private enum class CompileStatus(val label: String) {
-    IDLE("Idle"),
-    COMPILING("Compiling"),
-    SUCCESS("Success"),
-    ERROR("Error")
+    IDLE("IDLE :|"),
+    COMPILING("COMPILING :?"),
+    SUCCESS("SUCCESS :)"),
+    ERROR("FAILED :(")
 }
 
 private fun deriveStatus(isCompiling: Boolean, lastExitCode: Int?): CompileStatus = when {
@@ -716,91 +716,81 @@ private fun ScreenHeader(
     localizer: AppLocalization? = null,
     appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = localizer?.get("app.name", appLanguage, "PawnMC") ?: "PawnMC",
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = localizer?.get("app.name", appLanguage, "PawnMC") ?: "PawnMC",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
 
-                Text(
-                    text = localizer?.get("app.tagline", appLanguage, "Compiling ideas on the go.")
-                        ?: "Compiling ideas on the go.",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            if (!actionsVisible) {
-                HeaderActionsToggleButton(
-                    expanded = false,
-                    localizer = localizer,
-                    appLanguage = appLanguage,
-                    onToggle = onToggleActions
-                )
-            }
+            Text(
+                text = localizer?.get("app.tagline", appLanguage, "Compiling ideas on the go.")
+                    ?: "Compiling ideas on the go.",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
 
-        AnimatedVisibility(
-            visible = actionsVisible,
-            modifier = Modifier.align(Alignment.End)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HeaderActionsToggleButton(
-                    expanded = true,
-                    localizer = localizer,
-                    appLanguage = appLanguage,
-                    onToggle = onToggleActions
-                )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            HeaderActionsToggleButton(
+                expanded = actionsVisible,
+                localizer = localizer,
+                appLanguage = appLanguage,
+                onToggle = onToggleActions
+            )
 
-                HeaderActionButton(
-                    onClick = onSelfTestClick,
-                    enabled = !isCompiling,
-                    testTag = "self_test_button",
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Filled.Description,
-                            contentDescription = localizer?.get("main.header.selftest", appLanguage, "Self tests") ?: "Self tests",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                )
+            AnimatedVisibility(visible = actionsVisible) {
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HeaderActionButton(
+                        onClick = onSelfTestClick,
+                        enabled = !isCompiling,
+                        testTag = "self_test_button",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Filled.Description,
+                                contentDescription = localizer?.get("main.header.selftest", appLanguage, "Self tests") ?: "Self tests",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    )
 
-                HeaderActionButton(
-                    onClick = onEditorClick,
-                    enabled = !isCompiling,
-                    testTag = "xed_button",
-                    icon = {
-                        Icon(
-                            imageVector = PawnIcons.CodeEdit,
-                            contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                )
+                    HeaderActionButton(
+                        onClick = onEditorClick,
+                        enabled = !isCompiling,
+                        testTag = "xed_button",
+                        icon = {
+                            Icon(
+                                imageVector = PawnIcons.CodeEdit,
+                                contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    )
 
-                HeaderActionButton(
-                    onClick = onSettingsClick,
-                    enabled = !isCompiling,
-                    testTag = "settings_button",
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Filled.Settings,
-                            contentDescription = localizer?.get("main.header.settings", appLanguage, "Settings") ?: "Settings",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                )
+                    HeaderActionButton(
+                        onClick = onSettingsClick,
+                        enabled = !isCompiling,
+                        testTag = "settings_button",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Filled.Settings,
+                                contentDescription = localizer?.get("main.header.settings", appLanguage, "Settings") ?: "Settings",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    )
+                }
             }
         }
     }

@@ -44,7 +44,7 @@ class XedEditorTest {
         listOf(
             "assert", "break", "case", "char", "const", "continue", "default",
             "defined", "do", "else", "emit", "__emit", "enum", "exit", "for",
-            "forward", "goto", "if", "native", "new", "operator", "public", "return",
+            "forward", "goto", "hook", "if", "native", "new", "operator", "public", "return",
             "sizeof", "sleep", "state", "static", "stock", "switch", "tagof", "while"
         ).forEach { assertTrue("keyword $it", PawnRegistry.isKeyword(it)) }
 
@@ -63,6 +63,12 @@ class XedEditorTest {
     fun `native is a highlighted keyword with autocomplete`() {
         assertTrue(PawnRegistry.isKeyword("native"))
         assertTrue(PawnRegistry.getCompletions("nat").any { it.name == "native" })
+    }
+
+    @Test
+    fun `hook is a highlighted keyword with autocomplete`() {
+        assertTrue(PawnRegistry.isKeyword("hook"))
+        assertTrue(PawnRegistry.getCompletions("ho").any { it.name == "hook" })
     }
 
     @Test
@@ -175,5 +181,17 @@ class XedEditorTest {
         val diskContent = testFile.readText()
         assertEquals(updatedContent, diskContent)
         assertFalse(viewModel.hasUnsavedChanges)
+    }
+
+    @Test
+    fun `workspace document stays dirty when newer edits arrive during save`() {
+        val document = OpenDocument(tempFolder.newFile("workspace.pwn"))
+        document.updateContent("saved snapshot")
+        document.markSaved("saved snapshot")
+
+        document.updateContent("newer unsaved edit")
+        document.markSaved("saved snapshot")
+
+        assertTrue(document.isDirty)
     }
 }

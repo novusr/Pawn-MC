@@ -219,8 +219,11 @@ fun XedEditorScreen(
         val document = workspace.activeDocument
         if (document != null) {
             scope.launch {
-                workspace.saveDocument(document)
+                val saved = workspace.saveDocument(document)
                 workspace.refreshTree()
+                if (saved) {
+                    Toast.makeText(context, "Saved ${document.name}", Toast.LENGTH_SHORT).show()
+                }
             }
         } else {
             viewModel.saveFile(editorRef?.text?.toString() ?: "")
@@ -288,8 +291,10 @@ fun XedEditorScreen(
         val content = editorRef?.text?.toString() ?: return@rememberLauncherForActivityResult
 
         try {
-            context.contentResolver.openOutputStream(targetUri)?.use { outputStream ->
-                outputStream.write(content.toByteArray())
+            val outputStream = context.contentResolver.openOutputStream(targetUri)
+                ?: error("Unable to open the selected destination")
+            outputStream.use {
+                it.write(content.toByteArray())
             }
             Toast.makeText(
                 context,
@@ -339,9 +344,21 @@ fun XedEditorScreen(
                         if (workspace.isWorkspaceOpen) {
                             scope.launch {
                                 // Every open workspace, not just the one in front.
-                                workspace.openWorkspaces.forEach { workspace.saveAll(it) }
+                                var allSaved = true
+                                workspace.openWorkspaces.forEach { target ->
+                                    val dirtyCount = target.documents.count { it.isDirty }
+                                    if (workspace.saveAll(target) != dirtyCount) allSaved = false
+                                }
                                 showExitDialog = false
-                                onNavigateBack()
+                                if (allSaved) {
+                                    onNavigateBack()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Some files could not be saved. Review the unsaved tabs and retry.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
                         } else {
                             val currentText = editorRef?.text?.toString() ?: ""
@@ -1029,10 +1046,23 @@ fun XedEditorScreen(
                             // Unsaved buffers are written first so the compiler
                             // sees exactly what is on screen.
                             scope.launch {
-                                workspace.openWorkspaces.forEach { n_ws ->
-                                    workspace.saveAll(n_ws)
+                                var allSaved = true
+                                if (activeDocument == null && viewModel.hasUnsavedChanges) {
+                                    allSaved = viewModel.saveFileSync(editorRef?.text?.toString() ?: "")
                                 }
-                                onCompileRequest(n_target)
+                                workspace.openWorkspaces.forEach { n_ws ->
+                                    val dirtyCount = n_ws.documents.count { it.isDirty }
+                                    if (workspace.saveAll(n_ws) != dirtyCount) allSaved = false
+                                }
+                                if (allSaved) {
+                                    onCompileRequest(n_target)
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Compilation cancelled because a file could not be saved.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
                         }
                     },

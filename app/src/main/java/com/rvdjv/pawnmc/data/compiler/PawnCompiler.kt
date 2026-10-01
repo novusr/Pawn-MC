@@ -60,6 +60,13 @@ object PawnCompiler {
         return CompilerConfig.getInstanceOrNull()?.n_forced_compiler_mode == true
     }
 
+    internal fun compilerVersionForMode(
+        forcedMode: Boolean,
+        selectedVersion: CompilerConfig.CompilerVersion,
+        detectedVersion: CompilerConfig.CompilerVersion?
+    ): CompilerConfig.CompilerVersion =
+        if (forcedMode) selectedVersion else detectedVersion ?: CompilerConfig.CompilerVersion.V3107
+
     private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
     private val ERROR_COUNT_REGEX = """(?i)(\d+)\s+errors?\.?""".toRegex()
     private val PRODUCT_VERSION_REGEX = """\b\d+\.\d+\.\d+\b""".toRegex()
@@ -637,6 +644,16 @@ object PawnCompiler {
         options
     }
 
+    internal fun compilerArgumentsForVersion(
+        sourceFile: String,
+        options: List<String>,
+        version: CompilerConfig.CompilerVersion
+    ): List<String> = buildList {
+        add(STR_PAWNCC_BINARY_NAME)
+        add(sourceFile)
+        addAll(compilerOptionsForVersion(options, version))
+    }
+
     /**
      * Runs the selected compiler version with the provided arguments.
      *
@@ -667,12 +684,7 @@ object PawnCompiler {
             ?.onFailure { Log.e("PawnCompiler",
             "Failed to delete old log file: ${n_logFile.absolutePath}", it) }
 
-        val n_args = buildList {
-            add(STR_PAWNCC_BINARY_NAME)
-            addAll(compilerOptionsForVersion(options, version))
-            add(sourceFile)
-        }
-
+        val n_args = compilerArgumentsForVersion(sourceFile, options, version)
         val n_output = compile(n_args.toTypedArray())
         val n_parsedResult = parseCompilerOutput(n_output)
 

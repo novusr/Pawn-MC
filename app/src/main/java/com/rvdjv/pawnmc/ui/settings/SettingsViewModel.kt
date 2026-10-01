@@ -131,8 +131,8 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     }
 
     fun updateAppLanguage(language: CompilerConfig.AppLanguage) {
-        n_app_language = language
         config.n_app_language = language
+        n_app_language = language
     }
 
     /**
@@ -146,7 +146,7 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         config.n_editor_background_color = normalized
     }
     /**
-     * Adds an include path from Settings (manual entry or the folder picker).
+     * Adds an include path selected from the system folder picker.
      *
      * Returns false when the folder is already registered or is not a real directory, so
      * the caller can skip the write entirely instead of re-filtering the whole list.
