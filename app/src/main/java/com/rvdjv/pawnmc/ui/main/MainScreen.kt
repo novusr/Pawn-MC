@@ -40,6 +40,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Info
@@ -177,6 +178,25 @@ fun MainScreen(
         isStoragePermissionGranted = permissions.entries.all { it.value }
         if (!isStoragePermissionGranted) {
             showPermissionDialog = true
+        }
+    }
+
+    var pendingLogText by remember { mutableStateOf("") }
+    val downloadLogLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+        if (uri != null) {
+            val saved = runCatching {
+                context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { writer ->
+                    writer.write(pendingLogText)
+                } ?: error("Could not open the selected destination")
+            }.isSuccess
+            val message = if (saved) {
+                localizer.get("main.output.download.success", appLanguage, "Log downloaded successfully")
+            } else {
+                localizer.get("main.output.download.failed", appLanguage, "Failed to download log")
+            }
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -674,6 +694,13 @@ fun MainScreen(
                 outputText = viewModel.outputText,
                 status = deriveStatus(viewModel.isCompiling, viewModel.lastExitCode),
                 scrollState = outputScrollState,
+                canDownload = !viewModel.isCompiling && viewModel.lastExitCode != null,
+                onDownloadClick = {
+                    pendingLogText = viewModel.outputText
+                    val baseName = viewModel.selectedFilePath?.let { File(it).nameWithoutExtension }
+                        ?.takeIf { it.isNotBlank() } ?: "pawnmc"
+                    downloadLogLauncher.launch("$baseName.log")
+                },
                 onCopyClick = {
                     val isEmpty = viewModel.outputText.isEmpty() ||
                         viewModel.outputText == OUTPUT_PLACEHOLDER
@@ -1038,6 +1065,8 @@ private fun CompilerLogsSection(
     outputText: String,
     status: CompileStatus,
     scrollState: androidx.compose.foundation.ScrollState,
+    canDownload: Boolean = false,
+    onDownloadClick: () -> Unit = {},
     onCopyClick: () -> Unit,
     localizer: AppLocalization? = null,
     appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
@@ -1064,6 +1093,23 @@ private fun CompilerLogsSection(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onDownloadClick,
+                    enabled = canDownload,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowDownward,
+                        contentDescription = localizer?.get(
+                            "main.output.download.action",
+                            appLanguage,
+                            "Download output log"
+                        ) ?: "Download output log",
+                        tint = if (canDownload) MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
                 IconButton(onClick = onCopyClick, modifier = Modifier.size(32.dp)) {
                     Icon(
                         imageVector = Icons.Filled.ContentCopy,

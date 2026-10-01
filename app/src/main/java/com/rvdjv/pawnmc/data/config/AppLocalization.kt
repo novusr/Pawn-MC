@@ -1,7 +1,9 @@
 ﻿package com.rvdjv.pawnmc.data.config
 
 import android.content.Context
+import android.content.res.Configuration
 import kotlin.math.min
+import java.util.Locale
 
 class AppLocalization private constructor(private val entries: Map<String, String>) {
 
@@ -58,7 +60,17 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
     }
 
     companion object {
-        private const val ASSET_PATH = "_dat/_extract.dat"
+        private const val ASSET_PATH = "_extract.dat"
+
+        fun localizedContext(context: Context, language: CompilerConfig.AppLanguage): Context {
+            val locale = Locale.forLanguageTag(if (language == CompilerConfig.AppLanguage.ID) "id" else "en")
+            Locale.setDefault(locale)
+            val configuration = Configuration(context.resources.configuration).apply {
+                setLocale(locale)
+                setLayoutDirection(locale)
+            }
+            return context.createConfigurationContext(configuration)
+        }
 
         /**
          * Reads the localisation table from `_dat/_extract.dat` only.
@@ -73,10 +85,9 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
             }.getOrNull()?.takeIf { it.isNotBlank() }
 
             val fileData = if (assetData == null) {
-                runCatching {
-                    val directFile = java.io.File(ASSET_PATH)
-                    if (directFile.exists()) directFile.readText() else null
-                }.getOrNull()?.takeIf { it.isNotBlank() }
+                sequenceOf(java.io.File("_dat/_extract.dat"), java.io.File(ASSET_PATH))
+                    .mapNotNull { file -> runCatching { file.takeIf { it.isFile }?.readText() }.getOrNull() }
+                    .firstOrNull { it.isNotBlank() }
             } else null
 
             return AppLocalization(parseLocalizationData(assetData ?: fileData.orEmpty()))

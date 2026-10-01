@@ -150,6 +150,23 @@ class PawnCompilerIgnoreCaseWorkflowTest {
     }
 
     @Test
+    fun `refreshes an existing backup with the current folder contents`() {
+        val root = createProject("pawnmc-ignore-case-refresh")
+        try {
+            val gamemodes = File(root, "Gamemodes")
+            val backup = PawnCompiler.backupDirFor(gamemodes)
+            PawnCompiler.convertFolderToLowerCase(File(gamemodes, "Stock.pwn").absolutePath)
+            File(gamemodes, "new-file.pwn").writeText("main() { return 1; }\n")
+
+            assertTrue(PawnCompiler.refreshBackupForCompile(gamemodes))
+            assertTrue(File(backup, "new-file.pwn").isFile)
+            assertEquals("main() { return 1; }\n", File(backup, "new-file.pwn").readText())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
     fun `keeps a colliding lowercase name instead of overwriting it`() {
         val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-ignore-case-clash-${System.nanoTime()}")
         try {

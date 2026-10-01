@@ -33,6 +33,12 @@
 0x01:settings.language.option.en.desc.en:0x02:Use English for the app interface.
 0x01:settings.language.selector.id:0x02:Pilih Bahasa
 0x01:settings.language.selector.en:0x02:Select Language
+0x01:main.output.download.action.id:0x02:Unduh log output
+0x01:main.output.download.action.en:0x02:Download output log
+0x01:main.output.download.success.id:0x02:Log berhasil diunduh
+0x01:main.output.download.success.en:0x02:Log downloaded successfully
+0x01:main.output.download.failed.id:0x02:Gagal mengunduh log
+0x01:main.output.download.failed.en:0x02:Failed to download log
 0x01:settings.theme.id:0x02:Tema
 0x01:settings.theme.en:0x02:Theme
 0x01:settings.theme.desc.id:0x02:Mengatur apakah aplikasi mengikuti tema sistem, selalu terang, atau selalu gelap. Pilihan ini juga menentukan latar editor Xed.

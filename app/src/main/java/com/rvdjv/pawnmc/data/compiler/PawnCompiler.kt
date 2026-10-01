@@ -136,6 +136,35 @@ object PawnCompiler {
         return File(n_parent, "${workingDir.name}$BACKUP_DIR_SUFFIX")
     }
 
+    /** Replaces the backup with a snapshot of the current working folder. */
+    fun refreshBackupForCompile(workingDir: File): Boolean {
+        if (!workingDir.isDirectory) return false
+        val backup = backupDirFor(workingDir)
+        val parent = backup.parentFile ?: return false
+        val suffix = System.nanoTime().toString()
+        val staging = File(parent, ".${backup.name}.staging-$suffix")
+        val previous = File(parent, ".${backup.name}.previous-$suffix")
+
+        return try {
+            copyDirectoryRecursively(workingDir, staging)
+            if (backup.exists() && !backup.renameTo(previous)) {
+                staging.deleteRecursively()
+                return false
+            }
+            if (!staging.renameTo(backup)) {
+                previous.renameTo(backup)
+                staging.deleteRecursively()
+                return false
+            }
+            previous.deleteRecursively()
+            true
+        } catch (e: Exception) {
+            staging.deleteRecursively()
+            Log.e("PawnCompiler", "Could not refresh backup for ${workingDir.absolutePath}", e)
+            false
+        }
+    }
+
     /**
      * Decides whether the conversion has to run for [workingDir].
      *

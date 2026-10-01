@@ -1,6 +1,7 @@
 package com.rvdjv.pawnmc.ui.main
 
 import android.content.Intent
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.rvdjv.pawnmc.data.compiler.PawnCompiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.ui.editor.XedEditorScreen
 import com.rvdjv.pawnmc.ui.editor.XedEditorViewModel
@@ -23,6 +25,11 @@ import com.rvdjv.pawnmc.ui.theme.PawnMCTheme
 import com.rvdjv.pawnmc.ui.theme.resolveDarkTheme
 
 class MainActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        val language = CompilerConfig.getInstance(newBase).n_app_language
+        super.attachBaseContext(AppLocalization.localizedContext(newBase, language))
+    }
 
     private val viewModel: MainViewModel by viewModels {
         MainViewModelFactory(applicationContext)

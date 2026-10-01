@@ -1063,10 +1063,8 @@ fun SettingsScreen(
                             ),
                             selected = viewModel.n_app_language == language,
                             onClick = {
-                                val languageChanged = viewModel.n_app_language != language
                                 viewModel.updateAppLanguage(language)
                                 showLanguageDialog = false
-                                if (languageChanged) onRestartRequested()
                             }
                         )
 

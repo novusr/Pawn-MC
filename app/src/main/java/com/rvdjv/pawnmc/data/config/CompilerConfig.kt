@@ -233,7 +233,10 @@ class CompilerConfig private constructor(context: Context) {
         EN("en", "English (EN/US)", "English language");
 
         companion object {
-            fun fromValue(value: String?) = entries.find { it.value.equals(value, ignoreCase = true) } ?: ID
+            fun fromValue(value: String?): AppLanguage = when {
+                value.equals("in", ignoreCase = true) -> ID
+                else -> entries.find { it.value.equals(value, ignoreCase = true) } ?: ID
+            }
         }
     }
 

@@ -289,6 +289,18 @@ class MainViewModel(
             val options = config.buildOptions()
             val selectedVersion = config.n_compiler_version
 
+            val backupRefreshed = withContext(Dispatchers.IO) {
+                !config.n_ignore_case || PawnCompiler.refreshBackupForCompile(
+                    File(sourcePath).parentFile ?: File(".")
+                )
+            }
+            if (!backupRefreshed) {
+                outputText = "Failed to refresh the .backup folder; compilation was not started.\n"
+                lastExitCode = -1
+                isCompiling = false
+                return@launch
+            }
+
             val startTime = System.currentTimeMillis()
             val result = withContext(Dispatchers.IO) {
                 PawnCompiler.compile(sourcePath, options, selectedVersion)
