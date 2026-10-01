@@ -961,6 +961,43 @@ fun SettingsScreen(
         )
     }
 
+    if (showLanguageDialog) {
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text(localizer.get("settings.language.selector", appLanguage, "Select Language")) },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    CompilerConfig.AppLanguage.entries.forEachIndexed { index, language ->
+                        RadioButtonRow(
+                            text = language.label,
+                            description = language.description,
+                            selected = viewModel.n_app_language == language,
+                            onClick = {
+                                // Persisted through CompilerConfig, so the choice
+                                // immediately applies to every screen.
+                                viewModel.updateAppLanguage(language)
+                                showLanguageDialog = false
+                            }
+                        )
+
+                        if (index < CompilerConfig.AppLanguage.entries.size - 1) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                thickness = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text(localizer.get("settings.close", appLanguage, "Close"))
+                }
+            }
+        )
+    }
+
     if (showEditorBackgroundDialog) {
         EditorBackgroundDialog(
             initialHex = viewModel.n_editor_background_color,

@@ -99,6 +99,12 @@ class XedEditorViewModel(
                 lastSavedContent = content
                 hasUnsavedChanges = false
                 isLoading = false
+                // The file the user picked on the main screen becomes the first tab of
+                // the Xed workspace, so the tab strip and the explorer are usable right
+                // away instead of only after a folder is opened from the editor.
+                if (!workspace.isWorkspaceOpen) {
+                    workspace.registerExternalFile(file)
+                }
             } catch (e: Exception) {
                 loadError = "Failed to open file: ${e.localizedMessage ?: "Unknown error"}"
                 isLoading = false

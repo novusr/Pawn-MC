@@ -3,6 +3,7 @@ package com.rvdjv.pawnmc.ui
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
@@ -262,8 +263,10 @@ object PawnIcons {
     }
 
     /**
-     * Flower icon: six round petals around a punched-out centre, the glyph of the
-     * floating compile button in the Xed editor.
+     * Flower icon: six round petals around a punched-out centre.
+     *
+     * Kept for the self-test/decorative surfaces; the floating compile button of the
+     * Xed editor uses [WifiSignal] instead.
      *
      * Each petal is a circle drawn with four cubic curves and every circle shares
      * one even-odd path, so the six petals read as a single silhouette while the
@@ -291,6 +294,309 @@ object PawnIcons {
 
                 // --- Hole: the centre of the flower. ---
                 circle(cx = 12f, cy = 12f, r = 2.3f)
+            }
+        }.build()
+    }
+
+    /**
+     * Wi-Fi signal icon used by the floating compile button of the Xed editor.
+     *
+     * Three nested arcs plus the dot at the bottom-left form the familiar signal
+     * glyph. Each arc is a stroked ring segment, so the icon stays light in weight
+     * next to the filled Material glyphs it replaces.
+     */
+    val WifiSignal: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.WifiSignal",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            // Stroked arcs, drawn from the 135° to the 45° position so the fan opens
+            // towards the top-right, exactly like the platform Wi-Fi glyph.
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.9f, strokeLineCap = StrokeCap.Round) {
+                moveTo(8.6f, 12.4f)
+                quadraticTo(12f, 9.4f, 15.4f, 12.4f)
+            }
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.9f, strokeLineCap = StrokeCap.Round) {
+                moveTo(5.9f, 9.5f)
+                quadraticTo(12f, 4.1f, 18.1f, 9.5f)
+            }
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.9f, strokeLineCap = StrokeCap.Round) {
+                moveTo(3.2f, 6.6f)
+                quadraticTo(12f, -1.4f, 20.8f, 6.6f)
+            }
+            // Solid dot: the emitter of the signal.
+            circle(cx = 8.7f, cy = 16.4f, r = 2.0f)
+        }.build()
+    }
+
+    /**
+     * Rectangle-style folder icon for the workspace explorer.
+     *
+     * A rounded tab sits on top of a rounded body, so the glyph matches the
+     * rectangular look of the Xed editor surfaces instead of the slanted Material
+     * folder shape.
+     */
+    val FolderRect: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.FolderRect",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                // Tab of the folder.
+                moveTo(3f, 6.2f)
+                lineTo(9.4f, 6.2f)
+                lineTo(11.2f, 8.4f)
+                lineTo(3f, 8.4f)
+                close()
+                // Body of the folder.
+                moveTo(3f, 9.6f)
+                lineTo(21f, 9.6f)
+                lineTo(21f, 18.8f)
+                lineTo(3f, 18.8f)
+                close()
+            }
+        }.build()
+    }
+
+    /**
+     * Rectangle-style folder icon in its open state, used while a directory in the
+     * workspace explorer is expanded.
+     *
+     * The body is skewed to the left so the opening reads clearly even at 18dp,
+     * which is the size the explorer rows render it at.
+     */
+    val FolderRectOpen: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.FolderRectOpen",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                // Back plate with the tab.
+                moveTo(3f, 6.2f)
+                lineTo(9.4f, 6.2f)
+                lineTo(11.2f, 8.4f)
+                lineTo(3f, 8.4f)
+                close()
+                // Front plate, pushed right and down.
+                moveTo(6.4f, 10.4f)
+                lineTo(21f, 10.4f)
+                lineTo(21f, 18.8f)
+                lineTo(3.2f, 18.8f)
+                close()
+            }
+        }.build()
+    }
+
+    /**
+     * Rectangle-style file icon carrying the `{}` of a source file, used for the
+     * Pawn documents of the workspace explorer and the editor tabs.
+     */
+    val FileRect: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.FileRect",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillType = PathFillType.EvenOdd
+            ) {
+                // Sheet body.
+                moveTo(5f, 3.2f)
+                lineTo(14.4f, 3.2f)
+                lineTo(19f, 7.8f)
+                lineTo(19f, 20.8f)
+                lineTo(5f, 20.8f)
+                close()
+                // Folded corner.
+                moveTo(14.4f, 3.2f)
+                lineTo(19f, 7.8f)
+                lineTo(14.4f, 7.8f)
+                close()
+                // Left brace, punched out.
+                moveTo(9.4f, 10.4f)
+                lineTo(10.6f, 11.4f)
+                lineTo(9.9f, 12.9f)
+                lineTo(9.4f, 13.6f)
+                lineTo(9.9f, 14.3f)
+                lineTo(10.6f, 15.8f)
+                lineTo(9.4f, 16.8f)
+                lineTo(8.7f, 15.8f)
+                lineTo(9.2f, 14.3f)
+                lineTo(8.2f, 13.6f)
+                lineTo(9.2f, 12.9f)
+                lineTo(8.7f, 11.4f)
+                close()
+                // Right brace, punched out.
+                moveTo(14.6f, 10.4f)
+                lineTo(15.3f, 11.4f)
+                lineTo(14.8f, 12.9f)
+                lineTo(15.8f, 13.6f)
+                lineTo(14.8f, 14.3f)
+                lineTo(15.3f, 15.8f)
+                lineTo(14.6f, 16.8f)
+                lineTo(13.4f, 15.8f)
+                lineTo(13.9f, 14.3f)
+                lineTo(12.9f, 13.6f)
+                lineTo(13.9f, 12.9f)
+                lineTo(13.4f, 11.4f)
+                close()
+            }
+        }.build()
+    }
+
+    /**
+     * Include-file icon: the [FileRect] sheet with a folded `+` punched into it,
+     * so `#include` documents are told apart from source files at a glance.
+     */
+    val IncludeRect: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.IncludeRect",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillType = PathFillType.EvenOdd
+            ) {
+                // Sheet body.
+                moveTo(5f, 3.2f)
+                lineTo(14.4f, 3.2f)
+                lineTo(19f, 7.8f)
+                lineTo(19f, 20.8f)
+                lineTo(5f, 20.8f)
+                close()
+                // Folded corner.
+                moveTo(14.4f, 3.2f)
+                lineTo(19f, 7.8f)
+                lineTo(14.4f, 7.8f)
+                close()
+                // Vertical bar of the plus.
+                moveTo(11.6f, 10.2f)
+                lineTo(13.0f, 10.2f)
+                lineTo(13.0f, 16.6f)
+                lineTo(11.6f, 16.6f)
+                close()
+                // Horizontal bar of the plus.
+                moveTo(9.4f, 12.6f)
+                lineTo(15.2f, 12.6f)
+                lineTo(15.2f, 14.0f)
+                lineTo(9.4f, 14.0f)
+                close()
+            }
+        }.build()
+    }
+
+    /**
+     * Save-all icon: the [Save] body with a second, smaller sheet tucked behind the
+     * lower-right corner, i.e. "write every open document".
+     */
+    val SaveAll: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.SaveAll",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillType = PathFillType.EvenOdd
+            ) {
+                // Rear sheet.
+                moveTo(11.4f, 6.6f)
+                lineTo(21.4f, 6.6f)
+                lineTo(21.4f, 21.4f)
+                lineTo(11.4f, 21.4f)
+                close()
+                // Front sheet.
+                moveTo(2.6f, 2.6f)
+                lineTo(15.6f, 2.6f)
+                lineTo(18.4f, 5.4f)
+                lineTo(18.4f, 17.4f)
+                lineTo(2.6f, 17.4f)
+                close()
+                // Fold of the front sheet.
+                moveTo(15.6f, 2.6f)
+                lineTo(18.4f, 5.4f)
+                lineTo(15.6f, 5.4f)
+                close()
+                // Label slot of the front sheet.
+                moveTo(5.2f, 7.2f)
+                lineTo(12.4f, 7.2f)
+                lineTo(12.4f, 9.4f)
+                lineTo(5.2f, 9.4f)
+                close()
+                // Save arrow cut into the front sheet.
+                moveTo(7.4f, 11.0f)
+                lineTo(9.0f, 11.0f)
+                lineTo(9.0f, 13.4f)
+                lineTo(11.0f, 13.4f)
+                lineTo(8.2f, 16.0f)
+                lineTo(5.4f, 13.4f)
+                lineTo(7.4f, 13.4f)
+                close()
+            }
+        }.build()
+    }
+
+    /**
+     * Workspace-panel icon: a rectangle with a narrow left sidebar, i.e. the file
+     * explorer layout. Used by the floating workspace panel button.
+     */
+    val PanelRect: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.PanelRect",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(
+                fill = SolidColor(Color.Black),
+                fillType = PathFillType.EvenOdd
+            ) {
+                // Outer frame.
+                moveTo(3f, 4.4f)
+                lineTo(21f, 4.4f)
+                lineTo(21f, 19.6f)
+                lineTo(3f, 19.6f)
+                close()
+                // Sidebar slot.
+                moveTo(5.4f, 6.8f)
+                lineTo(9.4f, 6.8f)
+                lineTo(9.4f, 17.2f)
+                lineTo(5.4f, 17.2f)
+                close()
+                // Text lines of the content area.
+                moveTo(11.8f, 7.4f)
+                lineTo(18.6f, 7.4f)
+                lineTo(18.6f, 9.0f)
+                lineTo(11.8f, 9.0f)
+                close()
+                moveTo(11.8f, 11.2f)
+                lineTo(18.6f, 11.2f)
+                lineTo(18.6f, 12.8f)
+                lineTo(11.8f, 12.8f)
+                close()
+                moveTo(11.8f, 15.0f)
+                lineTo(16.4f, 15.0f)
+                lineTo(16.4f, 16.6f)
+                lineTo(11.8f, 16.6f)
+                close()
             }
         }.build()
     }

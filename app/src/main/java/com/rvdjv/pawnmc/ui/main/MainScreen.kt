@@ -177,7 +177,7 @@ fun MainScreen(
         viewModel.handleInitialUri(initialUri)
     }
 
-    // A compile requested from the Xed editor flower button: the editor already
+    // A compile requested from the Xed editor compile button: the editor already
     // closed itself, so the queued request is picked up here where the output and
     // the log live.
     LaunchedEffect(Unit) {

@@ -138,6 +138,10 @@ class OpenDocument(val file: File) {
 
     private var savedContent: String = ""
 
+    /** False while the first read from disk is still in flight. */
+    var isLoaded by mutableStateOf(false)
+        private set
+
     val isDirty: Boolean get() = content != savedContent
 
     val name: String get() = file.name
@@ -153,6 +157,7 @@ class OpenDocument(val file: File) {
     suspend fun loadFromDisk() {
         content = withContext(Dispatchers.IO) { file.readText() }
         markSaved()
+        isLoaded = true
     }
 }
 
@@ -242,6 +247,51 @@ class XedWorkspaceViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Registers a file the user opened outside the Xed workspace panel, i.e. from the
+     * main screen or the file browser.
+     *
+     * The folder of the file becomes a workspace (so the tab strip, the explorer and
+     * `Save All` all work from the first file), and the file itself is added as a tab.
+     * Calling it twice for the same file is a no-op.
+     */
+    fun registerExternalFile(file: File) {
+        if (!file.isFile) return
+        val dir = file.parentFile ?: return
+
+        val workspace = workspaces.firstOrNull { it.root.absolutePath == dir.absolutePath }
+            ?: newWorkspaceFor(dir)
+            ?: return
+
+        if (activeWorkspace == null || activeWorkspace?.root?.absolutePath != workspace.root.absolutePath) {
+            activeWorkspace = workspace
+        }
+        openFile(file, workspace)
+    }
+
+    /** Creates and scans a workspace for [dir], or returns null when the limit is hit. */
+    private fun newWorkspaceFor(dir: File): Workspace? {
+        if (isAtWorkspaceLimit) return null
+        val created = Workspace(dir)
+        workspaces.add(created)
+        scan(created)
+        return created
+    }
+
+    /**
+     * Closes the workspace folder in front and drops its opened editors.
+     *
+     * The folder only disappears from the list, so a folder that is deleted or
+     * unmounted outside the app can be cleared with the same call.
+     *
+     * @return true when a workspace was closed.
+     */
+    fun closeActiveWorkspace(): Boolean {
+        val closing = activeWorkspace ?: return false
+        closeWorkspace(closing)
+        return true
+    }
+
     /** Leaves every workspace; the caller decides what to show instead. */
     fun closeAllWorkspaces() {
         workspaces.clear()
@@ -268,24 +318,55 @@ class XedWorkspaceViewModel : ViewModel() {
     // Files
     // ------------------------------------------------------------------
 
-    /** Registers [file] as open and makes it the active editor, reading it once. */
+    /**
+     * Registers [file] as open and makes it the active editor.
+     *
+     * The disk read is kicked off immediately, before the editor even asks for the
+     * buffer, so tapping a file in the explorer fills the editor in one step instead
+     * of waiting for a second round trip. A document that was already open is only
+     * activated, never re-read, so its unsaved buffer survives the tap.
+     */
     fun openFile(file: File, workspace: Workspace = activeWorkspace ?: return) {
-        val document = workspace.documentFor(file)
-        if (document != null) {
-            workspace.activate(document.file.absolutePath)
+        val existing = workspace.documentFor(file)
+        if (existing != null) {
+            workspace.activate(existing.file.absolutePath)
+            if (!existing.isLoaded) loadDocument(existing, workspace)
             return
         }
         val opened = OpenDocument(file)
         workspace.addDocument(opened)
         workspace.activate(file.absolutePath)
+        loadDocument(opened, workspace)
+    }
+
+    /** Reads a registered document once and drops it again when the read fails. */
+    private fun loadDocument(document: OpenDocument, workspace: Workspace) {
         viewModelScope.launch {
             try {
-                opened.loadFromDisk()
+                document.loadFromDisk()
             } catch (e: Exception) {
-                workspace.removeDocument(file.absolutePath)
-                statusMessage = "Failed to open ${file.name}: ${e.localizedMessage}"
+                workspace.removeDocument(document.file.absolutePath)
+                statusMessage = "Failed to open ${document.name}: ${e.localizedMessage}"
             }
         }
+    }
+
+    /**
+     * Drops every file of the workspace that is not a folder, and closes the
+     * workspaces that are not folders on disk any more.
+     *
+     * Used by the editor when a workspace folder was closed or unmounted externally.
+     */
+    fun closeMissingWorkspaces(): Int {
+        val missing = workspaces.filter { !it.root.isDirectory }
+        missing.forEach { workspace ->
+            workspaces.remove(workspace)
+            scanning.remove(workspace)
+        }
+        if (activeWorkspace != null && activeWorkspace !in workspaces) {
+            activeWorkspace = workspaces.lastOrNull()
+        }
+        return missing.size
     }
 
     fun closeDocument(file: File, workspace: Workspace = activeWorkspace ?: return) {

@@ -7,10 +7,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -35,8 +36,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.FolderOpen
@@ -57,6 +58,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -66,7 +68,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarimport androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -91,6 +95,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -469,60 +474,9 @@ fun XedEditorScreen(
                         )
                     }
 
-                    IconButton(
-                        onClick = {
-                            showSearchBar = !showSearchBar
-                            if (!showSearchBar) {
-                                editorRef?.searcher?.stopSearch()
-                            }
-                        },
-                        modifier = Modifier.testTag("editor_search_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Search,
-                            contentDescription = "Search"
-                        )
-                    }
-
-                    IconButton(
-                        onClick = { folderPickerLauncher.launch(buildOpenFolderIntent()) },
-                        modifier = Modifier.testTag("editor_workspace_button")
-                    ) {
-                        Icon(
-                            imageVector = PawnIcons.Workspace,
-                            contentDescription = "Open workspace folder"
-                        )
-                    }
-
-                    IconButton(
-                        onClick = { saveActiveFile() },
-                        enabled = !viewModel.isSaving,
-                        modifier = Modifier.testTag("editor_save_button")
-                    ) {
-                        Icon(
-                            imageVector = PawnIcons.Save,
-                            contentDescription = "Save file",
-                            tint = if (hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Without a workspace this stays "Save As"; inside a workspace
-                    // the same slot becomes "Save All" for every modified file.
-                    TextButton(
-                        onClick = {
-                            if (workspace.isWorkspaceOpen) {
-                                scope.launch {
-                                    workspace.saveAll()
-                                    workspace.refreshTree()
-                                }
-                            } else {
-                                saveAsLauncher.launch(viewModel.fileName)
-                            }
-                        },                        modifier = Modifier.testTag("editor_save_as_button")
-                    ) {
-                        Text(if (workspace.isWorkspaceOpen) "Save All" else "Save As")
-                    }
-
+                    // Search, Open Workspace, Save and Save As/Save All live on the
+                    // floating rectangle toolbar above the compile button, so the top
+                    // bar only keeps history and the overflow menu.
                     Box {
                         IconButton(onClick = { showMenu = true }) {
                             Icon(PawnIcons.Settings, contentDescription = "Editor options")
@@ -610,7 +564,7 @@ fun XedEditorScreen(
                                 text = { Text(if (isExplorerVisible) "Hide Workspace Panel" else "Show Workspace Panel") },
                                 leadingIcon = {
                                     Icon(
-                                        imageVector = if (isExplorerVisible) Icons.Filled.ChevronRight else Icons.Filled.ChevronLeft,
+                                        imageVector = if (isExplorerVisible) Icons.Filled.ChevronRight else PawnIcons.PanelRect,
                                         contentDescription = null
                                     )
                                 },
@@ -784,11 +738,21 @@ fun XedEditorScreen(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                Row(modifier = Modifier.fillMaxSize()) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                // Visual Studio Code style tab strip above the code canvas.
+                XedTabStrip(
+                    documents = workspace.documents,
+                    activePath = workspace.activePath,
+                    onSelectTab = { file -> workspace.setActive(file) },
+                    onCloseTab = { file -> workspace.closeDocument(file) },
+                    onNewTabClick = { isExplorerVisible = !isExplorerVisible },
+                    onOpenFileClick = { folderPickerLauncher.launch(buildOpenFolderIntent()) }
+                )
+
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxSize()
+                        .fillMaxWidth()
                 ) {
                     when {
                     viewModel.isLoading && !workspace.isWorkspaceOpen -> {
@@ -820,6 +784,14 @@ fun XedEditorScreen(
                         }
                     }
                     else -> {
+                        // Empty workspace: every tab was closed, so offer the two ways
+                        // back into content instead of a blank canvas.
+                        if (workspace.isWorkspaceOpen && workspace.documents.isEmpty()) {
+                            EmptyWorkspaceView(
+                                onBrowseExplorer = { isExplorerVisible = !isExplorerVisible },
+                                onOpenFolder = { folderPickerLauncher.launch(buildOpenFolderIntent()) }
+                            )
+                        } else {
                         AndroidView(
                             factory = { ctx ->
                                 XedCodeEditor(ctx).apply {
@@ -846,6 +818,10 @@ fun XedEditorScreen(
                                         val document = workspace.activeDocument
                                         if (document != null) {
                                             workspace.updateContent(document.file, text.toString())
+                                            // The widget already shows this text, so the
+                                            // reload watcher must not push it back and
+                                            // reset the caret on every keystroke.
+                                            loadedBuffer.content = text.toString()
                                         } else {
                                             viewModel.onContentChanged(text.toString())
                                         }
@@ -870,52 +846,58 @@ fun XedEditorScreen(
                                 }
                                 // Push the buffer of the file the workspace panel
                                 // activated, or of the single file opened from the
-                                // browser. Only runs when the shown buffer changed,
-                                // so typing is never interrupted.
+                                // browser. Only runs when the shown path or content
+                                // really changed, so typing is never interrupted.
                                 val document = workspace.activeDocument
-                                if (loadedBuffer.document !== document || loadedBuffer.token != editorReloadToken) {
-                                    editor.setText(
-                                        document?.content
-                                            ?: if (workspace.isWorkspaceOpen) "" else (viewModel.fileContent ?: "")
-                                    )
-                                    loadedBuffer.document = document
-                                    loadedBuffer.token = editorReloadToken
+                                val singlePath = if (workspace.isWorkspaceOpen) "" else viewModel.filePath
+                                val singleContent = if (workspace.isWorkspaceOpen) "" else (viewModel.fileContent ?: "")
+                                val targetPath = document?.file?.absolutePath ?: singlePath
+                                val targetContent = document?.content ?: singleContent
+                                if (loadedBuffer.needsReload(document, singlePath, singleContent, editorReloadToken)) {
+                                    editor.setText(targetContent)
+                                    loadedBuffer.store(document, targetPath, targetContent, editorReloadToken)
                                     cursorLine = 1
                                     cursorCol = 1
                                 }
                             },
                             modifier = Modifier.fillMaxSize()
                         )
-                    }
-                }
-
-                if (isExplorerVisible) {
-                    XedWorkspacePanel(
-                        session = workspace,
-                        onOpenFile = openWorkspaceFile,
-                        onCloseFile = { file -> workspace.closeDocument(file) },
-                        onSelectFile = { file -> workspace.setActive(file) },
-                        onOpenHit = { hit ->
-                            workspace.openFile(hit.file)
-                            // The buffer is filled asynchronously, so the jump has
-                            // to wait for the reload to land in the widget.
-                            editorRef?.postDelayed({
-                                editorRef?.jumpToLine((hit.line - 1).coerceAtLeast(0))
-                            }, 250)
-                        },
-                        modifier = Modifier.width(explorerWidth.dp)
-                    )
-                }
-
-                WorkspacePanelToggle(
-                    isPanelVisible = isExplorerVisible,
-                    onToggle = { isExplorerVisible = !isExplorerVisible },
-                    onResize = { delta ->
-                        if (isExplorerVisible) {
-                            explorerWidth = (explorerWidth + delta).coerceIn(MIN_EXPLORER_WIDTH, MAX_EXPLORER_WIDTH)
                         }
                     }
-                )
+                }
+
+                // Floating explorer: it sits above the code canvas instead of being
+                // welded to the right edge, matching the rest of the Xed surfaces.
+                if (isExplorerVisible) {
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = MaterialTheme.colorScheme.surfaceContainer,
+                        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
+                        shadowElevation = 10.dp,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(start = 10.dp, top = 10.dp)
+                            .width(explorerWidth.dp)
+                            .fillMaxHeight(0.86f)
+                    ) {
+                        XedWorkspacePanel(
+                            session = workspace,
+                            onOpenFile = openWorkspaceFile,
+                            onCloseFile = { file -> workspace.closeDocument(file) },
+                            onSelectFile = { file -> workspace.setActive(file) },
+                            onOpenHit = { hit ->
+                                workspace.openFile(hit.file)
+                                // The buffer is filled asynchronously, so the jump has
+                                // to wait for the reload to land in the widget.
+                                editorRef?.postDelayed({
+                                    editorRef?.jumpToLine((hit.line - 1).coerceAtLeast(0))
+                                }, 250)
+                            },
+                            onClosePanel = { isExplorerVisible = false }
+                        )
+                    }
+                }
+                }
                 }
 
                 toolPanelMode?.let { mode ->
@@ -944,6 +926,41 @@ fun XedEditorScreen(
                             .padding(12.dp)
                     )
                 }
+
+                // Workspace panel toggle: floats directly above the compile button and
+                // opens or closes the explorer card.
+                FloatingRoundAction(
+                    size = 48.dp,
+                    icon = PawnIcons.PanelRect,
+                    contentDescription = if (isExplorerVisible) "Hide workspace panel" else "Show workspace panel",
+                    testTag = "editor_explorer_toggle",
+                    isActive = isExplorerVisible,
+                    onClick = { isExplorerVisible = !isExplorerVisible }
+                )
+
+                // Rectangle-style floating toolbar, stacked vertically above the
+                // workspace panel button and the compile button.
+                FloatingRectToolbar(
+                    hasUnsavedChanges = hasUnsavedChanges,
+                    workspaceOpen = workspace.isWorkspaceOpen,
+                    isSearchOpen = showSearchBar,
+                    onSearchClick = {
+                        showSearchBar = !showSearchBar
+                        if (!showSearchBar) editorRef?.searcher?.stopSearch()
+                    },
+                    onOpenWorkspaceClick = { folderPickerLauncher.launch(buildOpenFolderIntent()) },
+                    onSaveClick = { saveActiveFile() },
+                    onSaveAllClick = {
+                        if (workspace.isWorkspaceOpen) {
+                            scope.launch {
+                                workspace.saveAll()
+                                workspace.refreshTree()
+                            }
+                        } else {
+                            saveAsLauncher.launch(viewModel.fileName)
+                        }
+                    }
+                )
 
                 FloatingCompileButton(
                     enabled = activeDocument != null || viewModel.filePath.isNotBlank(),
@@ -979,7 +996,7 @@ fun XedEditorScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surfaceContainer)
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -992,13 +1009,27 @@ fun XedEditorScreen(
                         workspace.activeWorkspace?.name?.let { "$it - $extension" } ?: "Pawn ($extension)"
                     },
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = if (hasUnsavedChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp)
                 )
+                // Compact caret readout: no padding around the numbers, no spacing
+                // between them, so the pill covers as little of the editor as possible.
                 Text(
-                    text = "Ln $cursorLine, Col $cursorCol",
+                    text = "$cursorLine-$cursorCol",
                     fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .background(
+                            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            shape = RoundedCornerShape(6.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 1.dp)
                 )
             }
         }
@@ -1008,6 +1039,315 @@ fun XedEditorScreen(
         onDispose {
             editorRef?.release()
             editorRef = null
+        }
+    }
+}
+
+/**
+ * Shown when a workspace has no open document at all: either reopen the explorer or
+ * pick another folder.
+ */
+@Composable
+private fun EmptyWorkspaceView(
+    onBrowseExplorer: () -> Unit,
+    onOpenFolder: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(24.dp)
+        ) {
+            Icon(
+                imageVector = PawnIcons.PanelRect,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(40.dp)
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "No file open",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Browse the workspace panel or open another folder to start editing.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                FilledTonalButton(onClick = onBrowseExplorer) {
+                    Icon(PawnIcons.PanelRect, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Explorer")
+                }
+                FilledTonalButton(onClick = onOpenFolder) {
+                    Icon(PawnIcons.FolderRect, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Open Folder")
+                }
+            }
+        }
+    }
+}
+
+/** Side of the editor the floating compile button rests on. */
+private val FLOAT_MARGIN = 16.dp
+
+/** Vertical gap between the stacked floating controls. */
+private val FLOAT_GAP = 10.dp
+
+/** Diameter of the floating compile button. */
+private val COMPILE_BUTTON_SIZE = 58.dp
+
+/** Diameter of the floating workspace panel button. */
+private val PANEL_BUTTON_SIZE = 48.dp
+
+/** Width of the rectangle-style floating toolbar. */
+private val TOOLBAR_WIDTH = 52.dp
+
+/** Height of the rectangle-style floating toolbar (drag handle + four entries). */
+private val TOOLBAR_HEIGHT = 232.dp
+
+/**
+ * Rest position of a floating control, given the compile button it stacks above.
+ *
+ * All three floaters share this geometry: the panel button sits one gap above the
+ * compile button, the rectangular toolbar one gap above that, and both are centred on
+ * the compile button horizontally so the group reads as one column.
+ */
+private fun restOffsetAbove(
+    controlWidth: Dp,
+    controlHeight: Dp,
+    maxWidthPx: Float,
+    maxHeightPx: Float,
+    density: Density
+): IntOffset = with(density) {
+    val compilePx = COMPILE_BUTTON_SIZE.toPx()
+    val panelPx = PANEL_BUTTON_SIZE.toPx()
+    val controlWidthPx = controlWidth.toPx()
+    val controlHeightPx = controlHeight.toPx()
+    val marginPx = FLOAT_MARGIN.toPx()
+    val gapPx = FLOAT_GAP.toPx()
+
+    val x = (maxWidthPx - marginPx - controlWidthPx - (compilePx - controlWidthPx) / 2f)
+        .coerceAtLeast(0f)
+    val compileTop = maxHeightPx - marginPx - compilePx
+    val y = (compileTop - gapPx - panelPx - gapPx - controlHeightPx).coerceAtLeast(0f)
+
+    IntOffset(x.roundToInt(), y.roundToInt())
+}
+
+/**
+ * Floating rectangle toolbar of the editor: Search, Open Workspace, Save File and
+ * Save As / Save All, stacked top to bottom.
+ *
+ * The group is dragged anywhere inside the editor area with the same gesture physics
+ * and boundary clamping as the compile button, and a plain tap on one of its entries
+ * runs that action without starting a drag.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FloatingRectToolbar(
+    hasUnsavedChanges: Boolean,
+    workspaceOpen: Boolean,
+    isSearchOpen: Boolean,
+    onSearchClick: () -> Unit,
+    onOpenWorkspaceClick: () -> Unit,
+    onSaveClick: () -> Unit,
+    onSaveAllClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val density = LocalDensity.current
+
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val maxWidthPx = with(density) { maxWidth.toPx() }
+        val maxHeightPx = with(density) { maxHeight.toPx() }
+        val restOffset = restOffsetAbove(TOOLBAR_WIDTH, TOOLBAR_HEIGHT, maxWidthPx, maxHeightPx, density)
+        val toolbarWidthPx = with(density) { TOOLBAR_WIDTH.toPx() }
+        val toolbarHeightPx = with(density) { TOOLBAR_HEIGHT.toPx() }
+
+        var draggedOffset by remember { mutableStateOf<IntOffset?>(null) }
+        val offset = draggedOffset ?: restOffset
+
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
+            shadowElevation = 6.dp,
+            modifier = Modifier
+                .offset { offset }
+                .width(TOOLBAR_WIDTH)
+                .height(TOOLBAR_HEIGHT)
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragEnd = { },
+                        onDragCancel = { },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val current = draggedOffset ?: restOffset
+                            val newX = (current.x + dragAmount.x)
+                                .coerceIn(0f, (maxWidthPx - toolbarWidthPx).coerceAtLeast(0f))
+                            val newY = (current.y + dragAmount.y)
+                                .coerceIn(0f, (maxHeightPx - toolbarHeightPx).coerceAtLeast(0f))
+                            draggedOffset = IntOffset(newX.roundToInt(), newY.roundToInt())
+                        }
+                    )
+                }
+                .testTag("editor_floating_toolbar")
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Drag indicator bar.
+                Box(
+                    modifier = Modifier
+                        .padding(top = 6.dp)
+                        .width(20.dp)
+                        .height(3.dp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                )
+
+                ToolBarEntry(
+                    icon = Icons.Filled.Search,
+                    contentDescription = "Search",
+                    testTag = "editor_floating_search",
+                    isActive = isSearchOpen,
+                    onClick = onSearchClick
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                ToolBarEntry(
+                    icon = PawnIcons.FolderRect,
+                    contentDescription = "Open workspace folder",
+                    testTag = "editor_floating_open_workspace",
+                    onClick = onOpenWorkspaceClick
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                ToolBarEntry(
+                    icon = PawnIcons.Save,
+                    contentDescription = "Save file",
+                    testTag = "editor_floating_save",
+                    isActive = hasUnsavedChanges,
+                    onClick = onSaveClick
+                )
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                ToolBarEntry(
+                    icon = if (workspaceOpen) PawnIcons.SaveAll else PawnIcons.Save,
+                    contentDescription = if (workspaceOpen) "Save All" else "Save As",
+                    testTag = "editor_floating_save_all",
+                    onClick = onSaveAllClick
+                )
+            }
+        }
+    }
+}
+
+/** One entry of the floating rectangle toolbar. */
+@Composable
+private fun ToolBarEntry(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    testTag: String,
+    onClick: () -> Unit,
+    isActive: Boolean = false
+) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier
+            .size(46.dp)
+            .testTag(testTag)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = if (isActive) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            modifier = Modifier.size(22.dp)
+        )
+    }
+}
+
+/**
+ * Floating round action, used by the workspace panel button that sits directly above
+ * the compile button and opens or closes the explorer card.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FloatingRoundAction(
+    size: Dp,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    contentDescription: String,
+    testTag: String,
+    isActive: Boolean = false,
+    onClick: () -> Unit
+) {
+    val density = LocalDensity.current
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val maxWidthPx = with(density) { maxWidth.toPx() }
+        val maxHeightPx = with(density) { maxHeight.toPx() }
+        val restOffset = restOffsetAbove(size, size, maxWidthPx, maxHeightPx, density)
+        val sizePx = with(density) { size.toPx() }
+
+        var draggedOffset by remember { mutableStateOf<IntOffset?>(null) }
+        val offset = draggedOffset ?: restOffset
+
+        Surface(
+            onClick = onClick,
+            shape = RoundedCornerShape(14.dp),
+            color = if (isActive) {
+                MaterialTheme.colorScheme.secondaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            },
+            shadowElevation = 6.dp,
+            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
+            modifier = Modifier
+                .offset { offset }
+                .size(size)
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragEnd = { },
+                        onDragCancel = { },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val current = draggedOffset ?: restOffset
+                            val newX = (current.x + dragAmount.x)
+                                .coerceIn(0f, (maxWidthPx - sizePx).coerceAtLeast(0f))
+                            val newY = (current.y + dragAmount.y)
+                                .coerceIn(0f, (maxHeightPx - sizePx).coerceAtLeast(0f))
+                            draggedOffset = IntOffset(newX.roundToInt(), newY.roundToInt())
+                        }
+                    )
+                }
+                .testTag(testTag)
+        ) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = contentDescription,
+                    tint = if (isActive) {
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 }
@@ -1027,7 +1367,7 @@ private fun FloatingCompileButton(
     modifier: Modifier = Modifier
 ) {
     val n_density = LocalDensity.current
-    val n_diameter: Dp = 58.dp
+    val n_diameter: Dp = COMPILE_BUTTON_SIZE
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val n_maxWidth = with(n_density) { maxWidth.toPx() }
@@ -1087,7 +1427,7 @@ private fun FloatingCompileButton(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = PawnIcons.Flower,
+                    imageVector = PawnIcons.WifiSignal,
                     contentDescription = "Compile active file",
                     modifier = Modifier.size(30.dp)
                 )
@@ -1103,53 +1443,171 @@ private const val MIN_EXPLORER_WIDTH = 200f
 private const val MAX_EXPLORER_WIDTH = 640f
 
 /**
- * Slim strip on the right edge that toggles the workspace panel and, while the
- * panel is open, resizes it by dragging sideways — the Visual Studio arrangement.
+ * Visual Studio Code style tab strip above the code canvas.
+ *
+ * Each open document is a tab with a file-type icon, an unsaved dot and its own close
+ * button; the active tab is drawn on the editor surface with the primary accent line
+ * along its top edge. The last entry opens the explorer or a new file, so a tab strip
+ * alone is enough to navigate the workspace.
  */
 @Composable
-private fun WorkspacePanelToggle(
-    isPanelVisible: Boolean,
-    onToggle: () -> Unit,
-    onResize: (Float) -> Unit
+private fun XedTabStrip(
+    documents: List<OpenDocument>,
+    activePath: String?,
+    onSelectTab: (java.io.File) -> Unit,
+    onCloseTab: (java.io.File) -> Unit,
+    onNewTabClick: () -> Unit,
+    onOpenFileClick: () -> Unit
 ) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .fillMaxHeight()
-            .width(40.dp)
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
-            .pointerInput(isPanelVisible) {
-                detectHorizontalDragGestures(
-                    onDragEnd = { },
-                    onDragCancel = { },
-                    onHorizontalDrag = { change, dragAmount ->
-                        if (isPanelVisible) {
-                            change.consume()
-                            // Dragging left pulls the panel wider.
-                            onResize(-dragAmount)
+    Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(TAB_STRIP_HEIGHT)
+                .horizontalScroll(rememberScrollState()),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            documents.forEach { document ->
+                val isActive = document.file.absolutePath == activePath
+                Box(
+                    modifier = Modifier
+                        .background(
+                            color = if (isActive) {
+                                MaterialTheme.colorScheme.surfaceContainerLowest
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainer
+                            }
+                        )
+                        .clickable { onSelectTab(document.file) }
+                        .padding(start = 12.dp, end = 4.dp)
+                        .testTag("editor_tab_${document.name}")
+                ) {
+                    // Signature accent line on top of the active tab.
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                            .height(2.dp)
+                            .background(
+                                color = if (isActive) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    Color.Transparent
+                                }
+                            )
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.height(TAB_STRIP_HEIGHT)
+                    ) {
+                        Icon(
+                            imageVector = if (document.file.extension.equals("inc", ignoreCase = true)) {
+                                PawnIcons.IncludeRect
+                            } else {
+                                PawnIcons.FileRect
+                            },
+                            contentDescription = null,
+                            tint = if (document.file.extension.equals("inc", ignoreCase = true)) {
+                                MaterialTheme.colorScheme.tertiary
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            },
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = document.name,
+                            style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .widthIn(max = 140.dp)
+                                .padding(start = 6.dp)
+                        )
+                        if (document.isDirty) {
+                            Text(
+                                text = "●",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { onCloseTab(document.file) },
+                            modifier = Modifier.size(26.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Close ${document.name}",
+                                modifier = Modifier.size(13.dp)
+                            )
                         }
                     }
+                    VerticalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+            }
+
+            IconButton(
+                onClick = onNewTabClick,
+                modifier = Modifier
+                    .size(TAB_STRIP_HEIGHT)
+                    .testTag("editor_tab_explorer_toggle")
+            ) {
+                Icon(
+                    imageVector = PawnIcons.PanelRect,
+                    contentDescription = "Toggle workspace panel",
+                    modifier = Modifier.size(18.dp)
                 )
             }
-    ) {
-        IconButton(
-            onClick = onToggle,
-            modifier = Modifier.testTag("editor_explorer_toggle")
-        ) {
-            Icon(
-                imageVector = if (isPanelVisible) Icons.Filled.ChevronRight else Icons.Filled.ChevronLeft,
-                contentDescription = if (isPanelVisible) "Hide workspace panel" else "Show workspace panel",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            IconButton(
+                onClick = onOpenFileClick,
+                modifier = Modifier
+                    .size(TAB_STRIP_HEIGHT)
+                    .testTag("editor_tab_open_file")
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Open file",
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
+
+/** Compact height of the tab strip, matching the Visual Studio Code density. */
+private val TAB_STRIP_HEIGHT = 38.dp
 
 /** Remembers which buffer the native editor widget is currently showing. */
 private class LoadedBufferHolder {
     var document: OpenDocument? = null
+    var path: String? = null
+    var content: String? = null
     var token: Int = 0
+
+    /**
+     * Whether the widget has to receive a new buffer.
+     *
+     * Both the file *and* the content are compared. The document object alone is not
+     * enough: tapping a file in the workspace explorer swaps the active document, but
+     * the buffer only arrives once the disk read finished, so a path-only or
+     * identity-only check could latch onto the still-empty previous text and drop the
+     * file the user just tapped.
+     */
+    fun needsReload(document: OpenDocument?, singleFilePath: String, singleFileContent: String, reloadToken: Int): Boolean {
+        val targetPath = document?.file?.absolutePath ?: singleFilePath
+        val targetContent = document?.content ?: singleFileContent
+        return this.document !== document ||
+            this.path != targetPath ||
+            this.content != targetContent ||
+            this.token != reloadToken
+    }
+
+    fun store(document: OpenDocument?, targetPath: String, targetContent: String, reloadToken: Int) {
+        this.document = document
+        this.path = targetPath
+        this.content = targetContent
+        this.token = reloadToken
+    }
 }
 
 /**
@@ -1373,7 +1831,7 @@ private fun applyVividSyntaxPalette(scheme: EditorColorScheme, darkCanvas: Boole
     // canvas under a light app theme would render every variable dark-on-dark.
     scheme.setColor(
         EditorColorScheme.TEXT_NORMAL,
-        if (darkCanvas) 0xFFE6E9EF.toInt() else 0xFF1A1C1E.toInt()
+        if (darkCanvas) 0xFFF2F5FA.toInt() else 0xFF111418.toInt()
     )
 }
 
@@ -1396,14 +1854,14 @@ private data class SyntaxPalette(
 )
 
 private val DarkPalette = SyntaxPalette(
-    keyword = 0xFFFFC66D.toInt(),
-    type = 0xFF4DD0E1.toInt(),
-    literal = 0xFFFFAB70.toInt(),
-    function = 0xFF69F0AE.toInt(),
-    operator = 0xFFCE93D8.toInt(),
-    annotation = 0xFFB39DFF.toInt(),
-    comment = 0xFF7E8AA0.toInt(),
-    lineNumber = 0xFF5C6B80.toInt()
+    keyword = 0xFFFFD866.toInt(),
+    type = 0xFF6FE3F5.toInt(),
+    literal = 0xFFFFB07C.toInt(),
+    function = 0xFF7CFF9E.toInt(),
+    operator = 0xFFE6A8FF.toInt(),
+    annotation = 0xFFC9B6FF.toInt(),
+    comment = 0xFF9AA7BD.toInt(),
+    lineNumber = 0xFF7E8CA3.toInt()
 )
 
 /**
@@ -1413,14 +1871,14 @@ private val DarkPalette = SyntaxPalette(
  * against a white canvas stays readable.
  */
 private val LightPalette = SyntaxPalette(
-    keyword = 0xFFB45309.toInt(),
-    type = 0xFF00697A.toInt(),
-    literal = 0xFFC2410C.toInt(),
-    function = 0xFF15803D.toInt(),
-    operator = 0xFF7E22CE.toInt(),
-    annotation = 0xFF5B21B6.toInt(),
-    comment = 0xFF5A6B7F.toInt(),
-    lineNumber = 0xFF8A97A8.toInt()
+    keyword = 0xFF9A3412.toInt(),
+    type = 0xFF005E70.toInt(),
+    literal = 0xFF9A3412.toInt(),
+    function = 0xFF046C43.toInt(),
+    operator = 0xFF6B21C8.toInt(),
+    annotation = 0xFF4C1D95.toInt(),
+    comment = 0xFF44546B.toInt(),
+    lineNumber = 0xFF64748B.toInt()
 )
 
 /**
