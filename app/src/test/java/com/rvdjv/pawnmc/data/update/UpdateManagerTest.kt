@@ -19,13 +19,13 @@ class UpdateManagerTest {
         val json = JSONObject(
             """
             {
-              "tag_name": "v1.5.2",
-              "html_url": "https://github.com/novusr/Pawn-MC/releases/tag/v1.5.2",
-              "body": "# Changelog\n\n- fixed crash\n\n**important**",
+              "tag_name": "v1.5.100",
+              "html_url": "https://github.com/novusr/Pawn-MC/releases/tag/v1.5.100",
+              "body": "# Changelog\n\n- fixed ????????\n\n**important**",
               "assets": [
                 {
-                  "name": "pawnmc-1.5.2-debug.apk",
-                  "browser_download_url": "https://example.com/pawnmc-1.5.2-debug.apk"
+                  "name": "pawnmc-1.5.100-debug.apk",
+                  "browser_download_url": "https://example.com/pawnmc-1.5.100-debug.apk"
                 }
               ]
             }
@@ -34,9 +34,9 @@ class UpdateManagerTest {
 
         val release = parseGitHubRelease(json)
 
-        assertEquals("v1.5.2", release.version)
-        assertEquals("https://example.com/pawnmc-1.5.2-debug.apk", release.apkUrl)
-        assertTrue(release.bodyMarkdown.contains("fixed crash"))
+        assertEquals("v1.5.100", release.version)
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.apkUrl)
+        assertTrue(release.bodyMarkdown.contains("fixed ????????"))
         assertTrue(release.bodyMarkdown.contains("important"))
     }
 }
