@@ -93,7 +93,7 @@ From a manual review of the repository, the current project focuses on:
 | app/src/main/java/com/rvdjv/pawnmc/data/config/AppLocalization.kt | Loads and parses `_dat/_extract.dat`; no bundled copy of the strings |
 | app/src/main/java/com/rvdjv/pawnmc/data/compiler/PawnCompiler.kt | Native compiler wrapper; compiles Pawn files, reads output, handles fallback strategy |
 | app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | GitHub release fetcher, semantic version comparison, APK download, install intent preparation |
-| app/src/main/java/com/rvdjv/pawnmc/data/pawn/PawnRegistry.kt | Pawn keywords, directives, natives and forwards shared by completion and highlighting |
+| app/src/main/java/com/rvdjv/pawnmc/data/pawn/Registry.kt | Pawn keywords, directives, natives and forwards shared by completion and highlighting |
 
 ### 5.2 UI Layer
 
