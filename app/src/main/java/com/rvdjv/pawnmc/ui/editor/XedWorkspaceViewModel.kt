@@ -1,5 +1,6 @@
 package com.rvdjv.pawnmc.ui.editor
 
+import android.os.FileObserver
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -7,6 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -19,9 +22,26 @@ private const val MAX_WORKSPACE_DEPTH = 8
 
 /** Hard cap on how many hits a workspace search reports. */
 private const val MAX_SEARCH_HITS = 300
+private const val MAX_WATCHED_DIRECTORIES = 512
+private const val FILE_CHANGE_DEBOUNCE_MS = 250L
 
 /** How many folders may be open at the same time. */
 const val MAX_OPEN_WORKSPACES = 3
+
+internal fun normalizeNewPawnFileName(requestedName: String): String? {
+    val name = requestedName.trim()
+    if (name.isBlank() || name == "." || name == ".." || name.contains('/') || name.contains('\\')) {
+        return null
+    }
+
+    val extension = name.substringAfterLast('.', "").lowercase()
+    val fileName = if (extension.isBlank()) "$name.pwn" else name
+    val finalExtension = fileName.substringAfterLast('.', "").lowercase()
+    val baseName = fileName.substringBeforeLast('.', "")
+    return fileName.takeIf {
+        baseName.isNotBlank() && finalExtension in setOf("pawn", "pwn", "p", "inc")
+    }
+}
 
 /** A file or folder of an opened workspace, with its children already scanned. */
 data class WorkspaceNode(
@@ -177,6 +197,8 @@ class XedWorkspaceViewModel : ViewModel() {
 
     private val workspaces = mutableStateListOf<Workspace>()
     private val scanning = mutableStateListOf<Workspace>()
+    private val fileObservers = mutableMapOf<Workspace, MutableMap<String, FileObserver>>()
+    private val refreshJobs = mutableMapOf<Workspace, Job>()
 
     /** Workspace shown in the panel and used by search/replace. */
     var activeWorkspace by mutableStateOf<Workspace?>(null)
@@ -243,6 +265,7 @@ class XedWorkspaceViewModel : ViewModel() {
         // SnapshotStateList.remove returns a Boolean, so the removed workspace has to
         // be captured before it leaves the list.
         val closing = workspaces.firstOrNull { it.root.absolutePath == workspace.root.absolutePath }
+        stopWatchingWorkspace(workspace)
         workspaces.remove(workspace)
         scanning.remove(workspace)
         val closingPath = closing?.root?.absolutePath
@@ -298,6 +321,7 @@ class XedWorkspaceViewModel : ViewModel() {
 
     /** Leaves every workspace; the caller decides what to show instead. */
     fun closeAllWorkspaces() {
+        workspaces.toList().forEach(::stopWatchingWorkspace)
         workspaces.clear()
         scanning.clear()
         activeWorkspace = null
@@ -305,17 +329,85 @@ class XedWorkspaceViewModel : ViewModel() {
 
     /** Re-scans a workspace folder; called after files are replaced on disk. */
     fun refreshTree(workspace: Workspace? = activeWorkspace) {
-        scan(workspace ?: return)
+        val target = workspace ?: return
+        if (target in scanning) {
+            scheduleWorkspaceRefresh(target)
+        } else {
+            scan(target)
+        }
     }
 
     private fun scan(workspace: Workspace) {
         if (workspace in scanning) return
         scanning.add(workspace)
         viewModelScope.launch {
-            val scanned = withContext(Dispatchers.IO) { scanDirectory(workspace.root, 0) }
-            workspace.applyTree(scanned)
-            scanning.remove(workspace)
+            try {
+                val scanned = withContext(Dispatchers.IO) { scanDirectory(workspace.root, 0) }
+                if (workspace in workspaces) {
+                    workspace.applyTree(scanned)
+                    updateFileObservers(workspace, scanned)
+                }
+            } finally {
+                scanning.remove(workspace)
+            }
         }
+    }
+
+    private fun updateFileObservers(workspace: Workspace, tree: List<WorkspaceNode>) {
+        val directories = mutableListOf(workspace.root)
+        fun collect(nodes: List<WorkspaceNode>) {
+            nodes.forEach { node ->
+                if (node.isDirectory && directories.size < MAX_WATCHED_DIRECTORIES) {
+                    directories += node.file
+                    collect(node.children)
+                }
+            }
+        }
+        collect(tree)
+
+        val observers = fileObservers.getOrPut(workspace) { mutableMapOf() }
+        val wantedPaths = directories.mapTo(mutableSetOf()) { it.absolutePath }
+        observers.keys.filterNot { it in wantedPaths }.toList().forEach { path ->
+            observers.remove(path)?.stopWatching()
+        }
+
+        val watchedEvents = FileObserver.CREATE or FileObserver.MOVED_TO or
+            FileObserver.MOVED_FROM or FileObserver.DELETE or
+            FileObserver.DELETE_SELF or FileObserver.MOVE_SELF
+        directories.forEach { directory ->
+            val path = directory.absolutePath
+            if (path in observers) return@forEach
+
+            val observer = object : FileObserver(path, watchedEvents) {
+                override fun onEvent(event: Int, path: String?) {
+                    if (event and watchedEvents == 0) return
+                    viewModelScope.launch { scheduleWorkspaceRefresh(workspace) }
+                }
+            }
+            observer.startWatching()
+            observers[path] = observer
+        }
+    }
+
+    private fun scheduleWorkspaceRefresh(workspace: Workspace) {
+        if (workspace !in workspaces) return
+        refreshJobs[workspace]?.cancel()
+        refreshJobs[workspace] = viewModelScope.launch {
+            delay(FILE_CHANGE_DEBOUNCE_MS)
+            while (workspace in scanning) delay(50L)
+            if (workspace in workspaces) scan(workspace)
+            refreshJobs.remove(workspace)
+        }
+    }
+
+    private fun stopWatchingWorkspace(workspace: Workspace) {
+        refreshJobs.remove(workspace)?.cancel()
+        fileObservers.remove(workspace)?.values?.forEach(FileObserver::stopWatching)
+    }
+
+    override fun onCleared() {
+        workspaces.toList().forEach(::stopWatchingWorkspace)
+        super.onCleared()
     }
 
     // ------------------------------------------------------------------
@@ -344,6 +436,37 @@ class XedWorkspaceViewModel : ViewModel() {
         loadDocument(opened, target)
     }
 
+    /** Creates a new Pawn source file in the active workspace and opens it. */
+    suspend fun createNewPawnFile(requestedName: String): File? {
+        val target = activeWorkspace ?: run {
+            statusMessage = "Open a workspace before creating a file"
+            return null
+        }
+
+        val fileName = normalizeNewPawnFileName(requestedName)
+        if (fileName == null) {
+            statusMessage = "Enter a filename with .pawn, .pwn, .p, or .inc extension"
+            return null
+        }
+
+        val file = File(target.root, fileName)
+        return try {
+            val created = withContext(Dispatchers.IO) { file.createNewFile() }
+            if (!created) {
+                statusMessage = "File already exists: $fileName"
+                return null
+            }
+
+            openFile(file, target)
+            refreshTree(target)
+            statusMessage = "Created ${file.name}"
+            file
+        } catch (e: Exception) {
+            statusMessage = "Could not create $fileName: ${e.localizedMessage}"
+            null
+        }
+    }
+
     /** Reads a registered document once and drops it again when the read fails. */
     private fun loadDocument(document: OpenDocument, workspace: Workspace) {
         viewModelScope.launch {
@@ -365,6 +488,7 @@ class XedWorkspaceViewModel : ViewModel() {
     fun closeMissingWorkspaces(): Int {
         val missing = workspaces.filter { !it.root.isDirectory }
         missing.forEach { workspace ->
+            stopWatchingWorkspace(workspace)
             workspaces.remove(workspace)
             scanning.remove(workspace)
         }

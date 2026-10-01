@@ -108,6 +108,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.ui.PawnIcons
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
@@ -151,6 +154,8 @@ fun XedEditorScreen(
 
     var showExitDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    var showNewFileDialog by remember { mutableStateOf(false) }
+    var newFileName by remember { mutableStateOf("") }
     var showSearchBar by remember { mutableStateOf(false) }
     var showJumpDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
@@ -169,6 +174,19 @@ fun XedEditorScreen(
     // ------------------------------------------------------------------
     val workspace = viewModel.workspace
     val scope = rememberCoroutineScope()
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner, workspace) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                workspace.openWorkspaces.forEach { openWorkspace ->
+                    workspace.refreshTree(openWorkspace)
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     var isExplorerVisible by remember { mutableStateOf(false) }
     var explorerWidth by remember { mutableFloatStateOf(320f) }
@@ -308,6 +326,42 @@ fun XedEditorScreen(
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    if (showNewFileDialog) {
+        AlertDialog(
+            onDismissRequest = { showNewFileDialog = false },
+            title = { Text("New Pawn File") },
+            text = {
+                OutlinedTextField(
+                    value = newFileName,
+                    onValueChange = { newFileName = it },
+                    label = { Text("File name") },
+                    placeholder = { Text("gamemode.pwn") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = newFileName.isNotBlank(),
+                    onClick = {
+                        scope.launch {
+                            if (workspace.createNewPawnFile(newFileName) != null) {
+                                showNewFileDialog = false
+                            }
+                        }
+                    }
+                ) {
+                    Text("Create")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNewFileDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     BackHandler {
@@ -813,7 +867,11 @@ fun XedEditorScreen(
                     onSelectTab = { file -> workspace.setActive(file) },
                     onCloseTab = { file -> workspace.closeDocument(file) },
                     onNewTabClick = { isExplorerVisible = !isExplorerVisible },
-                    onOpenFileClick = { folderPickerLauncher.launch(buildOpenFolderIntent()) }
+                    onOpenFileClick = { folderPickerLauncher.launch(buildOpenFolderIntent()) },
+                    onCreateFileClick = {
+                        newFileName = ""
+                        showNewFileDialog = true
+                    }
                 )
 
                 Box(
@@ -1639,8 +1697,10 @@ private fun XedTabStrip(
     onSelectTab: (java.io.File) -> Unit,
     onCloseTab: (java.io.File) -> Unit,
     onNewTabClick: () -> Unit,
-    onOpenFileClick: () -> Unit
+    onOpenFileClick: () -> Unit,
+    onCreateFileClick: () -> Unit
 ) {
+    var showAddMenu by remember { mutableStateOf(false) }
     Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Row(
             modifier = Modifier
@@ -1740,17 +1800,38 @@ private fun XedTabStrip(
                     modifier = Modifier.size(18.dp)
                 )
             }
-            IconButton(
-                onClick = onOpenFileClick,
-                modifier = Modifier
-                    .size(TAB_STRIP_HEIGHT)
-                    .testTag("editor_tab_open_file")
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = "Open file",
-                    modifier = Modifier.size(18.dp)
-                )
+            Box {
+                IconButton(
+                    onClick = { showAddMenu = true },
+                    modifier = Modifier
+                        .size(TAB_STRIP_HEIGHT)
+                        .testTag("editor_tab_open_file")
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Add file",
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                DropdownMenu(
+                    expanded = showAddMenu,
+                    onDismissRequest = { showAddMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Open workspace folder") },
+                        onClick = {
+                            showAddMenu = false
+                            onOpenFileClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("New Pawn file") },
+                        onClick = {
+                            showAddMenu = false
+                            onCreateFileClick()
+                        }
+                    )
+                }
             }
         }
     }

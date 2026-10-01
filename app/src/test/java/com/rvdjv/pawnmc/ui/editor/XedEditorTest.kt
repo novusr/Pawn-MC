@@ -194,4 +194,13 @@ class XedEditorTest {
 
         assertTrue(document.isDirty)
     }
+
+    @Test
+    fun `new Pawn file names default to pwn and reject paths or unsupported extensions`() {
+        assertEquals("new_mode.pwn", normalizeNewPawnFileName("new_mode"))
+        assertEquals("library.inc", normalizeNewPawnFileName("library.inc"))
+        assertEquals(null, normalizeNewPawnFileName("../outside.pwn"))
+        assertEquals(null, normalizeNewPawnFileName("notes.txt"))
+        assertEquals(null, normalizeNewPawnFileName(" "))
+    }
 }
