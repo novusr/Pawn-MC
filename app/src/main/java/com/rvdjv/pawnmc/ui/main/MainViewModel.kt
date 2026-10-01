@@ -240,6 +240,10 @@ class MainViewModel(
     }
 
     fun compileFile(path: String, isStoragePermissionGranted: Boolean, onPermissionRequired: () -> Unit) {
+        // A path typed with a script extension (`.pawn`, `.pwn`, `.p`, `.inc`) is cleaned
+        // up first. This never cancels the compilation: an existing source file keeps its
+        // extension, only a path that does not exist gets the extension removed.
+        val sourcePath = CompilerConfig.resolveCompilePath(path)
         if (isPreparingFilesystem) {
             outputText = "Wait for the ignore-case conversion to finish before compiling.\n"
             return
@@ -249,7 +253,7 @@ class MainViewModel(
             return
         }
 
-        val detectedVersion = PawnCompiler.detectCompilerVersionForFile(path)
+        val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
         val version = detectedVersion ?: CompilerConfig.CompilerVersion.V3107
         config.n_compiler_version = version
 
@@ -257,11 +261,11 @@ class MainViewModel(
         // only has to make sure the folder is still consistent.
         if (config.n_ignore_case) {
             val n_needsConversion = PawnCompiler.needsConversion(
-                workingDir = File(path).parentFile ?: File("."),
+                workingDir = File(sourcePath).parentFile ?: File("."),
                 rememberedBackupDir = config.n_case_insensitive_backup_dir
             )
             if (n_needsConversion) {
-                selectFile(path)
+                selectFile(sourcePath)
                 return
             }
         }
@@ -274,7 +278,7 @@ class MainViewModel(
 
             val startTime = System.currentTimeMillis()
             val result = withContext(Dispatchers.IO) {
-                PawnCompiler.compile(path, options, selectedVersion)
+                PawnCompiler.compile(sourcePath, options, selectedVersion)
             }
             val duration = System.currentTimeMillis() - startTime
 

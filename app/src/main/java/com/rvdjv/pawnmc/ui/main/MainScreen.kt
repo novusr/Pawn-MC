@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.ui.main
+﻿package com.rvdjv.pawnmc.ui.main
 
 import android.Manifest
 import android.content.ClipData
@@ -15,6 +15,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +43,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.AlertDialog
@@ -134,6 +137,10 @@ fun MainScreen(
     // state dialog
     var showFileBrowser by remember { mutableStateOf(false) }
     var showPermissionDialog by remember { mutableStateOf(false) }
+    // Header actions start collapsed, so the corner only shows the three-dot toggle until
+    // the user asks for them.
+    var headerActionsVisible by remember { mutableStateOf(false) }
+    val onToggleActions = { headerActionsVisible = !headerActionsVisible }
     var isStoragePermissionGranted by remember {
         mutableStateOf(hasStoragePermission(context))
     }
@@ -203,9 +210,9 @@ fun MainScreen(
     if (showPermissionDialog) {
         AlertDialog(
             onDismissRequest = { showPermissionDialog = false },
-            title = { Text(localizer.get("main.perm.title", appLanguage, "Storage Permission Required!")) },
+            title = { Text(localizer.get("main.perm.grand.title", appLanguage, "Grand Permissions Required!")) },
             text = {
-                Text(localizer.get("main.perm.desc", appLanguage, "This app needs access to all files to compile pawn files and write amx output to any location."))
+                Text(localizer.get("main.perm.grand.desc", appLanguage, "PawnMC needs Grand Permissions (All files access) so it can compile pawn files and write the amx output anywhere."))
             },
             confirmButton = {
                 TextButton(
@@ -218,12 +225,12 @@ fun MainScreen(
                         )
                     }
                 ) {
-                    Text(localizer.get("main.perm.grant", appLanguage, "Grant"))
+                    Text(localizer.get("main.perm.grand.grant", appLanguage, "Grant"))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showPermissionDialog = false }) {
-                    Text(localizer.get("main.perm.later", appLanguage, "Cancel"))
+                    Text(localizer.get("main.perm.grand.later", appLanguage, "Not now"))
                 }
             }
         )
@@ -441,6 +448,8 @@ fun MainScreen(
 
             ScreenHeader(
                 isCompiling = viewModel.isCompiling,
+                actionsVisible = headerActionsVisible,
+                onToggleActions = onToggleActions,
                 onEditorClick = {
                     if (viewModel.isCompiling) {
                         showCompilingBlockedToast()
@@ -681,11 +690,32 @@ fun MainScreen(
     }
 }
 
+/**
+ * Gray used for the temporary drop shadow of the header action buttons.
+ *
+ * The same value is applied in the light and the dark theme, so the revealed menu reads
+ * the same way no matter which theme is active.
+ */
+private val HeaderActionShadowColor = Color(0xFF9E9E9E)
+
+/** Elevation of the header action shadow while the temporary menu is revealed. */
+private val HeaderActionShadowElevation = 12.dp
+
+/**
+ * Horizontal offset of the header action shadow.
+ *
+ * Negative, so the shadow is cast from right to left across the row of buttons and forms
+ * a single connected band that marks the temporary state.
+ */
+private val HeaderActionShadowXOffset = -6.dp
+
 @Composable
 private fun ScreenHeader(
     onEditorClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSelfTestClick: () -> Unit,
+    actionsVisible: Boolean = false,
+    onToggleActions: () -> Unit = {},
     isCompiling: Boolean = false,
     localizer: AppLocalization? = null,
     appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
@@ -696,16 +726,18 @@ private fun ScreenHeader(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
-            verticalArrangement = Arrangement.Center
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Pawn MC",
+                text = localizer?.get("app.name", appLanguage, "PawnMC Grand Permissions")
+                    ?: "PawnMC Grand Permissions",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onBackground
             )
 
             Text(
-                text = "Compiling ideas on the go.",
+                text = localizer?.get("app.tagline", appLanguage, "Compiling ideas on the go.")
+                    ?: "Compiling ideas on the go.",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -714,42 +746,135 @@ private fun ScreenHeader(
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = onSelfTestClick,
-                enabled = !isCompiling,
-                modifier = Modifier.testTag("self_test_button")
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Description,
-                    contentDescription = localizer?.get("main.header.selftest", appLanguage, "Self tests") ?: "Self tests",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+            // The three-dot toggle sits in front of the actions while the temporary menu
+            // is revealed, and stands alone in the corner once the menu is collapsed.
+            if (actionsVisible) {
+                HeaderActionsToggleButton(
+                    expanded = true,
+                    localizer = localizer,
+                    appLanguage = appLanguage,
+                    onToggle = onToggleActions
                 )
             }
 
-            IconButton(
-                onClick = onEditorClick,
-                enabled = !isCompiling,
-                modifier = Modifier.testTag("xed_button")
-            ) {
-                Icon(
-                    imageVector = PawnIcons.CodeEdit,
-                    contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            AnimatedVisibility(visible = actionsVisible) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    HeaderActionButton(
+                        onClick = onSelfTestClick,
+                        enabled = !isCompiling,
+                        testTag = "self_test_button",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Filled.Description,
+                                contentDescription = localizer?.get("main.header.selftest", appLanguage, "Self tests") ?: "Self tests",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    )
+
+                    HeaderActionButton(
+                        onClick = onEditorClick,
+                        enabled = !isCompiling,
+                        testTag = "xed_button",
+                        icon = {
+                            Icon(
+                                imageVector = PawnIcons.CodeEdit,
+                                contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    )
+
+                    HeaderActionButton(
+                        onClick = onSettingsClick,
+                        enabled = !isCompiling,
+                        testTag = "settings_button",
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Filled.Settings,
+                                contentDescription = localizer?.get("main.header.settings", appLanguage, "Settings") ?: "Settings",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    )
+                }
             }
 
-            IconButton(
-                onClick = onSettingsClick,
-                enabled = !isCompiling,
-                modifier = Modifier.testTag("settings_button")
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = localizer?.get("main.header.settings", appLanguage, "Settings") ?: "Settings",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+            if (!actionsVisible) {
+                HeaderActionsToggleButton(
+                    expanded = false,
+                    localizer = localizer,
+                    appLanguage = appLanguage,
+                    onToggle = onToggleActions
                 )
             }
         }
+    }
+}
+
+/**
+ * One entry of the temporary header menu.
+ *
+ * The button is a plain rounded-rectangle surface, and while the menu is open a gray drop
+ * shadow is cast to the left of it so the three buttons read as one band. The shadow is
+ * layered in front of an opaque surface, because a transparent background casts nothing.
+ */
+@Composable
+private fun HeaderActionButton(
+    onClick: () -> Unit,
+    enabled: Boolean,
+    testTag: String,
+    icon: @Composable () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .padding(horizontal = 2.dp)
+            .shadow(
+                elevation = HeaderActionShadowElevation,
+                shape = RoundedCornerShape(14.dp),
+                ambientColor = HeaderActionShadowColor,
+                spotColor = HeaderActionShadowColor,
+                xOffset = HeaderActionShadowXOffset,
+                yOffset = 2.dp
+            )
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(14.dp)
+            )
+            .testTag(testTag)
+    ) {
+        IconButton(onClick = onClick, enabled = enabled) {
+            icon()
+        }
+    }
+}
+
+/**
+ * The three-dot control that shows and hides the header actions.
+ *
+ * Deliberately rendered without any shadow, so only the revealed menu carries the
+ * temporary-state effect.
+ */
+@Composable
+private fun HeaderActionsToggleButton(
+    expanded: Boolean,
+    localizer: AppLocalization?,
+    appLanguage: CompilerConfig.AppLanguage,
+    onToggle: () -> Unit
+) {
+    IconButton(
+        onClick = onToggle,
+        modifier = Modifier.testTag("header_actions_toggle_button")
+    ) {
+        Icon(
+            imageVector = Icons.Filled.MoreHoriz,
+            contentDescription = if (expanded) {
+                localizer?.get("main.header.collapse", appLanguage, "Hide menu") ?: "Hide menu"
+            } else {
+                localizer?.get("main.header.expand", appLanguage, "Show menu") ?: "Show menu"
+            },
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 @Composable
@@ -1137,7 +1262,8 @@ private fun MainScreenFullPreview() {
             ScreenHeader(
                 onEditorClick = {},
                 onSettingsClick = {},
-                onSelfTestClick = {}
+                onSelfTestClick = {},
+                actionsVisible = true
             )
             Spacer(modifier = Modifier.height(SpaceL))
             CompileActionCard(

@@ -380,7 +380,7 @@ class CompilerConfig private constructor(context: Context) {
             val result = mutableListOf<String>()
 
             for (path in paths) {
-                val normalized = normalPath(path)
+                val normalized = normalizeIncludePathInput(path)
                 if (normalized.isBlank()) continue
 
                 val key = normalized.lowercase()
@@ -404,6 +404,66 @@ class CompilerConfig private constructor(context: Context) {
         }
 
         fun normalizeIncludePath(path: String): String = normalPath(path)
+
+        /**
+         * Source extensions PawnMC accepts. Only these four are treated as script
+         * extensions, so folders that legitimately contain a dot (for example
+         * `my.project/include`) keep working untouched.
+         */
+        private val SCRIPT_EXTENSIONS = listOf(".pawn", ".pwn", ".p", ".inc")
+
+        /**
+         * True when [path] ends with one of [SCRIPT_EXTENSIONS].
+         *
+         * The check is anchored to the end of the whole path, so only a real file
+         * extension counts and never a dot that belongs to a parent folder.
+         */
+        fun hasScriptExtension(path: String): Boolean {
+            val lowered = path.trim().replace('\\', '/').trimEnd('/').lowercase()
+            if (lowered.isEmpty()) return false
+            return SCRIPT_EXTENSIONS.any { lowered.endsWith(it) && lowered.length > it.length }
+        }
+
+        /**
+         * Removes a trailing script extension from [path].
+         *
+         * `.../gamemodes/main.pwn` becomes `.../gamemodes/main`, while
+         * `.../my.project/include` is returned unchanged because `.project` is not a
+         * script extension.
+         */
+        fun stripScriptExtension(path: String): String {
+            val original = path.trim()
+            val withoutTrailingSlash = original.replace('\\', '/').trimEnd('/')
+            if (!hasScriptExtension(withoutTrailingSlash)) return original
+
+            val lowered = withoutTrailingSlash.lowercase()
+            val extension = SCRIPT_EXTENSIONS.firstOrNull { lowered.endsWith(it) } ?: return original
+            return withoutTrailingSlash.dropLast(extension.length)
+        }
+
+        /**
+         * Normalises an include path exactly like [normalPath], then removes a trailing
+         * script extension so a path typed as `.../gamemodes/main.pwn` is stored as the
+         * folder `.../gamemodes/main` instead of being rejected as a non-existent path.
+         */
+        fun normalizeIncludePathInput(path: String): String = normalPath(stripScriptExtension(path))
+
+        /**
+         * Resolves the file handed to the compiler.
+         *
+         * When the selected path still points at a real file it is kept as-is, because
+         * the compiler needs the extension to recognise the source. Only when it does not
+         * exist (a mistyped selection, or a path carrying an extension) is the script
+         * extension removed, and the compilation is never cancelled by this cleanup.
+         */
+        fun resolveCompilePath(path: String): String {
+            val trimmed = path.trim()
+            if (trimmed.isEmpty()) return trimmed
+            if (!hasScriptExtension(trimmed)) return trimmed
+            val exists = runCatching { java.io.File(trimmed).exists() }.getOrDefault(false)
+            if (exists) return trimmed
+            return stripScriptExtension(trimmed)
+        }
 
         /**
          * Case-insensitive, separator-normalised key used to decide whether two include
@@ -465,7 +525,7 @@ class CompilerConfig private constructor(context: Context) {
             val survivors = mutableListOf<String>()
 
             for (path in existing) {
-                val normalized = normalPath(path)
+                val normalized = normalizeIncludePathInput(path)
                 if (normalized.isBlank() || normalized == "/") continue
 
                 val file = java.io.File(normalized)

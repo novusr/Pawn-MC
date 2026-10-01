@@ -68,6 +68,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -609,9 +610,10 @@ fun SettingsScreen(
                             PathRow(
                                 path = path,
                                 onClick = {
-                                    editingIncludePathIndex = index
-                                    editingIncludePathValue = path
-                                },
+                                editingIncludePathIndex = index
+                                editingIncludePathValue = path
+                                viewModel.clearIncludePathExtensionNotice()
+                            },
                                 onRemoveClick = { viewModel.removeIncludePathAt(index) }
                             )
                             if (index < viewModel.n_include_paths.size - 1) {
@@ -646,11 +648,38 @@ fun SettingsScreen(
                                 "PawnMC v1.5.1 introduces a new system. " +
                                     "You no longer need to manually add an include path if you use 'pawno/include'. " +
                                     "The system will automatically apply 'pawno/include' and 'gamemodes' when you select or " +
-                                    "browse a file for compilation. "
+                                    "browse a file for compilation. " +
+                                    "Extensions .pawn, .pwn, .p and .inc are removed automatically from include paths. "
                             ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    viewModel.includePathExtensionNotice?.let { strippedPath ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = localizer.get(
+                                    "settings.include.extension.stripped",
+                                    appLanguage,
+                                    "The script extension was removed and the path was saved as: "
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                            Text(
+                                text = strippedPath,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
 
                     HorizontalDivider(
@@ -663,6 +692,7 @@ fun SettingsScreen(
                         icon = Icons.Default.Add,
                         onClick = {
                             newIncludePathInput = ""
+                            viewModel.clearIncludePathExtensionNotice()
                             showAddIncludePathDialog = true
                         }
                     )
@@ -965,17 +995,17 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        val value = newIncludePathInput.trim()
-                        if (value.isNotBlank() && !viewModel.addIncludePath(value)) {
-                            Toast.makeText(
-                                context,
-                                localizer.get("settings.include.rejected", appLanguage, "Path already added or folder not found"),
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        showAddIncludePathDialog = false
-                        newIncludePathInput = ""
-                    }
+                                val value = newIncludePathInput.trim()
+                                if (value.isNotBlank() && !viewModel.addIncludePath(value)) {
+                                    Toast.makeText(
+                                        context,
+                                        localizer.get("settings.include.rejected", appLanguage, "Path already added or folder not found"),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                showAddIncludePathDialog = false
+                                newIncludePathInput = ""
+                            }
                 ) {
                     Text(localizer.get("settings.save", appLanguage, "Save"))
                 }
@@ -1656,8 +1686,10 @@ private const val EDITOR_BACKGROUND_SWATCH_COLUMNS = 5
  * [EDITOR_BACKGROUND_SWATCH_COLUMNS] so the grid has no ragged last row.
  */
 private val EditorBackgroundPresets = listOf(
-    0xFFFFFFFF.toInt(), 0xFFFBF7EF.toInt(), 0xFFEAF2FF.toInt(), 0xFFF1EDFF.toInt(), 0xFFE9F7EF.toInt(),
-    0xFFD6DCE3.toInt(), 0xFF1E1E1E.toInt(), 0xFF1B1B2F.toInt(), 0xFF0D1B2A.toInt(), 0xFF111D13.toInt()
+    0xFFFFFFFF.toInt(), 0xFFFBF7EF.toInt(), 0xFFF6F3FF.toInt(), 0xFFEAF2FF.toInt(), 0xFFE9F7EF.toInt(),
+    0xFFFFF4E5.toInt(), 0xFFFDEBF0.toInt(), 0xFFE7F6F8.toInt(), 0xFFF1F5F9.toInt(), 0xFFD6DCE3.toInt(),
+    0xFFCBD5E1.toInt(), 0xFF2B2B2B.toInt(), 0xFF1E1E1E.toInt(), 0xFF1B1B2F.toInt(), 0xFF232733.toInt(),
+    0xFF0D1B2A.toInt(), 0xFF111D13.toInt(), 0xFF2A1F14.toInt(), 0xFF26171D.toInt(), 0xFF12242A.toInt()
 )
 
 /** BT.601 luma of an ARGB colour, used to pick readable preview text. */

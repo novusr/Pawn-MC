@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.data.config
+﻿package com.rvdjv.pawnmc.data.config
 
 import android.content.Context
 import kotlin.math.min
@@ -60,144 +60,13 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
     companion object {
         private const val ASSET_PATH = "_dat/_extract.dat"
 
-        private val DEFAULT_DATA = """
-# External compile-time localization data for PawnMC
-0x01:settings.title.id:0x02:Pengaturan
-0x01:settings.title.en:0x02:Settings
-0x01:settings.general.id:0x02:Umum
-0x01:settings.general.en:0x02:General
-0x01:settings.general.desc.id:0x02:Preferensi dasar yang dipakai di seluruh aplikasi: bahasa antarmuka, tema tampilan, dan compiler yang dipakai untuk membangun skrip.
-0x01:settings.general.desc.en:0x02:Core preferences applied across the whole app: interface language, colour theme, and which compiler is used to build your scripts.
-0x01:settings.compiler.version.id:0x02:Versi Compiler
-0x01:settings.compiler.version.en:0x02:Compiler Version
-0x01:settings.compiler.version.desc.id:0x02:Pilih rilis pawncc yang dipakai saat kompilasi. Berpindah versi memuat ulang pustaka compiler, jadi aplikasi perlu dimulai ulang setelah berubah.
-0x01:settings.compiler.version.desc.en:0x02:Chooses which pawncc release performs the compilation. Switching versions reloads the compiler library, so the app has to restart once the change is applied.
-0x01:settings.compiler.forced.desc.id:0x02:Saat dipaksa, versi yang dipilih di atas selalu dipakai. Saat otomatis, compiler di dekat berkas yang sedang diedit lebih diprioritaskan bila versinya cocok.
-0x01:settings.compiler.forced.desc.en:0x02:When forced, the version picked above is always used. When automatic, a compiler sitting next to the file you are editing is preferred whenever its version matches.
-0x01:settings.language.id:0x02:Bahasa
-0x01:settings.language.en:0x02:Language
-0x01:settings.language.desc.id:0x02:Bahasa untuk semua teks antarmuka, termasuk pesan compiler dan uraian pengaturan.
-0x01:settings.language.desc.en:0x02:Language used for every piece of interface text, including compiler messages and settings descriptions.
-0x01:settings.language.selector.id:0x02:Pilih Bahasa
-0x01:settings.language.selector.en:0x02:Select Language
-0x01:settings.theme.id:0x02:Tema
-0x01:settings.theme.en:0x02:Theme
-0x01:settings.theme.desc.id:0x02:Mengatur apakah aplikasi mengikuti tema sistem, selalu terang, atau selalu gelap. Pilihan ini juga menentukan latar editor Xed.
-0x01:settings.theme.desc.en:0x02:Controls whether the app follows the system theme, or is pinned to light or dark. This choice also drives the Xed editor background.
-0x01:settings.theme.selector.id:0x02:Pilih Tema
-0x01:settings.theme.selector.en:0x02:Select Theme
-0x01:settings.compiler.options.id:0x02:Opsi Compiler
-0x01:settings.compiler.options.en:0x02:Compiler Options
-0x01:settings.compiler.options.desc.id:0x02:Flag yang diteruskan langsung ke pawncc saat membangun skrip. Perubahan di sini berlaku pada kompilasi berikutnya.
-0x01:settings.compiler.options.desc.en:0x02:Flags passed straight through to pawncc when a script is built. Changes here take effect on the next compilation.
-0x01:settings.option.semicolons.id:0x02:Titik Koma Wajib
-0x01:settings.option.semicolons.en:0x02:Mandatory Semicolons
-0x01:settings.option.semicolons.desc.id:0x02:Wajibkan titik koma di akhir setiap pernyataan
-0x01:settings.option.semicolons.desc.en:0x02:Require semicolons at the end of statements
-0x01:settings.option.parentheses.id:0x02:Tanda Kurung Wajib
-0x01:settings.option.parentheses.en:0x02:Mandatory Parentheses
-0x01:settings.option.parentheses.desc.id:0x02:Wajibkan tanda kurung pada pernyataan kontrol
-0x01:settings.option.parentheses.desc.en:0x02:Require parentheses in control statements
-0x01:settings.option.debug.id:0x02:Tingkat Debug
-0x01:settings.option.debug.en:0x02:Debug Level
-0x01:settings.option.debug.desc.id:0x02:Menentukan berapa banyak informasi debug dan pemeriksaan runtime yang dibangkitkan compiler. Level lebih tinggi menambah pemeriksaan tetapi memperlambat dan memperbesar hasil.
-0x01:settings.option.debug.desc.en:0x02:Controls how much debug information and runtime checking the compiler generates. Higher levels add more checks at the cost of build time and a larger output file.
-0x01:settings.option.optimization.id:0x02:Tingkat Optimasi
-0x01:settings.option.optimization.en:0x02:Optimization Level
-0x01:settings.option.optimization.desc.id:0x02:Menentukan seberapa agresif compiler menyederhanakan bytecode. Optimasi lebih tinggi menghasilkan AMX yang lebih kecil dan lebih cepat, tetapi menyulitkan penelusuran debug.
-0x01:settings.option.optimization.desc.en:0x02:Determines how aggressively the compiler simplifies the bytecode. Higher levels yield a smaller and faster AMX, but make debugging traces harder to follow.
-0x01:settings.option.ignorecase.id:0x02:Abaikan Huruf Besar/Kecil
-0x01:settings.option.ignorecase.en:0x02:Filesystem
-0x01:settings.option.ignorecase.desc.id:0x02:Membuat salinan cadangan folder (\"nama-folder.backup\"), lalu mengubah semua nama file selain file yang dipilih dan seluruh referensi #include menjadi huruf kecil. Dijalankan sekali per folder, karena melewati Android yang peka huruf besar/kecil.
-0x01:settings.option.ignorecase.desc.en:0x02:Backs the folder up as \"folder.backup\", then lowercases every file name except the one you selected and rewrites every #include reference to lowercase. It runs once per folder because Android storage is case sensitive.
-0x01:settings.option.explain.id:0x02:Jelaskan Output
-0x01:settings.option.explain.en:0x02:Explain Output
-0x01:settings.option.explain.desc.id:0x02:Tambahkan penjelasan yang mudah dipahami di samping peringatan, pesan error, dan pesan fatal.
-0x01:settings.option.explain.desc.en:0x02:Add human-readable explanations next to warnings, errors, and fatal messages extracted from the compiler log.
-0x01:settings.option.customflags.id:0x02:Flag Kustom
-0x01:settings.option.customflags.en:0x02:Custom Flags
-0x01:settings.option.customflags.desc.id:0x02:Parameter compiler tambahan, dipisahkan spasi
-0x01:settings.option.customflags.desc.en:0x02:Extra compiler parameters, space separated
-0x01:settings.include.paths.id:0x02:Path Include
-0x01:settings.include.paths.en:0x02:Include Paths
-0x01:settings.include.paths.desc.id:0x02:Daftar folder yang ditelusuri compiler saat menyelesaikan #include. Path yang tidak ada lagi akan dibuang otomatis saat aplikasi dibuka.
-0x01:settings.include.paths.desc.en:0x02:Folders the compiler searches when resolving #include. Paths that no longer exist are pruned automatically on app start.
-0x01:settings.editor.id:0x02:Xed Editor
-0x01:settings.editor.en:0x02:Xed Editor
-0x01:settings.editor.desc.id:0x02:Preferensi tampilan untuk editor kode bawaan. Perubahan langsung diterapkan ke editor yang sedang terbuka.
-0x01:settings.editor.desc.en:0x02:Appearance preferences for the built-in code editor. Changes apply to the open editor immediately.
-0x01:settings.editor.background.id:0x02:Latar Editor
-0x01:settings.editor.background.en:0x02:Editor Background
-0x01:settings.editor.background.desc.id:0x02:Pilih warna latar editor. Bawaan mengikuti tema aplikasi, sedangkan warna khusus menggantikannya sepenuhnya.
-0x01:settings.editor.background.desc.en:0x02:Pick the editor canvas colour. The default follows the app theme, while a custom pick replaces it completely.
-0x01:settings.editor.background.default.id:0x02:Bawaan
-0x01:settings.editor.background.default.en:0x02:Default
-0x01:settings.editor.background.reset.id:0x02:Kembalikan ke bawaan
-0x01:settings.editor.background.reset.en:0x02:Reset to default
-0x01:settings.editor.background.hex.id:0x02:Kode warna heksadesimal
-0x01:settings.editor.background.hex.en:0x02:Hex colour code
-0x01:settings.editor.background.invalid.id:0x02:Kode warna tidak valid, gunakan format #RRGGBB
-0x01:settings.editor.background.invalid.en:0x02:Invalid colour code, expected the #RRGGBB format
-0x01:settings.updates.desc.id:0x02:Memeriksa rilis baru di GitHub dan mengunduh APK bila tersedia. Pembaruan dipasang lewat dialog sistem Android.
-0x01:settings.updates.desc.en:0x02:Checks GitHub for a newer release and downloads the APK when one is attached. Updates are installed through the standard Android system dialog.
-0x01:settings.about.desc.id:0x02:Informasi versi aplikasi dan tautan ke repositori sumber.
-0x01:settings.about.desc.en:0x02:Application version information and a link to the source repository.
-0x01:settings.about.version.id:0x02:Versi Aplikasi
-0x01:settings.about.version.en:0x02:App Version
-0x01:settings.about.version.desc.id:0x02:Versi rilis PawnMC yang sedang terpasang di perangkat ini.
-0x01:settings.about.version.desc.en:0x02:The PawnMC release currently installed on this device.
-0x01:settings.about.github.id:0x02:Lihat di GitHub
-0x01:settings.about.github.en:0x02:View on GitHub
-0x01:settings.about.github.desc.id:0x02:Buka repositori sumber resmi untuk melihat riwayat rilis, melaporkan masalah, atau menyalin dan membangun sendiri.
-0x01:settings.about.github.desc.en:0x02:Opens the official source repository for release history, issue reports, and building your own copy.
-0x01:settings.about.restart.id:0x02:Mulai Ulang Aplikasi
-0x01:settings.about.restart.en:0x02:Restart Application
-0x01:settings.about.restart.desc.id:0x02:Menutup lalu membuka kembali PawnMC agar seluruh pengaturan diterapkan dari awal. Proses kompilasi yang sedang berjalan akan dibatalkan.
-0x01:settings.thanks.id:0x02:Terima Kasih
-0x01:settings.thanks.en:0x02:Thank You
-0x01:settings.about.restart.desc.en:0x02:Closes and reopens PawnMC so every setting is applied from scratch. A compilation that is currently running is cancelled.
-0x01:settings.restart.confirm.title.id:0x02:Mulai Ulang Aplikasi
-0x01:settings.restart.confirm.title.en:0x02:Restart Application
-0x01:settings.restart.confirm.text.id:0x02:PawnMC akan segera ditutup lalu dibuka kembali. Simpan dulu berkas yang sedang dibuka di Xed Editor, karena proses kompilasi yang sedang berjalan akan dibatalkan. Apakah Anda ingin memulai ulang sekarang?
-0x01:settings.restart.confirm.text.en:0x02:PawnMC will close and reopen immediately. Save any open file in the Xed Editor first, because a compilation that is currently running is cancelled. Would you like to restart now?
-0x01:settings.restart.confirm.button.id:0x02:Mulai Ulang Sekarang
-0x01:settings.restart.confirm.button.en:0x02:Restart Now
-0x01:main.busy.notice.id:0x02:Pengaturan, Xed Editor, dan Self-Test sementara tidak tersedia sampai proses kompilasi selesai.
-0x01:main.busy.notice.en:0x02:Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete.
-0x01:main.busy.toast.id:0x02:Pengaturan, editor, dan self-test tidak tersedia saat proses kompilasi berjalan
-0x01:main.busy.toast.en:0x02:Settings, editor, and self-test are unavailable while compiling
-0x01:settings.include.paths.notice.title.id:0x02:Catatan
-0x01:settings.include.paths.notice.title.en:0x02:Note
-0x01:settings.include.paths.notice.desc.id:0x02:PawnMC v.1.5.1 mulai menerapkan sistem baru, kini kamu tidak harus menambahkan include path manual jika kamu pengguna 'pawno/include', sistem akan menerapkan otomatis 'pawno/include' 'gamemodes' di saat kamu memilih file atau browse file untuk kompilasi.
-0x01:settings.include.paths.notice.desc.en:0x02:PawnMC v1.5.1 introduces a new system. You no longer need to manually add an include path if you use 'pawno/include'. The system will automatically apply 'pawno/include' and 'gamemodes' when you select or browse a file for compilation.
-0x01:settings.include.add.id:0x02:Tambah Path Include
-0x01:settings.include.add.en:0x02:Add Include Path
-0x01:settings.include.empty.id:0x02:Belum ada path include yang dikonfigurasi
-0x01:settings.include.empty.en:0x02:No include paths configured
-0x01:settings.include.rejected.id:0x02:Path sudah terdaftar atau folder tidak ditemukan
-0x01:settings.include.rejected.en:0x02:Path already added or folder not found
-0x01:settings.include.pruned.id:0x02:Path include yang tidak ada lagi telah dihapus
-0x01:settings.include.pruned.en:0x02:Include paths that no longer exist were removed
-0x01:settings.updates.id:0x02:Pembaruan
-0x01:settings.updates.en:0x02:Updates
-0x01:settings.updates.check.id:0x02:Periksa Pembaruan
-0x01:settings.updates.check.en:0x02:Check for updates
-0x01:settings.updates.ready.id:0x02:Perbarui PawnMC
-0x01:settings.updates.ready.en:0x02:Update PawnMC
-0x01:settings.updates.latest.id:0x02:Anda menggunakan versi terbaru
-0x01:settings.updates.latest.en:0x02:You're on the latest version
-0x01:settings.about.id:0x02:Tentang
-0x01:settings.about.en:0x02:About
-0x01:settings.close.id:0x02:Tutup
-0x01:settings.close.en:0x02:Close
-0x01:settings.cancel.id:0x02:Batal
-0x01:settings.cancel.en:0x02:Cancel
-0x01:settings.save.id:0x02:Simpan
-0x01:settings.save.en:0x02:Save
-0x01:settings.back.id:0x02:Kembali
-0x01:settings.back.en:0x02:Back
-        """.trimIndent()
-
+        /**
+         * Reads the localisation table from `_dat/_extract.dat` only.
+         *
+         * The asset is the single source of truth; there is deliberately no bundled copy
+         * and no comparison between the asset and anything else, so a string only ever has
+         * to be maintained in one place.
+         */
         fun load(context: Context): AppLocalization {
             val assetData = runCatching {
                 context.assets.open(ASSET_PATH).bufferedReader().use { it.readText() }
@@ -210,8 +79,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
                 }.getOrNull()?.takeIf { it.isNotBlank() }
             } else null
 
-            val data = assetData ?: fileData ?: DEFAULT_DATA
-            return AppLocalization(parseLocalizationData(data))
+            return AppLocalization(parseLocalizationData(assetData ?: fileData.orEmpty()))
         }
 
         fun parseLocalizationData(raw: String): Map<String, String> {

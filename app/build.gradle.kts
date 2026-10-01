@@ -36,6 +36,14 @@ android {
         compose = true
     }
 
+    sourceSets {
+        getByName("main") {
+            // `_dat/_extract.dat` is the single source of localisation data and ships
+            // as an asset, so nothing else in the app duplicates it.
+            assets.srcDir(rootProject.file("_dat"))
+        }
+    }
+
     defaultConfig {
         applicationId = "com.rvdjv.pawnmc"
         minSdk = 24

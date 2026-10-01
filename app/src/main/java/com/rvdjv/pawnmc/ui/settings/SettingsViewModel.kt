@@ -55,6 +55,26 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         addAll(CompilerConfig.pruneMissingIncludePaths(config.n_include_paths))
     }
 
+    /**
+     * Set when the user typed an include path that ended with a script extension
+     * (`.pawn`, `.pwn`, `.p`, `.inc`). The extension was removed automatically, and the
+     * stored text is kept here so Settings can show the plain centred notice.
+     */
+    var includePathExtensionNotice by mutableStateOf<String?>(null)
+        private set
+
+    fun clearIncludePathExtensionNotice() {
+        includePathExtensionNotice = null
+    }
+
+    private fun noteStrippedExtension(original: String, normalized: String) {
+        if (original.trim() == normalized.trim()) {
+            includePathExtensionNotice = null
+            return
+        }
+        includePathExtensionNotice = normalized
+    }
+
     fun updateCompilerVersion(version: CompilerConfig.CompilerVersion) {
         n_compiler_version = version
         config.n_compiler_version = version
@@ -132,7 +152,7 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
      * the caller can skip the write entirely instead of re-filtering the whole list.
      */
     fun addIncludePath(path: String): Boolean {
-        val normalizedPath = CompilerConfig.normalPath(path)
+        val normalizedPath = CompilerConfig.normalizeIncludePathInput(path)
         if (normalizedPath.isBlank()) return false
 
         if (CompilerConfig.containsIncludePath(n_include_paths, normalizedPath)) return false
@@ -142,6 +162,7 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
 
         n_include_paths.add(normalizedPath)
         config.n_include_paths = n_include_paths.toList()
+        noteStrippedExtension(path, normalizedPath)
         return true
     }
 
@@ -151,7 +172,7 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
      */
     fun updateIncludePathAt(index: Int, newPath: String): Boolean {
         if (index !in n_include_paths.indices) return false
-        val normalized = CompilerConfig.normalPath(newPath)
+        val normalized = CompilerConfig.normalizeIncludePathInput(newPath)
         if (normalized.isBlank()) {
             removeIncludePathAt(index)
             return false
@@ -165,6 +186,7 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
 
         n_include_paths[index] = normalized
         config.n_include_paths = n_include_paths.toList()
+        noteStrippedExtension(newPath, normalized)
         return true
     }
 

@@ -97,6 +97,8 @@
 0x01:settings.editor.background.default.en:0x02:Default
 0x01:settings.editor.background.reset.id:0x02:Kembalikan ke bawaan
 0x01:settings.editor.background.reset.en:0x02:Reset to default
+0x01:settings.editor.background.presets.id:0x02:Varian latar yang tersedia
+0x01:settings.editor.background.presets.en:0x02:Available background variants
 0x01:settings.editor.background.hex.id:0x02:Kode warna heksadesimal
 0x01:settings.editor.background.hex.en:0x02:Hex colour code
 0x01:settings.editor.background.invalid.id:0x02:Kode warna tidak valid, gunakan format #RRGGBB
@@ -121,8 +123,28 @@
 0x01:main.busy.toast.en:0x02:Settings, editor, and self-test are unavailable while compiling
 0x01:settings.include.paths.notice.title.id:0x02:Catatan
 0x01:settings.include.paths.notice.title.en:0x02:Note
-0x01:settings.include.paths.notice.desc.id:0x02:PawnMC v.1.5.1 mulai menerapkan sistem baru, kini kamu tidak harus menambahkan include path manual jika kamu pengguna 'pawno/include', sistem akan menerapkan otomatis 'pawno/include' 'gamemodes' di saat kamu memilih file atau browse file untuk kompilasi.
-0x01:settings.include.paths.notice.desc.en:0x02:PawnMC v1.5.1 introduces a new system. You no longer need to manually add an include path if you use 'pawno/include'. The system will automatically apply 'pawno/include' and 'gamemodes' when you select or browse a file for compilation.
+0x01:settings.include.paths.notice.desc.id:0x02:PawnMC v.1.5.1 mulai menerapkan sistem baru, kini kamu tidak harus menambahkan include path manual jika kamu pengguna 'pawno/include', sistem akan menerapkan otomatis 'pawno/include' 'gamemodes' di saat kamu memilih file atau browse file untuk kompilasi. Ekstensi .pawn, .pwn, .p, dan .inc akan dihapus otomatis dari path include.
+0x01:settings.include.paths.notice.desc.en:0x02:PawnMC v1.5.1 introduces a new system. You no longer need to manually add an include path if you use 'pawno/include'. The system will automatically apply 'pawno/include' and 'gamemodes' when you select or browse a file for compilation. The .pawn, .pwn, .p, and .inc extensions are removed automatically from include paths.
+0x01:settings.include.extension.stripped.id:0x02:Ekstensi script (.pawn, .pwn, .p, .inc) dihapus otomatis dan path disimpan sebagai:
+0x01:settings.include.extension.stripped.en:0x02:The script extension (.pawn, .pwn, .p, .inc) was removed automatically and the path was saved as:
+0x01:settings.include.extension.list.id:0x02:.pawn, .pwn, .p, .inc
+0x01:settings.include.extension.list.en:0x02:.pawn, .pwn, .p, .inc
+0x01:app.name.id:0x02:PawnMC Grand Permissions
+0x01:app.name.en:0x02:PawnMC Grand Permissions
+0x01:app.tagline.id:0x02:Menyusun ide saat bepergian.
+0x01:app.tagline.en:0x02:Compiling ideas on the go.
+0x01:main.header.expand.id:0x02:Tampilkan menu
+0x01:main.header.expand.en:0x02:Show menu
+0x01:main.header.collapse.id:0x02:Sembunyikan menu
+0x01:main.header.collapse.en:0x02:Hide menu
+0x01:main.perm.grand.title.id:0x02:Izin Grand Permissions Dibutuhkan!
+0x01:main.perm.grand.title.en:0x02:Grand Permissions Required!
+0x01:main.perm.grand.desc.id:0x02:Izin Semua Berkas (Grand Permissions) diperlukan PawnMC agar bisa mengompilasi berkas pawn dan menulis hasil amx ke lokasi mana pun.
+0x01:main.perm.grand.desc.en:0x02:PawnMC needs Grand Permissions (All files access) so it can compile pawn files and write the amx output anywhere.
+0x01:main.perm.grand.grant.id:0x02:Beri Izin
+0x01:main.perm.grand.grant.en:0x02:Grant
+0x01:main.perm.grand.later.id:0x02:Nanti
+0x01:main.perm.grand.later.en:0x02:Not now
 0x01:settings.close.id:0x02:Tutup
 0x01:settings.close.en:0x02:Close
 0x01:settings.cancel.id:0x02:Batal
