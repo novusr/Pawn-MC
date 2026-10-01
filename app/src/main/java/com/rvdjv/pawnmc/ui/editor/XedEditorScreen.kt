@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Visibility
@@ -101,6 +102,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.zIndex
 import com.rvdjv.pawnmc.ui.PawnIcons
 import com.rvdjv.pawnmc.ui.editor.pawn.PawnLanguage
 import io.github.rosemoe.sora.event.ContentChangeEvent
@@ -810,7 +812,7 @@ fun XedEditorScreen(
                                     setColorScheme(editorScheme)
                                     setEditorLanguage(PawnLanguage())
                                     setText(workspace.activeDocument?.content ?: viewModel.fileContent ?: "")
-                                    // Reserve room for the " - <column>" suffix now
+                                    // Reserve room for the "-<column>" suffix now
                                     // that the document is loaded; later edits are
                                     // cheap enough to re-measure on the fly.
                                     refreshColumnSuffixWidth()
@@ -837,6 +839,7 @@ fun XedEditorScreen(
                                     subscribeEvent(SelectionChangeEvent::class.java) { _, _ ->
                                         cursorLine = cursor.leftLine + 1
                                         cursorCol = cursor.leftColumn + 1
+                                        refreshColumnSuffixWidth()
                                     }
 
                                     editorRef = created
@@ -934,19 +937,19 @@ fun XedEditorScreen(
                     )
                 }
 
-                // Workspace panel toggle: floats directly above the compile button and
-                // opens or closes the explorer card.
+                // Keep the workspace toggle above the toolbar so it remains reachable
+                // while the explorer panel is open.
                 FloatingRoundAction(
-                    size = 48.dp,
-                    icon = PawnIcons.PanelRect,
+                    size = PANEL_BUTTON_SIZE,
+                    icon = Icons.Filled.PanTool,
                     contentDescription = if (isExplorerVisible) "Hide workspace panel" else "Show workspace panel",
                     testTag = "editor_explorer_toggle",
                     isActive = isExplorerVisible,
+                    reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP,
                     onClick = { isExplorerVisible = !isExplorerVisible }
                 )
 
-                // Rectangle-style floating toolbar, stacked vertically above the
-                // workspace panel button and the compile button.
+                // Rectangle-style toolbar remains directly above the compile button.
                 FloatingRectToolbar(
                     hasUnsavedChanges = hasUnsavedChanges,
                     workspaceOpen = workspace.isWorkspaceOpen,
@@ -1125,28 +1128,28 @@ private val TOOLBAR_HEIGHT = 232.dp
 /**
  * Rest position of a floating control, given the compile button it stacks above.
  *
- * All three floaters share this geometry: the panel button sits one gap above the
- * compile button, the rectangular toolbar one gap above that, and both are centred on
- * the compile button horizontally so the group reads as one column.
+ * Controls are centred on the compile button horizontally. [reservedBelow] lets a
+ * control stack above another floating control without changing the shared anchor.
  */
 private fun restOffsetAbove(
     controlWidth: Dp,
     controlHeight: Dp,
     maxWidthPx: Float,
     maxHeightPx: Float,
-    density: Density
+    density: Density,
+    reservedBelow: Dp = 0.dp
 ): IntOffset = with(density) {
     val compilePx = COMPILE_BUTTON_SIZE.toPx()
-    val panelPx = PANEL_BUTTON_SIZE.toPx()
     val controlWidthPx = controlWidth.toPx()
     val controlHeightPx = controlHeight.toPx()
     val marginPx = FLOAT_MARGIN.toPx()
     val gapPx = FLOAT_GAP.toPx()
+    val reservedBelowPx = reservedBelow.toPx()
 
     val x = (maxWidthPx - marginPx - controlWidthPx - (compilePx - controlWidthPx) / 2f)
         .coerceAtLeast(0f)
     val compileTop = maxHeightPx - marginPx - compilePx
-    val y = (compileTop - gapPx - panelPx - gapPx - controlHeightPx).coerceAtLeast(0f)
+    val y = (compileTop - gapPx - reservedBelowPx - controlHeightPx).coerceAtLeast(0f)
 
     IntOffset(x.roundToInt(), y.roundToInt())
 }
@@ -1302,14 +1305,26 @@ private fun FloatingRoundAction(
     contentDescription: String,
     testTag: String,
     isActive: Boolean = false,
+    reservedBelow: Dp = 0.dp,
     onClick: () -> Unit
 ) {
     val density = LocalDensity.current
 
-    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(1f)
+    ) {
         val maxWidthPx = with(density) { maxWidth.toPx() }
         val maxHeightPx = with(density) { maxHeight.toPx() }
-        val restOffset = restOffsetAbove(size, size, maxWidthPx, maxHeightPx, density)
+        val restOffset = restOffsetAbove(
+            size,
+            size,
+            maxWidthPx,
+            maxHeightPx,
+            density,
+            reservedBelow
+        )
         val sizePx = with(density) { size.toPx() }
 
         var draggedOffset by remember { mutableStateOf<IntOffset?>(null) }
@@ -1349,11 +1364,7 @@ private fun FloatingRoundAction(
                 Icon(
                     imageVector = icon,
                     contentDescription = contentDescription,
-                    tint = if (isActive) {
-                        MaterialTheme.colorScheme.onSecondaryContainer
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    },
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -1848,7 +1859,7 @@ private fun applyVividSyntaxPalette(scheme: EditorColorScheme, darkCanvas: Boole
  * Token colours for the dark canvas.
  *
  * Hues are chosen so adjacent kinds never share a family: keywords are amber,
- * types are cyan, literals are orange, functions are green, operators are
+ * types are cyan, literals are orange, functions are blue, operators are
  * magenta, annotations are violet and comments are a desaturated slate.
  */
 private data class SyntaxPalette(
@@ -1866,7 +1877,7 @@ private val DarkPalette = SyntaxPalette(
     keyword = 0xFFFFD866.toInt(),
     type = 0xFF6FE3F5.toInt(),
     literal = 0xFFFFB07C.toInt(),
-    function = 0xFF7CFF9E.toInt(),
+    function = 0xFF8AB4F8.toInt(),
     operator = 0xFFE6A8FF.toInt(),
     annotation = 0xFFC9B6FF.toInt(),
     comment = 0xFF9AA7BD.toInt(),
@@ -1882,8 +1893,8 @@ private val DarkPalette = SyntaxPalette(
 private val LightPalette = SyntaxPalette(
     keyword = 0xFF9A3412.toInt(),
     type = 0xFF005E70.toInt(),
-    literal = 0xFF9A3412.toInt(),
-    function = 0xFF046C43.toInt(),
+    literal = 0xFFB42318.toInt(),
+    function = 0xFF1D4ED8.toInt(),
     operator = 0xFF6B21C8.toInt(),
     annotation = 0xFF4C1D95.toInt(),
     comment = 0xFF44546B.toInt(),

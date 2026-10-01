@@ -8,7 +8,7 @@ import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorRenderer
 
 /** Separator drawn between a line number and its column label. */
-internal const val LINE_COLUMN_SEPARATOR = " - "
+internal const val LINE_COLUMN_SEPARATOR = "-"
 
 /**
  * Editor that installs a renderer able to draw extra information in the
@@ -18,7 +18,7 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
 
     /**
      * Extra room reserved (in px) on the right of the line-number area for the
-     * `" - <column>"` label.
+        * `"-<column>"` label.
      */
     private var columnSuffixWidth: Float = 0f
 
@@ -49,10 +49,15 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
      * Cheap enough to call whenever the text changes.
      */
     fun refreshColumnSuffixWidth() {
-        columnSuffixWidth = if (isLineNumberEnabled) measureColumnSuffix() else 0f
+        val newWidth = if (isLineNumberEnabled) measureColumnSuffix() else 0f
+        if (newWidth != columnSuffixWidth) {
+            columnSuffixWidth = newWidth
+            requestLayout()
+            invalidate()
+        }
     }
 
-    /** Width of the `" - <column>"` label, `0` while it is not measured. */
+    /** Width of the `"-<column>"` label, `0` while it is not measured. */
     fun getColumnSuffixWidth(): Float = columnSuffixWidth
 
     private fun measureColumnSuffix(): Float {
@@ -60,23 +65,9 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
             typeface = typefaceText
             textSize = textSizePx
         }
-        val digits = maxOf(3, digitsOf(widestColumnCount() + 1))
+        val digits = digitsOf(maxOf(cursor.leftColumn, cursor.rightColumn) + 1)
         val sample = "8".repeat(digits)
-        // The label is drawn right next to the number, so only the part that
-        // pushes it past the plain line number needs to be reserved.
-        val extra = paint.measureText(LINE_COLUMN_SEPARATOR + sample) - paint.measureText(sample)
-        return maxOf(0f, extra) + paint.textSize * 0.25f
-    }
-
-    private fun widestColumnCount(): Int {
-        var widest = 0
-        var line = 0
-        while (line < lineCount) {
-            val length = text.getColumnCount(line)
-            if (length > widest) widest = length
-            line++
-        }
-        return widest
+        return paint.measureText(LINE_COLUMN_SEPARATOR + sample)
     }
 
     private fun digitsOf(value: Int): Int {

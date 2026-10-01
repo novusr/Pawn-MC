@@ -15,6 +15,11 @@ class XedEditorTest {
     val tempFolder = TemporaryFolder()
 
     @Test
+    fun `line column label uses a compact separator`() {
+        assertEquals("-", LINE_COLUMN_SEPARATOR)
+    }
+
+    @Test
     fun `verifies Pawn keywords and directives in registry`() {
         assertTrue(PawnRegistry.isKeyword("new"))
         assertTrue(PawnRegistry.isKeyword("stock"))

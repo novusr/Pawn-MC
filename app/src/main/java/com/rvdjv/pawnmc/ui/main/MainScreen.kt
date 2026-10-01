@@ -734,19 +734,32 @@ private fun ScreenHeader(
                 )
             }
 
-            HeaderActionsToggleButton(
-                expanded = actionsVisible,
-                localizer = localizer,
-                appLanguage = appLanguage,
-                onToggle = onToggleActions
-            )
+            if (!actionsVisible) {
+                HeaderActionsToggleButton(
+                    expanded = false,
+                    localizer = localizer,
+                    appLanguage = appLanguage,
+                    onToggle = onToggleActions
+                )
+            }
         }
 
         AnimatedVisibility(
             visible = actionsVisible,
             modifier = Modifier.align(Alignment.End)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HeaderActionsToggleButton(
+                    expanded = true,
+                    localizer = localizer,
+                    appLanguage = appLanguage,
+                    onToggle = onToggleActions
+                )
+
                 HeaderActionButton(
                     onClick = onSelfTestClick,
                     enabled = !isCompiling,
@@ -853,7 +866,9 @@ private fun HeaderActionsToggleButton(
 ) {
     IconButton(
         onClick = onToggle,
-        modifier = Modifier.testTag("header_actions_toggle_button")
+        modifier = Modifier
+            .size(HeaderActionButtonSize)
+            .testTag("header_actions_toggle_button")
     ) {
         Icon(
             imageVector = Icons.Filled.MoreHoriz,
@@ -862,7 +877,8 @@ private fun HeaderActionsToggleButton(
             } else {
                 localizer?.get("main.header.expand", appLanguage, "Show menu") ?: "Show menu"
             },
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(HeaderActionIconSize)
         )
     }
 }
