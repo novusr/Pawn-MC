@@ -699,6 +699,8 @@ private val HeaderActionShadowColor = Color(0xFF9E9E9E)
 
 /** Elevation of the header action shadow while the temporary menu is revealed. */
 private val HeaderActionShadowElevation = 12.dp
+private val HeaderActionButtonSize = 48.dp
+private val HeaderActionIconSize = 24.dp
 
 @Composable
 private fun ScreenHeader(
@@ -711,90 +713,77 @@ private fun ScreenHeader(
     localizer: AppLocalization? = null,
     appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column {
-            Text(
-                text = localizer?.get("app.name", appLanguage, "PawnMC Grand Permissions")
-                    ?: "PawnMC Grand Permissions",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Text(
-                text = localizer?.get("app.tagline", appLanguage, "Compiling ideas on the go.")
-                    ?: "Compiling ideas on the go.",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
+    Column(modifier = Modifier.fillMaxWidth()) {
         Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // The three-dot toggle sits in front of the actions while the temporary menu
-            // is revealed, and stands alone in the corner once the menu is collapsed.
-            if (actionsVisible) {
-                HeaderActionsToggleButton(
-                    expanded = true,
-                    localizer = localizer,
-                    appLanguage = appLanguage,
-                    onToggle = onToggleActions
+            Column {
+                Text(
+                    text = localizer?.get("app.name", appLanguage, "PawnMC") ?: "PawnMC",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+
+                Text(
+                    text = localizer?.get("app.tagline", appLanguage, "Compiling ideas on the go.")
+                        ?: "Compiling ideas on the go.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            AnimatedVisibility(visible = actionsVisible) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    HeaderActionButton(
-                        onClick = onSelfTestClick,
-                        enabled = !isCompiling,
-                        testTag = "self_test_button",
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Filled.Description,
-                                contentDescription = localizer?.get("main.header.selftest", appLanguage, "Self tests") ?: "Self tests",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    )
+            HeaderActionsToggleButton(
+                expanded = actionsVisible,
+                localizer = localizer,
+                appLanguage = appLanguage,
+                onToggle = onToggleActions
+            )
+        }
 
-                    HeaderActionButton(
-                        onClick = onEditorClick,
-                        enabled = !isCompiling,
-                        testTag = "xed_button",
-                        icon = {
-                            Icon(
-                                imageVector = PawnIcons.CodeEdit,
-                                contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    )
+        AnimatedVisibility(
+            visible = actionsVisible,
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                HeaderActionButton(
+                    onClick = onSelfTestClick,
+                    enabled = !isCompiling,
+                    testTag = "self_test_button",
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Filled.Description,
+                            contentDescription = localizer?.get("main.header.selftest", appLanguage, "Self tests") ?: "Self tests",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
 
-                    HeaderActionButton(
-                        onClick = onSettingsClick,
-                        enabled = !isCompiling,
-                        testTag = "settings_button",
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Filled.Settings,
-                                contentDescription = localizer?.get("main.header.settings", appLanguage, "Settings") ?: "Settings",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    )
-                }
-            }
+                HeaderActionButton(
+                    onClick = onEditorClick,
+                    enabled = !isCompiling,
+                    testTag = "xed_button",
+                    icon = {
+                        Icon(
+                            imageVector = PawnIcons.CodeEdit,
+                            contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
 
-            if (!actionsVisible) {
-                HeaderActionsToggleButton(
-                    expanded = false,
-                    localizer = localizer,
-                    appLanguage = appLanguage,
-                    onToggle = onToggleActions
+                HeaderActionButton(
+                    onClick = onSettingsClick,
+                    enabled = !isCompiling,
+                    testTag = "settings_button",
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = localizer?.get("main.header.settings", appLanguage, "Settings") ?: "Settings",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 )
             }
         }
@@ -831,10 +820,20 @@ private fun HeaderActionButton(
                 color = MaterialTheme.colorScheme.surface,
                 shape = RoundedCornerShape(14.dp)
             )
-            .testTag(testTag)
     ) {
-        IconButton(onClick = onClick, enabled = enabled) {
-            icon()
+        IconButton(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = Modifier
+                .size(HeaderActionButtonSize)
+                .testTag(testTag)
+        ) {
+            Box(
+                modifier = Modifier.size(HeaderActionIconSize),
+                contentAlignment = Alignment.Center
+            ) {
+                icon()
+            }
         }
     }
 }

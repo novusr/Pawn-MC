@@ -129,8 +129,8 @@
 0x01:settings.include.extension.stripped.en:0x02:The script extension (.pawn, .pwn, .p, .inc) was removed automatically and the path was saved as:
 0x01:settings.include.extension.list.id:0x02:.pawn, .pwn, .p, .inc
 0x01:settings.include.extension.list.en:0x02:.pawn, .pwn, .p, .inc
-0x01:app.name.id:0x02:PawnMC Grand Permissions
-0x01:app.name.en:0x02:PawnMC Grand Permissions
+0x01:app.name.id:0x02:PawnMC
+0x01:app.name.en:0x02:PawnMC
 0x01:app.tagline.id:0x02:Menyusun ide saat bepergian.
 0x01:app.tagline.en:0x02:Compiling ideas on the go.
 0x01:main.header.expand.id:0x02:Tampilkan menu

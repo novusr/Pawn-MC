@@ -26,6 +26,7 @@ object PawnCompiler {
 
     /** Suffix of the untouched copy created next to a converted folder. */
     private const val BACKUP_DIR_SUFFIX = ".backup"
+    private const val SSCANF_NO_NICE_FEATURES_FLAG = "SSCANF_NO_NICE_FEATURES=1"
 
     private val INCLUDE_PATH_VARIANTS = listOf(
         "$STR_PAWNO_DIR_NAME/$STR_INCLUDE_DIR_NAME",
@@ -627,6 +628,15 @@ object PawnCompiler {
         return n_result
     }
 
+    internal fun compilerOptionsForVersion(
+        options: List<String>,
+        version: CompilerConfig.CompilerVersion
+    ): List<String> = if (version == CompilerConfig.CompilerVersion.V3107) {
+        options.filterNot { it == SSCANF_NO_NICE_FEATURES_FLAG } + SSCANF_NO_NICE_FEATURES_FLAG
+    } else {
+        options
+    }
+
     /**
      * Runs the selected compiler version with the provided arguments.
      *
@@ -659,7 +669,7 @@ object PawnCompiler {
 
         val n_args = buildList {
             add(STR_PAWNCC_BINARY_NAME)
-            addAll(options)
+            addAll(compilerOptionsForVersion(options, version))
             add(sourceFile)
         }
 

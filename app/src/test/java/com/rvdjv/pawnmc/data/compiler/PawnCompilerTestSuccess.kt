@@ -47,6 +47,23 @@ class PawnCompilerSuccessTest {
     }
 
     @Test
+    fun `adds sscanf compatibility flag last only for pawn 3 10 7`() {
+        val options = listOf("-d=3", "-i=/project/include", "-i=/project/gamemodes", "-v=0")
+
+        val options3107 = PawnCompiler.compilerOptionsForVersion(
+            options + "SSCANF_NO_NICE_FEATURES=1",
+            CompilerConfig.CompilerVersion.V3107
+        )
+        assertEquals(options + "SSCANF_NO_NICE_FEATURES=1", options3107)
+
+        val options31011 = PawnCompiler.compilerOptionsForVersion(
+            options,
+            CompilerConfig.CompilerVersion.V31011
+        )
+        assertEquals(options, options31011)
+    }
+
+    @Test
     fun `case-insensitive workspace lowercases filenames and include statements`() {
         val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-ignore-case-${System.nanoTime()}")
         val originalDir = File(root, "Gamemodes")
