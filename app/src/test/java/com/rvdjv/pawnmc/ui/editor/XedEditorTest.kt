@@ -60,6 +60,12 @@ class XedEditorTest {
     }
 
     @Test
+    fun `native is a highlighted keyword with autocomplete`() {
+        assertTrue(PawnRegistry.isKeyword("native"))
+        assertTrue(PawnRegistry.getCompletions("nat").any { it.name == "native" })
+    }
+
+    @Test
     fun `verifies operator tokens`() {
         listOf(
             "*=", "/=", "%=", "+=", "-=", "<<=", ">>>=", ">>=", "&=", "^=", "|=",

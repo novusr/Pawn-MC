@@ -183,7 +183,8 @@ object AppSelfTestCatalog {
                     )
                     check(
                         "other files lowercased",
-                        File(gamemodes, "warung.pwn").exists() && File(nestedDir, "ekosistem.inc").exists() &&
+                        File(gamemodes, "warung.pwn").exists() &&
+                            File(gamemodes, "library/ekosistem.inc").exists() &&
                             File(gamemodes, "library").isDirectory,
                         "expected warung.pwn, library/ekosistem.inc"
                     )

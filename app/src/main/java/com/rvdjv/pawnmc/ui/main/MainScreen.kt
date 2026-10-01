@@ -454,6 +454,11 @@ fun MainScreen(
                         showCompilingBlockedToast()
                         return@ScreenHeader
                     }
+                    if (!hasStoragePermission(context)) {
+                        isStoragePermissionGranted = false
+                        showPermissionDialog = true
+                        return@ScreenHeader
+                    }
                     val path = viewModel.selectedFilePath
                     if (path.isNullOrBlank() || !File(path).exists()) {
                         viewModel.ensureTemporaryFileSelected()
@@ -463,8 +468,6 @@ fun MainScreen(
                             Toast.LENGTH_LONG
                         ).show()
                         onEditorClick()
-                    } else if (!isStoragePermissionGranted && !hasStoragePermission(context)) {
-                        showPermissionDialog = true
                     } else {
                         onEditorClick()
                     }

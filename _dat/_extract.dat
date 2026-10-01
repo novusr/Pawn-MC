@@ -153,3 +153,127 @@
 0x01:settings.save.en:0x02:Save
 0x01:settings.back.id:0x02:Kembali
 0x01:settings.back.en:0x02:Back
+0x01:xed.quickkeys.hide.id:0x02:Sembunyikan Tombol Cepat
+0x01:xed.quickkeys.hide.en:0x02:Hide Quick Keys
+0x01:xed.quickkeys.show.id:0x02:Tampilkan Tombol Cepat
+0x01:xed.quickkeys.show.en:0x02:Show Quick Keys
+0x01:xed.about.menu.id:0x02:Tentang Xed Editor
+0x01:xed.about.menu.en:0x02:About Xed Editor
+0x01:xed.about.title.id:0x02:Tentang Xed Editor
+0x01:xed.about.title.en:0x02:About Xed Editor
+0x01:xed.about.intro.id:0x02:Xed adalah editor kode Pawn dengan syntax highlighting, saran kode, alat workspace, dan kompilasi langsung.
+0x01:xed.about.intro.en:0x02:Xed is a Pawn code editor with syntax highlighting, completion, workspace tools, and direct compilation.
+0x01:xed.about.close.id:0x02:Tutup
+0x01:xed.about.close.en:0x02:Close
+0x01:xed.about.back.title.id:0x02:Kembali
+0x01:xed.about.back.title.en:0x02:Back
+0x01:xed.about.back.desc.id:0x02:Kembali ke pemilihan berkas dan layar compiler.
+0x01:xed.about.back.desc.en:0x02:Return to the file selection and compiler screen.
+0x01:xed.about.undo.title.id:0x02:Urungkan
+0x01:xed.about.undo.title.en:0x02:Undo
+0x01:xed.about.undo.desc.id:0x02:Urungkan perubahan terakhir.
+0x01:xed.about.undo.desc.en:0x02:Undo the most recent edit.
+0x01:xed.about.redo.title.id:0x02:Ulangi
+0x01:xed.about.redo.title.en:0x02:Redo
+0x01:xed.about.redo.desc.id:0x02:Pulihkan perubahan terakhir yang diurungkan.
+0x01:xed.about.redo.desc.en:0x02:Restore the most recently undone edit.
+0x01:xed.about.options.title.id:0x02:Opsi Editor
+0x01:xed.about.options.title.en:0x02:Editor options
+0x01:xed.about.options.desc.id:0x02:Buka workspace, alat pencarian dan penggantian, kontrol tampilan, tombol cepat, dan halaman Tentang.
+0x01:xed.about.options.desc.en:0x02:Open workspace, search and replace tools, view controls, quick keys, and this About page.
+0x01:xed.about.open_workspace.title.id:0x02:Buka Folder Workspace
+0x01:xed.about.open_workspace.title.en:0x02:Open Workspace Folder
+0x01:xed.about.open_workspace.desc.id:0x02:Pilih folder lokal dan telusuri berkasnya di panel workspace.
+0x01:xed.about.open_workspace.desc.en:0x02:Choose a local folder and browse its files in the workspace panel.
+0x01:xed.about.close_workspace.title.id:0x02:Tutup Workspace
+0x01:xed.about.close_workspace.title.en:0x02:Close Workspace
+0x01:xed.about.close_workspace.desc.id:0x02:Tutup workspace aktif tanpa menutup workspace lain yang masih terbuka.
+0x01:xed.about.close_workspace.desc.en:0x02:Close the active workspace while keeping other open workspaces available.
+0x01:xed.about.close_all.title.id:0x02:Tutup Semua Workspace
+0x01:xed.about.close_all.title.en:0x02:Close All Workspaces
+0x01:xed.about.close_all.desc.id:0x02:Tutup semua workspace yang sedang terbuka di Xed.
+0x01:xed.about.close_all.desc.en:0x02:Close every workspace currently open in Xed.
+0x01:xed.about.search_workspace.title.id:0x02:Cari di Workspace
+0x01:xed.about.search_workspace.title.en:0x02:Search in Workspace
+0x01:xed.about.search_workspace.desc.id:0x02:Cari teks di seluruh berkas dalam workspace aktif.
+0x01:xed.about.search_workspace.desc.en:0x02:Find text across files in the active workspace.
+0x01:xed.about.replace_file.title.id:0x02:Ganti Kata per Berkas
+0x01:xed.about.replace_file.title.en:0x02:Replace Words per File
+0x01:xed.about.replace_file.desc.id:0x02:Ganti kecocokan di berkas saat ini, satu kemunculan atau semuanya.
+0x01:xed.about.replace_file.desc.en:0x02:Replace matches in the current file, one occurrence or all at once.
+0x01:xed.about.replace_workspace.title.id:0x02:Ganti Kata di Semua Berkas
+0x01:xed.about.replace_workspace.title.en:0x02:Replace Words All Files
+0x01:xed.about.replace_workspace.desc.id:0x02:Ganti teks yang cocok di seluruh berkas workspace.
+0x01:xed.about.replace_workspace.desc.en:0x02:Replace matching text across the workspace files.
+0x01:xed.about.workspace_panel.title.id:0x02:Tampilkan atau Sembunyikan Panel Workspace
+0x01:xed.about.workspace_panel.title.en:0x02:Show or Hide Workspace Panel
+0x01:xed.about.workspace_panel.desc.id:0x02:Tampilkan atau sembunyikan panel berisi berkas terbuka, folder, dan hasil pencarian.
+0x01:xed.about.workspace_panel.desc.en:0x02:Toggle the panel containing open files, folders, and search results.
+0x01:xed.about.select_all.title.id:0x02:Pilih Semua
+0x01:xed.about.select_all.title.en:0x02:Select All
+0x01:xed.about.select_all.desc.id:0x02:Pilih seluruh teks di berkas saat ini.
+0x01:xed.about.select_all.desc.en:0x02:Select all text in the current file.
+0x01:xed.about.jump.title.id:0x02:Lompat ke Baris
+0x01:xed.about.jump.title.en:0x02:Jump to Line
+0x01:xed.about.jump.desc.id:0x02:Pindahkan kursor langsung ke nomor baris tertentu.
+0x01:xed.about.jump.desc.en:0x02:Move the cursor directly to a line number.
+0x01:xed.about.wrap.title.id:0x02:Bungkus Baris
+0x01:xed.about.wrap.title.en:0x02:Word Wrap
+0x01:xed.about.wrap.desc.id:0x02:Aktifkan atau nonaktifkan pembungkusan baris.
+0x01:xed.about.wrap.desc.en:0x02:Turn line wrapping on or off.
+0x01:xed.about.read_only.title.id:0x02:Mode Hanya Baca
+0x01:xed.about.read_only.title.en:0x02:Read-Only Mode
+0x01:xed.about.read_only.desc.id:0x02:Cegah pengeditan sampai mode edit diaktifkan kembali.
+0x01:xed.about.read_only.desc.en:0x02:Prevent edits until editing is enabled again.
+0x01:xed.about.line_numbers.title.id:0x02:Nomor Baris
+0x01:xed.about.line_numbers.title.en:0x02:Line Numbers
+0x01:xed.about.line_numbers.desc.id:0x02:Tampilkan atau sembunyikan nomor baris dan kolom saat ini.
+0x01:xed.about.line_numbers.desc.en:0x02:Show or hide line numbers and the current column.
+0x01:xed.about.quickkeys_toggle.title.id:0x02:Tombol Cepat
+0x01:xed.about.quickkeys_toggle.title.en:0x02:Quick Keys Toggle
+0x01:xed.about.quickkeys_toggle.desc.id:0x02:Tampilkan atau sembunyikan bar bawah berisi TAB, simbol, dan angka.
+0x01:xed.about.quickkeys_toggle.desc.en:0x02:Show or hide the bottom row with TAB, symbols, and digits.
+0x01:xed.about.about.title.id:0x02:Tentang Xed Editor
+0x01:xed.about.about.title.en:0x02:About Xed Editor
+0x01:xed.about.about.desc.id:0x02:Buka panduan alat dan kontrol Xed ini.
+0x01:xed.about.about.desc.en:0x02:Open this guide to Xed's tools and controls.
+0x01:xed.about.search_file.title.id:0x02:Cari di Berkas
+0x01:xed.about.search_file.title.en:0x02:Search in File
+0x01:xed.about.search_file.desc.id:0x02:Cari teks di berkas saat ini dan berpindah di antara hasilnya.
+0x01:xed.about.search_file.desc.en:0x02:Find text in the current file and move between matches.
+0x01:xed.about.open_folder.title.id:0x02:Buka Folder
+0x01:xed.about.open_folder.title.en:0x02:Open Folder
+0x01:xed.about.open_folder.desc.id:0x02:Pilih folder workspace dari toolbar mengambang.
+0x01:xed.about.open_folder.desc.en:0x02:Choose a workspace folder from the floating toolbar.
+0x01:xed.about.save.title.id:0x02:Simpan
+0x01:xed.about.save.title.en:0x02:Save
+0x01:xed.about.save.desc.id:0x02:Simpan berkas aktif.
+0x01:xed.about.save.desc.en:0x02:Save the active file.
+0x01:xed.about.save_as_all.title.id:0x02:Simpan Sebagai atau Simpan Semua
+0x01:xed.about.save_as_all.title.en:0x02:Save As or Save All
+0x01:xed.about.save_as_all.desc.id:0x02:Simpan berkas saat ini dengan nama baru, atau simpan semua berkas workspace yang berubah.
+0x01:xed.about.save_as_all.desc.en:0x02:Save the current file under a new name, or save all modified workspace files.
+0x01:xed.about.compile.title.id:0x02:Kompilasi
+0x01:xed.about.compile.title.en:0x02:Compile
+0x01:xed.about.compile.desc.id:0x02:Simpan perubahan workspace yang terbuka lalu kompilasi berkas Pawn aktif.
+0x01:xed.about.compile.desc.en:0x02:Save open workspace changes and compile the active Pawn file.
+0x01:xed.about.explorer.title.id:0x02:Tombol Panel Workspace
+0x01:xed.about.explorer.title.en:0x02:Workspace Panel Button
+0x01:xed.about.explorer.desc.id:0x02:Tampilkan atau sembunyikan panel workspace mengambang.
+0x01:xed.about.explorer.desc.en:0x02:Show or hide the floating workspace panel.
+0x01:xed.about.tabs.title.id:0x02:Tab Berkas
+0x01:xed.about.tabs.title.en:0x02:File Tabs
+0x01:xed.about.tabs.desc.id:0x02:Beralih antarberkas terbuka atau tutup berkas melalui tab-nya.
+0x01:xed.about.tabs.desc.en:0x02:Switch between open files or close a file from its tab.
+0x01:xed.about.new_tab.title.id:0x02:Tambah atau Buka Berkas
+0x01:xed.about.new_tab.title.en:0x02:Add or Open File
+0x01:xed.about.new_tab.desc.id:0x02:Buka panel workspace atau pilih folder lain.
+0x01:xed.about.new_tab.desc.en:0x02:Open the workspace panel or choose another folder.
+0x01:xed.about.tab_key.title.id:0x02:TAB
+0x01:xed.about.tab_key.title.en:0x02:TAB
+0x01:xed.about.tab_key.desc.id:0x02:Masukkan satu tingkat indentasi pada posisi kursor.
+0x01:xed.about.tab_key.desc.en:0x02:Insert one indentation level at the cursor.
+0x01:xed.about.symbol_keys.title.id:0x02:Tombol Simbol dan Angka
+0x01:xed.about.symbol_keys.title.en:0x02:Symbol and Number Keys
+0x01:xed.about.symbol_keys.desc.id:0x02:Masukkan kurung kurawal, tanda kurung, kurung siku, tanda baca, atau angka pada posisi kursor.
+0x01:xed.about.symbol_keys.desc.en:0x02:Insert braces, parentheses, brackets, punctuation, or digits at the cursor.

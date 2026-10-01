@@ -23,12 +23,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -53,6 +55,8 @@ import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.WrapText
 import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -103,7 +107,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.zIndex
+import androidx.compose.ui.text.font.FontWeight
 import com.rvdjv.pawnmc.ui.PawnIcons
+import com.rvdjv.pawnmc.data.config.AppLocalization
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.ui.editor.pawn.PawnLanguage
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
@@ -125,6 +132,8 @@ fun XedEditorScreen(
     onCompileRequest: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
+    val localizer = remember(context) { AppLocalization.load(context) }
+    val appLanguage = remember(context) { CompilerConfig.getInstance(context).n_app_language }
     val appColorScheme = MaterialTheme.colorScheme
     val editorScheme = remember(appColorScheme, editorBackgroundColor) {
         buildEditorScheme(appColorScheme, editorBackgroundColor)
@@ -144,6 +153,8 @@ fun XedEditorScreen(
     var showMenu by remember { mutableStateOf(false) }
     var showSearchBar by remember { mutableStateOf(false) }
     var showJumpDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
+    var isQuickSymbolBarVisible by remember { mutableStateOf(true) }
 
     var searchQuery by remember { mutableStateOf("") }
     var replaceQuery by remember { mutableStateOf("") }
@@ -405,6 +416,14 @@ fun XedEditorScreen(
         )
     }
 
+    if (showAboutDialog) {
+        XedAboutDialog(
+            localizer = localizer,
+            language = appLanguage,
+            onDismiss = { showAboutDialog = false }
+        )
+    }
+
     Scaffold(
         // The scaffold keeps the page tone so the brighter code area in the middle
         // reads as its own surface, with toolbar/status bars one step above it.
@@ -633,6 +652,34 @@ fun XedEditorScreen(
                                     showMenu = false
                                     isLineNumbers = !isLineNumbers
                                     editorRef?.isLineNumberEnabled = isLineNumbers
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        localizer.get(
+                                            if (isQuickSymbolBarVisible) "xed.quickkeys.hide" else "xed.quickkeys.show",
+                                            appLanguage,
+                                            if (isQuickSymbolBarVisible) "Hide Quick Keys" else "Show Quick Keys"
+                                        )
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.Keyboard, contentDescription = null)
+                                },
+                                onClick = {
+                                    isQuickSymbolBarVisible = !isQuickSymbolBarVisible
+                                    showMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(localizer.get("xed.about.menu", appLanguage, "About Xed Editor"))
+                                },
+                                leadingIcon = { Icon(Icons.Filled.Info, contentDescription = null) },
+                                onClick = {
+                                    showMenu = false
+                                    showAboutDialog = true
                                 }
                             )
                         }
@@ -993,15 +1040,17 @@ fun XedEditorScreen(
                 )
             }
 
-            QuickSymbolBar(
-                onSymbolClick = { symbol ->
-                    val editor = editorRef
-                    if (editor != null) {
-                        editor.text.insert(editor.cursor.leftLine, editor.cursor.leftColumn, symbol)
-                    }
-                },
-                onTabClick = { insertIndentAtCursor(editorRef) }
-            )
+            if (isQuickSymbolBarVisible) {
+                QuickSymbolBar(
+                    onSymbolClick = { symbol ->
+                        val editor = editorRef
+                        if (editor != null) {
+                            editor.text.insert(editor.cursor.leftLine, editor.cursor.leftColumn, symbol)
+                        }
+                    },
+                    onTabClick = { insertIndentAtCursor(editorRef) }
+                )
+            }
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             Row(
@@ -1053,6 +1102,89 @@ fun XedEditorScreen(
             editorRef = null
         }
     }
+}
+
+private data class XedAboutItem(
+    val key: String,
+    val title: String,
+    val description: String
+)
+
+@Composable
+private fun XedAboutDialog(
+    localizer: AppLocalization,
+    language: CompilerConfig.AppLanguage,
+    onDismiss: () -> Unit
+) {
+    val items = listOf(
+        XedAboutItem("xed.about.back", "Back", "Return to the file selection and compiler screen."),
+        XedAboutItem("xed.about.undo", "Undo", "Undo the most recent edit."),
+        XedAboutItem("xed.about.redo", "Redo", "Restore the most recently undone edit."),
+        XedAboutItem("xed.about.options", "Editor options", "Open workspace, search and replace tools, view controls, quick keys, and this About page."),
+        XedAboutItem("xed.about.open_workspace", "Open Workspace Folder", "Choose a local folder and browse its files in the workspace panel."),
+        XedAboutItem("xed.about.close_workspace", "Close Workspace", "Close the active workspace while keeping other open workspaces available."),
+        XedAboutItem("xed.about.close_all", "Close All Workspaces", "Close every workspace currently open in Xed."),
+        XedAboutItem("xed.about.search_workspace", "Search in Workspace", "Find text across files in the active workspace."),
+        XedAboutItem("xed.about.replace_file", "Replace Words per File", "Replace matches in the current file, one occurrence or all at once."),
+        XedAboutItem("xed.about.replace_workspace", "Replace Words All Files", "Replace matching text across the workspace files."),
+        XedAboutItem("xed.about.workspace_panel", "Show or Hide Workspace Panel", "Toggle the panel containing open files, folders, and search results."),
+        XedAboutItem("xed.about.select_all", "Select All", "Select all text in the current file."),
+        XedAboutItem("xed.about.jump", "Jump to Line", "Move the cursor directly to a line number."),
+        XedAboutItem("xed.about.wrap", "Word Wrap", "Turn line wrapping on or off."),
+        XedAboutItem("xed.about.read_only", "Read-Only Mode", "Prevent edits until editing is enabled again."),
+        XedAboutItem("xed.about.line_numbers", "Line Numbers", "Show or hide line numbers and the current column."),
+        XedAboutItem("xed.about.quickkeys_toggle", "Quick Keys Toggle", "Show or hide the bottom row with TAB, symbols, and digits."),
+        XedAboutItem("xed.about.about", "About Xed Editor", "Open this guide to Xed's tools and controls."),
+        XedAboutItem("xed.about.search_file", "Search in File", "Find text in the current file and move between matches."),
+        XedAboutItem("xed.about.open_folder", "Open Folder", "Choose a workspace folder from the floating toolbar."),
+        XedAboutItem("xed.about.save", "Save", "Save the active file."),
+        XedAboutItem("xed.about.save_as_all", "Save As or Save All", "Save the current file under a new name, or save all modified workspace files."),
+        XedAboutItem("xed.about.compile", "Compile", "Save open workspace changes and compile the active Pawn file."),
+        XedAboutItem("xed.about.explorer", "Workspace Panel Button", "Show or hide the floating workspace panel."),
+        XedAboutItem("xed.about.tabs", "File Tabs", "Switch between open files or close a file from its tab."),
+        XedAboutItem("xed.about.new_tab", "Add or Open File", "Open the workspace panel or choose another folder."),
+        XedAboutItem("xed.about.tab_key", "TAB", "Insert one indentation level at the cursor."),
+        XedAboutItem("xed.about.symbol_keys", "Symbol and Number Keys", "Insert braces, parentheses, brackets, punctuation, or digits at the cursor.")
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(localizer.get("xed.about.title", language, "About Xed Editor")) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .heightIn(max = 480.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    localizer.get(
+                        "xed.about.intro",
+                        language,
+                        "Xed is a Pawn code editor with syntax highlighting, completion, workspace tools, and direct compilation."
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                items.forEach { item ->
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            localizer.get("${item.key}.title", language, item.title),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            localizer.get("${item.key}.desc", language, item.description),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(localizer.get("xed.about.close", language, "Close"))
+            }
+        }
+    )
 }
 
 /**
