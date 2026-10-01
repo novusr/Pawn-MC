@@ -10,14 +10,12 @@ import java.io.File
 object PawnCompiler {
 
     private const val STR_PAWNO_DIR_NAME              = "pawno"
+    private const val STR_QAWNO_DIR_NAME              = "qawno"
 
     private const val STR_PAWNCC_BINARY_NAME          = "pawncc"
     private const val STR_PAWNCC_FILE_NAME            = "pawncc.exe"
 
-    private const val STR_MODES_DIR_NAME              = "gamemodes"
     private const val STR_INCLUDE_DIR_NAME            = "include"
-    private const val STR_PATH_SEPARATOR              = "/"
-    private const val STR_INCLUDE_PATH_SUFFIX         = "/include"
     
     private const val STR_PAWN_FILE_EXTENSION         = "pawn"
     private const val STR_PWN_FILE_EXTENSION          = "pwn"
@@ -30,7 +28,8 @@ object PawnCompiler {
 
     private val INCLUDE_PATH_VARIANTS = listOf(
         "$STR_PAWNO_DIR_NAME/$STR_INCLUDE_DIR_NAME",
-        STR_MODES_DIR_NAME
+        "$STR_QAWNO_DIR_NAME/$STR_INCLUDE_DIR_NAME",
+        "includes"
     )
 
     private val COMPILER_BINARY_NAMES = listOf(
@@ -488,72 +487,40 @@ object PawnCompiler {
         return null
     }
 
-    /**
-     * Builds include paths based on the selected file directory and the nearest detected compiler folder.
-     *
-     * Every candidate is compared against [knownPaths] first and dropped when that folder is
-     * already registered, so re-discovering the same project does not repeat work the
-     * configuration already holds. Only genuinely new folders are returned, which means
-     * callers can append the result without running another filter pass.
-     *
-     * @param sourceFile selected Pawn file path
-     * @param knownPaths include paths already registered, used to skip duplicates early
-     * @return include directories that should be added as -i values
-     */
+    /** Selects one existing conventional include folder, or the stable `include/` fallback. */
     fun discoverRelevantIncludePaths(sourceFile: String, knownPaths: List<String> = emptyList()): List<String> {
-        val result = linkedSetOf<String>()
-        val resultKeys = mutableSetOf<String>()
         val known = knownPaths.asSequence()
             .map { CompilerConfig.includePathKey(it) }
             .filter { it.isNotBlank() && it != "/" }
             .toSet()
 
-        fun offer(candidate: File) {
-            val absolutePath = CompilerConfig.normalPath(candidate.absolutePath)
-            if (absolutePath.isBlank()) return
-            val key = CompilerConfig.includePathKey(absolutePath)
-            if (key.isBlank() || key == "/") return
-            if (key in known) return
-            if (!resultKeys.add(key)) return
-            result += absolutePath
+        val sourceDir = File(sourceFile).absoluteFile.parentFile ?: return emptyList()
+        val projectRoot = if (sourceDir.name.equals("gamemodes", ignoreCase = true)) {
+            sourceDir.parentFile ?: sourceDir
+        } else {
+            sourceDir
         }
 
-        val sourceDir = File(sourceFile).parentFile
-        val baseDirs = linkedSetOf<File>()
-
-        if (sourceDir != null && sourceDir.exists() && sourceDir.isDirectory) {
-            baseDirs += sourceDir
-            baseDirs += sourceDir.parentFile
-        }
-
-        val detectedCompiler = detectNearbyCompiler(sourceFile)
-        detectedCompiler?.filePath?.let { compilerPath ->
-            val compilerFile = File(compilerPath)
-            compilerFile.parentFile?.let { baseDirs += it }
-        }
-
-        baseDirs.forEach { baseDir ->
-            INCLUDE_PATH_VARIANTS.forEach { variant ->
-                val candidate = File(baseDir, variant)
-                offer(candidate)
+        val candidateRoots = linkedSetOf(projectRoot, sourceDir)
+        sourceDir.parentFile?.let { candidateRoots += it }
+        detectNearbyCompiler(sourceFile)?.filePath?.let { compilerPath ->
+            File(compilerPath).parentFile?.let { compilerDir ->
+                candidateRoots += if (compilerDir.name.equals(STR_PAWNO_DIR_NAME, ignoreCase = true)) {
+                    compilerDir.parentFile ?: compilerDir
+                } else {
+                    compilerDir
+                }
             }
         }
 
-        val sourceParent = sourceDir?.absoluteFile
-        if (sourceParent != null) {
-            val sourceGamemodes = File(sourceParent, STR_MODES_DIR_NAME)
-            offer(sourceGamemodes)
-        }
+        val selectedInclude = INCLUDE_PATH_VARIANTS.asSequence()
+            .flatMap { variant -> candidateRoots.asSequence().map { root -> File(root, variant) } }
+            .firstOrNull { candidate -> runCatching { candidate.isDirectory }.getOrDefault(false) }
+            ?: File(projectRoot, STR_INCLUDE_DIR_NAME)
 
-        val baseCandidate = sourceParent ?: File(System.getProperty("java.io.tmpdir"))
-        offer(File(baseCandidate, "$STR_PAWNO_DIR_NAME/$STR_INCLUDE_DIR_NAME"))
-        offer(File(baseCandidate, STR_MODES_DIR_NAME))
-
-        // Discovery probes several conventional locations that are usually absent, so
-        // keep only folders that really exist on disk.
-        return result.filter { path ->
-            runCatching { File(path).isDirectory }.getOrDefault(false)
-        }
+        val normalizedPath = CompilerConfig.normalPath(selectedInclude.absolutePath)
+        val key = CompilerConfig.includePathKey(normalizedPath)
+        return if (key.isBlank() || key == "/" || key in known) emptyList() else listOf(normalizedPath)
     }
 
     /**
@@ -638,10 +605,23 @@ object PawnCompiler {
     internal fun compilerOptionsForVersion(
         options: List<String>,
         version: CompilerConfig.CompilerVersion
-    ): List<String> = if (version == CompilerConfig.CompilerVersion.V3107) {
-        options.filterNot { it == SSCANF_NO_NICE_FEATURES_FLAG } + SSCANF_NO_NICE_FEATURES_FLAG
-    } else {
-        options
+    ): List<String> {
+        val normalized = mutableListOf<String>()
+        var hasSscanfFlag = false
+        options.forEach { option ->
+            val canonicalOption = if (option == "-D$SSCANF_NO_NICE_FEATURES_FLAG") {
+                SSCANF_NO_NICE_FEATURES_FLAG
+            } else option
+
+            if (canonicalOption == SSCANF_NO_NICE_FEATURES_FLAG) {
+                if (!hasSscanfFlag) normalized += canonicalOption
+                hasSscanfFlag = true
+            } else {
+                normalized += canonicalOption
+            }
+        }
+        if (version != CompilerConfig.CompilerVersion.V3107) return normalized
+        return normalized.filterNot { it == SSCANF_NO_NICE_FEATURES_FLAG } + SSCANF_NO_NICE_FEATURES_FLAG
     }
 
     internal fun compilerArgumentsForVersion(

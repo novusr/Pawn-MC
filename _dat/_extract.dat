@@ -9,18 +9,46 @@
 0x01:settings.compiler.version.en:0x02:Compiler Version
 0x01:settings.compiler.version.desc.id:0x02:Pilih rilis pawncc yang dipakai saat kompilasi. Berpindah versi memuat ulang pustaka compiler, jadi aplikasi perlu dimulai ulang setelah berubah.
 0x01:settings.compiler.version.desc.en:0x02:Chooses which pawncc release performs the compilation. Switching versions reloads the compiler library, so the app has to restart once the change is applied.
+0x01:settings.compiler.version.3107.label.id:0x02:Pawn 3.10.7
+0x01:settings.compiler.version.3107.label.en:0x02:Pawn 3.10.7
+0x01:settings.compiler.version.3107.desc.id:0x02:Versi stabil
+0x01:settings.compiler.version.3107.desc.en:0x02:Stable release
+0x01:settings.compiler.version.31011.label.id:0x02:Pawn 3.10.11
+0x01:settings.compiler.version.31011.label.en:0x02:Pawn 3.10.11
+0x01:settings.compiler.version.31011.desc.id:0x02:Rilis yang lebih baru
+0x01:settings.compiler.version.31011.desc.en:0x02:Newer release
 0x01:settings.compiler.forced.desc.id:0x02:Saat dipaksa, versi yang dipilih di atas selalu dipakai. Saat otomatis, compiler di dekat berkas yang sedang diedit lebih diprioritaskan bila versinya cocok.
 0x01:settings.compiler.forced.desc.en:0x02:When forced, the version picked above is always used. When automatic, a compiler sitting next to the file you are editing is preferred whenever its version matches.
 0x01:settings.language.id:0x02:Bahasa
 0x01:settings.language.en:0x02:Language
 0x01:settings.language.desc.id:0x02:Bahasa untuk semua teks antarmuka, termasuk pesan compiler dan uraian pengaturan.
 0x01:settings.language.desc.en:0x02:Language used for every piece of interface text, including compiler messages and settings descriptions.
+0x01:settings.language.option.id.label.id:0x02:Bahasa Indonesia
+0x01:settings.language.option.id.label.en:0x02:Indonesian
+0x01:settings.language.option.id.desc.id:0x02:Gunakan Bahasa Indonesia untuk antarmuka aplikasi.
+0x01:settings.language.option.id.desc.en:0x02:Use Indonesian for the app interface.
+0x01:settings.language.option.en.label.id:0x02:Bahasa Inggris
+0x01:settings.language.option.en.label.en:0x02:English (EN/US)
+0x01:settings.language.option.en.desc.id:0x02:Gunakan Bahasa Inggris untuk antarmuka aplikasi.
+0x01:settings.language.option.en.desc.en:0x02:Use English for the app interface.
 0x01:settings.language.selector.id:0x02:Pilih Bahasa
 0x01:settings.language.selector.en:0x02:Select Language
 0x01:settings.theme.id:0x02:Tema
 0x01:settings.theme.en:0x02:Theme
 0x01:settings.theme.desc.id:0x02:Mengatur apakah aplikasi mengikuti tema sistem, selalu terang, atau selalu gelap. Pilihan ini juga menentukan latar editor Xed.
 0x01:settings.theme.desc.en:0x02:Controls whether the app follows the system theme, or is pinned to light or dark. This choice also drives the Xed editor background.
+0x01:settings.theme.option.system.label.id:0x02:Ikuti Sistem
+0x01:settings.theme.option.system.label.en:0x02:System Default
+0x01:settings.theme.option.system.desc.id:0x02:Ikuti tema terang atau gelap perangkat.
+0x01:settings.theme.option.system.desc.en:0x02:Follow the device's light or dark theme.
+0x01:settings.theme.option.light.label.id:0x02:Terang
+0x01:settings.theme.option.light.label.en:0x02:Light
+0x01:settings.theme.option.light.desc.id:0x02:Selalu gunakan tema terang.
+0x01:settings.theme.option.light.desc.en:0x02:Always use the light theme.
+0x01:settings.theme.option.dark.label.id:0x02:Gelap
+0x01:settings.theme.option.dark.label.en:0x02:Dark
+0x01:settings.theme.option.dark.desc.id:0x02:Selalu gunakan tema gelap.
+0x01:settings.theme.option.dark.desc.en:0x02:Always use the dark theme.
 0x01:settings.theme.selector.id:0x02:Pilih Tema
 0x01:settings.theme.selector.en:0x02:Select Theme
 0x01:settings.compiler.options.id:0x02:Opsi Compiler
@@ -39,10 +67,38 @@
 0x01:settings.option.debug.en:0x02:Debug Level
 0x01:settings.option.debug.desc.id:0x02:Menentukan berapa banyak informasi debug dan pemeriksaan runtime yang dibangkitkan compiler. Level lebih tinggi menambah pemeriksaan tetapi memperlambat dan memperbesar hasil.
 0x01:settings.option.debug.desc.en:0x02:Controls how much debug information and runtime checking the compiler generates. Higher levels add more checks at the cost of build time and a larger output file.
+0x01:settings.option.debug.level.0.label.id:0x02:Nonaktif (-d0)
+0x01:settings.option.debug.level.0.label.en:0x02:Disabled (-d0)
+0x01:settings.option.debug.level.0.desc.id:0x02:Tidak menyertakan simbol debug atau validasi runtime.
+0x01:settings.option.debug.level.0.desc.en:0x02:No debug symbols or runtime validation.
+0x01:settings.option.debug.level.1.label.id:0x02:Validasi Runtime (-d1)
+0x01:settings.option.debug.level.1.label.en:0x02:Runtime Validation (-d1)
+0x01:settings.option.debug.level.1.desc.id:0x02:Memeriksa batas array tanpa menyertakan simbol debug.
+0x01:settings.option.debug.level.1.desc.en:0x02:Checks array bounds without including debug symbols.
+0x01:settings.option.debug.level.2.label.id:0x02:Debug Lengkap (-d2)
+0x01:settings.option.debug.level.2.label.en:0x02:Full Debugging (-d2)
+0x01:settings.option.debug.level.2.desc.id:0x02:Menyertakan informasi debug lengkap dan pemeriksaan runtime.
+0x01:settings.option.debug.level.2.desc.en:0x02:Includes full debug information and runtime checks.
+0x01:settings.option.debug.level.3.label.id:0x02:Debug Maksimal (-d3)
+0x01:settings.option.debug.level.3.label.en:0x02:Maximum Debug (-d3)
+0x01:settings.option.debug.level.3.desc.id:0x02:Debug paling terperinci; optimisasi otomatis dinonaktifkan.
+0x01:settings.option.debug.level.3.desc.en:0x02:Most detailed debugging; optimization is disabled automatically.
 0x01:settings.option.optimization.id:0x02:Tingkat Optimasi
 0x01:settings.option.optimization.en:0x02:Optimization Level
 0x01:settings.option.optimization.desc.id:0x02:Menentukan seberapa agresif compiler menyederhanakan bytecode. Optimasi lebih tinggi menghasilkan AMX yang lebih kecil dan lebih cepat, tetapi menyulitkan penelusuran debug.
 0x01:settings.option.optimization.desc.en:0x02:Determines how aggressively the compiler simplifies the bytecode. Higher levels yield a smaller and faster AMX, but make debugging traces harder to follow.
+0x01:settings.option.optimization.level.0.label.id:0x02:Nonaktif (-O0)
+0x01:settings.option.optimization.level.0.label.en:0x02:Disabled (-O0)
+0x01:settings.option.optimization.level.0.desc.id:0x02:Tidak melakukan optimisasi; paling aman tetapi ukuran hasil terbesar.
+0x01:settings.option.optimization.level.0.desc.en:0x02:No optimization; safest, but produces the largest output.
+0x01:settings.option.optimization.level.1.label.id:0x02:Seimbang (-O1)
+0x01:settings.option.optimization.level.1.label.en:0x02:Balanced (-O1)
+0x01:settings.option.optimization.level.1.desc.id:0x02:Optimisasi standar yang menjaga stabilitas.
+0x01:settings.option.optimization.level.1.desc.en:0x02:Default optimization pass for stable builds.
+0x01:settings.option.optimization.level.2.label.id:0x02:Agresif (-O2)
+0x01:settings.option.optimization.level.2.label.en:0x02:Aggressive (-O2)
+0x01:settings.option.optimization.level.2.desc.id:0x02:Optimisasi maksimum untuk kecepatan dan ukuran.
+0x01:settings.option.optimization.level.2.desc.en:0x02:Maximum optimization for speed and size.
 0x01:settings.option.ignorecase.id:0x02:Abaikan Huruf Besar/Kecil
 0x01:settings.option.ignorecase.en:0x02:Filesystem
 0x01:settings.option.ignorecase.desc.id:0x02:Membuat salinan cadangan folder (\"nama-folder.backup\"), lalu mengubah semua nama file selain file yang dipilih dan seluruh referensi #include menjadi huruf kecil. Dijalankan sekali per folder, karena melewati Android yang peka huruf besar/kecil.
@@ -123,8 +179,8 @@
 0x01:main.busy.toast.en:0x02:Settings, editor, and self-test are unavailable while compiling
 0x01:settings.include.paths.notice.title.id:0x02:Catatan
 0x01:settings.include.paths.notice.title.en:0x02:Note
-0x01:settings.include.paths.notice.desc.id:0x02:PawnMC v.1.5.1 mulai menerapkan sistem baru, kini kamu tidak harus menambahkan include path manual jika kamu pengguna 'pawno/include', sistem akan menerapkan otomatis 'pawno/include' 'gamemodes' di saat kamu memilih file atau browse file untuk kompilasi. Ekstensi .pawn, .pwn, .p, dan .inc akan dihapus otomatis dari path include.
-0x01:settings.include.paths.notice.desc.en:0x02:PawnMC v1.5.1 introduces a new system. You no longer need to manually add an include path if you use 'pawno/include'. The system will automatically apply 'pawno/include' and 'gamemodes' when you select or browse a file for compilation. The .pawn, .pwn, .p, and .inc extensions are removed automatically from include paths.
+0x01:settings.include.paths.notice.desc.id:0x02:Saat file dipilih, PawnMC memilih satu folder include dengan urutan 'pawno/include', 'qawno/include', lalu 'includes'. Jika semuanya tidak tersedia, 'include/' tetap ditambahkan sebagai fallback. Folder 'gamemodes/' tidak ditambahkan otomatis. Ekstensi .pawn, .pwn, .p, dan .inc dihapus otomatis dari path include.
+0x01:settings.include.paths.notice.desc.en:0x02:When a file is selected, PawnMC chooses one include folder in this order: 'pawno/include', 'qawno/include', then 'includes'. If none exists, 'include/' is still added as a fallback. 'gamemodes/' is not added automatically. The .pawn, .pwn, .p, and .inc extensions are removed automatically from include paths.
 0x01:settings.include.extension.stripped.id:0x02:Ekstensi script (.pawn, .pwn, .p, .inc) dihapus otomatis dan path disimpan sebagai:
 0x01:settings.include.extension.stripped.en:0x02:The script extension (.pawn, .pwn, .p, .inc) was removed automatically and the path was saved as:
 0x01:settings.include.extension.list.id:0x02:.pawn, .pwn, .p, .inc

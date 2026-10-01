@@ -11,6 +11,7 @@
 # include <mutex>
 # include <sstream>
 # include <cstring>
+# include <cctype>
 # include <cstdarg>
 # include <cstdio>
 # include <cstdlib>
@@ -93,6 +94,24 @@ namespace {
         std::stringstream result_stream;
         result_stream << "Exit code: " << exit_code << "\n" << output;
         return result_stream.str();
+    }
+
+    bool n_is_pawn_source_argument(const std::string& value) {
+        if (value.empty() || value[0] == '-' || value.find('=') != std::string::npos) {
+            return false;
+        }
+
+        const size_t separator = value.find_last_of("/\\");
+        const size_t dot = value.find_last_of('.');
+        if (dot == std::string::npos || (separator != std::string::npos && dot < separator)) {
+            return false;
+        }
+
+        std::string extension = value.substr(dot);
+        for (char& character : extension) {
+            character = static_cast<char>(std::tolower(static_cast<unsigned char>(character)));
+        }
+        return extension == ".pawn" || extension == ".pwn" || extension == ".p" || extension == ".inc";
     }
 }
 
@@ -649,14 +668,30 @@ Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_compile(JNIEnv* env, jobject th
     env->ReleaseStringUTFChars(n_first_string, n_first_value);
     env->DeleteLocalRef(n_first_string);
 
-    if (n_arg_count > 1) {
-        jstring n_source_string = static_cast<jstring>(env->GetObjectArrayElement(args, n_arg_count - 1));
-        const char* n_source_value = env->GetStringUTFChars(n_source_string, nullptr);
-        char* n_path_copy = strdup(n_source_value);
+    std::string n_source_path;
+    for (int n_index = n_arg_count - 1; n_index >= 1; --n_index) {
+        jstring n_candidate_string = static_cast<jstring>(env->GetObjectArrayElement(args, n_index));
+        const char* n_candidate_value = env->GetStringUTFChars(n_candidate_string, nullptr);
+        const bool n_is_source = n_is_pawn_source_argument(n_candidate_value);
+        if (n_is_source) {
+            n_source_path = n_candidate_value;
+        }
+        env->ReleaseStringUTFChars(n_candidate_string, n_candidate_value);
+        env->DeleteLocalRef(n_candidate_string);
+        if (n_is_source) break;
+    }
+
+    if (n_source_path.empty()) {
+        return env->NewStringUTF("Exit code: -1\nNo Pawn source path found in compiler arguments");
+    }
+
+    {
+        char* n_path_copy = strdup(n_source_path.c_str());
+        if (n_path_copy == nullptr) {
+            return env->NewStringUTF("Exit code: -1\nFailed to copy Pawn source path");
+        }
         n_args_storage.emplace_back(std::string("-D") + dirname(n_path_copy));
         free(n_path_copy);
-        env->ReleaseStringUTFChars(n_source_string, n_source_value);
-        env->DeleteLocalRef(n_source_string);
 
         LOGI("Working directory: %s", n_args_storage[1].c_str());
     }

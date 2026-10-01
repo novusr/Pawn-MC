@@ -97,11 +97,21 @@ class PawnCompilerSuccessTest {
 
     @Test
     fun `sscanf compatibility define is moved to the end without duplicates`() {
-        val options = listOf("-i=/project/include", "SSCANF_NO_NICE_FEATURES=1", "-v=0", "SSCANF_NO_NICE_FEATURES=1")
+        val options = listOf(
+            "-i=/project/include",
+            "-DSSCANF_NO_NICE_FEATURES=1",
+            "-v=0",
+            "SSCANF_NO_NICE_FEATURES=1",
+            "-DSSCANF_NO_NICE_FEATURES=1"
+        )
 
         assertEquals(
             listOf("-i=/project/include", "-v=0", "SSCANF_NO_NICE_FEATURES=1"),
             PawnCompiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V3107)
+        )
+        assertEquals(
+            listOf("-i=/project/include", "SSCANF_NO_NICE_FEATURES=1", "-v=0"),
+            PawnCompiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V31011)
         )
     }
 
@@ -132,20 +142,37 @@ class PawnCompilerSuccessTest {
     }
 
     @Test
-    fun `discovers only include roots that exist on disk`() {
+    fun `selects the first existing include convention then stable include fallback`() {
         val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-include-discovery-${System.nanoTime()}")
         val sourceFile = File(root, "gamemodes/main.pwn")
         sourceFile.parentFile?.mkdirs()
         sourceFile.writeText("main() { return; }\n")
+        File(root, "pawno/include").mkdirs()
         File(root, "qawno/include").mkdirs()
+        File(root, "includes").mkdirs()
 
         try {
-            val paths = PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
-            assertTrue(paths.any { it.contains("gamemodes", ignoreCase = true) })
-            assertTrue(paths.any { it.contains("qawno/include", ignoreCase = true) })
-            // Absent conventional folders must not be registered.
-            assertFalse(paths.any { it.contains("pawno/include", ignoreCase = true) })
-            assertEquals("No two include paths can have the same location", paths.size, paths.map { CompilerConfig.normalPath(it).lowercase() }.distinct().size)
+            assertEquals(
+                listOf(CompilerConfig.normalPath(File(root, "pawno/include").absolutePath)),
+                PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
+            )
+
+            File(root, "pawno/include").delete()
+            assertEquals(
+                listOf(CompilerConfig.normalPath(File(root, "qawno/include").absolutePath)),
+                PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
+            )
+
+            File(root, "qawno/include").delete()
+            assertEquals(
+                listOf(CompilerConfig.normalPath(File(root, "includes").absolutePath)),
+                PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
+            )
+
+            File(root, "includes").delete()
+            val fallback = CompilerConfig.normalPath(File(root, "include").absolutePath)
+            assertEquals(listOf(fallback), PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath))
+            assertFalse(File(fallback).exists())
         } finally {
             root.deleteRecursively()
         }
@@ -163,8 +190,7 @@ class PawnCompilerSuccessTest {
             val known = listOf(CompilerConfig.normalPath(File(root, "qawno/include").absolutePath))
             val paths = PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath, known)
 
-            assertTrue(paths.any { it.contains("gamemodes", ignoreCase = true) })
-            assertFalse(paths.any { it.contains("qawno/include", ignoreCase = true) })
+            assertTrue(paths.isEmpty())
         } finally {
             root.deleteRecursively()
         }

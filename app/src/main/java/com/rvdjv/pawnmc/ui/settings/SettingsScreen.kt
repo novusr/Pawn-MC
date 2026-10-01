@@ -320,7 +320,11 @@ fun SettingsScreen(
                 Column {
                     NavigationRow(
                         title = languageTitle,
-                        subtitle = viewModel.n_app_language.label,
+                        subtitle = localizer.get(
+                            "settings.language.option.${viewModel.n_app_language.value}.label",
+                            appLanguage,
+                            viewModel.n_app_language.label
+                        ),
                         description = localizer.get(
                             "settings.language.desc",
                             appLanguage,
@@ -337,7 +341,11 @@ fun SettingsScreen(
 
                     CompilerVersionRow(
                         title = compilerTitle,
-                        version = viewModel.n_compiler_version.label,
+                        version = localizer.get(
+                            "settings.compiler.version.${viewModel.n_compiler_version.value.filter(Char::isDigit)}.label",
+                            appLanguage,
+                            viewModel.n_compiler_version.label
+                        ),
                         forced = viewModel.n_forced_compiler_mode,
                         description = localizer.get(
                             "settings.compiler.version.desc",
@@ -361,7 +369,11 @@ fun SettingsScreen(
 
                     NavigationRow(
                         title = themeTitle,
-                        subtitle = viewModel.n_app_theme.label,
+                        subtitle = localizer.get(
+                            "settings.theme.option.${viewModel.n_app_theme.value}.label",
+                            appLanguage,
+                            viewModel.n_app_theme.label
+                        ),
                         description = localizer.get(
                             "settings.theme.desc",
                             appLanguage,
@@ -420,7 +432,12 @@ fun SettingsScreen(
                         val currentIndex = entries.indexOf(viewModel.n_debug_level).coerceIn(0, maxIndex)
 
                         Text(
-                            text = localizer.get("settings.option.debug", appLanguage, "Debug Level") + ": ${viewModel.n_debug_level.label}",
+                            text = localizer.get("settings.option.debug", appLanguage, "Debug Level") + ": " +
+                                localizer.get(
+                                    "settings.option.debug.level.${viewModel.n_debug_level.value}.label",
+                                    appLanguage,
+                                    viewModel.n_debug_level.label
+                                ),
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -429,7 +446,11 @@ fun SettingsScreen(
                                 "settings.option.debug.desc",
                                 appLanguage,
                                 "Controls how much debug information and runtime checking the compiler generates."
-                            ) + " " + viewModel.n_debug_level.description,
+                            ) + " " + localizer.get(
+                                "settings.option.debug.level.${viewModel.n_debug_level.value}.desc",
+                                appLanguage,
+                                viewModel.n_debug_level.description
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -462,7 +483,12 @@ fun SettingsScreen(
                         val currentIndex = entries.indexOf(viewModel.n_optimization_level).coerceIn(0, maxIndex)
 
                         Text(
-                            text = localizer.get("settings.option.optimization", appLanguage, "Optimization Level") + ": ${viewModel.n_optimization_level.label}",
+                            text = localizer.get("settings.option.optimization", appLanguage, "Optimization Level") + ": " +
+                                localizer.get(
+                                    "settings.option.optimization.level.${viewModel.n_optimization_level.value}.label",
+                                    appLanguage,
+                                    viewModel.n_optimization_level.label
+                                ),
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -471,7 +497,11 @@ fun SettingsScreen(
                                 "settings.option.optimization.desc",
                                 appLanguage,
                                 "Determines how aggressively the compiler simplifies the bytecode."
-                            ) + " " + viewModel.n_optimization_level.description,
+                            ) + " " + localizer.get(
+                                "settings.option.optimization.level.${viewModel.n_optimization_level.value}.desc",
+                                appLanguage,
+                                viewModel.n_optimization_level.description
+                            ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -978,8 +1008,16 @@ fun SettingsScreen(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     CompilerConfig.AppTheme.entries.forEachIndexed { index, theme ->
                         RadioButtonRow(
-                            text = theme.label,
-                            description = theme.description,
+                            text = localizer.get(
+                                "settings.theme.option.${theme.value}.label",
+                                appLanguage,
+                                theme.label
+                            ),
+                            description = localizer.get(
+                                "settings.theme.option.${theme.value}.desc",
+                                appLanguage,
+                                theme.description
+                            ),
                             selected = viewModel.n_app_theme == theme,
                             onClick = {
                                 viewModel.updateAppTheme(theme)
@@ -1013,8 +1051,16 @@ fun SettingsScreen(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     CompilerConfig.AppLanguage.entries.forEachIndexed { index, language ->
                         RadioButtonRow(
-                            text = language.label,
-                            description = language.description,
+                            text = localizer.get(
+                                "settings.language.option.${language.value}.label",
+                                appLanguage,
+                                language.label
+                            ),
+                            description = localizer.get(
+                                "settings.language.option.${language.value}.desc",
+                                appLanguage,
+                                language.description
+                            ),
                             selected = viewModel.n_app_language == language,
                             onClick = {
                                 val languageChanged = viewModel.n_app_language != language
@@ -1139,8 +1185,16 @@ fun SettingsScreen(
                 Column(modifier = Modifier.fillMaxWidth()) {
                     CompilerConfig.CompilerVersion.entries.forEachIndexed { index, version ->
                         RadioButtonRow(
-                            text = version.label,
-                            description = version.description,
+                            text = localizer.get(
+                                "settings.compiler.version.${version.value.filter(Char::isDigit)}.label",
+                                appLanguage,
+                                version.label
+                            ),
+                            description = localizer.get(
+                                "settings.compiler.version.${version.value.filter(Char::isDigit)}.desc",
+                                appLanguage,
+                                version.description
+                            ),
                             selected = viewModel.n_compiler_version == version,
                             onClick = {
                                 viewModel.updateCompilerVersion(version)

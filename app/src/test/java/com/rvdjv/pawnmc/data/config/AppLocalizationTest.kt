@@ -54,4 +54,27 @@ class AppLocalizationTest {
         assertEquals("Pengaturan", localizer.get("Settings", CompilerConfig.AppLanguage.ID))
         assertEquals("Settings", localizer.get("Pengaturan", CompilerConfig.AppLanguage.EN))
     }
+
+    @Test
+    fun `settings option descriptions resolve for both selected languages`() {
+        val localizer = AppLocalization.parseLocalizationData(
+            """
+            0x01:settings.option.debug.level.3.desc.id:0x02:Debug paling terperinci; optimisasi otomatis dinonaktifkan.
+            0x01:settings.option.debug.level.3.desc.en:0x02:Most detailed debugging; optimization is disabled automatically.
+            """.trimIndent()
+        ).let { parsed ->
+            val constructor = AppLocalization::class.java.getDeclaredConstructor(Map::class.java)
+            constructor.isAccessible = true
+            constructor.newInstance(parsed)
+        }
+
+        assertEquals(
+            "Debug paling terperinci; optimisasi otomatis dinonaktifkan.",
+            localizer.get("settings.option.debug.level.3.desc", CompilerConfig.AppLanguage.ID)
+        )
+        assertEquals(
+            "Most detailed debugging; optimization is disabled automatically.",
+            localizer.get("settings.option.debug.level.3.desc", CompilerConfig.AppLanguage.EN)
+        )
+    }
 }
