@@ -228,6 +228,10 @@ class MainViewModel(
             val currentPaths = config.n_include_paths
             val autoIncludePaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath, currentPaths)
             if (autoIncludePaths.isNotEmpty()) {
+                autoIncludePaths.forEach { includePath ->
+                    val directory = File(includePath)
+                    if (!directory.exists()) directory.mkdirs()
+                }
                 config.n_include_paths = currentPaths + autoIncludePaths
             }
         }

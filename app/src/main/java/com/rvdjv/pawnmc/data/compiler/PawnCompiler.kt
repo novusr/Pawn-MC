@@ -69,7 +69,7 @@ object PawnCompiler {
     private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
     private val ERROR_COUNT_REGEX = """(?i)(\d+)\s+errors?\.?""".toRegex()
     private val PRODUCT_VERSION_REGEX = """\b\d+\.\d+\.\d+\b""".toRegex()
-    private val INCLUDE_DIRECTIVE_REGEX = Regex("""(?i)#include\s*(?:\"([^\"]+)\"|'([^']+)')""")
+    private val INCLUDE_DIRECTIVE_REGEX = Regex("""(?i)#include\s*(?:\"([^\"]+)\"|'([^']+)'|<([^>]+)>)""")
     private val COMPILER_MESSAGE_REGEX = Regex("""(?i)(warning|error|fatal)\s+(\d+)""")
     private val KNOWN_ERROR_EXPLANATIONS = mapOf(
         "017" to "Undefined symbol. Check that the identifier is declared, included, and spelled exactly the same as the definition.",
@@ -123,7 +123,9 @@ object PawnCompiler {
      */
     fun lowercaseIncludeReferences(content: String): String =
         INCLUDE_DIRECTIVE_REGEX.replace(content) { match ->
-            val n_original_value = match.groupValues[1].ifBlank { match.groupValues[2] }
+            val n_original_value = match.groupValues[1]
+                .ifBlank { match.groupValues[2] }
+                .ifBlank { match.groupValues[3] }
             if (n_original_value.isBlank()) return@replace match.value
             val n_prefix = match.value.substringBefore(n_original_value)
             val n_suffix = match.value.substringAfterLast(n_original_value)

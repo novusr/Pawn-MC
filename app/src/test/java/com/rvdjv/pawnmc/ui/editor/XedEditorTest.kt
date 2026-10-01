@@ -1,7 +1,13 @@
 package com.rvdjv.pawnmc.ui.editor
 
 import com.rvdjv.pawnmc.data.pawn.PawnRegistry
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -9,10 +15,21 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class XedEditorTest {
 
     @get:Rule
     val tempFolder = TemporaryFolder()
+
+    @Before
+    fun setMainDispatcher() {
+        Dispatchers.setMain(Dispatchers.Unconfined)
+    }
+
+    @After
+    fun resetMainDispatcher() {
+        Dispatchers.resetMain()
+    }
 
     @Test
     fun `line column label uses a compact separator`() {

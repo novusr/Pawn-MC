@@ -386,12 +386,12 @@ class CompilerConfig private constructor(context: Context) {
                 val normalized = normalizeIncludePathInput(path)
                 if (normalized.isBlank()) continue
 
-                val key = normalized.lowercase()
+                val key = includePathKey(normalized)
                 if (key in unique) continue
 
                 val canonicalKey = runCatching {
                     val file = java.io.File(normalized)
-                    if (file.exists()) normalPath(file.canonicalPath).lowercase() else null
+                    if (file.exists()) includePathKey(file.canonicalPath) else null
                 }.getOrNull()
 
                 if (canonicalKey != null && canonicalKey in unique) continue
@@ -475,7 +475,32 @@ class CompilerConfig private constructor(context: Context) {
          * This is a pure string operation: it never touches the filesystem, so it stays
          * cheap enough to run on every incoming candidate before any real work happens.
          */
-        fun includePathKey(path: String): String = normalPath(path).lowercase()
+        fun includePathKey(path: String): String = normalPath(normalizePathSegments(path)).lowercase()
+
+        private fun normalizePathSegments(path: String): String {
+            val normalized = path.trim().replace('\\', '/')
+            val prefix = when {
+                normalized.startsWith("/") -> "/"
+                normalized.length >= 3 && normalized[1] == ':' && normalized[2] == '/' -> normalized.substring(0, 3)
+                else -> ""
+            }
+            val segments = normalized.removePrefix(prefix).split('/')
+            val stack = mutableListOf<String>()
+
+            for (segment in segments) {
+                when (segment) {
+                    "", "." -> Unit
+                    ".." -> if (stack.isNotEmpty() && stack.last() != "..") {
+                        stack.removeAt(stack.lastIndex)
+                    } else if (prefix.isEmpty()) {
+                        stack += segment
+                    }
+                    else -> stack += segment
+                }
+            }
+
+            return prefix + stack.joinToString("/")
+        }
 
         /**
          * Cheap duplicate check used by every include path entry point (Settings manual
