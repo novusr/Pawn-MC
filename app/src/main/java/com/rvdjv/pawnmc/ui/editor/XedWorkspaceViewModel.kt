@@ -240,9 +240,13 @@ class XedWorkspaceViewModel : ViewModel() {
 
     /** Closes one workspace and its opened editors, switching to another one. */
     fun closeWorkspace(workspace: Workspace) {
-        val removed = workspaces.remove(workspace)
+        // SnapshotStateList.remove returns a Boolean, so the removed workspace has to
+        // be captured before it leaves the list.
+        val closing = workspaces.firstOrNull { it.root.absolutePath == workspace.root.absolutePath }
+        workspaces.remove(workspace)
         scanning.remove(workspace)
-        if (activeWorkspace != null && activeWorkspace?.root?.absolutePath == removed?.root?.absolutePath) {
+        val closingPath = closing?.root?.absolutePath
+        if (activeWorkspace != null && activeWorkspace?.root?.absolutePath == closingPath) {
             activeWorkspace = workspaces.lastOrNull()
         }
     }
@@ -300,8 +304,8 @@ class XedWorkspaceViewModel : ViewModel() {
     }
 
     /** Re-scans a workspace folder; called after files are replaced on disk. */
-    fun refreshTree(workspace: Workspace = activeWorkspace ?: return) {
-        scan(workspace)
+    fun refreshTree(workspace: Workspace? = activeWorkspace) {
+        scan(workspace ?: return)
     }
 
     private fun scan(workspace: Workspace) {
@@ -326,17 +330,18 @@ class XedWorkspaceViewModel : ViewModel() {
      * of waiting for a second round trip. A document that was already open is only
      * activated, never re-read, so its unsaved buffer survives the tap.
      */
-    fun openFile(file: File, workspace: Workspace = activeWorkspace ?: return) {
-        val existing = workspace.documentFor(file)
+    fun openFile(file: File, workspace: Workspace? = activeWorkspace) {
+        val target = workspace ?: return
+        val existing = target.documentFor(file)
         if (existing != null) {
-            workspace.activate(existing.file.absolutePath)
-            if (!existing.isLoaded) loadDocument(existing, workspace)
+            target.activate(existing.file.absolutePath)
+            if (!existing.isLoaded) loadDocument(existing, target)
             return
         }
         val opened = OpenDocument(file)
-        workspace.addDocument(opened)
-        workspace.activate(file.absolutePath)
-        loadDocument(opened, workspace)
+        target.addDocument(opened)
+        target.activate(file.absolutePath)
+        loadDocument(opened, target)
     }
 
     /** Reads a registered document once and drops it again when the read fails. */
@@ -369,12 +374,12 @@ class XedWorkspaceViewModel : ViewModel() {
         return missing.size
     }
 
-    fun closeDocument(file: File, workspace: Workspace = activeWorkspace ?: return) {
-        workspace.removeDocument(file.absolutePath)
+    fun closeDocument(file: File, workspace: Workspace? = activeWorkspace) {
+        workspace?.removeDocument(file.absolutePath)
     }
 
-    fun setActive(file: File, workspace: Workspace = activeWorkspace ?: return) {
-        workspace.activate(file.absolutePath)
+    fun setActive(file: File, workspace: Workspace? = activeWorkspace) {
+        workspace?.activate(file.absolutePath)
     }
 
     fun updateContent(file: File, text: String, workspace: Workspace? = activeWorkspace) {
@@ -583,7 +588,7 @@ private fun isProbablyText(file: File): Boolean {
     return try {
         val bytes = file.readBytes()
         val limit = minOf(bytes.size, 512)
-        (0 until limit).none { bytes[it] == 0 }
+        (0 until limit).none { bytes[it] == 0.toByte() }
     } catch (_: Exception) {
         false
     }

@@ -67,6 +67,12 @@ class MainViewModel(
     var selectionError by mutableStateOf<String?>(null)
         private set
 
+    /**
+     * Compile request queued by the Xed editor, consumed once the main screen is
+     * visible again. Not snapshot state: it is a one-shot hand-off, not UI state.
+     */
+    private var pendingCompilePath: String? = null
+
     var temporaryFileNotice by mutableStateOf<String?>(null)
         private set
 

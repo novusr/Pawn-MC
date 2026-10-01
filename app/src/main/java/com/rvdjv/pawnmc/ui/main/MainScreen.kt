@@ -91,7 +91,6 @@ import com.rvdjv.pawnmc.ui.theme.status_error_container
 import com.rvdjv.pawnmc.ui.theme.status_idle
 import com.rvdjv.pawnmc.ui.theme.status_success
 import com.rvdjv.pawnmc.ui.theme.status_success_container
-import com.rvdjv.pawnmc.data.config.AppLocalization
 import java.io.File
 import kotlinx.coroutines.delay
 import java.text.DecimalFormat
@@ -701,14 +700,6 @@ private val HeaderActionShadowColor = Color(0xFF9E9E9E)
 /** Elevation of the header action shadow while the temporary menu is revealed. */
 private val HeaderActionShadowElevation = 12.dp
 
-/**
- * Horizontal offset of the header action shadow.
- *
- * Negative, so the shadow is cast from right to left across the row of buttons and forms
- * a single connected band that marks the temporary state.
- */
-private val HeaderActionShadowXOffset = -6.dp
-
 @Composable
 private fun ScreenHeader(
     onEditorClick: () -> Unit,
@@ -725,9 +716,7 @@ private fun ScreenHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column(
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Column {
             Text(
                 text = localizer?.get("app.name", appLanguage, "PawnMC Grand Permissions")
                     ?: "PawnMC Grand Permissions",
@@ -829,13 +818,14 @@ private fun HeaderActionButton(
     Box(
         modifier = Modifier
             .padding(horizontal = 2.dp)
+            // Extra room on the left so the gray shadow has somewhere to fall:
+            // the band therefore extends from right to left across the three buttons.
+            .padding(start = 6.dp)
             .shadow(
                 elevation = HeaderActionShadowElevation,
                 shape = RoundedCornerShape(14.dp),
                 ambientColor = HeaderActionShadowColor,
-                spotColor = HeaderActionShadowColor,
-                xOffset = HeaderActionShadowXOffset,
-                yOffset = 2.dp
+                spotColor = HeaderActionShadowColor
             )
             .background(
                 color = MaterialTheme.colorScheme.surface,
@@ -914,6 +904,8 @@ private fun CompileActionCard(
     isCompiling: Boolean,
     onChangeFileClick: () -> Unit,
     onCompileClick: () -> Unit,
+    localizer: AppLocalization? = null,
+    appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -1021,7 +1013,9 @@ private fun CompilerLogsSection(
     outputText: String,
     status: CompileStatus,
     scrollState: androidx.compose.foundation.ScrollState,
-    onCopyClick: () -> Unit
+    onCopyClick: () -> Unit,
+    localizer: AppLocalization? = null,
+    appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
 ) {
     Column {
         Row(

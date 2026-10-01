@@ -27,7 +27,15 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
  */
 class PawnManager : SimpleAnalyzeManager<Any?>() {
 
-    override fun analyze(text: StringBuilder, delegate: Delegate<Any?>): Styles {
+    /**
+     * Tokenizes [text] and paints the result.
+     *
+     * The delegate parameter is written with the outer type arguments, because
+     * `Delegate` is an *inner* class of the generic manager: Kotlin resolves
+     * `SimpleAnalyzeManager<Any?>.Delegate<Any?>` to the `Delegate<V>` the abstract
+     * `analyze` declares, which is what makes the override match.
+     */
+    override fun analyze(text: StringBuilder, delegate: SimpleAnalyzeManager<Any?>.Delegate<Any?>): Styles {
         val styles = Styles()
         val builder = MappedSpans.Builder()
         val blockStack = ArrayDeque<Pair<Int, Int>>()
@@ -64,11 +72,11 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
     }
 
     /**
-     * Region classifications. Each value carries the [TextStyle] Sora should
-     * use to paint it, so the analyzer only dispatches on the kind, not on
-     * colour.
+     * Region classifications. Each value carries the style id Sora should paint it
+     * with (`TextStyle.makeStyle` returns a `long` in this Sora version), so the
+     * analyzer only dispatches on the kind, not on colour.
      */
-    private enum class SpanKind(val style: TextStyle) {
+    private enum class SpanKind(val style: Long) {
         Keyword(TextStyle.makeStyle(EditorColorScheme.KEYWORD)),
         Type(TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME)),
         Constant(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
@@ -96,7 +104,10 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
      */
     private class PawnLexer(
         private val text: CharSequence,
-        private val delegate: Delegate<Any?>,
+        // `Delegate` is an inner class of the generic manager, so the outer type
+        // arguments have to be supplied on the reference itself, and the inner
+        // argument is fixed by `SimpleAnalyzeManager<Any?>`.
+        private val delegate: SimpleAnalyzeManager<Any?>.Delegate<Any?>,
         private val emit: (Span) -> Unit,
     ) {
         private var index = 0
@@ -104,7 +115,7 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
         private var column = 0
 
         private val size get() = text.length
-        private fun hasMore() = index < size && !delegate.isCancelled
+        private fun hasMore() = index < size && !delegate.isCancelled()
         private fun peekChar(offset: Int = 0): Char? {
             val pos = index + offset
             return if (pos in 0 until size) text[pos] else null

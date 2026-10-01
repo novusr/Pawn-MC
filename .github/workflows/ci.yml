@@ -44,23 +44,18 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+          add-job-summary: 'always'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Run Lint
         shell: bash
-        run: |
-          echo "::group::PawnMC Gradle Lint"
-          ./gradlew lint --console=plain --stacktrace
-          echo "::endgroup::"
+        run: ./gradlew lint --console=rich --no-daemon
 
       - name: Build Debug APK
         shell: bash
-        run: |
-          echo "::group::PawnMC Debug Build"
-          ./gradlew assembleDebug --console=plain --stacktrace
-          echo "::endgroup::"
+        run: ./gradlew assembleDebug --console=rich --no-daemon
 
       - name: Upload Debug APK
         if: always()
@@ -70,7 +65,7 @@ jobs:
           name: app-debug
           path: app/build/outputs/**/*.apk
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 90
 
       - name: Upload Lint Report
         if: always()
@@ -80,7 +75,7 @@ jobs:
           name: lint-report
           path: app/build/reports
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 90
 
   # Optional: Run unit tests if you have them
   test:
@@ -116,16 +111,14 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: true
+          add-job-summary: 'always'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Run Unit Tests
         shell: bash
-        run: |
-          echo "::group::PawnMC Unit Tests"
-          ./gradlew test --console=plain --stacktrace
-          echo "::endgroup::"
+        run: ./gradlew test --console=rich --no-daemon
 
       - name: Upload Test Results
         if: always()
@@ -135,4 +128,4 @@ jobs:
           name: test-results
           path: app/build/reports/tests/
           if-no-files-found: ignore
-          retention-days: 7
+          retention-days: 90

@@ -98,7 +98,15 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
  * The state is read from the live editor on every draw, so the label follows
  * caret moves, selection changes and text edits without extra bookkeeping.
  */
-private class ColumnLineNumberRenderer(editor: CodeEditor) : EditorRenderer(editor) {
+private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) {
+
+    /**
+     * Own reference to the editor.
+     *
+     * `EditorRenderer` keeps its own editor field private in this Sora version, so the
+     * renderer has to keep the reference it was constructed with.
+     */
+    private val host = host
 
     private val suffixPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -110,10 +118,10 @@ private class ColumnLineNumberRenderer(editor: CodeEditor) : EditorRenderer(edit
         width: Float,
         color: Int
     ) {
-        val host = editor as? XedCodeEditor
-        val suffixWidth = host?.getColumnSuffixWidth() ?: 0f
+        val owner = host as? XedCodeEditor
+        val suffixWidth = owner?.getColumnSuffixWidth() ?: 0f
         val column = if (suffixWidth > 0f) columnLabelFor(line, row) else null
-        if (host == null || column == null) {
+        if (owner == null || column == null) {
             super.drawLineNumber(canvas, line, row, offsetX, width, color)
             return
         }
@@ -123,11 +131,11 @@ private class ColumnLineNumberRenderer(editor: CodeEditor) : EditorRenderer(edit
         val numberWidth = width - suffixWidth
         super.drawLineNumber(canvas, line, row, offsetX, numberWidth, color)
 
-        val metrics = editor.lineNumberMetrics
-        val y = (editor.getRowBottom(row) + editor.getRowTop(row)) / 2f -
-            (metrics.descent - metrics.ascent) / 2f - metrics.ascent - editor.offsetY
-        suffixPaint.typeface = editor.typefaceLineNumber
-        suffixPaint.textSize = editor.textSizePx
+        val metrics = host.lineNumberMetrics
+        val y = (host.getRowBottom(row) + host.getRowTop(row)) / 2f -
+            (metrics.descent - metrics.ascent) / 2f - metrics.ascent - host.offsetY
+        suffixPaint.typeface = host.typefaceLineNumber
+        suffixPaint.textSize = host.textSizePx
         suffixPaint.color = color
         suffixPaint.textAlign = Paint.Align.LEFT
         canvas.drawText(LINE_COLUMN_SEPARATOR + column, offsetX + numberWidth, y, suffixPaint)
@@ -140,11 +148,11 @@ private class ColumnLineNumberRenderer(editor: CodeEditor) : EditorRenderer(edit
     private fun columnLabelFor(line: Int, row: Int): Int? {
         // With word wrap a line spans several rows; only the leading row carries
         // the label, otherwise it would repeat down the whole line.
-        val layout = editor.layout ?: return null
+        val layout = host.layout ?: return null
         val rowInfo = layout.getRowAt(row)
         if (!rowInfo.isLeadingRow || rowInfo.lineIndex != line) return null
 
-        val cursor = editor.cursor
+        val cursor = host.cursor
         val leftLine = cursor.leftLine
         val rightLine = cursor.rightLine
         return when {

@@ -1,5 +1,6 @@
 package com.rvdjv.pawnmc.ui.editor
 
+import android.content.Context
 import android.graphics.Typeface
 import android.net.Uri
 import android.widget.Toast
@@ -792,15 +793,21 @@ fun XedEditorScreen(
                                 onOpenFolder = { folderPickerLauncher.launch(buildOpenFolderIntent()) }
                             )
                         } else {
-                        AndroidView(
-                            factory = { ctx ->
-                                XedCodeEditor(ctx).apply {
+                        // Explicit type argument: without it Kotlin cannot infer the view type of the
+// factory and the update block is reported as untyped.
+                        AndroidView<XedCodeEditor>(
+                            factory = { ctx: Context ->
+                                // The last expression must be the editor itself: an
+                                // `apply` block returns Unit, which would break the
+                                // factory's return type.
+                                val created = XedCodeEditor(ctx)
+                                created.apply {
                                     typefaceText = Typeface.MONOSPACE
                                     isLineNumberEnabled = isLineNumbers
                                     isWordwrap = isWordWrap
                                     editable = !isReadOnly
                                     setTextSize(14f)
-                                    colorScheme = editorScheme
+                                    setColorScheme(editorScheme)
                                     setEditorLanguage(PawnLanguage())
                                     setText(workspace.activeDocument?.content ?: viewModel.fileContent ?: "")
                                     // Reserve room for the " - <column>" suffix now
@@ -832,16 +839,16 @@ fun XedEditorScreen(
                                         cursorCol = cursor.leftColumn + 1
                                     }
 
-                                    editorRef = this
+                                    editorRef = created
                                 }
-                                appliedScheme.current = editorScheme
+                                created
                             },
-                            update = { editor ->
+                            update = { editor: XedCodeEditor ->
                                 editorRef = editor
                                 // Re-tint when the app theme (and therefore the surface
                                 // ramp) changes while the editor view is still alive.
                                 if (appliedScheme.current !== editorScheme) {
-                                    editor.colorScheme = editorScheme
+                                    editor.setColorScheme(editorScheme)
                                     appliedScheme.current = editorScheme
                                 }
                                 // Push the buffer of the file the workspace panel
@@ -985,10 +992,12 @@ fun XedEditorScreen(
 
             QuickSymbolBar(
                 onSymbolClick = { symbol ->
-                    val editor = editorRef ?: return@QuickSymbolBar
-                    editor.text.insert(editor.cursor.leftLine, editor.cursor.leftColumn, symbol)
+                    val editor = editorRef
+                    if (editor != null) {
+                        editor.text.insert(editor.cursor.leftLine, editor.cursor.leftColumn, symbol)
+                    }
                 },
-                onTabClick = ::insertIndentAtCursor
+                onTabClick = { insertIndentAtCursor(editorRef) }
             )
 
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
@@ -1627,7 +1636,7 @@ private fun insertIndentAtCursor(editor: CodeEditor?) {
     val target = editor ?: return
     val line = target.cursor.leftLine
     val column = target.cursor.leftColumn
-    val lineText = target.text.getLine(line)
+    val lineText = target.text.getLine(line).toString()
 
     // Match the leading whitespace of the current line and add one level on top,
     // so consecutive [TAB] presses walk in cleanly instead of drifting right by
@@ -1705,7 +1714,7 @@ private fun QuickSymbolBar(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, top = 6.dp),
+                    .padding(start = 8.dp, end = 8.dp, top = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 digits.forEach { d ->

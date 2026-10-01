@@ -42,7 +42,7 @@ object PawnIcons {
         ).apply {
             path(
                 fill = SolidColor(Color.Black),
-                fillType = PathFillType.EvenOdd
+                pathFillType = PathFillType.EvenOdd
             ) {
                 // --- Outer device body, top-right corner notched. ---
                 moveTo(4f, 3f)
@@ -90,7 +90,7 @@ object PawnIcons {
         ).apply {
             path(
                 fill = SolidColor(Color.Black),
-                fillType = PathFillType.EvenOdd
+                pathFillType = PathFillType.EvenOdd
             ) {
                 // --- Sheet body, with the top-right corner folded away. ---
                 moveTo(3.5f, 2.5f)
@@ -160,7 +160,7 @@ object PawnIcons {
         ).apply {
             path(
                 fill = SolidColor(Color.Black),
-                fillType = PathFillType.EvenOdd
+                pathFillType = PathFillType.EvenOdd
             ) {
                 // --- Back sheet. ---
                 moveTo(4f, 3f)
@@ -220,10 +220,10 @@ object PawnIcons {
         ).apply {
             path(
                 fill = SolidColor(Color.Black),
-                fillType = PathFillType.EvenOdd
+                pathFillType = PathFillType.EvenOdd
             ) {
                 // --- Gear silhouette: eight teeth around a hub of radius 5.6,
-                // tips at 9.4, generated from 45° steps so the teeth are even. ---
+                // tips at 9.4, generated from 45Â° steps so the teeth are even. ---
                 moveTo(21.26f, 10.37f)
                 lineTo(21.26f, 13.63f)
                 lineTo(17.34f, 13.68f)
@@ -282,7 +282,7 @@ object PawnIcons {
         ).apply {
             path(
                 fill = SolidColor(Color.Black),
-                fillType = PathFillType.EvenOdd
+                pathFillType = PathFillType.EvenOdd
             ) {
                 // --- Six petals, radius 3.2, orbiting the centre at 5.2. ---
                 petal(cx = 17.2f, cy = 12f)
@@ -313,22 +313,25 @@ object PawnIcons {
             viewportWidth = 24f,
             viewportHeight = 24f
         ).apply {
-            // Stroked arcs, drawn from the 135° to the 45° position so the fan opens
-            // towards the top-right, exactly like the platform Wi-Fi glyph.
+            // Stroked arcs, drawn from the left to the right so the fan opens towards
+            // the top-right, exactly like the platform Wi-Fi glyph. Cubic curves are
+            // used because PathBuilder has no quadratic helper.
             path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.9f, strokeLineCap = StrokeCap.Round) {
                 moveTo(8.6f, 12.4f)
-                quadraticTo(12f, 9.4f, 15.4f, 12.4f)
+                curveTo(10.1f, 10.9f, 13.9f, 10.9f, 15.4f, 12.4f)
             }
             path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.9f, strokeLineCap = StrokeCap.Round) {
                 moveTo(5.9f, 9.5f)
-                quadraticTo(12f, 4.1f, 18.1f, 9.5f)
+                curveTo(8.6f, 6.8f, 15.4f, 6.8f, 18.1f, 9.5f)
             }
             path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.9f, strokeLineCap = StrokeCap.Round) {
                 moveTo(3.2f, 6.6f)
-                quadraticTo(12f, -1.4f, 20.8f, 6.6f)
+                curveTo(7.4f, 2.4f, 16.6f, 2.4f, 20.8f, 6.6f)
             }
             // Solid dot: the emitter of the signal.
-            circle(cx = 8.7f, cy = 16.4f, r = 2.0f)
+            path(fill = SolidColor(Color.Black)) {
+                circle(cx = 8.7f, cy = 16.4f, r = 2.0f)
+            }
         }.build()
     }
 
@@ -410,7 +413,7 @@ object PawnIcons {
         ).apply {
             path(
                 fill = SolidColor(Color.Black),
-                fillType = PathFillType.EvenOdd
+                pathFillType = PathFillType.EvenOdd
             ) {
                 // Sheet body.
                 moveTo(5f, 3.2f)
@@ -470,7 +473,7 @@ object PawnIcons {
         ).apply {
             path(
                 fill = SolidColor(Color.Black),
-                fillType = PathFillType.EvenOdd
+                pathFillType = PathFillType.EvenOdd
             ) {
                 // Sheet body.
                 moveTo(5f, 3.2f)
@@ -514,7 +517,7 @@ object PawnIcons {
         ).apply {
             path(
                 fill = SolidColor(Color.Black),
-                fillType = PathFillType.EvenOdd
+                pathFillType = PathFillType.EvenOdd
             ) {
                 // Rear sheet.
                 moveTo(11.4f, 6.6f)
@@ -567,7 +570,7 @@ object PawnIcons {
         ).apply {
             path(
                 fill = SolidColor(Color.Black),
-                fillType = PathFillType.EvenOdd
+                pathFillType = PathFillType.EvenOdd
             ) {
                 // Outer frame.
                 moveTo(3f, 4.4f)

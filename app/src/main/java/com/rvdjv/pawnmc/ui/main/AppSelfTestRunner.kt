@@ -134,13 +134,16 @@ object AppSelfTestCatalog {
                 "duplicate rejected=$rejectedDuplicate, actual values: $deduped"
         }
 
-        return     /**
-             * Replays the whole "Ignore case" workflow on files the test creates itself:
-             * browse a file, back the folder up, lowercase every other name, lowercase every
-             * static include reference, and finally confirm the instructions are not repeated
-             * while the backup folder is still there.
-             */
-            private fun runIgnoreCaseWorkflowTest(): AppSelfTestResult {
+        return AppSelfTestResult("$TEST_PREFIX: settings_integration", passed, message)
+    }
+
+        /**
+                 * Replays the whole "Ignore case" workflow on files the test creates itself:
+                 * browse a file, back the folder up, lowercase every other name, lowercase every
+                 * static include reference, and finally confirm the instructions are not repeated
+                 * while the backup folder is still there.
+                 */
+                private fun runIgnoreCaseWorkflowTest(): AppSelfTestResult {
                 val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-ignore-case-${System.nanoTime()}")
                 val gamemodes = File(root, "Gamemodes")
                 val sourceFile = File(gamemodes, "Stock.pwn")
@@ -235,4 +238,4 @@ object AppSelfTestCatalog {
                     root.deleteRecursively()
                 }
             }
-        }
+}

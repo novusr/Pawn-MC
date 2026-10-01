@@ -177,10 +177,15 @@ class XedEditorViewModelFactory(private val filePath: String) : ViewModelProvide
  * still there the next time it is opened.
  */
 class XedEditorViewModelFactoryForActivity(context: Context) : ViewModelProvider.Factory {
+
+    /** Kept as a property so the reference is never lost to shadowing. */
+    private val appContext: Context = context.applicationContext ?: context
+
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(XedEditorViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            val path = CompilerConfig.getInstance(context).n_last_selected_file_path.orEmpty()
+            val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(appContext)
+            val path = config.n_last_selected_file_path.orEmpty()
             return XedEditorViewModel(path) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")

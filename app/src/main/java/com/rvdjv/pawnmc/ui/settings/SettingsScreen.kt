@@ -1,10 +1,12 @@
 package com.rvdjv.pawnmc.ui.settings
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.widget.Toastimport androidx.activity.compose.rememberLauncherForActivityResult
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import androidx.compose.foundation.background
@@ -1578,7 +1580,7 @@ private fun EditorBackgroundDialog(
     // field means "follow the app theme", so there is no separate selection
     // state that could drift away from what the user actually sees.
     var input by remember { mutableStateOf(initialHex?.removePrefix("#").orEmpty()) }
-    val parsed = remember(input) { CompilerConfig.normalizeEditorBackgroundColor(input) }
+    val parsed = remember(input) { validateEditorBackgroundHex(input) }
     val invalid = input.isNotBlank() && parsed == null
     val previewArgb = remember(parsed) { parsed?.let(::hexToArgb) }
 
@@ -1728,6 +1730,24 @@ private val EditorBackgroundPresets = listOf(
     0xFFCBD5E1.toInt(), 0xFF2B2B2B.toInt(), 0xFF1E1E1E.toInt(), 0xFF1B1B2F.toInt(), 0xFF232733.toInt(),
     0xFF0D1B2A.toInt(), 0xFF111D13.toInt(), 0xFF2A1F14.toInt(), 0xFF26171D.toInt(), 0xFF12242A.toInt()
 )
+
+/**
+ * Validates a typed `#RRGGBB` value from the editor-background picker.
+ *
+ * Mirrors `CompilerConfig.normalizeEditorBackgroundColor`, which lives on the config
+ * instance rather than in the companion object, so it is not reachable from the UI
+ * layer without a view model instance.
+ *
+ * @return the normalized value, or `null` when the input is blank or malformed
+ */
+private fun validateEditorBackgroundHex(raw: String): String? {
+    val digits = raw.trim().removePrefix("#")
+    if (digits.isEmpty()) return null
+    if (digits.length != 6 || digits.any { !it.isDigit() && it.lowercaseChar() !in 'a'..'f' }) {
+        return null
+    }
+    return "#" + digits.uppercase()
+}
 
 /** BT.601 luma of an ARGB colour, used to pick readable preview text. */
 private fun luminance(argb: Int): Float {

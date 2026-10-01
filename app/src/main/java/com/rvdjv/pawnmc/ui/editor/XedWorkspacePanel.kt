@@ -70,7 +70,7 @@ fun XedWorkspacePanel(
 
     // Tracked explicitly so both a fresh scan and a folder toggle invalidate the
     // flattened list together with the rows rendered from it.
-    val flatNodes = remember(tree, collapsedPaths, workspace) {
+    val flatNodes: List<FlatNode> = remember(tree, collapsedPaths, workspace) {
         if (workspace == null) emptyList() else flattenWorkspaceNodes(workspace)
     }
 
@@ -91,14 +91,20 @@ fun XedWorkspacePanel(
         )
 
         LazyColumn(modifier = Modifier.fillMaxWidth()) {
-            if (workspace != null && workspace.documents.isNotEmpty()) {
+            // Captured into a local so the null check above survives the lambda: the
+            // smart cast of a nullable local is not available inside a composable lambda.
+            val current = workspace
+            if (current != null && current.documents.isNotEmpty()) {
                 item(key = "__opened_editors__") { SectionLabel("Opened Editors") }
 
-                items(workspace.documents.toList(), key = { "open:${it.file.absolutePath}" }) { document ->
+                items(
+                    items = current.documents.toList(),
+                    key = { doc: OpenDocument -> "open:${doc.file.absolutePath}" }
+                ) { document ->
                     OpenEditorRow(
                         name = document.name,
-                        path = document.file.parent?.name.orEmpty(),
-                        isActive = document.file.absolutePath == workspace.activePath,
+                        path = document.file.parentFile?.name.orEmpty(),
+                        isActive = document.file.absolutePath == current.activePath,
                         isDirty = document.isDirty,
                         onSelect = { onSelectFile(document.file) },
                         onClose = { onCloseFile(document.file) }
@@ -108,32 +114,40 @@ fun XedWorkspacePanel(
                 item(key = "__explorer__") { SectionLabel("Explorer") }
             }
 
-            items(flatNodes, key = { "node:${it.key}" }) { entry ->
+            items(
+                    items = flatNodes,
+                    key = { entry: FlatNode -> "node:${entry.node.key}" }
+                ) { entry ->
                 val node = entry.node
+                val current2 = workspace
                 when {
                     node.isDirectory -> FolderRow(
                         node = node,
                         depth = entry.depth,
-                        collapsed = workspace?.isExpanded(node) == false,
-                        onToggle = { workspace?.toggleFolder(node) }
+                        collapsed = current2?.isExpanded(node) == false,
+                        onToggle = { current2?.toggleFolder(node) }
                     )
                     else -> FileRow(
                         node = node,
                         depth = entry.depth,
-                        isActive = node.file.absolutePath == workspace?.activePath,
-                        isDirty = workspace?.documentFor(node.file)?.isDirty == true,
+                        isActive = node.file.absolutePath == current2?.activePath,
+                        isDirty = current2?.documentFor(node.file)?.isDirty == true,
                         onOpen = { onOpenFile(node.file) }
                     )
                 }
             }
 
-            if (workspace != null && workspace.searchQuery.isNotEmpty()) {
+            val current3 = workspace
+            if (current3 != null && current3.searchQuery.isNotEmpty()) {
                 item(key = "__search_results__") {
                     SectionLabel(
-                        if (workspace.isSearching) "Searching..." else "Results (${workspace.searchResults.size})"
+                        if (current3.isSearching) "Searching..." else "Results (${current3.searchResults.size})"
                     )
                 }
-                items(workspace.searchResults, key = { "hit:${it.file.absolutePath}:${it.line}" }) { hit ->
+                items(
+                    items = current3.searchResults,
+                    key = { hit: WorkspaceSearchHit -> "hit:${hit.file.absolutePath}:${hit.line}" }
+                ) { hit ->
                     SearchHitRow(hit = hit, onOpen = { onOpenHit(hit) })
                 }
             }
