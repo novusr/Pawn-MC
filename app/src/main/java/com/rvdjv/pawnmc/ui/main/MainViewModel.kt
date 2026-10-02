@@ -67,11 +67,12 @@ class MainViewModel(
     var selectionError by mutableStateOf<String?>(null)
         private set
 
-    /**
-     * Compile request queued by the Xed editor, consumed once the main screen is
-     * visible again. Not snapshot state: it is a one-shot hand-off, not UI state.
-     */
-    private var pendingCompilePath: String? = null
+    /** Compile request queued by Xed and handled by the mounted main screen. */
+    var pendingCompilePath by mutableStateOf<String?>(null)
+        private set
+
+    var compileRequestId by mutableStateOf(0)
+        private set
 
     var temporaryFileNotice by mutableStateOf<String?>(null)
         private set
@@ -88,6 +89,9 @@ class MainViewModel(
         private set
 
     var outputText by mutableStateOf("Ready to compile...\n")
+        private set
+
+    var hasCompilerOutput by mutableStateOf(false)
         private set
 
     var lastExitCode by mutableStateOf<Int?>(null)
@@ -341,6 +345,7 @@ class MainViewModel(
      * screen when it becomes visible again.
      */
     fun requestCompileFromEditor(path: String) {
+        hasCompilerOutput = true
         val n_validExtensions = setOf("pawn", "pwn", "p", "inc")
         if (File(path).extension.lowercase() !in n_validExtensions) {
             outputText = "Cannot compile '${File(path).name}': unsupported file type.\n"
@@ -350,6 +355,7 @@ class MainViewModel(
         config.n_last_selected_file_path = path
         applyCompilerAutoDetection(path)
         pendingCompilePath = path
+        compileRequestId++
     }
 
     /** Returns the queued editor compile request once, or `null` when there is none. */

@@ -1,5 +1,7 @@
 package com.rvdjv.pawnmc.ui.editor
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Typeface
 import android.net.Uri
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -114,6 +117,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.ui.PawnIcons
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.data.pawn.PawnRegistry
 import com.rvdjv.pawnmc.ui.editor.pawn.PawnLanguage
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
@@ -132,6 +136,7 @@ fun XedEditorScreen(
     viewModel: XedEditorViewModel,
     onNavigateBack: () -> Unit,
     editorBackgroundColor: String? = null,
+    compileOutput: String = "",
     onCompileRequest: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -159,6 +164,14 @@ fun XedEditorScreen(
     var showSearchBar by remember { mutableStateOf(false) }
     var showJumpDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showHashDialog by remember { mutableStateOf(false) }
+    var showHashAlgorithmMenu by remember { mutableStateOf(false) }
+    var hashAlgorithm by remember { mutableStateOf("SHA-256") }
+    var hashText by remember { mutableStateOf("") }
+    var hashResult by remember { mutableStateOf<String?>(null) }
+    var hashError by remember { mutableStateOf<String?>(null) }
+    var hashTextMode by remember { mutableStateOf(false) }
+    var noticeMessage by remember { mutableStateOf<String?>(null) }
     var isQuickSymbolBarVisible by remember { mutableStateOf(true) }
 
     var searchQuery by remember { mutableStateOf("") }
@@ -227,7 +240,7 @@ fun XedEditorScreen(
 
     LaunchedEffect(workspace.statusMessage) {
         workspace.statusMessage?.let { message ->
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            noticeMessage = message
             workspace.clearStatusMessage()
         }
     }
@@ -374,9 +387,22 @@ fun XedEditorScreen(
 
     LaunchedEffect(viewModel.statusMessage) {
         viewModel.statusMessage?.let { msg ->
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            noticeMessage = msg
             viewModel.clearStatusMessage()
         }
+    }
+
+    noticeMessage?.let { message ->
+        AlertDialog(
+            onDismissRequest = { noticeMessage = null },
+            title = { Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Informasi" else "Notice") },
+            text = { Text(message) },
+            confirmButton = {
+                TextButton(onClick = { noticeMessage = null }) {
+                    Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Tutup" else "Dismiss")
+                }
+            }
+        )
     }
 
     if (showExitDialog) {
@@ -492,6 +518,114 @@ fun XedEditorScreen(
             localizer = localizer,
             language = appLanguage,
             onDismiss = { showAboutDialog = false }
+        )
+    }
+
+    if (showHashDialog) {
+        AlertDialog(
+            onDismissRequest = { showHashDialog = false },
+            title = { Text("Hash Generator") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (!hashTextMode) {
+                            FilledTonalButton(onClick = { hashTextMode = false; hashResult = null; hashError = null }) {
+                                Text("Current file")
+                            }
+                        } else {
+                            TextButton(onClick = { hashTextMode = false; hashResult = null; hashError = null }) {
+                                Text("Current file")
+                            }
+                        }
+                        if (hashTextMode) {
+                            FilledTonalButton(onClick = { hashTextMode = true; hashResult = null; hashError = null }) {
+                                Text("Text")
+                            }
+                        } else {
+                            TextButton(onClick = { hashTextMode = true; hashResult = null; hashError = null }) {
+                                Text("Text")
+                            }
+                        }
+                        Box {
+                            TextButton(onClick = { showHashAlgorithmMenu = true }) {
+                                Text(hashAlgorithm)
+                            }
+                            DropdownMenu(
+                                expanded = showHashAlgorithmMenu,
+                                onDismissRequest = { showHashAlgorithmMenu = false }
+                            ) {
+                                listOf("MD5", "SHA-1", "SHA-256", "SHA-512").forEach { algorithm ->
+                                    DropdownMenuItem(
+                                        text = { Text(algorithm) },
+                                        onClick = {
+                                            hashAlgorithm = algorithm
+                                            hashResult = null
+                                            hashError = null
+                                            showHashAlgorithmMenu = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    if (hashTextMode) {
+                        OutlinedTextField(
+                            value = hashText,
+                            onValueChange = { hashText = it; hashResult = null; hashError = null },
+                            label = { Text("Text to hash") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 2
+                        )
+                    } else {
+                        Text(
+                            text = activeDocument?.file?.name ?: viewModel.fileName.ifBlank { "No file open" },
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    hashError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    hashResult?.let { result ->
+                        Text(
+                            text = result,
+                            fontFamily = FontFamily.Monospace,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                        TextButton(onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("$hashAlgorithm hash", result))
+                        }) {
+                            Text("Copy")
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (!hashTextMode && editorRef == null) {
+                        hashError = "Open a file first"
+                    } else {
+                        val bytes = if (hashTextMode) {
+                            hashText.toByteArray(Charsets.UTF_8)
+                        } else {
+                            editorRef?.text?.toString().orEmpty().toByteArray(Charsets.UTF_8)
+                        }
+                        runCatching {
+                            java.security.MessageDigest.getInstance(hashAlgorithm)
+                                .digest(bytes)
+                                .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+                        }.onSuccess {
+                            hashResult = it
+                            hashError = null
+                        }.onFailure {
+                            hashError = it.localizedMessage ?: "Unable to generate hash"
+                        }
+                    }
+                }) {
+                    Text("Generate")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showHashDialog = false }) { Text("Close") }
+            }
         )
     }
 
@@ -654,6 +788,15 @@ fun XedEditorScreen(
                                 }
                             )
                             DropdownMenuItem(
+                                text = { Text("Hash Generator") },
+                                onClick = {
+                                    showMenu = false
+                                    hashResult = null
+                                    hashError = null
+                                    showHashDialog = true
+                                }
+                            )
+                            DropdownMenuItem(
                                 text = { Text(if (isExplorerVisible) "Hide Workspace Panel" else "Show Workspace Panel") },
                                 leadingIcon = {
                                     Icon(
@@ -768,6 +911,7 @@ fun XedEditorScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+                .imePadding()
                 .fillMaxSize()
         ) {
             AnimatedVisibility(visible = showSearchBar) {
@@ -1014,6 +1158,7 @@ fun XedEditorScreen(
                     ) {
                         XedWorkspacePanel(
                             session = workspace,
+                            outputText = compileOutput,
                             onOpenFile = openWorkspaceFile,
                             onCloseFile = { file -> workspace.closeDocument(file) },
                             onSelectFile = { file -> workspace.setActive(file) },
@@ -1114,6 +1259,7 @@ fun XedEditorScreen(
                                 }
                                 if (allSaved) {
                                     onCompileRequest(n_target)
+                                    isExplorerVisible = true
                                 } else {
                                     Toast.makeText(
                                         context,
@@ -1136,7 +1282,7 @@ fun XedEditorScreen(
                             editor.text.insert(editor.cursor.leftLine, editor.cursor.leftColumn, symbol)
                         }
                     },
-                    onTabClick = { insertIndentAtCursor(editorRef) }
+                    onTabClick = { applyTabAction(editorRef) }
                 )
             }
 
@@ -1899,6 +2045,29 @@ private fun insertIndentAtCursor(editor: CodeEditor?) {
         .let { if (it < 0) column else it }
     val baseIndent = lineText.take(leading)
     target.text.insert(line, column, baseIndent + "    ")
+}
+
+/** Applies the first matching Pawn completion, falling back to normal indentation. */
+private fun applyTabAction(editor: CodeEditor?) {
+    val target = editor ?: return
+    val line = target.cursor.leftLine
+    val column = target.cursor.leftColumn
+    val lineText = target.text.getLine(line).toString()
+    var prefixStart = column
+    while (prefixStart > 0) {
+        val character = lineText[prefixStart - 1]
+        if (!Character.isJavaIdentifierPart(character) && character != '#' && character != ':') break
+        prefixStart--
+    }
+    val prefix = lineText.substring(prefixStart, column)
+    val completion = PawnRegistry.getCompletions(prefix).firstOrNull()
+    if (completion == null) {
+        insertIndentAtCursor(target)
+        return
+    }
+
+    target.text.delete(line, prefixStart, line, column)
+    target.text.insert(line, prefixStart, completion.name)
 }
 
 /** One key in the quick symbol row. */

@@ -10,9 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandMore
@@ -57,6 +60,7 @@ private val PanelRowMinHeight = 44.dp
 @Composable
 fun XedWorkspacePanel(
     session: XedWorkspaceViewModel,
+    outputText: String = "",
     onOpenFile: (File) -> Unit,
     onCloseFile: (File) -> Unit,
     onSelectFile: (File) -> Unit,
@@ -138,6 +142,22 @@ fun XedWorkspacePanel(
             }
 
             val current3 = workspace
+            if (outputText.isNotBlank()) {
+                item(key = "__compiler_output__") {
+                    SectionLabel("Output")
+                    Text(
+                        text = outputText,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 180.dp)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                }
+            }
             if (current3 != null && current3.searchQuery.isNotEmpty()) {
                 item(key = "__search_results__") {
                     SectionLabel(

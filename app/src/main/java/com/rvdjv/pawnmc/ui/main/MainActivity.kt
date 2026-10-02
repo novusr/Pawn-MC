@@ -13,6 +13,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import com.rvdjv.pawnmc.data.compiler.PawnCompiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.config.AppLocalization
@@ -73,22 +76,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if (isEditorOpen && !currentFilePath.isNullOrBlank()) {
-                    XedEditorScreen(
-                        viewModel = editorViewModel,
-                        onNavigateBack = {
-                            isEditorOpen = false
-                            viewModel.loadLastSelectedFile()
-                        },
-                        editorBackgroundColor = viewModel.n_editor_background_color,
-                        onCompileRequest = { path ->
-                            // Register the file with the compiler system right away,
-                            // then return to the main screen where the output shows.
-                            viewModel.requestCompileFromEditor(path)
-                            isEditorOpen = false
-                        }
-                    )
-                } else {
+                Box(modifier = Modifier.fillMaxSize()) {
                     MainScreen(
                         viewModel = viewModel,
                         onEditorClick = {
@@ -99,6 +87,24 @@ class MainActivity : ComponentActivity() {
                         },
                         initialUri = intent.data
                     )
+                    if (isEditorOpen && !currentFilePath.isNullOrBlank()) {
+                        XedEditorScreen(
+                            viewModel = editorViewModel,
+                            onNavigateBack = {
+                                isEditorOpen = false
+                                viewModel.loadLastSelectedFile()
+                            },
+                            editorBackgroundColor = viewModel.n_editor_background_color,
+                            compileOutput = when {
+                                viewModel.isCompiling && viewModel.outputText.isBlank() -> "Compiling...\n"
+                                viewModel.hasCompilerOutput -> viewModel.outputText
+                                else -> ""
+                            },
+                            onCompileRequest = { path ->
+                                viewModel.requestCompileFromEditor(path)
+                            }
+                        )
+                    }
                 }
             }
         }

@@ -213,10 +213,8 @@ fun MainScreen(
         viewModel.handleInitialUri(initialUri)
     }
 
-    // A compile requested from the Xed editor compile button: the editor already
-    // closed itself, so the queued request is picked up here where the output and
-    // the log live.
-    LaunchedEffect(Unit) {
+    // Xed stays open while this mounted screen handles its compile request.
+    LaunchedEffect(viewModel.compileRequestId) {
         viewModel.consumePendingCompile()?.let { pendingPath ->
             if (!hasStoragePermission(context)) {
                 showPermissionDialog = true
