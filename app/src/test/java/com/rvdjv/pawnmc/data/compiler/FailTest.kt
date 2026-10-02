@@ -5,7 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class PawnCompilerFailTest {
+class FailTest {
     @Test
     fun `detects error count from compiler output`() {
         val output = """
@@ -19,8 +19,8 @@ class PawnCompilerFailTest {
             6 Errors.
         """.trimIndent()
 
-        assertEquals(6, PawnCompiler.extractErrorCount(output))
-        assertTrue(PawnCompiler.shouldRetryWithFallback(output, 5))
+        assertEquals(6, Compiler.extractErrorCount(output))
+        assertTrue(Compiler.shouldRetryWithFallback(output, 5))
     }
 
     @Test

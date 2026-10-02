@@ -7,7 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.rvdjv.pawnmc.data.compiler.PawnCompiler
+import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 
 class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
@@ -215,11 +215,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     }
 
     fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean {
-        return PawnCompiler.isRestartRequired(requestedVersion)
+        return Compiler.isRestartRequired(requestedVersion)
     }
 
     fun getLoadedVersion(): CompilerConfig.CompilerVersion? {
-        return PawnCompiler.getLoadedVersion()
+        return Compiler.getLoadedVersion()
     }
 }
 

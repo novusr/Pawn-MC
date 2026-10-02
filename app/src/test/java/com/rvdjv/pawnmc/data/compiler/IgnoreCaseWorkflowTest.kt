@@ -13,7 +13,7 @@ import java.io.File
  *
  * Every test builds its own project folder, so no manual fixture is needed.
  */
-class PawnCompilerIgnoreCaseWorkflowTest {
+class IgnoreCaseWorkflowTest {
 
     /** Mixed case project used by most of the checks below. */
     private fun createProject(rootName: String): File {
@@ -37,11 +37,11 @@ class PawnCompilerIgnoreCaseWorkflowTest {
             val gamemodes = File(root, "Gamemodes")
             val source = File(gamemodes, "Stock.pwn")
 
-            val result = PawnCompiler.convertFolderToLowerCase(source.absolutePath)
+            val result = Compiler.convertFolderToLowerCase(source.absolutePath)
 
-            assertEquals(PawnCompiler.ConversionStatus.CONVERTED, result.status)
+            assertEquals(CaseConversion.ConversionStatus.CONVERTED, result.status)
 
-            val backup = PawnCompiler.backupDirFor(gamemodes)
+            val backup = Compiler.backupDirFor(gamemodes)
             assertTrue("backup folder must exist", backup.isDirectory)
             assertEquals("Gamemodes.backup", backup.name)
             assertTrue("backup keeps the original names", File(backup, "Stock.pwn").exists())
@@ -67,7 +67,7 @@ class PawnCompilerIgnoreCaseWorkflowTest {
             val gamemodes = File(root, "Gamemodes")
             val source = File(gamemodes, "Stock.pwn")
 
-            PawnCompiler.convertFolderToLowerCase(source.absolutePath)
+            Compiler.convertFolderToLowerCase(source.absolutePath)
 
             val selectedText = File(gamemodes, "Stock.pwn").readText()
             assertTrue(selectedText.contains("#include \"warung.pwn\""))
@@ -89,13 +89,13 @@ class PawnCompilerIgnoreCaseWorkflowTest {
             #include <system>
         """.trimIndent()
 
-        val rewritten = PawnCompiler.lowercaseIncludeReferences(source)
+        val rewritten = Compiler.lowercaseIncludeReferences(source)
 
         assertTrue(rewritten.contains("#include \"aaaa\""))
         assertTrue(rewritten.contains("#include <bbb>"))
         assertTrue(rewritten.contains("#include 'ccd'"))
         assertTrue(rewritten.contains("#include <system>"))
-        assertEquals(source, PawnCompiler.lowercaseIncludeReferences(rewritten))
+        assertEquals(source, Compiler.lowercaseIncludeReferences(rewritten))
     }
 
     @Test
@@ -104,23 +104,23 @@ class PawnCompilerIgnoreCaseWorkflowTest {
         try {
             val gamemodes = File(root, "Gamemodes")
             val source = File(gamemodes, "Stock.pwn")
-            val first = PawnCompiler.convertFolderToLowerCase(source.absolutePath)
-            val backup = PawnCompiler.backupDirFor(gamemodes)
+            val first = Compiler.convertFolderToLowerCase(source.absolutePath)
+            val backup = Compiler.backupDirFor(gamemodes)
 
-            assertFalse(PawnCompiler.needsConversion(gamemodes, backup.absolutePath))
+            assertFalse(Compiler.needsConversion(gamemodes, backup.absolutePath))
 
-            val second = PawnCompiler.convertFolderToLowerCase(
+            val second = Compiler.convertFolderToLowerCase(
                 selectedFilePath = first.sourceFile,
                 rememberedBackupDir = backup.absolutePath
             )
-            assertEquals(PawnCompiler.ConversionStatus.ALREADY_CONVERTED, second.status)
+            assertEquals(CaseConversion.ConversionStatus.ALREADY_CONVERTED, second.status)
             assertEquals(0, second.renamedEntries)
 
             // A new mixed case file inside an already converted folder must not
             // trigger the instructions again.
             File(gamemodes, "Extra.PWN").writeText("#include \"Warung.pwn\"\n")
             assertTrue(File(gamemodes, "Extra.PWN").exists())
-            assertFalse(PawnCompiler.needsConversion(gamemodes, backup.absolutePath))
+            assertFalse(Compiler.needsConversion(gamemodes, backup.absolutePath))
         } finally {
             root.deleteRecursively()
         }
@@ -132,18 +132,18 @@ class PawnCompilerIgnoreCaseWorkflowTest {
         try {
             val gamemodes = File(root, "Gamemodes")
             val source = File(gamemodes, "Stock.pwn")
-            val backup = PawnCompiler.backupDirFor(gamemodes)
-            PawnCompiler.convertFolderToLowerCase(source.absolutePath)
+            val backup = Compiler.backupDirFor(gamemodes)
+            Compiler.convertFolderToLowerCase(source.absolutePath)
 
             backup.deleteRecursively()
-            assertTrue(PawnCompiler.needsConversion(gamemodes, backup.absolutePath))
+            assertTrue(Compiler.needsConversion(gamemodes, backup.absolutePath))
 
-            val again = PawnCompiler.convertFolderToLowerCase(
+            val again = Compiler.convertFolderToLowerCase(
                 selectedFilePath = File(gamemodes, "Stock.pwn").absolutePath,
                 rememberedBackupDir = backup.absolutePath
             )
-            assertEquals(PawnCompiler.ConversionStatus.CONVERTED, again.status)
-            assertTrue(PawnCompiler.backupDirFor(gamemodes).isDirectory)
+            assertEquals(CaseConversion.ConversionStatus.CONVERTED, again.status)
+            assertTrue(Compiler.backupDirFor(gamemodes).isDirectory)
         } finally {
             root.deleteRecursively()
         }
@@ -154,11 +154,11 @@ class PawnCompilerIgnoreCaseWorkflowTest {
         val root = createProject("pawnmc-ignore-case-refresh")
         try {
             val gamemodes = File(root, "Gamemodes")
-            val backup = PawnCompiler.backupDirFor(gamemodes)
-            PawnCompiler.convertFolderToLowerCase(File(gamemodes, "Stock.pwn").absolutePath)
+            val backup = Compiler.backupDirFor(gamemodes)
+            Compiler.convertFolderToLowerCase(File(gamemodes, "Stock.pwn").absolutePath)
             File(gamemodes, "new-file.pwn").writeText("main() { return 1; }\n")
 
-            assertTrue(PawnCompiler.refreshBackupForCompile(gamemodes))
+            assertTrue(Compiler.refreshBackupForCompile(gamemodes))
             assertTrue(File(backup, "new-file.pwn").isFile)
             assertEquals("main() { return 1; }\n", File(backup, "new-file.pwn").readText())
         } finally {
@@ -176,9 +176,9 @@ class PawnCompilerIgnoreCaseWorkflowTest {
             File(gamemodes, "Other.pwn").writeText("#include \"Helper.inc\"\n")
             File(gamemodes, "helper.inc").writeText("stock Helper() { return 1; }\n")
 
-            val result = PawnCompiler.convertFolderToLowerCase(File(gamemodes, "Main.pwn").absolutePath)
+            val result = Compiler.convertFolderToLowerCase(File(gamemodes, "Main.pwn").absolutePath)
 
-            assertEquals(PawnCompiler.ConversionStatus.CONVERTED, result.status)
+            assertEquals(CaseConversion.ConversionStatus.CONVERTED, result.status)
             assertTrue(File(gamemodes, "Main.pwn").exists())
             assertTrue("the differently cased file is kept under a unique name", File(gamemodes, "other.pwn").exists())
             assertTrue(File(gamemodes, "helper.inc").exists())
@@ -195,7 +195,7 @@ class PawnCompilerIgnoreCaseWorkflowTest {
             val gamemodes = File(root, "Gamemodes")
             val source = File(gamemodes, "Stock.pwn")
 
-            val result = PawnCompiler.convertFolderToLowerCase(source.absolutePath)
+            val result = Compiler.convertFolderToLowerCase(source.absolutePath)
 
             assertTrue(File(result.sourceFile).exists())
             assertEquals("Stock.pwn", File(result.sourceFile).name)
@@ -212,9 +212,9 @@ class PawnCompilerIgnoreCaseWorkflowTest {
             folder.mkdirs()
             File(folder, "Readme.txt").writeText("nothing to convert here")
 
-            assertFalse(PawnCompiler.needsConversion(folder, null))
-            val result = PawnCompiler.convertFolderToLowerCase(File(folder, "missing.pwn").absolutePath)
-            assertEquals(PawnCompiler.ConversionStatus.FAILED, result.status)
+            assertFalse(Compiler.needsConversion(folder, null))
+            val result = Compiler.convertFolderToLowerCase(File(folder, "missing.pwn").absolutePath)
+            assertEquals(CaseConversion.ConversionStatus.FAILED, result.status)
         } finally {
             root.deleteRecursively()
         }

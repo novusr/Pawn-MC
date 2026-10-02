@@ -1,0 +1,22 @@
+# External compile-time data for PawnMC
+# Local explanations of Pawn compiler messages (warning / error / fatal + numeric code).
+# Loaded at runtime by CompilerExplanationStore; never duplicated in Kotlin sources.
+# Format mirrors _extract.dat: 0x01:<code>:0x02:<explanation>
+# When a code appears twice the last entry wins, matching the previous map behaviour.
+0x01:015:0x02:Default case must be the last case. Place default after all explicit case blocks.
+0x01:016:0x02:Multiple defaults are not allowed in the same switch statement.
+0x01:017:0x02:Undefined symbol. Check that the identifier is declared, included, and spelled exactly the same as the definition.
+0x01:021:0x02:Symbol already defined. A duplicate declaration exists in the same scope.
+0x01:024:0x02:Break or continue is out of context. It must be inside a loop or switch block.
+0x01:040:0x02:Duplicate case label. Each case value must be unique within the switch statement.
+0x01:061:0x02:Recursive include detected. Break the include cycle with guards or forward declarations.
+0x01:100:0x02:Cannot read from file. The compiler could not open the given source or include file. Check the path, permissions, and file existence.
+0x01:101:0x02:Cannot write to file. The output target could not be created or written to. Check permissions and the destination folder.
+0x01:200:0x02:Identifier is truncated to the implementation limit. Use shorter, unique names to avoid collisions.
+0x01:203:0x02:A symbol is declared but never used. It may be dead code or an unfinished implementation.
+0x01:204:0x02:A value is assigned but never read. This often indicates redundant initialization or a logic bug.
+0x01:205:0x02:Redundant code: constant expression is zero. This condition is always false and makes the block unreachable.
+0x01:211:0x02:Possibly unintended assignment. An assignment appears in a condition; use == for comparison instead.
+0x01:214:0x02:Literal array or string passed to a non-const parameter. Declare the parameter as const or copy the data to a mutable buffer.
+0x01:217:0x02:A value is assigned but never used. Remove the unused assignment or use the variable before it goes out of scope.
+0x01:217:0x02:Loose indentation. This warning is cosmetic but can hide structural mistakes and make code harder to read.

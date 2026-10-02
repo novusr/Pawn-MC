@@ -16,7 +16,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
-import com.rvdjv.pawnmc.data.compiler.PawnCompiler
+import com.rvdjv.pawnmc.data.compiler.Explanations
+import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.update.UpdateManager
@@ -55,7 +56,10 @@ class MainActivity : ComponentActivity() {
         // Drop them once on startup so the list never shows dead entries and the compiler
         // is not handed stale -i values.
         config.pruneMissingIncludePaths()
-        PawnCompiler.resetSessionState()
+        Compiler.resetSessionState()
+        // The local compiler message explanations live in `_dat/_explain.dat`; load the
+        // table once so `explainCompilerOutput` never has to touch the disk per line.
+        Explanations.load(applicationContext)
         UpdateManager(applicationContext).ensureVersionFileWritten()
         enableEdgeToEdge()
         setContent {

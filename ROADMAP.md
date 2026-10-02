@@ -46,6 +46,7 @@ From a manual review of the repository, the current project focuses on:
 | Version selection | Switch between Pawn compiler versions |
 | Native compilation | Execute Pawn compilation through the native layer |
 | Output capture | Read compiler output and parse exit codes |
+| Output explanations | Local hints for Pawn warning/error codes, stored in `_dat/_explain.dat` |
 | Auto fallback | Retry using an alternate compiler version after repeated errors |
 | Settings screen | Manage app configuration and compiler preferences |
 | GitHub update check | Compare installed app version with latest release |
@@ -80,6 +81,7 @@ From a manual review of the repository, the current project focuses on:
 | app/src/main/cpp/Compiler.cpp | Native bridge for compiler interop |
 | app/src/main/res/xml/file_paths.xml | FileProvider paths for APK install flow |
 | _dat/_extract.dat | Single source of localisation data (id/en), packaged as an asset |
+| _dat/_explain.dat | Single source of compiler message explanations (`code` -> hint), packaged as an asset |
 
 ---
 
@@ -91,7 +93,13 @@ From a manual review of the repository, the current project focuses on:
 |---|---|
 | app/src/main/java/com/rvdjv/pawnmc/data/config/CompilerConfig.kt | Stores all compiler settings and app preferences in SharedPreferences; builds compile option lists; normalises include paths and strips script extensions |
 | app/src/main/java/com/rvdjv/pawnmc/data/config/AppLocalization.kt | Loads and parses `_dat/_extract.dat`; no bundled copy of the strings |
-| app/src/main/java/com/rvdjv/pawnmc/data/compiler/PawnCompiler.kt | Native compiler wrapper; compiles Pawn files, reads output, handles fallback strategy |
+| app/src/main/java/com/rvdjv/pawnmc/data/compiler/Compiler.kt | Facade of the compiler layer; forwards the public API to the focused compiler helpers |
+| app/src/main/java/com/rvdjv/pawnmc/data/compiler/Names.kt | Shared compiler names, extensions, folder variants and flags |
+| app/src/main/java/com/rvdjv/pawnmc/data/compiler/Runner.kt | Native library loading, compile execution, option/argument building, fallback retry |
+| app/src/main/java/com/rvdjv/pawnmc/data/compiler/Detection.kt | Nearby `pawncc` detection, binary metadata/MD5 reading, include path selection |
+| app/src/main/java/com/rvdjv/pawnmc/data/compiler/CaseConversion.kt | "Ignore case" conversion: folder backup, lowercase names, `#include` rewriting |
+| app/src/main/java/com/rvdjv/pawnmc/data/compiler/Explainer.kt | Annotates raw compiler output with local hints from `_dat/_explain.dat` |
+| app/src/main/java/com/rvdjv/pawnmc/data/compiler/Explanations.kt | Reads, parses and caches `_dat/_explain.dat`; single source for message hints |
 | app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | GitHub release fetcher, semantic version comparison, APK download, install intent preparation |
 | app/src/main/java/com/rvdjv/pawnmc/data/pawn/Registry.kt | Pawn keywords, directives, natives and forwards shared by completion and highlighting |
 
@@ -126,6 +134,7 @@ From a manual review of the repository, the current project focuses on:
 |---|---|
 | app/src/test/java/com/rvdjv/pawnmc/data/update/UpdateManagerTest.kt | Regression tests for version comparison logic |
 | app/src/test/java/com/rvdjv/pawnmc/data/config/AppLocalizationTest.kt | Localisation parsing and lookup regression tests |
+| app/src/test/java/com/rvdjv/pawnmc/data/compiler/ExplanationsTest.kt | `_dat/_explain.dat` parsing regression tests |
 
 ---
 
@@ -136,12 +145,13 @@ From a manual review of the repository, the current project focuses on:
 | App configuration | app/build.gradle.kts, gradle.properties | Build system, versioning, SDK setup |
 | Native compiler | app/src/main/cpp/CMakeLists.txt, app/src/main/cpp/Compiler.cpp | JNI/native bridge and native compile support |
 | Compiler config | app/src/main/java/com/rvdjv/pawnmc/data/config/CompilerConfig.kt | Persistent compile configuration |
-| Compile engine | app/src/main/java/com/rvdjv/pawnmc/data/compiler/PawnCompiler.kt | Compile logic, output capture, fallback retry |
+| Compile engine | app/src/main/java/com/rvdjv/pawnmc/data/compiler/Compiler.kt | Compile logic, output capture, fallback retry |
 | Update flow | app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | GitHub API interactions and APK update install pipeline |
 | Main app UI | app/src/main/java/com/rvdjv/pawnmc/ui/main/MainScreen.kt | Main compile entry point |
 | Editor UI | app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedEditorScreen.kt | Code canvas, tab strip, floating controls |
 | Workspace model | app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedWorkspaceViewModel.kt | Folder trees, open documents, search/replace |
 | Localization | app/src/main/java/com/rvdjv/pawnmc/data/config/AppLocalization.kt, _dat/_extract.dat | Single-source id/en strings |
+| Compiler explanations | app/src/main/java/com/rvdjv/pawnmc/data/compiler/Explanations.kt, _dat/_explain.dat | Single-source local hints for Pawn compiler messages |
 | Settings UI | app/src/main/java/com/rvdjv/pawnmc/ui/settings/SettingsScreen.kt | App configuration and update controls |
 | File browser | app/src/main/java/com/rvdjv/pawnmc/ui/filebrowser/FileBrowserDialog.kt | Storage browsing and file selection |
 
@@ -174,7 +184,7 @@ From a manual review of the repository, the current project focuses on:
 |---|---|
 | 1 | MainViewModel.compileFile() runs |
 | 2 | File validation and storage permission are checked |
-| 3 | PawnCompiler.compile() is invoked |
+| 3 | Compiler.compile() is invoked |
 | 4 | Compiler options are built from config |
 | 5 | Native compile output is parsed |
 | 6 | Output log and compile result are shown in UI |
@@ -208,13 +218,20 @@ From a manual review of the repository, the current project focuses on:
 | Product focus | PawnMC is clearly a mobile-first Pawn compiler utility rather than a general-purpose IDE |
 | Strength | Strong separation between UI, compiler logic, config, and native bridge |
 | Risk area | Storage permissions are critical because the app reads and writes file-based compiler artifacts |
-| Native lifecycle | PawnCompiler holds initialization state and version switching state, so restart logic matters |
+| Native lifecycle | `Runner` holds initialization state and version switching state, so restart logic matters |
 | Update reliability | GitHub release checking and APK install flow require careful handling of network, invalid APKs, and Android install restrictions |
 | Configuration integrity | CompilerConfig is central to compile behavior and must remain consistent with UI and native state |
 | Include path hygiene | Only `.pawn`, `.pwn`, `.p` and `.inc` are treated as script extensions, and they are stripped from include paths and compile paths |
 | Compose state in lists | The workspace tree must be remembered against `tree` and `collapsedPaths`, otherwise folder toggles never recompose |
 | Single scrolling surface | The explorer keeps opened editors, tree and hits in one LazyColumn; competing scroll containers swallow taps |
-| Single localisation source | `_dat/_extract.dat` is the only place strings live; AppLocalization must never duplicate them |
+| Single localisation source | `_dat/_extract.dat` is the only place UI strings live; AppLocalization must never duplicate them |
+| External explanation data | `_dat/_explain.dat` ships as an asset next to `_extract.dat` because `assets.srcDir(rootProject.file("_dat"))` already covers the whole folder |
+| Single explanation source | `_dat/_explain.dat` is the only place compiler message hints live; Explanations parses it once per process and the map lives in no Kotlin source |
+| Compiler layer split | `Compiler` stayed a thin facade while the implementation was split by single responsibility, so callers keep one stable entry point |
+| No type aliases in objects | Kotlin does not allow a `typealias` inside an `object`, so the result types are referenced through their owners: `CaseConversion.ConversionStatus`, `CaseConversion.ConversionResult` and `Detection.NearbyCompilerMatch` |
+| Naming inside a package | Files and objects inside `data/compiler` drop the redundant `Compiler`/`Pawn` prefix because the package already states it (`Compiler`, `Runner`, `Detection`, `Explainer`, `Explanations`, `Names`) |
+| JNI symbol names follow the owner | The native `compile`/`getOutput`/`getErrors` methods live in `Runner`, so the JNI names use `..._Runner_*` and ProGuard keeps `com.rvdjv.pawnmc.data.compiler.Runner` |
+| Clickable links in static text | Thank-you notes render URLs as annotated, coloured, tappable spans via `ClickableText` and the platform URI handler |
 | Floating control geometry | Compile, workspace panel and toolbar share one geometry so they stack and centre by default |
 
 ---
@@ -247,6 +264,7 @@ From a manual review of the repository, the current project focuses on:
 | Medium | Extend workspace support: rename/move files, drag-and-drop in the explorer, richer replace previews |
 | Low | Extend theme and app customization options (editor background presets, accent density) |
 | Low | Keep localisation strings in sync in `_dat/_extract.dat` only, and add keys as the UI grows |
+| Low | Extend `_dat/_explain.dat` with more Pawn message codes and keep it as the only place hints are maintained |
 
 ---
 
@@ -262,7 +280,7 @@ The most relevant files to understand the project are:
 | app/build.gradle.kts | App build and version metadata |
 | app/src/main/AndroidManifest.xml | Permissions and install support |
 | app/src/main/java/com/rvdjv/pawnmc/data/config/CompilerConfig.kt | Runtime compile settings |
-| app/src/main/java/com/rvdjv/pawnmc/data/compiler/PawnCompiler.kt | Native compile engine |
+| app/src/main/java/com/rvdjv/pawnmc/data/compiler/Compiler.kt | Public compile engine entry point (facade) |
 | app/src/main/java/com/rvdjv/pawnmc/ui/main/MainScreen.kt | Main user workflow |
 | app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedEditorScreen.kt | Editor canvas, tab strip and floating controls |
 | app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedWorkspaceViewModel.kt | Workspace trees, open documents, search/replace |
@@ -270,6 +288,7 @@ The most relevant files to understand the project are:
 | app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | Release update logic |
 | app/src/main/cpp/Compiler.cpp | Native bridge implementation |
 | _dat/_extract.dat | Localisation data for Indonesian and English |
+| _dat/_explain.dat | Local explanations of Pawn compiler messages |
 
 ---
 

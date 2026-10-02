@@ -8,7 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.rvdjv.pawnmc.data.compiler.PawnCompiler
+import com.rvdjv.pawnmc.data.compiler.CaseConversion
+import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -188,14 +189,14 @@ class MainViewModel(
 
         viewModelScope.launch {
             val n_result = withContext(Dispatchers.IO) {
-                PawnCompiler.convertFolderToLowerCase(
+                Compiler.convertFolderToLowerCase(
                     selectedFilePath = path,
                     rememberedBackupDir = config.n_case_insensitive_backup_dir
                 )
             }
 
             when (n_result.status) {
-                PawnCompiler.ConversionStatus.CONVERTED -> {
+                CaseConversion.ConversionStatus.CONVERTED -> {
                     config.n_case_insensitive_backup_dir = n_result.backupDir.absolutePath
                     filesystemNotice = IGNORE_CASE_DONE_NOTICE.format(n_result.backupDir.name)
                     outputText +=
@@ -203,16 +204,16 @@ class MainViewModel(
                             "rewrote includes in ${n_result.rewrittenIncludes} file(s), " +
                             "backup at ${n_result.backupDir.absolutePath}\n"
                 }
-                PawnCompiler.ConversionStatus.ALREADY_CONVERTED -> {
+                CaseConversion.ConversionStatus.ALREADY_CONVERTED -> {
                     config.n_case_insensitive_backup_dir = n_result.backupDir.absolutePath
                     filesystemNotice = IGNORE_CASE_SKIPPED_NOTICE.format(n_result.backupDir.name)
                     outputText += "Ignore case: skipped, ${n_result.backupDir.name} already exists\n"
                 }
-                PawnCompiler.ConversionStatus.NOT_NEEDED -> {
+                CaseConversion.ConversionStatus.NOT_NEEDED -> {
                     filesystemNotice = null
                     outputText += "Ignore case: nothing to convert in ${n_result.workingDir.name}\n"
                 }
-                PawnCompiler.ConversionStatus.FAILED -> {
+                CaseConversion.ConversionStatus.FAILED -> {
                     config.clearCaseInsensitiveBackupDir()
                     filesystemNotice = IGNORE_CASE_FAILED_NOTICE
                     outputText += "Ignore case: conversion failed for ${n_result.workingDir.absolutePath}\n"
@@ -230,7 +231,7 @@ class MainViewModel(
         if (!config.n_forced_include_path_auto) {
             // Discovery skips every folder the config already holds.
             val currentPaths = config.n_include_paths
-            val autoIncludePaths = PawnCompiler.discoverRelevantIncludePaths(sourcePath, currentPaths)
+            val autoIncludePaths = Compiler.discoverRelevantIncludePaths(sourcePath, currentPaths)
             if (autoIncludePaths.isNotEmpty()) {
                 autoIncludePaths.forEach { includePath ->
                     val directory = File(includePath)
@@ -243,7 +244,7 @@ class MainViewModel(
         if (config.n_forced_compiler_mode) return
 
         // Auto-detect only when automatic compiler selection is enabled.
-        val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
+        val detectedVersion = Compiler.detectCompilerVersionForFile(sourcePath)
         if (detectedVersion != null) {
             config.n_compiler_version = detectedVersion
             outputText += "Detected compiler: ${detectedVersion.label}\n"
@@ -270,8 +271,8 @@ class MainViewModel(
         }
 
         val forcedCompilerMode = config.n_forced_compiler_mode
-        val detectedVersion = PawnCompiler.detectCompilerVersionForFile(sourcePath)
-        val version = PawnCompiler.compilerVersionForMode(
+        val detectedVersion = Compiler.detectCompilerVersionForFile(sourcePath)
+        val version = Compiler.compilerVersionForMode(
             forcedMode = forcedCompilerMode,
             selectedVersion = config.n_compiler_version,
             detectedVersion = detectedVersion
@@ -281,7 +282,7 @@ class MainViewModel(
         // The conversion already happened when the file was browsed, so compiling
         // only has to make sure the folder is still consistent.
         if (config.n_ignore_case) {
-            val n_needsConversion = PawnCompiler.needsConversion(
+            val n_needsConversion = Compiler.needsConversion(
                 workingDir = File(sourcePath).parentFile ?: File("."),
                 rememberedBackupDir = config.n_case_insensitive_backup_dir
             )
@@ -298,7 +299,7 @@ class MainViewModel(
             val selectedVersion = config.n_compiler_version
 
             val backupRefreshed = withContext(Dispatchers.IO) {
-                !config.n_ignore_case || PawnCompiler.refreshBackupForCompile(
+                !config.n_ignore_case || Compiler.refreshBackupForCompile(
                     File(sourcePath).parentFile ?: File(".")
                 )
             }
@@ -311,12 +312,12 @@ class MainViewModel(
 
             val startTime = System.currentTimeMillis()
             val result = withContext(Dispatchers.IO) {
-                PawnCompiler.compile(sourcePath, options, selectedVersion)
+                Compiler.compile(sourcePath, options, selectedVersion)
             }
             val duration = System.currentTimeMillis() - startTime
 
             val compilerOutput = if (config.n_explain_output) {
-                PawnCompiler.explainCompilerOutput(result.second, appDirectory)
+                Compiler.explainCompilerOutput(result.second, appDirectory)
             } else {
                 result.second
             }

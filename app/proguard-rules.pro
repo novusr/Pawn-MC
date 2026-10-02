@@ -1,7 +1,7 @@
 # PawnMC ProGuard Rules
 
-# Keep all JNI native methods in PawnCompiler
--keep class com.rvdjv.pawnmc.PawnCompiler {
+# Keep all JNI native methods in Runner
+-keep class com.rvdjv.pawnmc.data.compiler.Runner {
     private native <methods>;
 }
 
@@ -10,8 +10,8 @@
 -keep class com.rvdjv.pawnmc.SettingsActivity
 
 # Keep CompilerConfig enums (used for SharedPreferences serialization)
--keep class com.rvdjv.pawnmc.CompilerConfig$CompilerVersion { *; }
--keep class com.rvdjv.pawnmc.CompilerConfig$DebugLevel { *; }
+-keep class com.rvdjv.pawnmc.data.config.CompilerConfig$CompilerVersion { *; }
+-keep class com.rvdjv.pawnmc.data.config.CompilerConfig$DebugLevel { *; }
 
 # Preserve line numbers for crash reports
 -keepattributes SourceFile,LineNumberTable

@@ -504,7 +504,7 @@ class CompilerConfig private constructor(context: Context) {
 
         /**
          * Cheap duplicate check used by every include path entry point (Settings manual
-         * add/edit, folder picker, and [PawnCompiler] auto-discovery).
+         * add/edit, folder picker, and [Compiler] auto-discovery).
          *
          * Returns true when [candidate] resolves to a folder already present in
          * [existing] (same path, different case, or same canonical location through a

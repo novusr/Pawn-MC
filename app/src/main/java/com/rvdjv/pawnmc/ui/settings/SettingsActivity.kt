@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.data.compiler.Explanations
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.ui.theme.PawnMCTheme
@@ -27,6 +28,9 @@ class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CompilerConfig.getInstance(applicationContext)
+        // Settings can be the launcher entry point, so make sure the explanation
+        // table is loaded here too and not only from MainActivity.
+        Explanations.load(applicationContext)
         UpdateManager(applicationContext).ensureVersionFileWritten()
         enableEdgeToEdge()
         setContent {

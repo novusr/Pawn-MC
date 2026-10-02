@@ -1,6 +1,7 @@
 package com.rvdjv.pawnmc.ui.main
 
-import com.rvdjv.pawnmc.data.compiler.PawnCompiler
+import com.rvdjv.pawnmc.data.compiler.CaseConversion
+import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import java.io.File
 
@@ -94,7 +95,7 @@ object AppSelfTestCatalog {
             val payload = CompilerConfig.STR_V31011.toByteArray(Charsets.UTF_16LE)
             compilerFile.writeBytes(payload)
 
-            val match = PawnCompiler.detectNearbyCompiler(sourceFile.absolutePath)
+            val match = Compiler.detectNearbyCompiler(sourceFile.absolutePath)
             val passed = match != null && match.version == CompilerConfig.CompilerVersion.V31011
             val message = if (passed) {
                 "Nearby compiler detection matched a supported Pawn compiler version."
@@ -164,11 +165,11 @@ object AppSelfTestCatalog {
                     includeFile.writeText("#include \"Aaaa.inc\"\nstock Warung() { return 1; }\n")
                     incFile.writeText("stock Ekosistem() { return 2; }\n")
 
-                    val backupDir = PawnCompiler.backupDirFor(gamemodes)
-                    val firstRun = PawnCompiler.convertFolderToLowerCase(sourceFile.absolutePath)
+                    val backupDir = Compiler.backupDirFor(gamemodes)
+                    val firstRun = Compiler.convertFolderToLowerCase(sourceFile.absolutePath)
                     check(
                         "first run converts",
-                        firstRun.status == PawnCompiler.ConversionStatus.CONVERTED,
+                        firstRun.status == CaseConversion.ConversionStatus.CONVERTED,
                         "status=${firstRun.status}"
                     )
                     check(
@@ -203,14 +204,14 @@ object AppSelfTestCatalog {
                     )
 
                     // Second browse with the backup folder present: the instructions must be skipped.
-                    val needsConversion = PawnCompiler.needsConversion(gamemodes, backupDir.absolutePath)
-                    val secondRun = PawnCompiler.convertFolderToLowerCase(
+                    val needsConversion = Compiler.needsConversion(gamemodes, backupDir.absolutePath)
+                    val secondRun = Compiler.convertFolderToLowerCase(
                         selectedFilePath = firstRun.sourceFile,
                         rememberedBackupDir = backupDir.absolutePath
                     )
                     check(
                         "second run skipped",
-                        !needsConversion && secondRun.status == PawnCompiler.ConversionStatus.ALREADY_CONVERTED,
+                        !needsConversion && secondRun.status == CaseConversion.ConversionStatus.ALREADY_CONVERTED,
                         "needs=$needsConversion status=${secondRun.status}"
                     )
 
@@ -218,7 +219,7 @@ object AppSelfTestCatalog {
                     backupDir.deleteRecursively()
                     check(
                         "runs again without backup",
-                        PawnCompiler.needsConversion(gamemodes, backupDir.absolutePath),
+                        Compiler.needsConversion(gamemodes, backupDir.absolutePath),
                         "conversion should be required again"
                     )
 

@@ -8,7 +8,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 
-class PawnCompilerSuccessTest {
+class SuccessTest {
     @Test
     fun `testing success build`() {
         val output = """
@@ -16,8 +16,8 @@ class PawnCompilerSuccessTest {
             source.pawn(10) : warning 217: "foo" is assigned a value but never used
         """.trimIndent()
 
-        assertEquals(0, PawnCompiler.extractErrorCount(output))
-        assertFalse(PawnCompiler.shouldRetryWithFallback(output, 5))
+        assertEquals(0, Compiler.extractErrorCount(output))
+        assertFalse(Compiler.shouldRetryWithFallback(output, 5))
     }
 
     @Test
@@ -30,7 +30,7 @@ class PawnCompilerSuccessTest {
     fun `forced compiler keeps the configured version instead of detection or fallback`() {
         assertEquals(
             CompilerConfig.CompilerVersion.V31011,
-            PawnCompiler.compilerVersionForMode(
+            Compiler.compilerVersionForMode(
                 forcedMode = true,
                 selectedVersion = CompilerConfig.CompilerVersion.V31011,
                 detectedVersion = CompilerConfig.CompilerVersion.V3107
@@ -38,7 +38,7 @@ class PawnCompilerSuccessTest {
         )
         assertEquals(
             CompilerConfig.CompilerVersion.V3107,
-            PawnCompiler.compilerVersionForMode(
+            Compiler.compilerVersionForMode(
                 forcedMode = false,
                 selectedVersion = CompilerConfig.CompilerVersion.V31011,
                 detectedVersion = null
@@ -75,7 +75,7 @@ class PawnCompilerSuccessTest {
         sourceFile.writeText("main() {}\n")
 
         try {
-            val detected = PawnCompiler.detectNearbyCompiler(sourceFile.absolutePath)
+            val detected = Compiler.detectNearbyCompiler(sourceFile.absolutePath)
             val expectedMd5 = java.security.MessageDigest.getInstance("MD5")
                 .digest(compilerBytes)
                 .joinToString("") { "%02x".format(it) }
@@ -107,7 +107,7 @@ class PawnCompilerSuccessTest {
     fun `adds sscanf compatibility define as final compiler argument for pawn 3 10 7`() {
         val options = listOf("-d=3", "-i=/project/include", "-i=/project/gamemodes", "-v=0")
 
-        val options3107 = PawnCompiler.compilerOptionsForVersion(
+        val options3107 = Compiler.compilerOptionsForVersion(
             options,
             CompilerConfig.CompilerVersion.V3107
         )
@@ -116,13 +116,13 @@ class PawnCompilerSuccessTest {
             options3107
         )
 
-        val options31011 = PawnCompiler.compilerOptionsForVersion(
+        val options31011 = Compiler.compilerOptionsForVersion(
             options,
             CompilerConfig.CompilerVersion.V31011
         )
         assertEquals(options, options31011)
 
-        val compilerArguments = PawnCompiler.compilerArgumentsForVersion(
+        val compilerArguments = Compiler.compilerArgumentsForVersion(
             "/project/main.pwn",
             options,
             CompilerConfig.CompilerVersion.V3107
@@ -144,11 +144,11 @@ class PawnCompilerSuccessTest {
 
         assertEquals(
             listOf("-i=/project/include", "-v=0", "SSCANF_NO_NICE_FEATURES=1"),
-            PawnCompiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V3107)
+            Compiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V3107)
         )
         assertEquals(
             listOf("-i=/project/include", "SSCANF_NO_NICE_FEATURES=1", "-v=0"),
-            PawnCompiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V31011)
+            Compiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V31011)
         )
     }
 
@@ -164,15 +164,15 @@ class PawnCompilerSuccessTest {
         sourceFile.writeText("#include \"Aaa.inc\"\n#include \"Other.Inc\"\n")
 
         try {
-            val result = PawnCompiler.convertFolderToLowerCase(sourceFile.absolutePath)
+            val result = Compiler.convertFolderToLowerCase(sourceFile.absolutePath)
             val workingDir = result.workingDir
 
-            assertEquals(PawnCompiler.ConversionStatus.CONVERTED, result.status)
+            assertEquals(CaseConversion.ConversionStatus.CONVERTED, result.status)
             assertTrue(File(workingDir, "Main.PWN").exists())
             assertTrue(File(workingDir, "aaa.inc").exists())
             assertTrue(File(workingDir, "Main.PWN").readText().contains("#include \"aaa.inc\""))
             assertTrue(File(workingDir, "Main.PWN").readText().contains("#include \"other.inc\""))
-            assertTrue(PawnCompiler.backupDirFor(workingDir).isDirectory)
+            assertTrue(Compiler.backupDirFor(workingDir).isDirectory)
         } finally {
             root.deleteRecursively()
         }
@@ -191,24 +191,24 @@ class PawnCompilerSuccessTest {
         try {
             assertEquals(
                 listOf(CompilerConfig.normalPath(File(root, "pawno/include").absolutePath)),
-                PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
+                Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
             )
 
             File(root, "pawno/include").delete()
             assertEquals(
                 listOf(CompilerConfig.normalPath(File(root, "qawno/include").absolutePath)),
-                PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
+                Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
             )
 
             File(root, "qawno/include").delete()
             assertEquals(
                 listOf(CompilerConfig.normalPath(File(root, "includes").absolutePath)),
-                PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
+                Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
             )
 
             File(root, "includes").delete()
             val fallback = CompilerConfig.normalPath(File(root, "include").absolutePath)
-            assertEquals(listOf(fallback), PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath))
+            assertEquals(listOf(fallback), Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath))
             assertFalse(File(fallback).exists())
         } finally {
             root.deleteRecursively()
@@ -225,7 +225,7 @@ class PawnCompilerSuccessTest {
 
         try {
             val known = listOf(CompilerConfig.normalPath(File(root, "qawno/include").absolutePath))
-            val paths = PawnCompiler.discoverRelevantIncludePaths(sourceFile.absolutePath, known)
+            val paths = Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath, known)
 
             assertTrue(paths.isEmpty())
         } finally {

@@ -493,12 +493,12 @@ extern "C" {
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     (void)vm;
     (void)reserved;
-    LOGI("PawnCompiler native library loaded");
+    LOGI("Compiler native library loaded");
     return JNI_VERSION_1_6;
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_compile(JNIEnv* env, jobject thiz,
+Java_com_rvdjv_pawnmc_data_compiler_Runner_compile(JNIEnv* env, jobject thiz,
                                                           jobjectArray args) {
     (void)thiz;
 
@@ -718,14 +718,14 @@ Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_compile(JNIEnv* env, jobject th
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_getOutput(JNIEnv* env, jobject thiz) {
+Java_com_rvdjv_pawnmc_data_compiler_Runner_getOutput(JNIEnv* env, jobject thiz) {
     (void)thiz;
     std::lock_guard<std::mutex> lock(n_output_mutex);
     return env->NewStringUTF(n_output_buffer.str().c_str());
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_data_compiler_PawnCompiler_getErrors(JNIEnv* env, jobject thiz) {
+Java_com_rvdjv_pawnmc_data_compiler_Runner_getErrors(JNIEnv* env, jobject thiz) {
     (void)thiz;
     std::lock_guard<std::mutex> lock(n_output_mutex);
     return env->NewStringUTF(n_error_buffer.str().c_str());
