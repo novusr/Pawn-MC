@@ -49,7 +49,44 @@ class PawnCompilerSuccessTest {
     @Test
     fun `matches detected compiler metadata by product version and size`() {
         assertTrue(CompilerConfig.CompilerVersion.V31011.matchesDetected(CompilerConfig.STR_V31011, 19_000L, null))
+        assertTrue(CompilerConfig.CompilerVersion.V31011.matchesDetected(null, null, "9044b9ef65658c79851b4e2e249e5c75"))
         assertTrue(CompilerConfig.CompilerVersion.V3107.matchesDetected(null, 28_000L, "a48e04d28e8cb77e0361ecb4dced2501"))
+        assertEquals(
+            CompilerConfig.CompilerVersion.V31011,
+            CompilerConfig.CompilerVersion.V3107.nearestSupportedEquivalent(null, 18_944L, null)
+        )
+        assertEquals(
+            CompilerConfig.CompilerVersion.V3107,
+            CompilerConfig.CompilerVersion.V31011.nearestSupportedEquivalent(null, 28_672L, null)
+        )
+    }
+
+    @Test
+    fun `detects product version and hashes a nearby pawncc exe`() {
+        val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-compiler-detection-${System.nanoTime()}")
+        val pawnoDir = File(root, "pawno")
+        val compilerFile = File(pawnoDir, "pawncc.exe")
+        val sourceFile = File(root, "gamemode.pwn")
+        val compilerBytes = ByteArray(18_944)
+        CompilerConfig.STR_V31011.toByteArray(Charsets.UTF_16LE).copyInto(compilerBytes)
+
+        pawnoDir.mkdirs()
+        compilerFile.writeBytes(compilerBytes)
+        sourceFile.writeText("main() {}\n")
+
+        try {
+            val detected = PawnCompiler.detectNearbyCompiler(sourceFile.absolutePath)
+            val expectedMd5 = java.security.MessageDigest.getInstance("MD5")
+                .digest(compilerBytes)
+                .joinToString("") { "%02x".format(it) }
+
+            assertEquals(CompilerConfig.CompilerVersion.V31011, detected?.version)
+            assertEquals(CompilerConfig.STR_V31011, detected?.productVersion)
+            assertEquals(compilerFile.absolutePath, detected?.filePath)
+            assertEquals(expectedMd5, detected?.md5)
+        } finally {
+            root.deleteRecursively()
+        }
     }
 
     @Test

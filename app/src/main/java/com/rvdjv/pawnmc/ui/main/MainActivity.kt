@@ -83,7 +83,7 @@ class MainActivity : ComponentActivity() {
                             isEditorOpen = true
                         },
                         onSettingsClick = {
-                            startActivity(Intent(this, SettingsActivity::class.java))
+                            startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
                         },
                         initialUri = intent.data
                     )

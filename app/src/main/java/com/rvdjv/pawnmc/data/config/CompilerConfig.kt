@@ -290,8 +290,8 @@ class CompilerConfig private constructor(context: Context) {
 
             if (sizeBytes != null) {
                 val size = sizeBytes.toDouble()
-                if (size <= 20_000L) return V3107
-                if (size >= 28_000L) return V31011
+                if (size <= 20_000L) return V31011
+                if (size >= 28_000L) return V3107
             }
 
             return null
