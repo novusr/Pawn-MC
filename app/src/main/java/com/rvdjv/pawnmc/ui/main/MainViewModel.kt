@@ -295,8 +295,8 @@ class MainViewModel(
         isCompiling = true
         outputText = ""
         viewModelScope.launch {
-            val options = config.buildOptions()
             val selectedVersion = config.n_compiler_version
+            val options = config.buildOptions(selectedVersion)
 
             val backupRefreshed = withContext(Dispatchers.IO) {
                 !config.n_ignore_case || Compiler.refreshBackupForCompile(

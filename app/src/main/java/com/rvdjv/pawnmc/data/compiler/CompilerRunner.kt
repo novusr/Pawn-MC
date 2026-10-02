@@ -1,9 +1,9 @@
-package com.rvdjv.pawnmc.data.compiler
+exppackage com.rvdjv.pawnmc.data.compiler
 
 import android.util.Log
-import com.rvdjv.pawnmc.data.compiler.Names.AUTO_FALLBACK_ERROR_THRESHOLD
-import com.rvdjv.pawnmc.data.compiler.Names.SSCANF_NO_NICE_FEATURES_FLAG
-import com.rvdjv.pawnmc.data.compiler.Names.STR_PAWNCC_BINARY_NAME
+import com.rvdjv.pawnmc.data.compiler.CompilerConstants.AUTO_FALLBACK_ERROR_THRESHOLD
+import com.rvdjv.pawnmc.data.compiler.CompilerConstants.SSCANF_NO_NICE_FEATURES_FLAG
+import com.rvdjv.pawnmc.data.compiler.CompilerConstants.STR_PAWNCC_BINARY_NAME
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import java.io.File
 
@@ -11,7 +11,7 @@ import java.io.File
  * Execution layer: loads the native library, builds the argument list, runs the
  * compiler and keeps the one-shot fallback to the other compiler version.
  */
-object Runner {
+object CompilerRunner {
 
     private var INITIALIZED_VER: CompilerConfig.CompilerVersion? = null
     private var IS_INITIALIZED = false
@@ -52,7 +52,7 @@ object Runner {
     private fun ensureInitialized(version: CompilerConfig.CompilerVersion): Boolean {
         if (IS_INITIALIZED) {
             if (INITIALIZED_VER != version) {
-                Log.w("Compiler",
+                Log.w("PawnCompiler",
                     "Requested ${version.label} but ${INITIALIZED_VER?.label} is already loaded. " +
                     "App restart required for a full version swap.")
             }
@@ -63,10 +63,10 @@ object Runner {
             System.loadLibrary(version.libraryName)
             INITIALIZED_VER = version
             IS_INITIALIZED = true
-            Log.i("Compiler", "Loaded: ${version.libraryName}")
+            Log.i("PawnCompiler", "Loaded: ${version.libraryName}")
             true
         } catch (e: UnsatisfiedLinkError) {
-            Log.e("Compiler", "Failed to load: ${version.libraryName}", e)
+            Log.e("PawnCompiler", "Failed to load: ${version.libraryName}", e)
             false
         }
     }
@@ -135,7 +135,7 @@ object Runner {
 
             if (n_config != null) {
                 Log.w(
-                    "Compiler",
+                    "PawnCompiler",
                     "fail! found: ${extractErrorCount(n_result.second)}" +
                     " errors in ${version.label}. " +
                     "trying ${n_fallbackVersion.label} for the next retry."
@@ -160,15 +160,7 @@ object Runner {
     ): List<String> {
         val normalized = mutableListOf<String>()
         var hasSscanfFlag = false
-        val versionSafeOptions = if (
-            version == CompilerConfig.CompilerVersion.V3107 &&
-            options.any { CompilerConfig.isO2OptimizationFlag(it) }
-        ) {
-            options.filterNot { CompilerConfig.isOptimizationFlag(it) } + "-O=1"
-        } else {
-            options
-        }
-        versionSafeOptions.forEach { option ->
+        options.forEach { option ->
             val canonicalOption = if (option == "-D$SSCANF_NO_NICE_FEATURES_FLAG") {
                 SSCANF_NO_NICE_FEATURES_FLAG
             } else option
@@ -211,7 +203,7 @@ object Runner {
             return -1 to "Failed to load compiler library"
         }
 
-        Log.d("Compiler", "Compiling with: ${INITIALIZED_VER?.label}")
+        Log.d("PawnCompiler", "Compiling with: ${INITIALIZED_VER?.label}")
 
         val n_logFile = runCatching {
             File(sourceFile).let { n_file ->
@@ -221,7 +213,7 @@ object Runner {
         }.getOrNull()
 
         n_logFile?.takeIf { it.exists() }?.runCatching { delete() }
-            ?.onFailure { Log.e("Compiler",
+            ?.onFailure { Log.e("PawnCompiler",
             "Failed to delete old log file: ${n_logFile.absolutePath}", it) }
 
         val n_args = compilerArgumentsForVersion(sourceFile, options, version)
@@ -229,7 +221,7 @@ object Runner {
         val n_parsedResult = parseCompilerOutput(n_output)
 
         n_logFile?.runCatching { writeText(n_parsedResult.second) }
-            ?.onFailure { Log.e("Compiler",
+            ?.onFailure { Log.e("PawnCompiler",
             "Failed to write log file: ${n_logFile.absolutePath}", it) }
 
         return n_parsedResult

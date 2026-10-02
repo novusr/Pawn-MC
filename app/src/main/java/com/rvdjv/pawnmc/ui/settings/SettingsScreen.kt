@@ -527,16 +527,20 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 16.dp)
                     ) {
-                        val entries = CompilerConfig.OptimizationLevel.entries
+                        val entries = CompilerConfig.optimizationLevelsFor(viewModel.n_compiler_version)
+                        val selectedOptimizationLevel = CompilerConfig.effectiveOptimizationLevel(
+                            viewModel.n_compiler_version,
+                            viewModel.n_optimization_level
+                        )
                         val maxIndex = (entries.size - 1).coerceAtLeast(1)
-                        val currentIndex = entries.indexOf(viewModel.n_optimization_level).coerceIn(0, maxIndex)
+                        val currentIndex = entries.indexOf(selectedOptimizationLevel).coerceIn(0, maxIndex)
 
                         Text(
                             text = localizer.get("settings.option.optimization", appLanguage, "Optimization Level") + ": " +
                                 localizer.get(
-                                    "settings.option.optimization.level.${viewModel.n_optimization_level.value}.label",
+                                    "settings.option.optimization.level.${selectedOptimizationLevel.value}.label",
                                     appLanguage,
-                                    viewModel.n_optimization_level.label
+                                    selectedOptimizationLevel.label
                                 ),
                             style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
@@ -547,13 +551,24 @@ fun SettingsScreen(
                                 appLanguage,
                                 "Determines how aggressively the compiler simplifies the bytecode."
                             ) + " " + localizer.get(
-                                "settings.option.optimization.level.${viewModel.n_optimization_level.value}.desc",
+                                "settings.option.optimization.level.${selectedOptimizationLevel.value}.desc",
                                 appLanguage,
-                                viewModel.n_optimization_level.description
+                                selectedOptimizationLevel.description
                             ),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        if (viewModel.n_compiler_version == CompilerConfig.CompilerVersion.V3107) {
+                            Text(
+                                text = localizer.get(
+                                    "settings.option.optimization.v3107.notice",
+                                    appLanguage,
+                                    "Aggressive optimization (-O2) is available with Pawn 3.10.11."
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.tertiary
+                            )
+                        }
 
                         Spacer(modifier = Modifier.height(8.dp))
 

@@ -95,12 +95,56 @@ class SuccessTest {
             optimizationLevel = CompilerConfig.OptimizationLevel.O2,
             mandatorySemicolons = true,
             mandatoryParentheses = true,
-            customFlags = "-v=0"
+            customFlags = "-v=0",
+            compilerVersion = CompilerConfig.CompilerVersion.V31011
         )
 
         assertTrue(options.contains("-O=2"))
         assertTrue(options.contains("-v=0"))
         assertTrue(options.contains("-;+"))
+    }
+
+    @Test
+    fun `optimization level two is restricted to pawn 3 10 11`() {
+        val version3107Options = CompilerConfig.buildOptionsFor(
+            optimizationLevel = CompilerConfig.OptimizationLevel.O2,
+            customFlags = "-O2 -O=2 -v=0",
+            compilerVersion = CompilerConfig.CompilerVersion.V3107
+        )
+        assertTrue(version3107Options.contains("-O=1"))
+        assertFalse(version3107Options.any { CompilerConfig.isO2OptimizationFlag(it) })
+        assertEquals(
+            CompilerConfig.OptimizationLevel.O1,
+            CompilerConfig.effectiveOptimizationLevel(
+                CompilerConfig.CompilerVersion.V3107,
+                CompilerConfig.OptimizationLevel.O2
+            )
+        )
+        assertEquals(
+            listOf(
+                CompilerConfig.OptimizationLevel.O0,
+                CompilerConfig.OptimizationLevel.O1
+            ),
+            CompilerConfig.optimizationLevelsFor(CompilerConfig.CompilerVersion.V3107)
+        )
+        assertEquals(
+            CompilerConfig.OptimizationLevel.O2,
+            CompilerConfig.effectiveOptimizationLevel(
+                CompilerConfig.CompilerVersion.V31011,
+                CompilerConfig.OptimizationLevel.O2
+            )
+        )
+    }
+
+    @Test
+    fun `fallback argument normalization removes o2 for pawn 3 10 7`() {
+        val options = Compiler.compilerOptionsForVersion(
+            listOf("-O=2", "-O2", "-d=3"),
+            CompilerConfig.CompilerVersion.V3107
+        )
+
+        assertFalse(options.any { CompilerConfig.isO2OptimizationFlag(it) })
+        assertTrue(options.contains("-O=1"))
     }
 
     @Test

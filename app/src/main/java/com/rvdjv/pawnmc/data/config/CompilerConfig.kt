@@ -186,14 +186,15 @@ class CompilerConfig private constructor(context: Context) {
     /**
      * Build compiler options list from current configuration.
      */
-    fun buildOptions(): List<String> {
+    fun buildOptions(compilerVersion: CompilerVersion = n_compiler_version): List<String> {
         return buildOptionsFor(
             debugLevel = n_debug_level,
             optimizationLevel = n_optimization_level,
             mandatorySemicolons = n_mandatory_semicolons,
             mandatoryParentheses = n_mandatory_parentheses,
             includePaths = n_include_paths,
-            customFlags = n_custom_flags
+            customFlags = n_custom_flags,
+            compilerVersion = compilerVersion
         )
     }
 
@@ -359,11 +360,13 @@ class CompilerConfig private constructor(context: Context) {
             mandatorySemicolons: Boolean = true,
             mandatoryParentheses: Boolean = true,
             includePaths: List<String> = emptyList(),
-            customFlags: String = ""
+            customFlags: String = "",
+            compilerVersion: CompilerVersion = CompilerVersion.V3107
         ): List<String> {
             val options = mutableListOf<String>()
             options.add("-d=${debugLevel.value}")
-            options.add("-O=${optimizationLevel.value}")
+            val effectiveOptimization = effectiveOptimizationLevel(compilerVersion, optimizationLevel)
+            options.add("-O=${effectiveOptimization.value}")
 
             if (mandatorySemicolons) { options.add("-;+") }
             if (mandatoryParentheses) { options.add("-(+") }
@@ -374,9 +377,41 @@ class CompilerConfig private constructor(context: Context) {
             }
 
             val custom = customFlags.trim()
-            if (custom.isNotEmpty()) { options.addAll(custom.split("\\s+".toRegex()).filter { it.isNotBlank() }) }
+            if (custom.isNotEmpty()) {
+                val customOptions = custom.split("\\s+".toRegex()).filter { it.isNotBlank() }
+                options.addAll(
+                    if (compilerVersion == CompilerVersion.V3107) {
+                        customOptions.filterNot { isO2OptimizationFlag(it) }
+                    } else {
+                        customOptions
+                    }
+                )
+            }
             return options
         }
+
+        fun optimizationLevelsFor(compilerVersion: CompilerVersion): List<OptimizationLevel> =
+            if (compilerVersion == CompilerVersion.V3107) {
+                OptimizationLevel.entries.filterNot { it == OptimizationLevel.O2 }
+            } else {
+                OptimizationLevel.entries
+            }
+
+        fun effectiveOptimizationLevel(
+            compilerVersion: CompilerVersion,
+            requestedLevel: OptimizationLevel
+        ): OptimizationLevel =
+            if (compilerVersion == CompilerVersion.V3107 && requestedLevel == OptimizationLevel.O2) {
+                OptimizationLevel.O1
+            } else {
+                requestedLevel
+            }
+
+        internal fun isO2OptimizationFlag(option: String): Boolean =
+            option.equals("-O2", ignoreCase = true) || option.equals("-O=2", ignoreCase = true)
+
+        internal fun isOptimizationFlag(option: String): Boolean =
+            option.matches(Regex("(?i)^-O=?\\d+$"))
 
         fun dedupePaths(paths: Iterable<String>): List<String> {
             val unique = linkedSetOf<String>()

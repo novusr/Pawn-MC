@@ -105,6 +105,8 @@
 0x01:settings.option.optimization.level.2.label.en:0x02:Aggressive (-O2)
 0x01:settings.option.optimization.level.2.desc.id:0x02:Optimisasi maksimum untuk kecepatan dan ukuran.
 0x01:settings.option.optimization.level.2.desc.en:0x02:Maximum optimization for speed and size.
+0x01:settings.option.optimization.v3107.notice.id:0x02:Optimisasi agresif (-O2) hanya tersedia dengan Pawn 3.10.11.
+0x01:settings.option.optimization.v3107.notice.en:0x02:Aggressive optimization (-O2) is available with Pawn 3.10.11.
 0x01:settings.option.ignorecase.id:0x02:Abaikan Huruf Besar/Kecil
 0x01:settings.option.ignorecase.en:0x02:Filesystem
 0x01:settings.option.ignorecase.desc.id:0x02:Membuat salinan cadangan folder (\"nama-folder.backup\"), lalu mengubah semua nama file selain file yang dipilih dan seluruh referensi #include menjadi huruf kecil. Dijalankan sekali per folder, karena melewati Android yang peka huruf besar/kecil.
