@@ -39,6 +39,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Description
@@ -272,6 +273,11 @@ fun MainScreen(
 
     var showSelfTestDialog by remember { mutableStateOf(false) }
     var selfTestResults by remember { mutableStateOf<List<AppSelfTestResult>>(emptyList()) }
+    var showCompilingNotice by remember { mutableStateOf(false) }
+
+    LaunchedEffect(viewModel.isCompiling) {
+        if (viewModel.isCompiling) showCompilingNotice = true
+    }
 
     fun showCompilingBlockedToast() {
         Toast.makeText(
@@ -525,11 +531,13 @@ fun MainScreen(
                 appLanguage = appLanguage
             )
 
-            if (viewModel.isCompiling) {
+            if (showCompilingNotice) {
                 Spacer(modifier = Modifier.height(SpaceS))
                 CompilingBlockedNotice(
                     localizer = localizer,
-                    appLanguage = appLanguage
+                    appLanguage = appLanguage,
+                    isCompiling = viewModel.isCompiling,
+                    onDismiss = { showCompilingNotice = false }
                 )
             }
 
@@ -920,7 +928,9 @@ private fun HeaderActionsToggleButton(
 @Composable
 private fun CompilingBlockedNotice(
     localizer: AppLocalization,
-    appLanguage: CompilerConfig.AppLanguage
+    appLanguage: CompilerConfig.AppLanguage,
+    isCompiling: Boolean,
+    onDismiss: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -938,13 +948,30 @@ private fun CompilingBlockedNotice(
         Spacer(modifier = Modifier.width(SpaceXS + 2.dp))
         Text(
             text = localizer.get(
-                "main.busy.notice",
+                if (isCompiling) "main.busy.notice" else "main.busy.completed",
                 appLanguage,
-                "Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete."
+                if (isCompiling) {
+                    "Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete."
+                } else {
+                    "Compilation finished. Settings, Xed Editor, and Self-Test are available again."
+                }
             ),
             color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f)
         )
+        IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+            Icon(
+                imageVector = Icons.Filled.Close,
+                contentDescription = localizer.get(
+                    "main.busy.dismiss",
+                    appLanguage,
+                    "Dismiss compilation notice"
+                ),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp)
+            )
+        }
     }
 }
 @Composable

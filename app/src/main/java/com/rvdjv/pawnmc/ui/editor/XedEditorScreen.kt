@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Typeface
 import android.net.Uri
+import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -50,6 +51,7 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PanTool
+import androidx.compose.material.icons.filled.PrecisionManufacturing
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Visibility
@@ -127,6 +129,8 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
 import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -171,6 +175,9 @@ fun XedEditorScreen(
     var hashResult by remember { mutableStateOf<String?>(null) }
     var hashError by remember { mutableStateOf<String?>(null) }
     var hashTextMode by remember { mutableStateOf(false) }
+    var hashFileUri by remember { mutableStateOf<Uri?>(null) }
+    var hashFileName by remember { mutableStateOf<String?>(null) }
+    var isHashing by remember { mutableStateOf(false) }
     var noticeMessage by remember { mutableStateOf<String?>(null) }
     var isQuickSymbolBarVisible by remember { mutableStateOf(true) }
 
@@ -339,6 +346,24 @@ fun XedEditorScreen(
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    val hashFilePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val uri = result.data?.data ?: return@rememberLauncherForActivityResult
+        hashFileUri = uri
+        hashFileName = context.contentResolver.query(
+            uri,
+            arrayOf(OpenableColumns.DISPLAY_NAME),
+            null,
+            null,
+            null
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) cursor.getString(0) else null
+        } ?: uri.lastPathSegment
+        hashResult = null
+        hashError = null
     }
 
     if (showNewFileDialog) {
@@ -577,10 +602,23 @@ fun XedEditorScreen(
                             minLines = 2
                         )
                     } else {
-                        Text(
-                            text = activeDocument?.file?.name ?: viewModel.fileName.ifBlank { "No file open" },
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = hashFileName
+                                    ?: activeDocument?.file?.name
+                                    ?: viewModel.fileName.ifBlank { "No file open" },
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(
+                                onClick = { hashFilePickerLauncher.launch(buildOpenFileIntent()) }
+                            ) {
+                                Icon(Icons.Filled.FolderOpen, contentDescription = null)
+                                Text("Choose file")
+                            }
+                        }
                     }
                     hashError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                     hashResult?.let { result ->
@@ -599,28 +637,50 @@ fun XedEditorScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = {
-                    if (!hashTextMode && editorRef == null) {
+                TextButton(
+                    enabled = !isHashing,
+                    onClick = {
+                    val selectedUri = if (hashTextMode) null else hashFileUri
+                    val editorBytes = when {
+                        hashTextMode -> hashText.toByteArray(Charsets.UTF_8)
+                        selectedUri == null -> editorRef?.text?.toString()?.toByteArray(Charsets.UTF_8)
+                        else -> null
+                    }
+                    if (!hashTextMode && selectedUri == null && editorBytes == null) {
                         hashError = "Open a file first"
                     } else {
-                        val bytes = if (hashTextMode) {
-                            hashText.toByteArray(Charsets.UTF_8)
-                        } else {
-                            editorRef?.text?.toString().orEmpty().toByteArray(Charsets.UTF_8)
-                        }
-                        runCatching {
-                            java.security.MessageDigest.getInstance(hashAlgorithm)
-                                .digest(bytes)
-                                .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
-                        }.onSuccess {
-                            hashResult = it
-                            hashError = null
-                        }.onFailure {
-                            hashError = it.localizedMessage ?: "Unable to generate hash"
+                        isHashing = true
+                        scope.launch {
+                            runCatching {
+                                val digest = java.security.MessageDigest.getInstance(hashAlgorithm)
+                                if (selectedUri != null) {
+                                    withContext(Dispatchers.IO) {
+                                        val input = context.contentResolver.openInputStream(selectedUri)
+                                            ?: error("Unable to open selected file")
+                                        input.use { stream ->
+                                            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                                            while (true) {
+                                                val count = stream.read(buffer)
+                                                if (count < 0) break
+                                                digest.update(buffer, 0, count)
+                                            }
+                                        }
+                                        digest.digest()
+                                    }
+                                } else {
+                                    digest.digest(editorBytes ?: error("Open a file first"))
+                                }.joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+                            }.onSuccess {
+                                hashResult = it
+                                hashError = null
+                            }.onFailure {
+                                hashError = it.localizedMessage ?: "Unable to generate hash"
+                            }
+                            isHashing = false
                         }
                     }
                 }) {
-                    Text("Generate")
+                    Text(if (isHashing) "Generating..." else "Generate")
                 }
             },
             dismissButton = {
@@ -789,10 +849,15 @@ fun XedEditorScreen(
                             )
                             DropdownMenuItem(
                                 text = { Text("Hash Generator") },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.PrecisionManufacturing, contentDescription = null)
+                                },
                                 onClick = {
                                     showMenu = false
                                     hashResult = null
                                     hashError = null
+                                    hashFileUri = null
+                                    hashFileName = null
                                     showHashDialog = true
                                 }
                             )

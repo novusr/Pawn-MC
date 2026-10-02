@@ -181,6 +181,10 @@
 0x01:settings.updates.latest.en:0x02:You're on the latest version
 0x01:main.busy.notice.id:0x02:Pengaturan, Xed Editor, dan Self-Test sementara tidak tersedia sampai proses kompilasi selesai.
 0x01:main.busy.notice.en:0x02:Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete.
+0x01:main.busy.completed.id:0x02:Kompilasi selesai. Pengaturan, Xed Editor, dan Self-Test sudah tersedia kembali.
+0x01:main.busy.completed.en:0x02:Compilation finished. Settings, Xed Editor, and Self-Test are available again.
+0x01:main.busy.dismiss.id:0x02:Tutup pemberitahuan kompilasi
+0x01:main.busy.dismiss.en:0x02:Dismiss compilation notice
 0x01:main.busy.toast.id:0x02:Pengaturan, editor, dan self-test tidak tersedia saat proses kompilasi berjalan
 0x01:main.busy.toast.en:0x02:Settings, editor, and self-test are unavailable while compiling
 0x01:settings.include.paths.notice.title.id:0x02:Catatan

@@ -12,6 +12,7 @@ import com.rvdjv.pawnmc.data.config.AppLocalization
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -68,6 +69,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -103,6 +110,48 @@ private val THANK_YOU_EN_LINES = listOf(
     "We hope PawnMC will continue to be useful, grow further, and become a valuable tool for your Pawn development workflow.",
     "Official Community: https://discord.gg/2YqkmDvTch"
 )
+
+private val URL_REGEX = Regex("https?://\\S+")
+
+@Composable
+private fun ThankYouLine(line: String) {
+    val uriHandler = LocalUriHandler.current
+    val linkColor = MaterialTheme.colorScheme.primary
+
+    val annotated = remember(line, linkColor) {
+        buildAnnotatedString {
+            var last = 0
+            URL_REGEX.findAll(line).forEach { m ->
+                append(line.substring(last, m.range.first))
+                withStyle(
+                    SpanStyle(
+                        color = linkColor,
+                        textDecoration = TextDecoration.Underline
+                    )
+                ) {
+                    pushStringAnnotation(TAG_URL, m.value)
+                    append(m.value)
+                    pop()
+                }
+                last = m.range.last + 1
+            }
+            if (last < line.length) append(line.substring(last))
+        }
+    }
+
+    ClickableText(
+        text = annotated,
+        style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
+        modifier = Modifier.fillMaxWidth(),
+        onClick = { offset ->
+            annotated.getStringAnnotations(TAG_URL, offset, offset).firstOrNull()?.let { anno ->
+                runCatching { uriHandler.openUri(anno.item) }
+            }
+        }
+    )
+}
+
+private const val TAG_URL = "url"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -929,11 +978,7 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     THANK_YOU_ID_LINES.forEach { line ->
-                        Text(
-                            text = line,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        ThankYouLine(line = line)
                         Spacer(modifier = Modifier.height(6.dp))
                     }
                     HorizontalDivider(
@@ -948,11 +993,7 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     THANK_YOU_EN_LINES.forEach { line ->
-                        Text(
-                            text = line,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        ThankYouLine(line = line)
                         Spacer(modifier = Modifier.height(6.dp))
                     }
                 }

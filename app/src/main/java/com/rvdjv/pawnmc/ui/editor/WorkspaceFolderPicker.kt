@@ -31,6 +31,19 @@ fun buildOpenFolderIntent(): Intent {
     return intent
 }
 
+/** Intent that opens the system file picker, starting in the Downloads folder. */
+fun buildOpenFileIntent(): Intent {
+    val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+        addCategory(Intent.CATEGORY_OPENABLE)
+        type = "*/*"
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        downloadsInitialUri()?.let { intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, it) }
+    }
+    return intent
+}
+
 /** Downloads folder of the primary shared storage, where the picker starts. */
 private fun downloadsInitialUri(): Uri? = Uri.parse(
     "content://com.android.externalstorage.documents/document/primary%3ADownload"
