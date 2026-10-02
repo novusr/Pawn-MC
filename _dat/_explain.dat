@@ -7,19 +7,36 @@
 0x01:013.en:0x02:No entry point was found. Check that you compiled the intended source file and that it contains the required entry function. For a quick standalone test, add `main() {}`; game modes may require a specific public callback instead.
 0x01:013.id:0x02:Titik masuk program tidak ditemukan. Pastikan Anda memilih file sumber yang benar dan file tersebut memiliki fungsi titik masuk yang diperlukan. Untuk uji cepat pada program mandiri, tambahkan `main() {}`; mode permainan mungkin memerlukan callback public tertentu.
 0x01:015:0x02:Default case must be the last case. Place default after all explicit case blocks.
+0x01:015.id:0x02:Case default harus menjadi case terakhir. Letakkan default setelah semua blok case yang memiliki nilai eksplisit.
 0x01:016:0x02:Multiple defaults are not allowed in the same switch statement.
+0x01:016.id:0x02:Beberapa case default tidak diperbolehkan dalam satu pernyataan switch.
 0x01:017:0x02:Undefined symbol. Check that the identifier is declared, included, and spelled exactly the same as the definition.
+0x01:017.id:0x02:Simbol tidak dikenal. Pastikan identifier sudah dideklarasikan atau disertakan, serta penulisannya sama persis dengan deklarasinya.
 0x01:021:0x02:Symbol already defined. A duplicate declaration exists in the same scope.
+0x01:021.id:0x02:Simbol sudah didefinisikan. Ada deklarasi ganda dalam cakupan yang sama.
 0x01:024:0x02:Break or continue is out of context. It must be inside a loop or switch block.
+0x01:024.id:0x02:Break atau continue digunakan di luar konteks yang sesuai. Keduanya harus berada di dalam blok perulangan atau switch.
 0x01:040:0x02:Duplicate case label. Each case value must be unique within the switch statement.
+0x01:040.id:0x02:Label case ganda. Setiap nilai case dalam pernyataan switch harus unik.
 0x01:061:0x02:Recursive include detected. Break the include cycle with guards or forward declarations.
+0x01:061.id:0x02:Include rekursif terdeteksi. Putus siklus include dengan include guard atau deklarasi forward.
 0x01:100:0x02:Cannot read from file. The compiler could not open the given source or include file. Check the path, permissions, and file existence.
+0x01:100.id:0x02:File tidak dapat dibaca. Compiler tidak dapat membuka file sumber atau include. Periksa lokasi, izin akses, dan keberadaan file.
 0x01:101:0x02:Cannot write to file. The output target could not be created or written to. Check permissions and the destination folder.
+0x01:101.id:0x02:File tidak dapat ditulis. Compiler tidak dapat membuat atau menulis file keluaran. Periksa izin akses dan folder tujuan.
 0x01:200:0x02:Identifier is truncated to the implementation limit. Use shorter, unique names to avoid collisions.
+0x01:200.id:0x02:Identifier terpotong karena batas implementasi. Gunakan nama yang lebih pendek dan unik agar tidak bertabrakan.
 0x01:203:0x02:A symbol is declared but never used. It may be dead code or an unfinished implementation.
+0x01:203.id:0x02:Simbol dideklarasikan tetapi tidak pernah digunakan. Kode tersebut mungkin sudah tidak diperlukan atau implementasinya belum selesai.
 0x01:204:0x02:A value is assigned but never read. This often indicates redundant initialization or a logic bug.
+0x01:204.id:0x02:Nilai telah diisi tetapi tidak pernah dibaca. Ini sering menandakan inisialisasi yang tidak perlu atau kesalahan logika.
 0x01:205:0x02:Redundant code: constant expression is zero. This condition is always false and makes the block unreachable.
+0x01:205.id:0x02:Kode tidak diperlukan: ekspresi konstanta bernilai nol. Kondisi ini selalu salah sehingga bloknya tidak dapat dijalankan.
 0x01:211:0x02:Possibly unintended assignment. An assignment appears in a condition; use == for comparison instead.
+0x01:211.id:0x02:Kemungkinan terjadi assignment yang tidak disengaja. Assignment ditemukan dalam kondisi; gunakan == jika yang dimaksud adalah perbandingan.
 0x01:214:0x02:Literal array or string passed to a non-const parameter. Declare the parameter as const or copy the data to a mutable buffer.
+0x01:214.id:0x02:Array atau string literal diberikan ke parameter non-const. Deklarasikan parameter sebagai const atau salin nilainya ke buffer yang dapat diubah.
 0x01:217:0x02:A value is assigned but never used. Remove the unused assignment or use the variable before it goes out of scope.
+0x01:217.id:0x02:Nilai telah diisi tetapi tidak pernah digunakan. Hapus assignment tersebut atau gunakan variabel sebelum cakupannya berakhir.
 0x01:217:0x02:Loose indentation. This warning is cosmetic but can hide structural mistakes and make code harder to read.
+0x01:217.id:0x02:Indentasi tidak konsisten. Peringatan ini hanya terkait tampilan, tetapi dapat menyamarkan kesalahan struktur dan menyulitkan pembacaan kode.
