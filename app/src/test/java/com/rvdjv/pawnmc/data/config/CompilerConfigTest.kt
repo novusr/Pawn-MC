@@ -78,6 +78,23 @@ class CompilerConfigTest {
     }
 
     @Test
+    fun pruneMissingIncludePaths_keepsMissingFallbackIncludeDirectory() {
+        val root = temporaryFolder.newFolder("pawnmc_prune_fallback")
+        val fallback = File(root, "include")
+        val missingOther = File(root, "gamemodes")
+
+        val survivors = CompilerConfig.pruneMissingIncludePaths(
+            listOf(
+                CompilerConfig.normalPath(fallback.absolutePath),
+                CompilerConfig.normalPath(missingOther.absolutePath)
+            )
+        )
+
+        assertFalse(fallback.exists())
+        assertEquals(listOf(CompilerConfig.normalPath(fallback.absolutePath)), survivors)
+    }
+
+    @Test
     fun pruneMissingIncludePaths_removesDuplicatesInStoredList() {
         val root = temporaryFolder.newFolder("pawnmc_prune_dupe")
         val alive = File(root, "include").apply { mkdirs() }

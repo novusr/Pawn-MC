@@ -4,6 +4,10 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.view.KeyEvent
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputConnection
+import android.view.inputmethod.InputConnectionWrapper
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorRenderer
 
@@ -15,6 +19,53 @@ internal const val LINE_COLUMN_SEPARATOR = "-"
  * line-number area. See [ColumnLineNumberRenderer].
  */
 class XedCodeEditor(context: Context) : CodeEditor(context) {
+
+    override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
+        val connection = super.onCreateInputConnection(outAttrs) ?: return null
+        return object : InputConnectionWrapper(connection, true) {
+            override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean {
+                if (beforeLength == 1 && afterLength == 0 && deleteIndentLevel()) return true
+                return super.deleteSurroundingText(beforeLength, afterLength)
+            }
+
+            override fun deleteSurroundingTextInCodePoints(
+                beforeLength: Int,
+                afterLength: Int
+            ): Boolean {
+                if (beforeLength == 1 && afterLength == 0 && deleteIndentLevel()) return true
+                return super.deleteSurroundingTextInCodePoints(beforeLength, afterLength)
+            }
+        }
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_DEL && deleteIndentLevel()) return true
+        return super.onKeyDown(keyCode, event)
+    }
+
+    private fun deleteIndentLevel(): Boolean {
+        val currentCursor = cursor
+        if (currentCursor.leftLine != currentCursor.rightLine ||
+            currentCursor.leftColumn != currentCursor.rightColumn
+        ) return false
+
+        val line = currentCursor.leftLine
+        val column = currentCursor.leftColumn
+        if (column == 0) return false
+
+        val lineText = text.getLine(line).toString()
+        if (column > lineText.length) return false
+        val prefix = lineText.substring(0, column)
+        if (prefix.any { it != ' ' && it != '\t' }) return false
+
+        val startColumn = if (prefix.last() == '\t') {
+            column - 1
+        } else {
+            (column - INDENT_SIZE).coerceAtLeast(0)
+        }
+        text.delete(line, startColumn, line, column)
+        return true
+    }
 
     /**
      * Extra room reserved (in px) on the right of the line-number area for the
@@ -78,6 +129,10 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
             digits++
         }
         return digits
+    }
+
+    private companion object {
+        const val INDENT_SIZE = 4
     }
 }
 

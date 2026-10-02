@@ -575,10 +575,8 @@ class CompilerConfig private constructor(context: Context) {
         }
 
         /**
-         * Drops every stored include path whose folder no longer exists on disk.
-         *
-         * Runs once when the app starts so the list shown in Settings can never point at
-         * deleted SD-card folders, and so the compiler is not handed dead `-i` values.
+         * Drops stored include paths whose folder no longer exists, except the stable
+         * root `include` fallback which must remain available even before it is created.
          * Also re-dedupes, guarding against a list that went stale through a manual edit
          * of the stored value.
          *
@@ -593,7 +591,10 @@ class CompilerConfig private constructor(context: Context) {
 
                 val file = java.io.File(normalized)
                 val usable = runCatching { file.isDirectory }.getOrDefault(false)
-                if (!usable) continue
+                val isFallbackInclude = file.name.equals("include", ignoreCase = true) &&
+                    file.parentFile?.name?.equals("pawno", ignoreCase = true) != true &&
+                    file.parentFile?.name?.equals("qawno", ignoreCase = true) != true
+                if (!usable && !isFallbackInclude) continue
 
                 if (containsIncludePath(survivors, normalized)) continue
 
