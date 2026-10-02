@@ -317,7 +317,7 @@ class MainViewModel(
             val duration = System.currentTimeMillis() - startTime
 
             val compilerOutput = if (config.n_explain_output) {
-                Compiler.explainCompilerOutput(result.second, appDirectory)
+                Compiler.explainCompilerOutput(result.second, appDirectory, config.n_app_language)
             } else {
                 result.second
             }

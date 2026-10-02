@@ -2,7 +2,10 @@
 # Local explanations of Pawn compiler messages (warning / error / fatal + numeric code).
 # Loaded at runtime by CompilerExplanationStore; never duplicated in Kotlin sources.
 # Format mirrors _extract.dat: 0x01:<code>:0x02:<explanation>
+# Language-specific keys use <code>.<language>, such as 013.id.
 # When a code appears twice the last entry wins, matching the previous map behaviour.
+0x01:013.en:0x02:No entry point was found. Check that you compiled the intended source file and that it contains the required entry function. For a quick standalone test, add `main() {}`; game modes may require a specific public callback instead.
+0x01:013.id:0x02:Titik masuk program tidak ditemukan. Pastikan Anda memilih file sumber yang benar dan file tersebut memiliki fungsi titik masuk yang diperlukan. Untuk uji cepat pada program mandiri, tambahkan `main() {}`; mode permainan mungkin memerlukan callback public tertentu.
 0x01:015:0x02:Default case must be the last case. Place default after all explicit case blocks.
 0x01:016:0x02:Multiple defaults are not allowed in the same switch statement.
 0x01:017:0x02:Undefined symbol. Check that the identifier is declared, included, and spelled exactly the same as the definition.

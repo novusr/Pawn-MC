@@ -35,10 +35,24 @@ object Explanations {
     }
 
     /** Explanation for [code], or `null` when the code is not documented locally. */
-    fun explanationFor(code: String): String? = cached?.get(code.trim())
+    fun explanationFor(
+        code: String,
+        language: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+    ): String? = resolve(cached.orEmpty(), code, language)
 
     /** Returns every known explanation, mainly for diagnostics and tests. */
     fun allExplanations(): Map<String, String> = cached.orEmpty()
+
+    internal fun resolve(
+        explanations: Map<String, String>,
+        code: String,
+        language: CompilerConfig.AppLanguage
+    ): String? {
+        val normalizedCode = code.trim()
+        return explanations["$normalizedCode.${language.value}"]
+            ?: explanations[normalizedCode]
+            ?: explanations["$normalizedCode.${CompilerConfig.AppLanguage.EN.value}"]
+    }
 
     private fun readFromFileSystem(): String? =
         sequenceOf(File(FALLBACK_PATH), File(ASSET_PATH))

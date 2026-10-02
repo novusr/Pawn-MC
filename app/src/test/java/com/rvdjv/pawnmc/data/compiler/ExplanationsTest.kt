@@ -3,6 +3,7 @@ package com.rvdjv.pawnmc.data.compiler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 
 /**
  * Regression tests for the `_dat/_explain.dat` parser.
@@ -45,6 +46,26 @@ class ExplanationsTest {
         val parsed = Explanations.parse("021=Symbol already defined.")
 
         assertEquals("Symbol already defined.", parsed["021"])
+    }
+
+    @Test
+    fun resolvesLocalizedExplanationWithEnglishFallback() {
+        val parsed = Explanations.parse(
+            """
+            0x01:013.en:0x02:No entry point was found.
+            0x01:013.id:0x02:Titik masuk program tidak ditemukan.
+            0x01:017:0x02:Undefined symbol.
+            """.trimIndent()
+        )
+
+        assertEquals(
+            "Titik masuk program tidak ditemukan.",
+            Explanations.resolve(parsed, "013", CompilerConfig.AppLanguage.ID)
+        )
+        assertEquals(
+            "Undefined symbol.",
+            Explanations.resolve(parsed, "017", CompilerConfig.AppLanguage.ID)
+        )
     }
 
     @Test

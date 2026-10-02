@@ -17,7 +17,11 @@ object Explainer {
         "No local explanation found for this compiler message. " +
         "Check the Pawn error reference for details."
 
-    fun explainCompilerOutput(rawText: String, cacheDir: File): String {
+    fun explainCompilerOutput(
+        rawText: String,
+        cacheDir: File,
+        language: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+    ): String {
         if (rawText.isBlank()) return rawText
 
         val outputCache = File(cacheDir, "compiler_output_cache_${System.nanoTime()}.log")
@@ -30,8 +34,8 @@ object Explainer {
                 val match = COMPILER_MESSAGE_REGEX.find(line)
                 if (match != null) {
                     val code = match.groupValues[2].trimStart('0')
-                    val explanation = Explanations.explanationFor(code)
-                        ?: Explanations.explanationFor(match.groupValues[2])
+                    val explanation = Explanations.explanationFor(code, language)
+                        ?: Explanations.explanationFor(match.groupValues[2], language)
                         ?: NO_LOCAL_EXPLANATION
                     builder.appendLine("    [explain] $explanation")
                 }

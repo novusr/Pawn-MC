@@ -164,8 +164,11 @@ object Compiler {
         version: CompilerConfig.CompilerVersion
     ): List<String> = Runner.compilerArgumentsForVersion(sourceFile, options, version)
 
-    fun explainCompilerOutput(rawText: String, cacheDir: File): String =
-        Explainer.explainCompilerOutput(rawText, cacheDir)
+    fun explainCompilerOutput(
+        rawText: String,
+        cacheDir: File,
+        language: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+    ): String = Explainer.explainCompilerOutput(rawText, cacheDir, language)
 
     /**
      * Returns the last captured compiler output from the native layer.
