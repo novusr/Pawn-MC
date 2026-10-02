@@ -1,6 +1,7 @@
 package com.rvdjv.pawnmc.ui.editor
 
 import com.rvdjv.pawnmc.data.pawn.PawnRegistry
+import com.rvdjv.pawnmc.ui.editor.pawn.PawnSourceSymbols
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -149,6 +150,28 @@ class XedEditorTest {
 
         val updateCompletions = PawnRegistry.getCompletions("OnPlayerUp")
         assertTrue(updateCompletions.any { it.name == "OnPlayerUpdate" })
+    }
+
+    @Test
+    fun `finds local function declarations and ignores comments strings and registry conflicts`() {
+        val source = """
+            // stock commentedOut() {}
+            /* public alsoCommentedOut() {} */
+            stock abc(value, const name[]) {
+                return 1;
+            }
+            public Float:OnReady(playerid) {}
+            forward OnLoaded();
+            native localNative(value);
+            stock strcat(custom[]) { return 1; }
+            new sample[] = "stock insideString() {";
+        """.trimIndent()
+
+        val functions = PawnSourceSymbols.functions(source)
+
+        assertEquals(listOf("abc", "OnReady", "OnLoaded", "localNative"), functions.map { it.name })
+        assertTrue(functions.first().description.contains("stock abc(value, const name[])"))
+        assertFalse(functions.any { it.name == "strcat" })
     }
 
     @Test

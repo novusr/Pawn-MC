@@ -2356,7 +2356,7 @@ private val DarkPalette = SyntaxPalette(
     literal = 0xFFFFB07C.toInt(),
     function = 0xFF8AB4F8.toInt(),
     operator = 0xFFE6A8FF.toInt(),
-    annotation = 0xFFC9B6FF.toInt(),
+    annotation = 0xFF7EE081.toInt(),
     comment = 0xFF9AA7BD.toInt(),
     lineNumber = 0xFF7E8CA3.toInt()
 )
@@ -2373,7 +2373,7 @@ private val LightPalette = SyntaxPalette(
     literal = 0xFFB42318.toInt(),
     function = 0xFF1D4ED8.toInt(),
     operator = 0xFF6B21C8.toInt(),
-    annotation = 0xFF4C1D95.toInt(),
+    annotation = 0xFF16753B.toInt(),
     comment = 0xFF44546B.toInt(),
     lineNumber = 0xFF64748B.toInt()
 )

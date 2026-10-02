@@ -411,6 +411,7 @@ object PawnRegistry {
     fun isDirective(word: String): Boolean = word in directiveSet || word.removePrefix("#") in directiveSet
     fun isType(word: String): Boolean = word in typeSet || word.removeSuffix(":") in typeSet
     fun isConstant(word: String): Boolean = word in constantSet
+    fun containsSymbol(name: String): Boolean = allItems.any { it.name.equals(name, ignoreCase = true) }
 
     /**
      * True for every known callable symbol, including the natives and forwards

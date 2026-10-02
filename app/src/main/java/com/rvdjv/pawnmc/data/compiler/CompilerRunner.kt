@@ -1,9 +1,9 @@
-exppackage com.rvdjv.pawnmc.data.compiler
+package com.rvdjv.pawnmc.data.compiler
 
 import android.util.Log
-import com.rvdjv.pawnmc.data.compiler.CompilerConstants.AUTO_FALLBACK_ERROR_THRESHOLD
-import com.rvdjv.pawnmc.data.compiler.CompilerConstants.SSCANF_NO_NICE_FEATURES_FLAG
-import com.rvdjv.pawnmc.data.compiler.CompilerConstants.STR_PAWNCC_BINARY_NAME
+import com.rvdjv.pawnmc.data.compiler.Names.AUTO_FALLBACK_ERROR_THRESHOLD
+import com.rvdjv.pawnmc.data.compiler.Names.SSCANF_NO_NICE_FEATURES_FLAG
+import com.rvdjv.pawnmc.data.compiler.Names.STR_PAWNCC_BINARY_NAME
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import java.io.File
 

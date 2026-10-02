@@ -1,6 +1,7 @@
 package com.rvdjv.pawnmc.ui.editor.pawn
 
 import android.os.Bundle
+import com.rvdjv.pawnmc.data.pawn._item
 import com.rvdjv.pawnmc.data.pawn.PawnItemKind
 import com.rvdjv.pawnmc.data.pawn.PawnRegistry
 import io.github.rosemoe.sora.lang.EmptyLanguage
@@ -38,10 +39,12 @@ class PawnLanguage : Language {
         publisher: CompletionPublisher,
         extraArguments: Bundle
     ) {
+        val source = (0 until content.getLineCount()).joinToString("\n") { content.getLine(it) }
+        val localFunctions = PawnSourceSymbols.functions(source)
         val operatorPrefix = operatorPrefixAt(content, position)
         if (operatorPrefix != null) {
             publisher.checkCancelled()
-            publish(publisher, operatorPrefix)
+            publish(publisher, operatorPrefix, localFunctions)
             return
         }
 
@@ -51,7 +54,7 @@ class PawnLanguage : Language {
 
         if (prefix.isBlank()) return
         publisher.checkCancelled()
-        publish(publisher, prefix)
+        publish(publisher, prefix, localFunctions)
     }
 
     /**
@@ -75,8 +78,14 @@ class PawnLanguage : Language {
         return if (PawnRegistry.isOperator(candidate)) candidate else null
     }
 
-    private fun publish(publisher: CompletionPublisher, prefix: String) {
-        val matchingItems = PawnRegistry.getCompletions(prefix)
+    private fun publish(
+        publisher: CompletionPublisher,
+        prefix: String,
+        localFunctions: List<PawnLocalFunction>
+    ) {
+        val matchingItems = PawnRegistry.getCompletions(prefix) + localFunctions
+            .filter { it.name.startsWith(prefix, ignoreCase = true) }
+            .map { _item(it.name, it.description, PawnItemKind.FUNCTION) }
         for (item in matchingItems) {
             publisher.checkCancelled()
             val itemKind = when (item.kind) {

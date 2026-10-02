@@ -39,8 +39,9 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
         val styles = Styles()
         val builder = MappedSpans.Builder()
         val blockStack = ArrayDeque<Pair<Int, Int>>()
+        val localFunctions = PawnSourceSymbols.functions(text).mapTo(hashSetOf()) { it.name }
 
-        PawnLexer(text, delegate) { span ->
+        PawnLexer(text, delegate, localFunctions) { span ->
             when (span.kind) {
                 SpanKind.BraceOpen -> {
                     blockStack += span.line to span.column
@@ -81,6 +82,7 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
         Type(TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME)),
         Constant(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
         Function(TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME)),
+        LocalFunction(TextStyle.makeStyle(EditorColorScheme.ANNOTATION)),
         Identifier(TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)),
         Directive(TextStyle.makeStyle(EditorColorScheme.ANNOTATION)),
         String(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
@@ -108,6 +110,7 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
         // arguments have to be supplied on the reference itself, and the inner
         // argument is fixed by `SimpleAnalyzeManager<Any?>`.
         private val delegate: SimpleAnalyzeManager<Any?>.Delegate<Any?>,
+        private val localFunctions: Set<String>,
         private val emit: (Span) -> Unit,
     ) {
         private var index = 0
@@ -295,6 +298,7 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
             PawnRegistry.isKeyword(word) -> SpanKind.Keyword
             PawnRegistry.isType(word) -> SpanKind.Type
             PawnRegistry.isConstant(word) -> SpanKind.Constant
+            word in localFunctions -> SpanKind.LocalFunction
             PawnRegistry.isFunction(word) -> SpanKind.Function
             isCallSite(lookFrom) -> SpanKind.Function
             else -> SpanKind.Identifier
