@@ -1,7 +1,7 @@
 package com.rvdjv.pawnmc.data.compiler
 
 import com.rvdjv.pawnmc.data.config.CompilerConfig
-import com.rvdjv.pawnmc.ui.main.MainViewModel
+import com.rvdjv.pawnmc.`interface`.main.MainViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

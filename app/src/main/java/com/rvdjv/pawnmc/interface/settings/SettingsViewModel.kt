@@ -1,0 +1,235 @@
+package com.rvdjv.pawnmc.`interface`.settings
+
+import android.content.Context
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.rvdjv.pawnmc.data.compiler.Compiler
+import com.rvdjv.pawnmc.data.config.CompilerConfig
+
+class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
+
+    var n_compiler_version by mutableStateOf(config.n_compiler_version)
+        private set
+
+    var n_debug_level by mutableStateOf(config.n_debug_level)
+        private set
+
+    var n_optimization_level by mutableStateOf(config.n_optimization_level)
+        private set
+
+    var n_ignore_case by mutableStateOf(config.n_ignore_case)
+        private set
+
+    var n_explain_output by mutableStateOf(config.n_explain_output)
+        private set
+
+    var n_mandatory_semicolons by mutableStateOf(config.n_mandatory_semicolons)
+        private set
+
+    var n_mandatory_parentheses by mutableStateOf(config.n_mandatory_parentheses)
+        private set
+
+    var n_custom_flags by mutableStateOf(config.n_custom_flags)
+        private set
+
+    var n_forced_compiler_mode by mutableStateOf(config.n_forced_compiler_mode)
+        private set
+
+    var n_forced_include_path_auto by mutableStateOf(config.n_forced_include_path_auto)
+        private set
+
+    var n_app_theme by mutableStateOf(config.n_app_theme)
+        private set
+
+    var n_app_language by mutableStateOf(config.n_app_language)
+        private set
+
+    var n_editor_background_color by mutableStateOf(config.n_editor_background_color)
+        private set
+
+    val n_include_paths = mutableStateListOf<String>().apply {
+        addAll(CompilerConfig.pruneMissingIncludePaths(config.n_include_paths))
+    }
+
+    /**
+     * Set when the user typed an include path that ended with a script extension
+     * (`.pawn`, `.pwn`, `.p`, `.inc`). The extension was removed automatically, and the
+     * stored text is kept here so Settings can show the plain centred notice.
+     */
+    var includePathExtensionNotice by mutableStateOf<String?>(null)
+        private set
+
+    fun clearIncludePathExtensionNotice() {
+        includePathExtensionNotice = null
+    }
+
+    private fun noteStrippedExtension(original: String, normalized: String) {
+        if (original.trim() == normalized.trim()) {
+            includePathExtensionNotice = null
+            return
+        }
+        includePathExtensionNotice = normalized
+    }
+
+    fun updateCompilerVersion(version: CompilerConfig.CompilerVersion) {
+        n_compiler_version = version
+        config.n_compiler_version = version
+    }
+
+    fun updateDebugLevel(level: CompilerConfig.DebugLevel) {
+        n_debug_level = level
+        config.n_debug_level = level
+    }
+
+    fun updateOptimizationLevel(level: CompilerConfig.OptimizationLevel) {
+        n_optimization_level = level
+        config.n_optimization_level = level
+    }
+
+    fun updateIgnoreCase(enabled: Boolean) {
+        n_ignore_case = enabled
+        config.n_ignore_case = enabled
+    }
+
+    fun updateExplainOutput(enabled: Boolean) {
+        n_explain_output = enabled
+        config.n_explain_output = enabled
+    }
+
+    fun updateMandatorySemicolons(enabled: Boolean) {
+        n_mandatory_semicolons = enabled
+        config.n_mandatory_semicolons = enabled
+    }
+
+    fun updateMandatoryParentheses(enabled: Boolean) {
+        n_mandatory_parentheses = enabled
+        config.n_mandatory_parentheses = enabled
+    }
+
+    fun updateCustomFlags(flags: String) {
+        n_custom_flags = flags
+        config.n_custom_flags = flags
+    }
+
+    fun updateForcedCompilerMode(enabled: Boolean) {
+        n_forced_compiler_mode = enabled
+        config.n_forced_compiler_mode = enabled
+    }
+
+    fun updateForcedIncludePathAuto(enabled: Boolean) {
+        n_forced_include_path_auto = enabled
+        config.n_forced_include_path_auto = enabled
+    }
+
+    fun updateAppTheme(theme: CompilerConfig.AppTheme) {
+        n_app_theme = theme
+        config.n_app_theme = theme
+    }
+
+    fun updateAppLanguage(language: CompilerConfig.AppLanguage) {
+        config.n_app_language = language
+        n_app_language = language
+    }
+
+    /**
+     * Stores a custom Xed editor background colour, or clears it (pass `null`)
+     * so the editor falls back to the app theme surface ramp.
+     */
+    fun updateEditorBackgroundColor(hex: String?) {
+        val normalized = config.normalizeEditorBackgroundColor(hex)
+        if (hex != null && normalized == null) return
+        n_editor_background_color = normalized
+        config.n_editor_background_color = normalized
+    }
+    /**
+     * Adds an include path selected from the system folder picker.
+     *
+     * Returns false when the folder is already registered or is not a real directory, so
+     * the caller can skip the write entirely instead of re-filtering the whole list.
+     */
+    fun addIncludePath(path: String): Boolean {
+        val normalizedPath = CompilerConfig.normalizeIncludePathInput(path)
+        if (normalizedPath.isBlank()) return false
+
+        if (CompilerConfig.containsIncludePath(n_include_paths, normalizedPath)) return false
+
+        val file = java.io.File(normalizedPath)
+        if (!runCatching { file.isDirectory }.getOrDefault(false)) return false
+
+        n_include_paths.add(normalizedPath)
+        config.n_include_paths = n_include_paths.toList()
+        noteStrippedExtension(path, normalizedPath)
+        return true
+    }
+
+    /**
+     * Replaces the entry at [index]. Blank input removes the entry, and a value that
+     * collides with another row (or is not a real folder) is rejected.
+     */
+    fun updateIncludePathAt(index: Int, newPath: String): Boolean {
+        if (index !in n_include_paths.indices) return false
+        val normalized = CompilerConfig.normalizeIncludePathInput(newPath)
+        if (normalized.isBlank()) {
+            removeIncludePathAt(index)
+            return false
+        }
+
+        val others = n_include_paths.filterIndexed { i, _ -> i != index }
+        if (CompilerConfig.containsIncludePath(others, normalized)) return false
+
+        val file = java.io.File(normalized)
+        if (!runCatching { file.isDirectory }.getOrDefault(false)) return false
+
+        n_include_paths[index] = normalized
+        config.n_include_paths = n_include_paths.toList()
+        noteStrippedExtension(newPath, normalized)
+        return true
+    }
+
+    fun removeIncludePathAt(index: Int) {
+        if (index in n_include_paths.indices) {
+            n_include_paths.removeAt(index)
+            config.n_include_paths = n_include_paths.toList()
+        }
+    }
+
+    /**
+     * Drops stored paths whose folder disappeared (removed SD card, deleted folder) and
+     * mirrors the result into the visible list.
+     *
+     * @return how many entries were removed
+     */
+    fun pruneMissingIncludePaths(): Int {
+        val before = n_include_paths.toList()
+        val survivors = CompilerConfig.pruneMissingIncludePaths(before)
+        if (survivors.size == before.size) return 0
+
+        n_include_paths.clear()
+        n_include_paths.addAll(survivors)
+        config.n_include_paths = survivors
+        return before.size - survivors.size
+    }
+
+    fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean {
+        return Compiler.isRestartRequired(requestedVersion)
+    }
+
+    fun getLoadedVersion(): CompilerConfig.CompilerVersion? {
+        return Compiler.getLoadedVersion()
+    }
+}
+
+class SettingsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context)
+            return SettingsViewModel(config) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}

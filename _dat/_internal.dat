@@ -1,0 +1,795 @@
+0x01:item|DIRECTIVE|#include:0x02:Include an external source or header file
+0x01:item|DIRECTIVE|#define:0x02:Define a preprocessor macro or constant
+0x01:item|DIRECTIVE|#undef:0x02:Undefine an existing macro
+0x01:item|DIRECTIVE|#if:0x02:Conditional compilation check
+0x01:item|DIRECTIVE|#elseif:0x02:Alternative conditional compilation check
+0x01:item|DIRECTIVE|#else:0x02:Default conditional compilation branch
+0x01:item|DIRECTIVE|#endif:0x02:End of conditional compilation block
+0x01:item|DIRECTIVE|#endinput:0x02:Stops reading the current file
+0x01:item|DIRECTIVE|#tryinclude:0x02:Include a file only if it has not been included yet
+0x01:item|DIRECTIVE|#endscript:0x02:Stop reading the current file without an error
+0x01:item|DIRECTIVE|#file:0x02:Set the file name reported by diagnostics
+0x01:item|DIRECTIVE|#warning:0x02:Enable, disable or raise a compiler warning
+0x01:item|DIRECTIVE|#assert:0x02:Compile-time assertion check
+0x01:item|DIRECTIVE|#error:0x02:Emit user-defined compilation error
+0x01:item|DIRECTIVE|#pragma:0x02:Compiler control directive
+0x01:item|DIRECTIVE|#emit:0x02:Emit raw AMX bytecode opcode
+0x01:item|DIRECTIVE|#line:0x02:Set line number and optional filename
+0x01:item|DIRECTIVE|tabsize:0x02:Pragma to set tab indent width
+0x01:item|DIRECTIVE|dynamic:0x02:Pragma to set AMX stack/heap memory size
+0x01:item|DIRECTIVE|ctrlchar:0x02:Pragma to change escape character
+0x01:item|DIRECTIVE|deprecated:0x02:Pragma to mark symbol as deprecated
+0x01:item|DIRECTIVE|semicolon:0x02:Pragma to enforce or relax semicolons
+0x01:item|KEYWORD|stock:0x02:Declares variable or function compiled only if used
+0x01:item|KEYWORD|public:0x02:Declares an exported function callable by AMX
+0x01:item|KEYWORD|forward:0x02:Forward declaration for public functions
+0x01:item|KEYWORD|hook:0x02:Hooks a callback or function so multiple handlers can be chained
+0x01:item|KEYWORD|native:0x02:Declares a C/C++ native plugin or host function
+0x01:item|KEYWORD|new:0x02:Declares a local or global variable
+0x01:item|KEYWORD|static:0x02:Declares static scoped variable or private function
+0x01:item|KEYWORD|const:0x02:Declares an immutable constant variable
+0x01:item|KEYWORD|enum:0x02:Defines an enumerated constant structure
+0x01:item|KEYWORD|state:0x02:State machine transition declaration
+0x01:item|KEYWORD|goto:0x02:Jump unconditionally to label
+0x01:item|KEYWORD|break:0x02:Break out of loop or switch block
+0x01:item|KEYWORD|continue:0x02:Skip to next iteration of loop
+0x01:item|KEYWORD|return:0x02:Return value and exit function
+0x01:item|KEYWORD|if:0x02:Conditional branch statement
+0x01:item|KEYWORD|else:0x02:Alternative conditional branch
+0x01:item|KEYWORD|while:0x02:Loop while condition is true
+0x01:item|KEYWORD|do:0x02:Loop executing at least once
+0x01:item|KEYWORD|for:0x02:Standard for-loop statement
+0x01:item|KEYWORD|switch:0x02:Multi-branch switch statement
+0x01:item|KEYWORD|case:0x02:Case label in switch statement
+0x01:item|KEYWORD|default:0x02:Default branch in switch statement
+0x01:item|KEYWORD|sizeof:0x02:Returns size in cells or array dimensions
+0x01:item|KEYWORD|tagof:0x02:Returns tag integer representing data type
+0x01:item|KEYWORD|assert:0x02:Runtime assertion condition
+0x01:item|KEYWORD|sleep:0x02:Pawn abstract machine sleep call
+0x01:item|KEYWORD|char:0x02:Sub-cell character packing indexer
+0x01:item|KEYWORD|defined:0x02:Preprocessor check for a defined macro
+0x01:item|KEYWORD|emit:0x02:Inline AMX bytecode opcode
+0x01:item|KEYWORD|__emit:0x02:Argument list marker for a raw EMIT
+0x01:item|KEYWORD|exit:0x02:Terminate the script immediately
+0x01:item|KEYWORD|operator:0x02:User defined operator overload declaration
+0x01:item|KEYWORD|*begin:0x02:Start of a multi-line block comment
+0x01:item|KEYWORD|*end:0x02:End of a multi-line block comment
+0x01:item|KEYWORD|*then:0x02:Block comment continuation of the previous line
+0x01:item|OPERATOR|>>>=:0x02:Unsigned right shift assignment
+0x01:item|OPERATOR|<<=:0x02:Left shift assignment
+0x01:item|OPERATOR|>>=:0x02:Arithmetic right shift assignment
+0x01:item|OPERATOR|*=:0x02:Multiplication assignment
+0x01:item|OPERATOR|/=:0x02:Division assignment
+0x01:item|OPERATOR|%=:0x02:Modulo assignment
+0x01:item|OPERATOR|+=:0x02:Addition assignment
+0x01:item|OPERATOR|-=:0x02:Subtraction assignment
+0x01:item|OPERATOR|&=:0x02:Bitwise AND assignment
+0x01:item|OPERATOR|^=:0x02:Bitwise XOR assignment
+0x01:item|OPERATOR||=:0x02:Bitwise OR assignment
+0x01:item|OPERATOR|>>>:0x02:Unsigned right shift
+0x01:item|OPERATOR|>>:0x02:Arithmetic right shift
+0x01:item|OPERATOR|<<:0x02:Left shift
+0x01:item|OPERATOR|||:0x02:Logical OR
+0x01:item|OPERATOR|&&:0x02:Logical AND
+0x01:item|OPERATOR|==:0x02:Equality comparison
+0x01:item|OPERATOR|!=:0x02:Inequality comparison
+0x01:item|OPERATOR|<=:0x02:Less than or equal comparison
+0x01:item|OPERATOR|>=:0x02:Greater than or equal comparison
+0x01:item|OPERATOR|++:0x02:Pre/post increment
+0x01:item|OPERATOR|--:0x02:Pre/post decrement
+0x01:item|OPERATOR|...:0x02:Ellipsis / argument spread
+0x01:item|OPERATOR|..:0x02:Argument range marker
+0x01:item|OPERATOR|:::0x02:Tag scope separator
+0x01:item|OPERATOR|+:0x02:Addition
+0x01:item|OPERATOR|-:0x02:Subtraction or negation
+0x01:item|OPERATOR|*:0x02:Multiplication
+0x01:item|OPERATOR|/:0x02:Division
+0x01:item|OPERATOR|%:0x02:Modulo
+0x01:item|OPERATOR|=:0x02:Assignment
+0x01:item|OPERATOR|!:0x02:Logical NOT
+0x01:item|OPERATOR|<:0x02:Less than comparison
+0x01:item|OPERATOR|>:0x02:Greater than comparison
+0x01:item|OPERATOR|&:0x02:Bitwise AND
+0x01:item|OPERATOR||:0x02:Bitwise OR
+0x01:item|OPERATOR|^:0x02:Bitwise XOR
+0x01:item|OPERATOR|~:0x02:Bitwise NOT
+0x01:item|OPERATOR|?:0x02:Ternary conditional marker
+0x01:item|OPERATOR|::0x02:Ternary else marker
+0x01:item|OPERATOR|.:0x02:Array member or argument range separator
+0x01:item|OPERATOR|,:0x02:Argument separator
+0x01:item|OPERATOR|;:0x02:Statement terminator
+0x01:item|TYPE|Float::0x02:Floating point single-precision tag
+0x01:item|TYPE|bool::0x02:Boolean true/false data tag
+0x01:item|TYPE|File::0x02:File handle tag for file operations
+0x01:item|TYPE|Text::0x02:Global text draw identifier tag
+0x01:item|TYPE|PlayerText::0x02:Player-specific text draw identifier tag
+0x01:item|TYPE|Menu::0x02:Game menu identifier tag
+0x01:item|TYPE|Text3D::0x02:Global 3D text label identifier tag
+0x01:item|TYPE|PlayerText3D::0x02:Player-specific 3D text label tag
+0x01:item|CONSTANT|true:0x02:Boolean true literal (1)
+0x01:item|CONSTANT|false:0x02:Boolean false literal (0)
+0x01:item|CONSTANT|cellmax:0x02:Maximum signed 32-bit cell value
+0x01:item|CONSTANT|cellmin:0x02:Minimum signed 32-bit cell value
+0x01:item|CONSTANT|INVALID_PLAYER_ID:0x02:Special ID representing no valid player (65535)
+0x01:item|CONSTANT|INVALID_VEHICLE_ID:0x02:Special ID representing no valid vehicle (65535)
+0x01:item|CONSTANT|INVALID_OBJECT_ID:0x02:Special ID representing no valid object (65535)
+0x01:item|CONSTANT|INVALID_TIMER_ID:0x02:Invalid timer handle representation
+0x01:item|CONSTANT|MAX_PLAYERS:0x02:Maximum player slots on server (default 50/500/1000)
+0x01:item|CONSTANT|MAX_VEHICLES:0x02:Maximum vehicle slots on server (default 2000)
+0x01:item|CONSTANT|MAX_OBJECTS:0x02:Maximum global object limit (1000)
+0x01:item|CONSTANT|MAX_ACTORS:0x02:Maximum static actors on server (1000)
+0x01:item|CONSTANT|MAX_TEXT_DRAWS:0x02:Maximum global text draws (2048)
+0x01:item|CONSTANT|MAX_MENUS:0x02:Maximum menu instances (128)
+0x01:item|CONSTANT|MAX_GANG_ZONES:0x02:Maximum gang zones (1024)
+0x01:item|CONSTANT|SPECIAL_ACTION_NONE:0x02:Player special action: None
+0x01:item|CONSTANT|SPECIAL_ACTION_DUCK:0x02:Player special action: Ducking
+0x01:item|CONSTANT|SPECIAL_ACTION_USEJETPACK:0x02:Player special action: Jetpack
+0x01:item|CONSTANT|PLAYER_STATE_NONE:0x02:Player state: None
+0x01:item|CONSTANT|PLAYER_STATE_ONFOOT:0x02:Player state: On Foot
+0x01:item|CONSTANT|PLAYER_STATE_DRIVER:0x02:Player state: Driver of a vehicle
+0x01:item|CONSTANT|PLAYER_STATE_PASSENGER:0x02:Player state: Passenger in a vehicle
+0x01:item|CONSTANT|PLAYER_STATE_WASTED:0x02:Player state: Dead/Wasted
+0x01:item|CONSTANT|PLAYER_STATE_SPAWNED:0x02:Player state: Spawned
+0x01:item|CONSTANT|PLAYER_STATE_SPECTATING:0x02:Player state: Spectating
+0x01:item|CALLBACK|OnGameModeInit:0x02:Callback triggered when the gamemode loads
+0x01:item|CALLBACK|OnGameModeExit:0x02:Callback triggered when the gamemode shuts down
+0x01:item|CALLBACK|OnFilterScriptInit:0x02:Callback triggered when a filterscript loads
+0x01:item|CALLBACK|OnFilterScriptExit:0x02:Callback triggered when a filterscript unloads
+0x01:item|CALLBACK|OnPlayerConnect:0x02:Callback triggered when a player joins the server
+0x01:item|CALLBACK|OnPlayerDisconnect:0x02:Callback triggered when a player leaves the server
+0x01:item|CALLBACK|OnPlayerSpawn:0x02:Callback triggered when a player spawns in the world
+0x01:item|CALLBACK|OnPlayerDeath:0x02:Callback triggered when a player dies or is killed
+0x01:item|CALLBACK|OnVehicleSpawn:0x02:Callback triggered when a vehicle spawns
+0x01:item|CALLBACK|OnVehicleDeath:0x02:Callback triggered when a vehicle is destroyed
+0x01:item|CALLBACK|OnPlayerText:0x02:Callback triggered when a player sends public chat
+0x01:item|CALLBACK|OnPlayerCommandText:0x02:Callback triggered when a player enters a slash command
+0x01:item|CALLBACK|OnPlayerRequestClass:0x02:Callback triggered when a player views class selection
+0x01:item|CALLBACK|OnPlayerEnterVehicle:0x02:Callback triggered when a player starts entering a vehicle
+0x01:item|CALLBACK|OnPlayerExitVehicle:0x02:Callback triggered when a player starts exiting a vehicle
+0x01:item|CALLBACK|OnPlayerStateChange:0x02:Callback triggered when a player changes state (foot, car, etc.)
+0x01:item|CALLBACK|OnPlayerEnterCheckpoint:0x02:Callback triggered when a player enters standard checkpoint
+0x01:item|CALLBACK|OnPlayerLeaveCheckpoint:0x02:Callback triggered when a player leaves standard checkpoint
+0x01:item|CALLBACK|OnPlayerEnterRaceCheckpoint:0x02:Callback triggered when entering race checkpoint
+0x01:item|CALLBACK|OnPlayerLeaveRaceCheckpoint:0x02:Callback triggered when leaving race checkpoint
+0x01:item|CALLBACK|OnRconCommand:0x02:Callback triggered on server console RCON command
+0x01:item|CALLBACK|OnPlayerRequestSpawn:0x02:Callback triggered when player clicks Spawn button
+0x01:item|CALLBACK|OnObjectMoved:0x02:Callback triggered when a moving object finishes its travel
+0x01:item|CALLBACK|OnPlayerObjectMoved:0x02:Callback triggered when player object finishes moving
+0x01:item|CALLBACK|OnPlayerPickUpPickup:0x02:Callback triggered when a player walks over a pickup
+0x01:item|CALLBACK|OnVehicleMod:0x02:Callback triggered when a vehicle modification is installed
+0x01:item|CALLBACK|OnVehiclePaintjob:0x02:Callback triggered when a vehicle paintjob is applied
+0x01:item|CALLBACK|OnVehicleRespray:0x02:Callback triggered when a vehicle color is changed
+0x01:item|CALLBACK|OnVehicleDamageStatusUpdate:0x02:Callback triggered on vehicle damage parts update
+0x01:item|CALLBACK|OnUnoccupiedVehicleUpdate:0x02:Callback triggered periodically for unoccupied vehicles
+0x01:item|CALLBACK|OnPlayerSelectedMenuRow:0x02:Callback triggered when selecting a menu option
+0x01:item|CALLBACK|OnPlayerExitedMenu:0x02:Callback triggered when player cancels out of a menu
+0x01:item|CALLBACK|OnDialogResponse:0x02:Callback triggered when user interacts with a GUI dialog
+0x01:item|CALLBACK|OnPlayerClickPlayerTextDraw:0x02:Callback triggered on clicking personal text draw
+0x01:item|CALLBACK|OnPlayerClickTextDraw:0x02:Callback triggered on clicking global text draw
+0x01:item|CALLBACK|OnPlayerClickPlayer:0x02:Callback triggered when clicking player in scoreboard
+0x01:item|CALLBACK|OnIncomingConnection:0x02:Callback triggered on incoming raw client connection
+0x01:item|CALLBACK|OnTrailerUpdate:0x02:Callback triggered when vehicle trailer sync updates
+0x01:item|CALLBACK|OnVehicleSirenStateChange:0x02:Callback triggered when siren toggles on/off
+0x01:item|CALLBACK|OnPlayerGiveDamage:0x02:Callback triggered when a player damages someone
+0x01:item|CALLBACK|OnPlayerTakeDamage:0x02:Callback triggered when a player suffers damage
+0x01:item|CALLBACK|OnPlayerWeaponShot:0x02:Callback triggered on bullet fired by weapon
+0x01:item|FUNCTION|print:0x02:Prints a plain string to server log without formatting: print(const string[])
+0x01:item|FUNCTION|printf:0x02:Prints formatted string to server log: printf(const format[], {Float,_}:...)
+0x01:item|FUNCTION|format:0x02:Formats string buffer with specifiers: format(output[], len, const format[], ...)
+0x01:item|FUNCTION|strlen:0x02:Returns length of string in characters: strlen(const string[])
+0x01:item|FUNCTION|strcat:0x02:Concatenates two strings together: strcat(dest[], const source[], maxlength)
+0x01:item|FUNCTION|strdel:0x02:Deletes characters from start to end index: strdel(string[], start, end)
+0x01:item|FUNCTION|strins:0x02:Inserts string at given index: strins(string[], const substr[], pos, maxlength)
+0x01:item|FUNCTION|strcmp:0x02:Compares two strings: strcmp(const string1[], const string2[], bool:ignorecase, length)
+0x01:item|FUNCTION|strfind:0x02:Finds substring in target string: strfind(const string[], const sub[], bool:ignorecase, pos)
+0x01:item|FUNCTION|strval:0x02:Converts string characters into an integer: strval(const string[])
+0x01:item|FUNCTION|valstr:0x02:Converts integer into decimal string: valstr(dest[], value, bool:pack)
+0x01:item|FUNCTION|strmid:0x02:Extracts substring from source into dest: strmid(dest[], const source[], start, end, maxlength)
+0x01:item|FUNCTION|SetTimer:0x02:Calls function after interval in ms: SetTimer(funcname[], interval, repeating)
+0x01:item|FUNCTION|SetTimerEx:0x02:Calls function with arguments after interval: SetTimerEx(funcname[], interval, repeating, format[], ...)
+0x01:item|FUNCTION|KillTimer:0x02:Cancels an active timer: KillTimer(timerid)
+0x01:item|FUNCTION|GetTickCount:0x02:Returns millisecond count since system start: GetTickCount()
+0x01:item|FUNCTION|GetMaxPlayers:0x02:Returns configured player slot limit: GetMaxPlayers()
+0x01:item|FUNCTION|random:0x02:Returns random integer between 0 and max - 1: random(max)
+0x01:item|FUNCTION|min:0x02:Returns smaller of two integer values: min(value1, value2)
+0x01:item|FUNCTION|max:0x02:Returns larger of two integer values: max(value1, value2)
+0x01:item|FUNCTION|clamp:0x02:Constrains value between min and max bounds: clamp(value, min, max)
+0x01:item|FUNCTION|SendClientMessage:0x02:Sends chat message to single player: SendClientMessage(playerid, color, const message[])
+0x01:item|FUNCTION|SendClientMessageToAll:0x02:Broadcasts chat message to all players: SendClientMessageToAll(color, const message[])
+0x01:item|FUNCTION|SendPlayerMessageToPlayer:0x02:Emulates chat from one player to another: SendPlayerMessageToPlayer(playerid, senderid, const message[])
+0x01:item|FUNCTION|SendPlayerMessageToAll:0x02:Emulates chat from one player to all: SendPlayerMessageToAll(senderid, const message[])
+0x01:item|FUNCTION|SendRconCommand:0x02:Executes an RCON command line directly: SendRconCommand(command[])
+0x01:item|FUNCTION|GameTextForAll:0x02:Displays arcade style game text on all screens: GameTextForAll(const string[], time, style)
+0x01:item|FUNCTION|GameTextForPlayer:0x02:Displays arcade style game text to player: GameTextForPlayer(playerid, const string[], time, style)
+0x01:item|FUNCTION|SetPlayerSpawnInfo:0x02:Configures default spawn coordinates & gear: SetPlayerSpawnInfo(playerid, team, skin, Float:x, Float:y, Float:z, Float:rotation, ...)
+0x01:item|FUNCTION|SpawnPlayer:0x02:Forces immediate respawn for player: SpawnPlayer(playerid)
+0x01:item|FUNCTION|SetPlayerPos:0x02:Teleports player to 3D world coordinates: SetPlayerPos(playerid, Float:x, Float:y, Float:z)
+0x01:item|FUNCTION|SetPlayerPosFindZ:0x02:Teleports player searching for highest ground: SetPlayerPosFindZ(playerid, Float:x, Float:y, Float:z)
+0x01:item|FUNCTION|GetPlayerPos:0x02:Gets current 3D position of player: GetPlayerPos(playerid, &Float:x, &Float:y, &Float:z)
+0x01:item|FUNCTION|SetPlayerFacingAngle:0x02:Sets heading compass direction angle: SetPlayerFacingAngle(playerid, Float:ang)
+0x01:item|FUNCTION|GetPlayerFacingAngle:0x02:Gets heading compass direction angle: GetPlayerFacingAngle(playerid, &Float:ang)
+0x01:item|FUNCTION|IsPlayerInRangeOfPoint:0x02:Tests if player is within sphere radius: IsPlayerInRangeOfPoint(playerid, Float:range, Float:x, Float:y, Float:z)
+0x01:item|FUNCTION|IsPlayerConnected:0x02:Tests if player is connected: IsPlayerConnected(playerid)
+0x01:item|FUNCTION|IsPlayerInVehicle:0x02:Tests if player is in specific vehicle: IsPlayerInVehicle(playerid, vehicleid)
+0x01:item|FUNCTION|IsPlayerInAnyVehicle:0x02:Tests if player is inside any vehicle: IsPlayerInAnyVehicle(playerid)
+0x01:item|FUNCTION|SetPlayerHealth:0x02:Sets current health points: SetPlayerHealth(playerid, Float:health)
+0x01:item|FUNCTION|GetPlayerHealth:0x02:Gets current health points: GetPlayerHealth(playerid, &Float:health)
+0x01:item|FUNCTION|SetPlayerArmour:0x02:Sets current body armour points: SetPlayerArmour(playerid, Float:armour)
+0x01:item|FUNCTION|GetPlayerArmour:0x02:Gets current body armour points: GetPlayerArmour(playerid, &Float:armour)
+0x01:item|FUNCTION|GivePlayerMoney:0x02:Adds or deducts money from player: GivePlayerMoney(playerid, money)
+0x01:item|FUNCTION|GetPlayerMoney:0x02:Returns current player money balance: GetPlayerMoney(playerid)
+0x01:item|FUNCTION|ResetPlayerMoney:0x02:Sets player money balance to zero: ResetPlayerMoney(playerid)
+0x01:item|FUNCTION|SetPlayerScore:0x02:Sets player scoreboard score: SetPlayerScore(playerid, score)
+0x01:item|FUNCTION|GetPlayerScore:0x02:Returns player scoreboard score: GetPlayerScore(playerid)
+0x01:item|FUNCTION|SetPlayerSkin:0x02:Changes character PED skin ID: SetPlayerSkin(playerid, skinid)
+0x01:item|FUNCTION|GetPlayerSkin:0x02:Returns current character PED skin ID: GetPlayerSkin(playerid)
+0x01:item|FUNCTION|GivePlayerWeapon:0x02:Awards weapon and ammo to player: GivePlayerWeapon(playerid, weaponid, ammo)
+0x01:item|FUNCTION|ResetPlayerWeapons:0x02:Removes all weapons from player: ResetPlayerWeapons(playerid)
+0x01:item|FUNCTION|GetPlayerWeapon:0x02:Returns currently held weapon ID: GetPlayerWeapon(playerid)
+0x01:item|FUNCTION|SetPlayerName:0x02:Changes player nickname: SetPlayerName(playerid, const name[])
+0x01:item|FUNCTION|GetPlayerName:0x02:Retrieves player nickname: GetPlayerName(playerid, const name[], len)
+0x01:item|FUNCTION|SetPlayerColor:0x02:Sets player radar blip and name tag color: SetPlayerColor(playerid, color)
+0x01:item|FUNCTION|GetPlayerColor:0x02:Returns player color: GetPlayerColor(playerid)
+0x01:item|FUNCTION|SetPlayerInterior:0x02:Changes building interior ID: SetPlayerInterior(playerid, interiorid)
+0x01:item|FUNCTION|GetPlayerInterior:0x02:Gets building interior ID: GetPlayerInterior(playerid)
+0x01:item|FUNCTION|SetPlayerVirtualWorld:0x02:Sets virtual world dimension ID: SetPlayerVirtualWorld(playerid, worldid)
+0x01:item|FUNCTION|GetPlayerVirtualWorld:0x02:Gets virtual world dimension ID: GetPlayerVirtualWorld(playerid)
+0x01:item|FUNCTION|GetPlayerIp:0x02:Retrieves player IP address: GetPlayerIp(playerid, const name[], len)
+0x01:item|FUNCTION|GetPlayerPing:0x02:Returns player latency in ms: GetPlayerPing(playerid)
+0x01:item|FUNCTION|Kick:0x02:Kicks a player from the server: Kick(playerid)
+0x01:item|FUNCTION|Ban:0x02:Bans player IP address: Ban(playerid)
+0x01:item|FUNCTION|BanEx:0x02:Bans player IP address with custom reason: BanEx(playerid, const reason[])
+0x01:item|FUNCTION|PutPlayerInVehicle:0x02:Teleports player directly into vehicle: PutPlayerInVehicle(playerid, vehicleid, seatid)
+0x01:item|FUNCTION|RemovePlayerFromVehicle:0x02:Ejects player from their vehicle: RemovePlayerFromVehicle(playerid)
+0x01:item|FUNCTION|GetPlayerVehicleID:0x02:Returns vehicle ID player is inside: GetPlayerVehicleID(playerid)
+0x01:item|FUNCTION|GetPlayerVehicleSeat:0x02:Returns vehicle seat index of player: GetPlayerVehicleSeat(playerid)
+0x01:item|FUNCTION|CreateVehicle:0x02:Spawns a new vehicle: CreateVehicle(vehicletype, Float:x, Float:y, Float:z, Float:rotation, color1, color2, respawn_delay, addsiren)
+0x01:item|FUNCTION|DestroyVehicle:0x02:Removes vehicle from the server: DestroyVehicle(vehicleid)
+0x01:item|FUNCTION|GetVehiclePos:0x02:Gets 3D position of vehicle: GetVehiclePos(vehicleid, &Float:x, &Float:y, &Float:z)
+0x01:item|FUNCTION|SetVehiclePos:0x02:Teleports vehicle to coordinates: SetVehiclePos(vehicleid, Float:x, Float:y, Float:z)
+0x01:item|FUNCTION|RepairVehicle:0x02:Repairs vehicle engine and body panels: RepairVehicle(vehicleid)
+0x01:item|FUNCTION|SetVehicleNumberPlate:0x02:Sets license plate text: SetVehicleNumberPlate(vehicleid, const numberplate[])
+0x01:item|FUNCTION|GetVehicleModel:0x02:Returns vehicle model ID: GetVehicleModel(vehicleid)
+0x01:item|FUNCTION|AddVehicleComponent:0x02:Adds car mod component: AddVehicleComponent(vehicleid, componentid)
+0x01:item|FUNCTION|RemoveVehicleComponent:0x02:Removes car mod component: RemoveVehicleComponent(vehicleid, componentid)
+0x01:item|FUNCTION|ChangeVehicleColor:0x02:Changes body color of vehicle: ChangeVehicleColor(vehicleid, color1, color2)
+0x01:item|FUNCTION|ChangeVehiclePaintjob:0x02:Changes paintjob livery of vehicle: ChangeVehiclePaintjob(vehicleid, paintjobid)
+0x01:item|FUNCTION|CreateObject:0x02:Creates global world object: CreateObject(modelid, Float:X, Float:Y, Float:Z, Float:rX, Float:rY, Float:rZ, Float:DrawDistance)
+0x01:item|FUNCTION|DestroyObject:0x02:Destroys world object: DestroyObject(objectid)
+0x01:item|FUNCTION|MoveObject:0x02:Smoothly moves object to target position: MoveObject(objectid, Float:X, Float:Y, Float:Z, Float:Speed, Float:RotX, Float:RotY, Float:RotZ)
+0x01:item|FUNCTION|StopObject:0x02:Halts object movement immediately: StopObject(objectid)
+0x01:item|FUNCTION|CreatePickup:0x02:Creates world pickup model: CreatePickup(model, type, Float:X, Float:Y, Float:Z, Virtualworld)
+0x01:item|FUNCTION|DestroyPickup:0x02:Removes pickup: DestroyPickup(pickup)
+0x01:item|FUNCTION|ShowPlayerDialog:0x02:Displays modal GUI dialog window to player: ShowPlayerDialog(playerid, dialogid, style, caption[], info[], button1[], button2[])
+0x01:item|FUNCTION|TextDrawCreate:0x02:Creates global on-screen text draw: TextDrawCreate(Float:x, Float:y, text[])
+0x01:item|FUNCTION|TextDrawDestroy:0x02:Destroys global text draw: TextDrawDestroy(Text:text)
+0x01:item|FUNCTION|TextDrawShowForPlayer:0x02:Displays text draw to player: TextDrawShowForPlayer(playerid, Text:text)
+0x01:item|FUNCTION|TextDrawHideForPlayer:0x02:Hides text draw from player: TextDrawHideForPlayer(playerid, Text:text)
+0x01:item|FUNCTION|TextDrawSetString:0x02:Updates text draw string: TextDrawSetString(Text:text, string[])
+0x01:item|FUNCTION|fopen:0x02:Opens file on disk: fopen(name[], mode)
+0x01:item|FUNCTION|fclose:0x02:Closes open file handle: fclose(File:handle)
+0x01:item|FUNCTION|fwrite:0x02:Writes text line to file: fwrite(File:handle, string[])
+0x01:item|FUNCTION|fread:0x02:Reads text line from file: fread(File:handle, string[], size, bool:pack)
+0x01:item|FUNCTION|fexist:0x02:Checks if file exists on server disk: fexist(name[])
+0x01:item|FUNCTION|fremove:0x02:Deletes file from server disk: fremove(name[])
+0x01:native|a_actor.inc|ApplyActorAnimation:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|ClearActorAnimations:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|CreateActor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|DestroyActor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|GetActorFacingAngle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|GetActorHealth:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|GetActorPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|GetActorVirtualWorld:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|IsActorInvulnerable:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|IsActorStreamedIn:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|IsValidActor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|SetActorFacingAngle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|SetActorHealth:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|SetActorInvulnerable:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|SetActorPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_actor.inc|SetActorVirtualWorld:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_http.inc|HTTP:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|acos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|asin:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|atan:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|atan2:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|format:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetDistanceFromMeToPoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetMyFacingAngle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetMyPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetPlayerArmedWeapon:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetPlayerArmour:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetPlayerFacingAngle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetPlayerHealth:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetPlayerKeys:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetPlayerName:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetPlayerPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetPlayerSpecialAction:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetPlayerState:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetPlayerVehicleID:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|GetTickCount:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|IsPlayerConnected:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|IsPlayerInRangeOfPoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|IsPlayerStreamedIn:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|IsVehicleStreamedIn:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|KillTimer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|PauseRecordingPlayback:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|print:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|printf:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|ResumeRecordingPlayback:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|SendChat:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|SendCommand:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|SetMyFacingAngle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|SetMyPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|SetTimer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|StartRecordingPlayback:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_npc.inc|StopRecordingPlayback:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|AttachObjectToObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|AttachObjectToPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|AttachObjectToVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|AttachPlayerObjectToPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|AttachPlayerObjectToVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|CancelEdit:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|CreateObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|CreatePlayerObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|DestroyObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|DestroyPlayerObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|EditObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|EditPlayerObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|GetObjectModel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|GetObjectPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|GetObjectRot:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|GetPlayerObjectModel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|GetPlayerObjectPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|GetPlayerObjectRot:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|IsObjectMoving:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|IsPlayerObjectMoving:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|IsValidObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|IsValidPlayerObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|MoveObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|MovePlayerObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SelectObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetObjectMaterial:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetObjectMaterialText:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetObjectNoCameraCol:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetObjectPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetObjectRot:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetObjectsDefaultCameraCol:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetPlayerObjectMaterial:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetPlayerObjectMaterialText:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetPlayerObjectNoCameraCol:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetPlayerObjectPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|SetPlayerObjectRot:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|StopObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_objects.inc|StopPlayerObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|AllowPlayerTeleport:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|ApplyAnimation:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|AttachCameraToObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|AttachCameraToPlayerObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|CancelSelectTextDraw:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|ClearAnimations:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|CreateExplosionForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|CreatePlayerTextDraw:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|DeletePVar:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|DisablePlayerCheckpoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|DisablePlayerRaceCheckpoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|DisableRemoteVehicleCollisions:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|EditAttachedObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|EnablePlayerCameraTarget:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|EnableStuntBonusForAll:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|EnableStuntBonusForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|ForceClassSelection:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetAnimationName:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerAmmo:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerAnimationIndex:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerArmour:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerCameraAspectRatio:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerCameraFrontVector:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerCameraMode:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerCameraPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerCameraTargetActor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerCameraTargetObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerCameraTargetPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerCameraTargetVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerCameraZoom:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerColor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerDistanceFromPoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerDrunkLevel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerFacingAngle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerFightingStyle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerHealth:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerInterior:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerIp:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerKeys:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerLastShotVectors:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerMoney:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerName:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerPing:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerScore:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerSkin:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerSpecialAction:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerState:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerSurfingObjectID:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerSurfingVehicleID:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerTargetActor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerTargetPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerTeam:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerTime:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerVehicleID:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerVehicleSeat:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerVelocity:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerVirtualWorld:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerWantedLevel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerWeapon:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerWeaponData:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPlayerWeaponState:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPVarFloat:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPVarInt:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPVarNameAtIndex:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPVarString:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPVarsUpperIndex:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GetPVarType:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GivePlayerMoney:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|GivePlayerWeapon:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|InterpolateCameraLookAt:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|InterpolateCameraPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|IsPlayerAttachedObjectSlotUsed:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|IsPlayerConnected:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|IsPlayerInAnyVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|IsPlayerInCheckpoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|IsPlayerInRaceCheckpoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|IsPlayerInRangeOfPoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|IsPlayerInVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|IsPlayerStreamedIn:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayAudioStreamForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayCrimeReportForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerPlaySound:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerSpectatePlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerSpectateVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawAlignment:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawBackgroundColor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawBoxColor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawColor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawDestroy:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawFont:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawHide:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawLetterSize:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawSetOutline:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawSetPreviewModel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawSetPreviewRot:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawSetPreviewVehCol:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawSetProportional:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawSetSelectable:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawSetShadow:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawSetString:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawShow:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawTextSize:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PlayerTextDrawUseBox:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|PutPlayerInVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|RemoveBuildingForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|RemovePlayerAttachedObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|RemovePlayerFromVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|RemovePlayerMapIcon:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|ResetPlayerMoney:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|ResetPlayerWeapons:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SelectTextDraw:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetCameraBehindPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerAmmo:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerArmedWeapon:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerArmour:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerAttachedObject:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerCameraLookAt:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerCameraPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerChatBubble:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerCheckpoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerColor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerDrunkLevel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerFacingAngle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerFightingStyle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerHealth:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerInterior:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerMapIcon:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerMarkerForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerName:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerPos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerPosFindZ:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerRaceCheckpoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerScore:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerShopName:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerSkillLevel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerSkin:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerSpecialAction:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerTeam:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerTime:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerVelocity:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerVirtualWorld:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerWantedLevel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerWeather:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPlayerWorldBounds:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPVarFloat:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPVarInt:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetPVarString:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SetSpawnInfo:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|ShowPlayerNameTagForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|SpawnPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|StartRecordingPlayerData:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|StopAudioStreamForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|StopRecordingPlayerData:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|TogglePlayerClock:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|TogglePlayerControllable:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_players.inc|TogglePlayerSpectating:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|acos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|AddMenuItem:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|AddPlayerClass:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|AddPlayerClassEx:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|AddStaticPickup:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|AddStaticVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|AddStaticVehicleEx:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|AllowAdminTeleport:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|AllowInteriorWeapons:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|asin:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|atan:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|atan2:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|Attach3DTextLabelToPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|Attach3DTextLabelToVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|Ban:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|BanEx:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|BlockIpAddress:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|CallLocalFunction:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|CallRemoteFunction:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|ConnectNPC:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|Create3DTextLabel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|CreateExplosion:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|CreateMenu:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|CreatePickup:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|CreatePlayer3DTextLabel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|Delete3DTextLabel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|DeletePlayer3DTextLabel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|DeleteSVar:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|DestroyMenu:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|DestroyPickup:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|DisableInteriorEnterExits:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|DisableMenu:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|DisableMenuRow:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|DisableNameTagLOS:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|EnableTirePopping:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|EnableVehicleFriendlyFire:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|EnableZoneNames:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|format:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GameModeExit:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GameTextForAll:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GameTextForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GangZoneCreate:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GangZoneDestroy:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GangZoneFlashForAll:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GangZoneFlashForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GangZoneHideForAll:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GangZoneHideForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GangZoneShowForAll:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GangZoneShowForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GangZoneStopFlashForAll:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GangZoneStopFlashForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetActorPoolSize:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetConsoleVarAsBool:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetConsoleVarAsInt:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetConsoleVarAsString:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetMaxPlayers:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetNetworkStats:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetPlayerMenu:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetPlayerNetworkStats:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetPlayerPoolSize:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetPlayerVersion:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetServerTickRate:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetServerVarAsBool:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetServerVarAsInt:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetServerVarAsString:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetSVarFloat:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetSVarInt:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetSVarNameAtIndex:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetSVarString:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetSVarsUpperIndex:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetSVarType:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetTickCount:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetVehiclePoolSize:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|GetWeaponName:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|HideMenuForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|IsPlayerAdmin:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|IsPlayerNPC:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|IsValidMenu:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|Kick:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|KillTimer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|LimitGlobalChatRadius:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|LimitPlayerMarkerRadius:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|NetStats_BytesReceived:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|NetStats_BytesSent:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|NetStats_ConnectionStatus:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|NetStats_GetConnectedTime:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|NetStats_GetIpPort:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|NetStats_MessagesReceived:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|NetStats_MessagesRecvPerSecond:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|NetStats_MessagesSent:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|NetStats_PacketLossPercent:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|print:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|printf:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SendClientMessage:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SendClientMessageToAll:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SendDeathMessage:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SendDeathMessageToPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SendPlayerMessageToAll:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SendPlayerMessageToPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SendRconCommand:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetDeathDropAmount:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetGameModeText:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetGravity:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetMenuColumnHeader:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetNameTagDrawDistance:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetSVarFloat:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetSVarInt:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetSVarString:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetTeamCount:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetTimer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetTimerEx:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetWeather:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SetWorldTime:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|SHA256_PassHash:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|ShowMenuForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|ShowNameTags:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|ShowPlayerDialog:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|ShowPlayerMarkers:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawAlignment:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawBackgroundColor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawBoxColor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawColor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawCreate:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawDestroy:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawFont:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawHideForAll:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawHideForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawLetterSize:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawSetOutline:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawSetPreviewModel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawSetPreviewRot:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawSetPreviewVehCol:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawSetProportional:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawSetSelectable:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawSetShadow:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawSetString:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawShowForAll:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawShowForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawTextSize:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|TextDrawUseBox:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|UnBlockIpAddress:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|Update3DTextLabelText:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|UpdatePlayer3DTextLabelText:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|UsePlayerPedAnims:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_samp.inc|VectorSize:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_close:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_debug_openfiles:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_debug_openresults:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_field_name:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_free_result:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_get_field:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_get_field_assoc:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_get_field_assoc_float:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_get_field_assoc_int:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_get_field_float:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_get_field_int:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_get_mem_handle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_get_result_mem_handle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_next_row:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_num_fields:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_num_rows:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_open:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_sampdb.inc|db_query:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|AddVehicleComponent:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|AttachTrailerToVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|ChangeVehicleColor:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|ChangeVehiclePaintjob:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|CreateVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|DestroyVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|DetachTrailerFromVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleComponentInSlot:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleComponentType:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleDamageStatus:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleDistanceFromPoint:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleHealth:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleModel:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleModelInfo:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleParamsCarDoors:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleParamsCarWindows:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleParamsEx:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleParamsSirenState:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehiclePos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleRotationQuat:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleTrailer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleVelocity:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleVirtualWorld:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|GetVehicleZAngle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|IsTrailerAttachedToVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|IsVehicleStreamedIn:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|LinkVehicleToInterior:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|ManualVehicleEngineAndLights:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|RemoveVehicleComponent:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|RepairVehicle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleAngularVelocity:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleHealth:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleNumberPlate:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleParamsCarDoors:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleParamsCarWindows:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleParamsEx:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleParamsForPlayer:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehiclePos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleToRespawn:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleVelocity:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleVirtualWorld:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|SetVehicleZAngle:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|a_vehicles.inc|UpdateVehicleDamageStatus:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|clamp:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|deleteproperty:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|existproperty:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|funcidx:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|getarg:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|getproperty:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|heapspace:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|max:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|min:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|numargs:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|random:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|setarg:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|setproperty:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|swapchars:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|tolower:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|core.inc|toupper:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|datagram.inc|listenport:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|datagram.inc|sendpacket:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|datagram.inc|sendstring:0x02:Native provided by the Pawn/SA-MP include set
+0x01:forward|datagram.inc|@receivepacket:0x02:Forward callback provided by the Pawn/SA-MP include set
+0x01:forward|datagram.inc|@receivestring:0x02:Forward callback provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fblockread:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fblockwrite:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fclose:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fexist:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fgetchar:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|flength:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fmatch:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fopen:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fputchar:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fread:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fremove:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fseek:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|ftemp:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|file.inc|fwrite:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|float:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatabs:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatadd:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatcmp:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatcos:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatdiv:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatfract:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatlog:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatmul:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatpower:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatround:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatsin:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatsqroot:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatstr:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floatsub:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|floattan:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|float.inc|operator:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|bool:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|memcpy:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|strcat:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|strcmp:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|strfind:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|strlen:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|strmid:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|strpack:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|strunpack:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|strval:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|uudecode:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|uuencode:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|string.inc|valstr:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|time.inc|getdate:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|time.inc|gettime:0x02:Native provided by the Pawn/SA-MP include set
+0x01:native|time.inc|tickcount:0x02:Native provided by the Pawn/SA-MP include set

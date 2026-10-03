@@ -107,26 +107,26 @@ From a manual review of the repository, the current project focuses on:
 
 | File / Path | Purpose |
 |---|---|
-| app/src/main/java/com/rvdjv/pawnmc/ui/main/MainActivity.kt | Main app activity; opens MainScreen and launches settings |
-| app/src/main/java/com/rvdjv/pawnmc/ui/main/MainScreen.kt | Primary compile UI, file browser handling, permission prompts, output logs |
-| app/src/main/java/com/rvdjv/pawnmc/ui/main/MainViewModel.kt | State store for selected file, compile status, and output text |
-| app/src/main/java/com/rvdjv/pawnmc/ui/settings/SettingsActivity.kt | Settings activity host |
-| app/src/main/java/com/rvdjv/pawnmc/ui/settings/SettingsScreen.kt | Full settings UI for compiler options, app info, and update actions |
-| app/src/main/java/com/rvdjv/pawnmc/ui/settings/SettingsViewModel.kt | Settings state handling and config updates |
-| app/src/main/java/com/rvdjv/pawnmc/ui/filebrowser/FileBrowserDialog.kt | File/folder browser for selecting Pawn files or include directories |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedEditorActivity.kt | Hosts the Xed editor |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedEditorScreen.kt | Editor canvas, tab strip, floating compile/panel/toolbar, status bar, syntax palette |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedEditorViewModel.kt | Active file state, single-file save flow, owns the workspace session |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedWorkspaceViewModel.kt | Up to 3 workspaces with trees, open documents, search and replace |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedWorkspacePanel.kt | Floating workspace explorer: opened editors, folder tree, search hits |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedCodeEditor.kt | Thin wrapper around the Sora CodeEditor widget |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedToolPanel.kt | Search / replace panel for workspace-wide operations |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/pawn/PawnLanguage.kt | Pawn language implementation for the editor (completion, indent, symbols) |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/pawn/PawnManager.kt | Pawn analyzer feeding the syntax highlighter |
-| app/src/main/java/com/rvdjv/pawnmc/ui/PawnIcons.kt | Hand-drawn vector icons: save, save-all, code edit, workspace, panel, folders, files, Wi-Fi signal |
-| app/src/main/java/com/rvdjv/pawnmc/ui/theme/Color.kt | Colors for app theme |
-| app/src/main/java/com/rvdjv/pawnmc/ui/theme/Theme.kt | Material3 theme configuration |
-| app/src/main/java/com/rvdjv/pawnmc/ui/theme/Type.kt | Typography styles |
+| app/src/main/java/com/rvdjv/pawnmc/interface/main/MainActivity.kt | Main app activity; opens MainScreen and launches settings |
+| app/src/main/java/com/rvdjv/pawnmc/interface/main/MainScreen.kt | Primary compile UI, file browser handling, permission prompts, output logs |
+| app/src/main/java/com/rvdjv/pawnmc/interface/main/MainViewModel.kt | State store for selected file, compile status, and output text |
+| app/src/main/java/com/rvdjv/pawnmc/interface/settings/SettingsActivity.kt | Settings activity host |
+| app/src/main/java/com/rvdjv/pawnmc/interface/settings/SettingsScreen.kt | Full settings UI for compiler options, app info, and update actions |
+| app/src/main/java/com/rvdjv/pawnmc/interface/settings/SettingsViewModel.kt | Settings state handling and config updates |
+| app/src/main/java/com/rvdjv/pawnmc/interface/filebrowser/FileBrowserDialog.kt | File/folder browser for selecting Pawn files or include directories |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedEditorActivity.kt | Hosts the Xed editor |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedEditorScreen.kt | Editor canvas, tab strip, floating compile/panel/toolbar, status bar, syntax palette |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedEditorViewModel.kt | Active file state, single-file save flow, owns the workspace session |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedWorkspaceViewModel.kt | Up to 3 workspaces with trees, open documents, search and replace |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedWorkspacePanel.kt | Floating workspace explorer: opened editors, folder tree, search hits |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedCodeEditor.kt | Thin wrapper around the Sora CodeEditor widget |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedToolPanel.kt | Search / replace panel for workspace-wide operations |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/pawn/PawnLanguage.kt | Pawn language implementation for the editor (completion, indent, symbols) |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/pawn/PawnManager.kt | Pawn analyzer feeding the syntax highlighter |
+| app/src/main/java/com/rvdjv/pawnmc/interface/PawnIcons.kt | Hand-drawn vector icons: save, save-all, code edit, workspace, panel, folders, files, Wi-Fi signal |
+| app/src/main/java/com/rvdjv/pawnmc/interface/theme/Color.kt | Colors for app theme |
+| app/src/main/java/com/rvdjv/pawnmc/interface/theme/Theme.kt | Material3 theme configuration |
+| app/src/main/java/com/rvdjv/pawnmc/interface/theme/Type.kt | Typography styles |
 
 ### 5.3 Tests
 
@@ -147,13 +147,13 @@ From a manual review of the repository, the current project focuses on:
 | Compiler config | app/src/main/java/com/rvdjv/pawnmc/data/config/CompilerConfig.kt | Persistent compile configuration |
 | Compile engine | app/src/main/java/com/rvdjv/pawnmc/data/compiler/Compiler.kt | Compile logic, output capture, fallback retry |
 | Update flow | app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | GitHub API interactions and APK update install pipeline |
-| Main app UI | app/src/main/java/com/rvdjv/pawnmc/ui/main/MainScreen.kt | Main compile entry point |
-| Editor UI | app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedEditorScreen.kt | Code canvas, tab strip, floating controls |
-| Workspace model | app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedWorkspaceViewModel.kt | Folder trees, open documents, search/replace |
+| Main app UI | app/src/main/java/com/rvdjv/pawnmc/interface/main/MainScreen.kt | Main compile entry point |
+| Editor UI | app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedEditorScreen.kt | Code canvas, tab strip, floating controls |
+| Workspace model | app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedWorkspaceViewModel.kt | Folder trees, open documents, search/replace |
 | Localization | app/src/main/java/com/rvdjv/pawnmc/data/config/AppLocalization.kt, _dat/_extract.dat | Single-source id/en strings |
 | Compiler explanations | app/src/main/java/com/rvdjv/pawnmc/data/compiler/Explanations.kt, _dat/_explain.dat | Single-source local hints for Pawn compiler messages |
-| Settings UI | app/src/main/java/com/rvdjv/pawnmc/ui/settings/SettingsScreen.kt | App configuration and update controls |
-| File browser | app/src/main/java/com/rvdjv/pawnmc/ui/filebrowser/FileBrowserDialog.kt | Storage browsing and file selection |
+| Settings UI | app/src/main/java/com/rvdjv/pawnmc/interface/settings/SettingsScreen.kt | App configuration and update controls |
+| File browser | app/src/main/java/com/rvdjv/pawnmc/interface/filebrowser/FileBrowserDialog.kt | Storage browsing and file selection |
 
 ---
 
@@ -281,10 +281,10 @@ The most relevant files to understand the project are:
 | app/src/main/AndroidManifest.xml | Permissions and install support |
 | app/src/main/java/com/rvdjv/pawnmc/data/config/CompilerConfig.kt | Runtime compile settings |
 | app/src/main/java/com/rvdjv/pawnmc/data/compiler/Compiler.kt | Public compile engine entry point (facade) |
-| app/src/main/java/com/rvdjv/pawnmc/ui/main/MainScreen.kt | Main user workflow |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedEditorScreen.kt | Editor canvas, tab strip and floating controls |
-| app/src/main/java/com/rvdjv/pawnmc/ui/editor/XedWorkspaceViewModel.kt | Workspace trees, open documents, search/replace |
-| app/src/main/java/com/rvdjv/pawnmc/ui/settings/SettingsScreen.kt | Settings and update actions |
+| app/src/main/java/com/rvdjv/pawnmc/interface/main/MainScreen.kt | Main user workflow |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedEditorScreen.kt | Editor canvas, tab strip and floating controls |
+| app/src/main/java/com/rvdjv/pawnmc/interface/editor/XedWorkspaceViewModel.kt | Workspace trees, open documents, search/replace |
+| app/src/main/java/com/rvdjv/pawnmc/interface/settings/SettingsScreen.kt | Settings and update actions |
 | app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | Release update logic |
 | app/src/main/cpp/Compiler.cpp | Native bridge implementation |
 | _dat/_extract.dat | Localisation data for Indonesian and English |
