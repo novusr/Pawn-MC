@@ -1,35 +1,51 @@
 # MC Developer Portal strings and Markdown documentation for the Xed command simulator.
-# Keys use the same 0x01:<key>:0x02:<value> format as _extract.dat.
-# Literal \n sequences become line breaks; the .id and .en variants support app language selection.
+# Keys use the same 0x01:<key>:0x02:<value> format as _dat_extract.dat.
+# Literal \n sequences become line breaks; the .id, .en and .es variants support app language selection.
 0x01:terminal.help.id:0x02:Perintah yang tersedia:\n  help                 Tampilkan daftar perintah\n  docs                 Buka dokumentasi pawncc\n  pawncc <file> [flag] Jalankan pawncc dengan file dan flag yang ditulis\n  switch [versi]       Ganti compiler 3.10.7 / 3.10.11\n  clear                Bersihkan riwayat console (alias: celar)\n\nContoh: pawncc gamemodes/mode.pwn -d=3\nKetik docs untuk dokumentasi lengkap.
 0x01:terminal.help.en:0x02:Available commands:\n  help                 Show the command list\n  docs                 Open pawncc documentation\n  pawncc <file> [flags] Run pawncc with the specified file and flags\n  switch [version]     Switch compiler 3.10.7 / 3.10.11\n  clear                Clear console history (alias: celar)\n\nExample: pawncc gamemodes/mode.pwn -d=3\nType docs for full documentation.
+0x01:terminal.help.es:0x02:Comandos disponibles:\n  help                 Muestra la lista de comandos\n  docs                 Abre la documentacion de pawncc\n  pawncc <archivo> [flags] Ejecuta pawncc con el archivo y los flags indicados\n  switch [version]     Cambia el compilador 3.10.7 / 3.10.11\n  clear                Borra el historial de la consola (alias: celar)\n\nEjemplo: pawncc gamemodes/mode.pwn -d=3\nEscribi docs para ver la documentacion completa.
 0x01:terminal.docs.id:0x02:# MC Developer Portal\n\nConsole ini menjalankan **pawncc native**. Input bukan shell Android: hanya perintah yang tercantum di sini yang dikenali.\n\n## Perintah\n\n- `help` menampilkan daftar perintah.\n- `docs` menampilkan dokumentasi ini.\n- `pawncc <file> [flag...]` mengompilasi file yang disebut secara eksplisit. Perintah `pawncc` tanpa argumen hanya menampilkan cara pakai.\n- `switch [3.10.7|3.10.11]` memilih versi compiler; tanpa argumen, versi console berganti.\n- `clear` menghapus riwayat console; ejaan `celar` juga diterima.\n\n## Contoh\n\n```text\npawncc gamemodes/mode.pwn -d=3\npawncc "gamemodes/test mode.pwn" -i=includes -o=mode.amx\nswitch 3.10.11\nclear\n```\n\nHanya flag yang ditulis pada perintah yang diteruskan ke pawncc. Konfigurasi flag, optimisasi, dan include path dari Settings PawnMC tidak ditambahkan. Sertakan sendiri opsi yang diperlukan, misalnya `-i=includes`. File sumber harus berekstensi `.pwn`, `.pawn`, `.p`, atau `.inc` dan berada di dalam workspace.\n\n## Batasan\n\nTidak ada `cd`, `ls`, pipe, redirect, ekspansi shell, atau pemanggilan program lain. Versi console dimulai dari **3.10.7**. Jika library compiler versi lain sudah dimuat aplikasi, mulai ulang aplikasi setelah `switch` agar pilihan berlaku.
 0x01:terminal.docs.en:0x02:# MC Developer Portal\n\nThis console runs the bundled **native pawncc**. Input is not an Android shell: only the commands listed here are recognized.\n\n## Commands\n\n- `help` prints the command list.\n- `docs` displays this documentation.\n- `pawncc <file> [flags...]` compiles the explicitly named file. Bare `pawncc` only prints usage.\n- `switch [3.10.7|3.10.11]` selects the compiler version; without an argument, it toggles the console version.\n- `clear` removes console history; the spelling `celar` is also accepted.\n\n## Examples\n\n```text\npawncc gamemodes/mode.pwn -d=3\npawncc "gamemodes/test mode.pwn" -i=includes -o=mode.amx\nswitch 3.10.11\nclear\n```\n\nOnly flags written in the command are passed to pawncc. PawnMC Settings for flags, optimization, and include paths are not added. Specify needed options yourself, for example `-i=includes`. Source files must use `.pwn`, `.pawn`, `.p`, or `.inc` and stay inside the workspace.\n\n## Limits\n\nThere is no `cd`, `ls`, pipe, redirect, shell expansion, or launching other programs. The console starts with **3.10.7**. If another native compiler library is already loaded by the app, restart after `switch` for the selection to take effect.
+0x01:terminal.docs.es:0x02:# MC Developer Portal\n\nEsta consola ejecuta el **pawncc nativo** incluido. La entrada no es una shell de Android: solo se reconocen los comandos listados aca.\n\n## Comandos\n\n- `help` muestra la lista de comandos.\n- `docs` muestra esta documentacion.\n- `pawncc <archivo> [flags...]` compila el archivo indicado explicitamente. `pawncc` sin argumentos solo muestra el modo de uso.\n- `switch [3.10.7|3.10.11]` elige la version del compilador; sin argumento, alterna la version de la consola.\n- `clear` borra el historial de la consola; tambien se acepta la grafia `celar`.\n\n## Ejemplos\n\n```text\npawncc gamemodes/mode.pwn -d=3\npawncc "gamemodes/test mode.pwn" -i=includes -o=mode.amx\nswitch 3.10.11\nclear\n```\n\nSolo se pasan a pawncc los flags escritos en el comando. No se agregan los flags, la optimizacion ni las rutas de include de la configuracion de PawnMC. Especifica vos mismo las opciones que necesites, por ejemplo `-i=includes`. Los archivos fuente deben usar `.pwn`, `.pawn`, `.p` o `.inc` y deben quedar dentro del workspace.\n\n## Limites\n\nNo hay `cd`, `ls`, pipes, redireccion, expansion de shell ni ejecucion de otros programas. La consola arranca con **3.10.7**. Si la app ya cargo otra libreria nativa del compilador, reiniciá despues de `switch` para que la eleccion surta efecto.
 0x01:terminal.error.quote.id:0x02:Tanda kutip belum ditutup.
 0x01:terminal.error.quote.en:0x02:A quoted argument was not closed.
+0x01:terminal.error.quote.es:0x02:No se cerro un argumento entre comillas.
 0x01:terminal.error.switch.id:0x02:Gunakan `switch`, `switch 3.10.7`, atau `switch 3.10.11`.
 0x01:terminal.error.switch.en:0x02:Use `switch`, `switch 3.10.7`, or `switch 3.10.11`.
+0x01:terminal.error.switch.es:0x02:Usar `switch`, `switch 3.10.7` o `switch 3.10.11`.
 0x01:terminal.error.source.id:0x02:Sumber tidak valid. Sebutkan file Pawn secara eksplisit di dalam workspace.
 0x01:terminal.error.source.en:0x02:Invalid source. Name a Pawn file explicitly inside the workspace.
+0x01:terminal.error.source.es:0x02:Fuente invalida. Nombre un archivo Pawn explicitamente dentro del workspace.
 0x01:terminal.error.restart.id:0x02:Versi compiler baru belum dapat dimuat karena library lama sudah aktif. Mulai ulang aplikasi untuk memakai versi pilihan.
 0x01:terminal.error.restart.en:0x02:The selected compiler cannot load because another native library is already active. Restart the app to use the selected version.
+0x01:terminal.error.restart.es:0x02:El compilador elegido no se puede cargar porque ya hay otra libreria nativa activa. Reinicia la app para usar la version seleccionada.
 0x01:terminal.error.command.id:0x02:Perintah tidak dikenal. Gunakan `help`, `docs`, `pawncc`, `switch`, atau `clear`. Ketik `help`.
 0x01:terminal.error.command.en:0x02:Unknown command. Use `help`, `docs`, `pawncc`, `switch`, or `clear`. Type `help`.
+0x01:terminal.error.command.es:0x02:Comando desconocido. Usar `help`, `docs`, `pawncc`, `switch` o `clear`. Escribi `help`.
 0x01:terminal.pawncc.usage.id:0x02:Cara pakai: pawncc <file.pwn> [flag...]. Sebutkan file sumber dan setiap flag yang ingin diteruskan.
 0x01:terminal.pawncc.usage.en:0x02:Usage: pawncc <file.pwn> [flags...]. Specify the source file and every flag to pass through.
+0x01:terminal.pawncc.usage.es:0x02:Modo de uso: pawncc <archivo.pwn> [flags...]. Indica el archivo fuente y cada flag que quieras pasar.
 0x01:terminal.error.execution.id:0x02:Kompilasi gagal:
 0x01:terminal.error.execution.en:0x02:Compilation failed:
+0x01:terminal.error.execution.es:0x02:La compilacion fallo:
 0x01:terminal.switch.success.id:0x02:Versi compiler dipilih: {version}.{restart}
 0x01:terminal.switch.success.en:0x02:Compiler version selected: {version}.{restart}
+0x01:terminal.switch.success.es:0x02:Version del compilador seleccionada: {version}.{restart}
 0x01:terminal.switch.restart.id:0x02: Mulai ulang aplikasi agar berlaku.
 0x01:terminal.switch.restart.en:0x02: Restart the app for this to take effect.
+0x01:terminal.switch.restart.es:0x02: Reinicia la app para que esto surta efecto.
 0x01:terminal.ready.id:0x02:MC Developer Portal siap. Ketik `help` untuk perintah atau `docs` untuk dokumentasi.
 0x01:terminal.ready.en:0x02:MC Developer Portal ready. Type `help` for commands or `docs` for documentation.
+0x01:terminal.ready.es:0x02:MC Developer Portal listo. Escribi `help` para los comandos o `docs` para la documentacion.
 0x01:terminal.running.id:0x02:Menjalankan pawncc...
 0x01:terminal.running.en:0x02:Running pawncc...
+0x01:terminal.running.es:0x02:Ejecutando pawncc...
 0x01:terminal.input.placeholder.id:0x02:Ketik perintah...
 0x01:terminal.input.placeholder.en:0x02:Enter a command...
+0x01:terminal.input.placeholder.es:0x02:Escribi un comando...
 0x01:terminal.run.id:0x02:Jalankan perintah
 0x01:terminal.run.en:0x02:Run command
+0x01:terminal.run.es:0x02:Ejecutar comando
 0x01:terminal.close.id:0x02:Tutup MC Developer Portal
 0x01:terminal.close.en:0x02:Close MC Developer Portal
+0x01:terminal.close.es:0x02:Cerrar MC Developer Portal

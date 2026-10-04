@@ -86,10 +86,10 @@ class PawnLanguage(
         prefix: String,
         localFunctions: List<PawnLocalFunction>
     ) {
-        val localFunctionDescription = if (appLanguage == CompilerConfig.AppLanguage.ID) {
-            "Dideklarasikan di berkas ini"
-        } else {
-            "Declared in this file"
+        val localFunctionDescription = when (appLanguage) {
+            CompilerConfig.AppLanguage.ID -> "Dideklarasikan di berkas ini"
+            CompilerConfig.AppLanguage.ES -> "Declarada en este archivo"
+            CompilerConfig.AppLanguage.EN -> "Declared in this file"
         }
         val matchingItems = PawnRegistry.getCompletions(prefix, appLanguage) + localFunctions
             .filter { it.name.startsWith(prefix, ignoreCase = true) }

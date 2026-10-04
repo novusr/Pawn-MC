@@ -1,29 +1,46 @@
-# External compile-time data for PawnMC
+﻿﻿# External compile-time data for PawnMC
 # Local explanations of Pawn compiler messages (warning / error / fatal + numeric code).
 # Loaded at runtime by CompilerExplanationStore; never duplicated in Kotlin sources.
-# Format mirrors _extract.dat: 0x01:<code>:0x02:<explanation>
-# Language-specific keys use <code>.<language>, such as 013.id.
+# Format mirrors _dat_extract.dat: 0x01:<code>:0x02:<explanation>
+# Language-specific keys use <code>.<language>, such as 013.id or 013.es.
 # When a code appears twice the last entry wins, matching the previous map behaviour.
 0x01:013.en:0x02:No entry point was found. Check that you compiled the intended source file and that it contains the required entry function. For a quick standalone test, add `main() {}`; game modes may require a specific public callback instead.
 0x01:013.id:0x02:Titik masuk program tidak ditemukan. Pastikan Anda memilih file sumber yang benar dan file tersebut memiliki fungsi titik masuk yang diperlukan. Untuk uji cepat pada program mandiri, tambahkan `main() {}`; mode permainan mungkin memerlukan callback public tertentu.
+0x01:013.es:0x02:No se encontro el punto de entrada. Verifica que hayas compilado el archivo fuente correcto y que contenga la funcion de entrada requerida. Para una prueba rapida independiente, agrega `main() {}`; los modos de juego pueden requerir un callback publico especifico.
 0x01:015:0x02:Default case must be the last case. Place default after all explicit case blocks.
+0x01:015.es:0x02:El case default debe ser el ultimo. Coloca default despues de todos los bloques case explicitos.
 0x01:015.id:0x02:Case default harus menjadi case terakhir. Letakkan default setelah semua blok case yang memiliki nilai eksplisit.
+0x01:016.es:0x02:No se permiten varios default en la misma sentencia switch.
 0x01:016:0x02:Multiple defaults are not allowed in the same switch statement.
+0x01:017.es:0x02:Simbolo no definido. Verifica que el identificador este declarado, incluido y escrito exactamente igual que en su definicion.
 0x01:016.id:0x02:Beberapa case default tidak diperbolehkan dalam satu pernyataan switch.
+0x01:021.es:0x02:Simbolo ya definido. Existe una declaracion duplicada en el mismo ambito.
 0x01:017:0x02:Undefined symbol. Check that the identifier is declared, included, and spelled exactly the same as the definition.
+0x01:024.es:0x02:break o continue esta fuera de contexto. Debe estar dentro de un bloque de bucle o de un switch.
 0x01:017.id:0x02:Simbol tidak dikenal. Pastikan identifier sudah dideklarasikan atau disertakan, serta penulisannya sama persis dengan deklarasinya.
+0x01:040.es:0x02:Etiqueta case duplicada. Cada valor de case debe ser unico dentro de la sentencia switch.
 0x01:021:0x02:Symbol already defined. A duplicate declaration exists in the same scope.
+0x01:061.es:0x02:Se detecto un include recursivo. Rompe el ciclo de includes con include guards o declaraciones forward.
 0x01:021.id:0x02:Simbol sudah didefinisikan. Ada deklarasi ganda dalam cakupan yang sama.
+0x01:100.es:0x02:No se puede leer el archivo. El compilador no pudo abrir el archivo fuente o include indicado. Revisa la ruta, los permisos y que el archivo exista.
 0x01:024:0x02:Break or continue is out of context. It must be inside a loop or switch block.
+0x01:101.es:0x02:No se puede escribir el archivo. No se pudo crear ni escribir el destino de salida. Revisa los permisos y la carpeta de destino.
 0x01:024.id:0x02:Break atau continue digunakan di luar konteks yang sesuai. Keduanya harus berada di dalam blok perulangan atau switch.
+0x01:200.es:0x02:El identificador fue truncado por el limite de la implementacion. Usa nombres mas cortos y unicos para evitar colisiones.
 0x01:040:0x02:Duplicate case label. Each case value must be unique within the switch statement.
+0x01:203.es:0x02:Un simbolo esta declarado pero nunca se usa. Puede ser codigo muerto o una implementacion sin terminar.
 0x01:040.id:0x02:Label case ganda. Setiap nilai case dalam pernyataan switch harus unik.
+0x01:204.es:0x02:Se asigno un valor pero nunca se lee. Suele indicar una inicializacion redundante o un error de logica.
 0x01:061:0x02:Recursive include detected. Break the include cycle with guards or forward declarations.
+0x01:205.es:0x02:Codigo redundante: la expresion constante es cero. Esta condicion siempre es falsa y vuelve inalcanzable el bloque.
 0x01:061.id:0x02:Include rekursif terdeteksi. Putus siklus include dengan include guard atau deklarasi forward.
+0x01:211.es:0x02:Posible asignacion no intencional. Hay una asignacion dentro de una condicion; usa == si lo que querias era comparar.
 0x01:100:0x02:Cannot read from file. The compiler could not open the given source or include file. Check the path, permissions, and file existence.
+0x01:214.es:0x02:Se paso un array o string literal a un parametro que no es const. Declara el parametro como const o copia el dato a un buffer modificable.
 0x01:100.id:0x02:File tidak dapat dibaca. Compiler tidak dapat membuka file sumber atau include. Periksa lokasi, izin akses, dan keberadaan file.
 0x01:101:0x02:Cannot write to file. The output target could not be created or written to. Check permissions and the destination folder.
 0x01:101.id:0x02:File tidak dapat ditulis. Compiler tidak dapat membuat atau menulis file keluaran. Periksa izin akses dan folder tujuan.
+0x01:217.es:0x02:Indentacion irregular. Esta advertencia es estetica, pero puede esconder errores estructurales y dificulta la lectura del codigo.
 0x01:200:0x02:Identifier is truncated to the implementation limit. Use shorter, unique names to avoid collisions.
 0x01:200.id:0x02:Identifier terpotong karena batas implementasi. Gunakan nama yang lebih pendek dan unik agar tidak bertabrakan.
 0x01:203:0x02:A symbol is declared but never used. It may be dead code or an unfinished implementation.

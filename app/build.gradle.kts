@@ -1,4 +1,4 @@
-import java.util.Properties
+﻿import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -38,7 +38,7 @@ android {
 
     sourceSets {
         getByName("main") {
-            // `_dat/_extract.dat` is the single source of localisation data and ships
+            // `_dat/_dat_extract.dat` is the single source of localisation data and ships
             // as an asset, so nothing else in the app duplicates it.
             assets.srcDir(rootProject.file("_dat"))
         }

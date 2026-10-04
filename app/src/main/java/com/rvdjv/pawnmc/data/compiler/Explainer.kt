@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.data.compiler
+﻿package com.rvdjv.pawnmc.data.compiler
 
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import java.io.File
@@ -7,7 +7,7 @@ import java.io.File
  * Human readable explanation of raw compiler output.
  *
  * Every warning/error line is copied verbatim and followed by an indented local
- * hint when the message code is documented in `_dat/_explain.dat`. The wording of
+ * hint when the message code is documented in `_dat/_dat_explain.dat`. The wording of
  * every hint lives in that asset, never in this file.
  */
 object Explainer {

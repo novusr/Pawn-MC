@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.main
+﻿package com.rvdjv.pawnmc.`interface`.main
 
 import android.content.Intent
 import android.content.Context
@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
         // is not handed stale -i values.
         config.pruneMissingIncludePaths()
         Compiler.resetSessionState()
-        // The local compiler message explanations live in `_dat/_explain.dat`; load the
+        // The local compiler message explanations live in `_dat/_dat_explain.dat`; load the
         // table once so `explainCompilerOutput` never has to touch the disk per line.
         Explanations.load(applicationContext)
         InternDat.load(applicationContext)

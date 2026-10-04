@@ -1,4 +1,4 @@
-# Indonesian completion descriptions are keyed by the matching English description.
+﻿# Indonesian completion descriptions are keyed by the matching English description.
 # Function signature suffixes are retained by InternDat when only their summary is translated.
 0x01:description.id:0x02:Include an external source or header file:0x03:Sertakan file sumber atau header eksternal
 0x01:description.id:0x02:Define a preprocessor macro or constant:0x03:Tentukan makro preprosesor atau konstanta
@@ -276,6 +276,283 @@
 0x01:description.id:0x02:Callback triggered when a player damages someone:0x03:Callback yang dipanggil saat pemain melukai seseorang
 0x01:description.id:0x02:Callback triggered when a player suffers damage:0x03:Callback yang dipanggil saat pemain menerima kerusakan
 0x01:description.id:0x02:Callback triggered on bullet fired by weapon:0x03:Callback yang dipanggil saat senjata menembakkan peluru
+# Spanish (Argentina) completion descriptions, keyed by the matching English description.
+0x01:description.es:0x02:Include an external source or header file:0x03:Incluye un archivo fuente o header externo
+0x01:description.es:0x02:Define a preprocessor macro or constant:0x03:Define una macro del preprocesador o una constante
+0x01:description.es:0x02:Undefine an existing macro:0x03:Elimina la definicion de una macro existente
+0x01:description.es:0x02:Conditional compilation check:0x03:Verificacion de compilacion condicional
+0x01:description.es:0x02:Alternative conditional compilation check:0x03:Verificacion alternativa de compilacion condicional
+0x01:description.es:0x02:Default conditional compilation branch:0x03:Rama predeterminada de compilacion condicional
+0x01:description.es:0x02:End of conditional compilation block:0x03:Fin del bloque de compilacion condicional
+0x01:description.es:0x02:Stops reading the current file:0x03:Detiene la lectura del archivo actual
+0x01:description.es:0x02:Include a file only if it has not been included yet:0x03:Incluye un archivo solo si todavia no fue incluido
+0x01:description.es:0x02:Stop reading the current file without an error:0x03:Detiene la lectura del archivo actual sin generar error
+0x01:description.es:0x02:Set the file name reported by diagnostics:0x03:Define el nombre de archivo que informan los diagnosticos
+0x01:description.es:0x02:Enable, disable or raise a compiler warning:0x03:Activa, desactiva o eleva una advertencia del compilador
+0x01:description.es:0x02:Compile-time assertion check:0x03:Verificacion de asercion en tiempo de compilacion
+0x01:description.es:0x02:Emit user-defined compilation error:0x03:Emite un error de compilacion definido por el usuario
+0x01:description.es:0x02:Compiler control directive:0x03:Directiva de control del compilador
+0x01:description.es:0x02:Emit raw AMX bytecode opcode:0x03:Emite directamente un opcode del bytecode AMX
+0x01:description.es:0x02:Set line number and optional filename:0x03:Define el numero de linea y el nombre de archivo opcional
+0x01:description.es:0x02:Pragma to set tab indent width:0x03:Pragma para definir el ancho de la indentacion con tabuladores
+0x01:description.es:0x02:Pragma to set AMX stack/heap memory size:0x03:Pragma para definir el tamano de memoria de stack/heap de AMX
+0x01:description.es:0x02:Pragma to change escape character:0x03:Pragma para cambiar el caracter de escape
+0x01:description.es:0x02:Pragma to mark symbol as deprecated:0x03:Pragma para marcar un simbolo como obsoleto
+0x01:description.es:0x02:Pragma to enforce or relax semicolons:0x03:Pragma para exigir o relajar el uso de punto y coma
+0x01:description.es:0x02:Declares variable or function compiled only if used:0x03:Declara una variable o funcion que se compila solo si se usa
+0x01:description.es:0x02:Declares an exported function callable by AMX:0x03:Declara una funcion exportada que puede llamar AMX
+0x01:description.es:0x02:Forward declaration for public functions:0x03:Declaracion anticipada para funciones publicas
+0x01:description.es:0x02:Hooks a callback or function so multiple handlers can be chained:0x03:Engancha un callback o funcion para que varios handlers se encadenen
+0x01:description.es:0x02:Declares a C/C++ native plugin or host function:0x03:Declara una funcion nativa de un plugin C/C++ o del host
+0x01:description.es:0x02:Declares a local or global variable:0x03:Declara una variable local o global
+0x01:description.es:0x02:Declares static scoped variable or private function:0x03:Declara una variable de ambito estatico o una funcion privada
+0x01:description.es:0x02:Declares an immutable constant variable:0x03:Declara una variable constante inmutable
+0x01:description.es:0x02:Defines an enumerated constant structure:0x03:Define una estructura de constantes enumeradas
+0x01:description.es:0x02:State machine transition declaration:0x03:Declaracion de transicion de una maquina de estados
+0x01:description.es:0x02:Jump unconditionally to label:0x03:Salto incondicional a una etiqueta
+0x01:description.es:0x02:Break out of loop or switch block:0x03:Sale de un bloque de bucle o de un switch
+0x01:description.es:0x02:Skip to next iteration of loop:0x03:Salta a la siguiente iteracion del bucle
+0x01:description.es:0x02:Return value and exit function:0x03:Devuelve un valor y termina la funcion
+0x01:description.es:0x02:Conditional branch statement:0x03:Sentencia de rama condicional
+0x01:description.es:0x02:Alternative conditional branch:0x03:Rama condicional alternativa
+0x01:description.es:0x02:Loop while condition is true:0x03:Bucle mientras la condicion sea verdadera
+0x01:description.es:0x02:Loop executing at least once:0x03:Bucle que se ejecuta al menos una vez
+0x01:description.es:0x02:Standard for-loop statement:0x03:Sentencia estandar de bucle for
+0x01:description.es:0x02:Multi-branch switch statement:0x03:Sentencia switch con varias ramas
+0x01:description.es:0x02:Case label in switch statement:0x03:Etiqueta case dentro de una sentencia switch
+0x01:description.es:0x02:Default branch in switch statement:0x03:Rama predeterminada dentro de una sentencia switch
+0x01:description.es:0x02:Returns size in cells or array dimensions:0x03:Devuelve el tamano en celdas o las dimensiones del array
+0x01:description.es:0x02:Returns tag integer representing data type:0x03:Devuelve el entero de etiqueta que representa el tipo de dato
+0x01:description.es:0x02:Runtime assertion condition:0x03:Condicion de asercion en tiempo de ejecucion
+0x01:description.es:0x02:Pawn abstract machine sleep call:0x03:Llamada sleep de la maquina abstracta de Pawn
+0x01:description.es:0x02:Sub-cell character packing indexer:0x03:Indexador de empaquetado de caracteres de sub-celda
+0x01:description.es:0x02:Preprocessor check for a defined macro:0x03:Verificacion del preprocesador para una macro definida
+0x01:description.es:0x02:Inline AMX bytecode opcode:0x03:Opcode del bytecode AMX en linea
+0x01:description.es:0x02:Argument list marker for a raw EMIT:0x03:Marcador de lista de argumentos para un EMIT directo
+0x01:description.es:0x02:Terminate the script immediately:0x03:Termina el script de inmediato
+0x01:description.es:0x02:User defined operator overload declaration:0x03:Declaracion de sobrecarga de operador definida por el usuario
+0x01:description.es:0x02:Start of a multi-line block comment:0x03:Inicio de un comentario de bloque de varias lineas
+0x01:description.es:0x02:End of a multi-line block comment:0x03:Fin de un comentario de bloque de varias lineas
+0x01:description.es:0x02:Block comment continuation of the previous line:0x03:Continuacion de un comentario de bloque de la linea anterior
+0x01:description.es:0x02:Unsigned right shift assignment:0x03:Asignacion de desplazamiento a la derecha sin signo
+0x01:description.es:0x02:Left shift assignment:0x03:Asignacion de desplazamiento a la izquierda
+0x01:description.es:0x02:Arithmetic right shift assignment:0x03:Asignacion de desplazamiento a la derecha aritmetico
+0x01:description.es:0x02:Multiplication assignment:0x03:Asignacion de multiplicacion
+0x01:description.es:0x02:Division assignment:0x03:Asignacion de division
+0x01:description.es:0x02:Modulo assignment:0x03:Asignacion de modulo
+0x01:description.es:0x02:Addition assignment:0x03:Asignacion de suma
+0x01:description.es:0x02:Subtraction assignment:0x03:Asignacion de resta
+0x01:description.es:0x02:Bitwise AND assignment:0x03:Asignacion de AND bit a bit
+0x01:description.es:0x02:Bitwise XOR assignment:0x03:Asignacion de XOR bit a bit
+0x01:description.es:0x02:Bitwise OR assignment:0x03:Asignacion de OR bit a bit
+0x01:description.es:0x02:Unsigned right shift:0x03:Desplazamiento a la derecha sin signo
+0x01:description.es:0x02:Arithmetic right shift:0x03:Desplazamiento a la derecha aritmetico
+0x01:description.es:0x02:Left shift:0x03:Desplazamiento a la izquierda
+0x01:description.es:0x02:Logical OR:0x03:OR logico
+0x01:description.es:0x02:Logical AND:0x03:AND logico
+0x01:description.es:0x02:Equality comparison:0x03:Comparacion de igualdad
+0x01:description.es:0x02:Inequality comparison:0x03:Comparacion de desigualdad
+0x01:description.es:0x02:Less than or equal comparison:0x03:Comparacion menor o igual que
+0x01:description.es:0x02:Greater than or equal comparison:0x03:Comparacion mayor o igual que
+0x01:description.es:0x02:Pre/post increment:0x03:Incremento previo o posterior
+0x01:description.es:0x02:Pre/post decrement:0x03:Decremento previo o posterior
+0x01:description.es:0x02:Ellipsis / argument spread:0x03:Elipsis / expansion de argumentos
+0x01:description.es:0x02:Argument range marker:0x03:Marcador de rango de argumentos
+0x01:description.es:0x02:Tag scope separator:0x03:Separador de ambito de etiqueta
+0x01:description.es:0x02:Addition:0x03:Suma
+0x01:description.es:0x02:Subtraction or negation:0x03:Resta o negacion
+0x01:description.es:0x02:Multiplication:0x03:Multiplicacion
+0x01:description.es:0x02:Division:0x03:Division
+0x01:description.es:0x02:Modulo:0x03:Modulo
+0x01:description.es:0x02:Assignment:0x03:Asignacion
+0x01:description.es:0x02:Logical NOT:0x03:NOT logico
+0x01:description.es:0x02:Less than comparison:0x03:Comparacion menor que
+0x01:description.es:0x02:Greater than comparison:0x03:Comparacion mayor que
+0x01:description.es:0x02:Bitwise AND:0x03:AND bit a bit
+0x01:description.es:0x02:Bitwise OR:0x03:OR bit a bit
+0x01:description.es:0x02:Bitwise XOR:0x03:XOR bit a bit
+0x01:description.es:0x02:Bitwise NOT:0x03:NOT bit a bit
+0x01:description.es:0x02:Ternary conditional marker:0x03:Marcador de condicion ternaria
+0x01:description.es:0x02:Ternary else marker:0x03:Marcador de else en el operador ternario
+0x01:description.es:0x02:Array member or argument range separator:0x03:Separador de miembro de array o de rango de argumentos
+0x01:description.es:0x02:Argument separator:0x03:Separador de argumentos
+0x01:description.es:0x02:Statement terminator:0x03:Terminador de sentencia
+0x01:description.es:0x02:Floating point single-precision tag:0x03:Etiqueta de punto flotante de precision simple
+0x01:description.es:0x02:Boolean true/false data tag:0x03:Etiqueta de dato booleano true/false
+0x01:description.es:0x02:File handle tag for file operations:0x03:Etiqueta de handle de archivo para operaciones de archivo
+0x01:description.es:0x02:Global text draw identifier tag:0x03:Etiqueta de identificador de text draw global
+0x01:description.es:0x02:Player-specific text draw identifier tag:0x03:Etiqueta de identificador de text draw especifico del jugador
+0x01:description.es:0x02:Game menu identifier tag:0x03:Etiqueta de identificador de menu del juego
+0x01:description.es:0x02:Global 3D text label identifier tag:0x03:Etiqueta de identificador de etiqueta de texto 3D global
+0x01:description.es:0x02:Player-specific 3D text label identifier tag:0x03:Etiqueta de identificador de etiqueta de texto 3D especifica del jugador
+0x01:description.es:0x02:Boolean true literal (1):0x03:Literal booleano true (1)
+0x01:description.es:0x02:Boolean false literal (0):0x03:Literal booleano false (0)
+0x01:description.es:0x02:Maximum signed 32-bit cell value:0x03:Valor maximo de celda signed de 32 bits
+0x01:description.es:0x02:Minimum signed 32-bit cell value:0x03:Valor minimo de celda signed de 32 bits
+0x01:description.es:0x02:Special ID representing no valid player (65535):0x03:ID especial que representa ningun jugador valido (65535)
+0x01:description.es:0x02:Special ID representing no valid vehicle (65535):0x03:ID especial que representa ningun vehiculo valido (65535)
+0x01:description.es:0x02:Special ID representing no valid object (65535):0x03:ID especial que representa ningun objeto valido (65535)
+0x01:description.es:0x02:Invalid timer handle representation:0x03:Representacion de un handle de timer invalido
+0x01:description.es:0x02:Maximum player slots on server (default 50/500/1000):0x03:Cantidad maxima de slots de jugador del servidor (por defecto 50/500/1000)
+0x01:description.es:0x02:Maximum vehicle slots on server (default 2000):0x03:Cantidad maxima de slots de vehiculo del servidor (por defecto 2000)
+0x01:description.es:0x02:Maximum global object limit (1000):0x03:Limite maximo de objetos globales (1000)
+0x01:description.es:0x02:Maximum static actors on server (1000):0x03:Cantidad maxima de actores estaticos del servidor (1000)
+0x01:description.es:0x02:Maximum global text draws (2048):0x03:Cantidad maxima de text draws globales (2048)
+0x01:description.es:0x02:Maximum menu instances (128):0x03:Cantidad maxima de instancias de menu (128)
+0x01:description.es:0x02:Maximum gang zones (1024):0x03:Cantidad maxima de zonas de banda (1024)
+0x01:description.es:0x02:Player special action: None:0x03:Accion especial del jugador: Ninguna
+0x01:description.es:0x02:Player special action: Ducking:0x03:Accion especial del jugador: Agacharse
+0x01:description.es:0x02:Player special action: Jetpack:0x03:Accion especial del jugador: Jetpack
+0x01:description.es:0x02:Player state: None:0x03:Estado del jugador: Ninguno
+0x01:description.es:0x02:Player state: On Foot:0x03:Estado del jugador: A pie
+0x01:description.es:0x02:Player state: Driver of a vehicle:0x03:Estado del jugador: Conductor de un vehiculo
+0x01:description.es:0x02:Player state: Passenger in a vehicle:0x03:Estado del jugador: Pasajero de un vehiculo
+0x01:description.es:0x02:Player state: Dead/Wasted:0x03:Estado del jugador: Muerto/Desangrado
+0x01:description.es:0x02:Player state: Spawned:0x03:Estado del jugador: Spawneado
+0x01:description.es:0x02:Player state: Spectating:0x03:Estado del jugador: Observando
+0x01:description.es:0x02:Native provided by the Pawn/SA-MP include set:0x03:Nativa provista por el conjunto de includes de Pawn/SA-MP
+0x01:description.es:0x02:Prints a plain string to server log without formatting:0x03:Imprime un texto simple en el log del servidor sin formateo
+0x01:description.es:0x02:Prints formatted string to server log:0x03:Imprime un texto formateado en el log del servidor
+0x01:description.es:0x02:Formats string buffer with specifiers:0x03:Formatea un buffer de string con especificadores
+0x01:description.es:0x02:Returns length of string in characters:0x03:Devuelve el largo de un string en caracteres
+0x01:description.es:0x02:Concatenates two strings together:0x03:Concatena dos strings
+0x01:description.es:0x02:Deletes characters from start to end index:0x03:Borra caracteres desde el indice inicial hasta el final
+0x01:description.es:0x02:Inserts string at given index:0x03:Inserta un string en el indice indicado
+0x01:description.es:0x02:Compares two strings:0x03:Compara dos strings
+0x01:description.es:0x02:Finds substring in target string:0x03:Busca una subcadena dentro de un string
+0x01:description.es:0x02:Converts string characters into an integer:0x03:Convierte los caracteres de un string en un entero
+0x01:description.es:0x02:Converts integer into decimal string:0x03:Convierte un entero en un string decimal
+0x01:description.es:0x02:Extracts substring from source into dest:0x03:Extrae una subcadena del origen hacia el destino
+0x01:description.es:0x02:Calls function after interval in ms:0x03:Llama a una funcion despues de un intervalo en ms
+0x01:description.es:0x02:Calls function with arguments after interval:0x03:Llama a una funcion con argumentos despues de un intervalo
+0x01:description.es:0x02:Cancels an active timer:0x03:Cancela un timer activo
+0x01:description.es:0x02:Returns millisecond count since system start:0x03:Devuelve la cuenta de milisegundos desde el inicio del sistema
+0x01:description.es:0x02:Returns configured player slot limit:0x03:Devuelve el limite de slots de jugador configurado
+0x01:description.es:0x02:Returns random integer between 0 and max - 1:0x03:Devuelve un entero aleatorio entre 0 y max - 1
+0x01:description.es:0x02:Returns smaller of two integer values:0x03:Devuelve el menor de dos valores enteros
+0x01:description.es:0x02:Returns larger of two integer values:0x03:Devuelve el mayor de dos valores enteros
+0x01:description.es:0x02:Constrains value between min and max bounds:0x03:Limita un valor entre los limites min y max
+0x01:description.es:0x02:Sends chat message to single player:0x03:Envia un mensaje de chat a un solo jugador
+0x01:description.es:0x02:Broadcasts chat message to all players:0x03:Difunde un mensaje de chat a todos los jugadores
+0x01:description.es:0x02:Emulates chat from one player to another:0x03:Emula un chat de un jugador hacia otro
+0x01:description.es:0x02:Emulates chat from one player to all:0x03:Emula un chat de un jugador hacia todos
+0x01:description.es:0x02:Executes an RCON command line directly:0x03:Ejecuta directamente una linea de comando RCON
+0x01:description.es:0x02:Displays arcade style game text on all screens:0x03:Muestra texto de juego estilo arcade en todas las pantallas
+0x01:description.es:0x02:Displays arcade style game text to player:0x03:Muestra texto de juego estilo arcade a un jugador
+0x01:description.es:0x02:Configures default spawn coordinates & gear:0x03:Configura las coordenadas y el equipo de spawn por defecto
+0x01:description.es:0x02:Forces immediate respawn for player:0x03:Fuerza un respawn inmediato del jugador
+0x01:description.es:0x02:Teleports player to 3D world coordinates:0x03:Teletransporta al jugador a coordenadas del mundo 3D
+0x01:description.es:0x02:Teleports player searching for highest ground:0x03:Teletransporta al jugador buscando el terreno mas alto
+0x01:description.es:0x02:Gets current 3D position of player:0x03:Obtiene la posicion 3D actual del jugador
+0x01:description.es:0x02:Sets heading compass direction angle:0x03:Define el angulo de direccion de la brujula
+0x01:description.es:0x02:Gets heading compass direction angle:0x03:Obtiene el angulo de direccion de la brujula
+0x01:description.es:0x02:Tests if player is within sphere radius:0x03:Comprueba si el jugador esta dentro de un radio esferico
+0x01:description.es:0x02:Tests if player is connected:0x03:Comprueba si el jugador esta conectado
+0x01:description.es:0x02:Tests if player is in specific vehicle:0x03:Comprueba si el jugador esta en un vehiculo especifico
+0x01:description.es:0x02:Tests if player is inside any vehicle:0x03:Comprueba si el jugador esta dentro de cualquier vehiculo
+0x01:description.es:0x02:Sets current health points:0x03:Define los puntos de vida actuales
+0x01:description.es:0x02:Gets current health points:0x03:Obtiene los puntos de vida actuales
+0x01:description.es:0x02:Sets current body armour points:0x03:Define los puntos de chaleco antibalas actuales
+0x01:description.es:0x02:Gets current body armour points:0x03:Obtiene los puntos de chaleco antibalas actuales
+0x01:description.es:0x02:Adds or deducts money from player:0x03:Suma o descuenta dinero al jugador
+0x01:description.es:0x02:Returns current player money balance:0x03:Devuelve el saldo de dinero actual del jugador
+0x01:description.es:0x02:Sets player money balance to zero:0x03:Define el saldo de dinero del jugador en cero
+0x01:description.es:0x02:Sets player scoreboard score:0x03:Define el puntaje del jugador en el scoreboard
+0x01:description.es:0x02:Returns current player scoreboard score:0x03:Devuelve el puntaje actual del jugador en el scoreboard
+0x01:description.es:0x02:Returns current player character PED skin ID:0x03:Devuelve el ID de skin del PED actual del jugador
+0x01:description.es:0x02:Changes character PED skin ID:0x03:Cambia el ID de skin del PED del jugador
+0x01:description.es:0x02:Returns current character PED skin ID:0x03:Devuelve el ID de skin del PED actual del jugador
+0x01:description.es:0x02:Awards weapon and ammo to player:0x03:Otorga un arma con su municion al jugador
+0x01:description.es:0x02:Removes all weapons from player:0x03:Quita todas las armas al jugador
+0x01:description.es:0x02:Returns currently held weapon ID:0x03:Devuelve el ID del arma que el jugador tiene en mano
+0x01:description.es:0x02:Changes player nickname:0x03:Cambia el apodo del jugador
+0x01:description.es:0x02:Retrieves player nickname:0x03:Obtiene el apodo del jugador
+0x01:description.es:0x02:Sets player radar blip and name tag color:0x03:Define el blip del radar y el color del name tag del jugador
+0x01:description.es:0x02:Returns player color:0x03:Devuelve el color del jugador
+0x01:description.es:0x02:Changes building interior ID:0x03:Cambia el ID del interior de un edificio
+0x01:description.es:0x02:Gets building interior ID:0x03:Obtiene el ID del interior de un edificio
+0x01:description.es:0x02:Sets virtual world dimension ID:0x03:Define el ID de dimension del mundo virtual
+0x01:description.es:0x02:Gets virtual world dimension ID:0x03:Obtiene el ID de dimension del mundo virtual
+0x01:description.es:0x02:Retrieves player IP address:0x03:Obtiene la direccion IP del jugador
+0x01:description.es:0x02:Returns player latency in ms:0x03:Devuelve la latencia del jugador en ms
+0x01:description.es:0x02:Kicks a player from the server:0x03:Expulsa a un jugador del servidor
+0x01:description.es:0x02:Bans player IP address:0x03:Banea la direccion IP de un jugador
+0x01:description.es:0x02:Bans player IP address with custom reason:0x03:Banea la direccion IP de un jugador con un motivo personalizado
+0x01:description.es:0x02:Teleports player directly into vehicle:0x03:Teletransporta al jugador directamente dentro de un vehiculo
+0x01:description.es:0x02:Ejects player from their vehicle:0x03:Eyecta al jugador de su vehiculo
+0x01:description.es:0x02:Returns vehicle ID player is inside:0x03:Devuelve el ID del vehiculo en el que esta el jugador
+0x01:description.es:0x02:Returns vehicle seat index of player:0x03:Devuelve el indice del asiento del vehiculo del jugador
+0x01:description.es:0x02:Spawns a new vehicle:0x03:Genera un vehiculo nuevo
+0x01:description.es:0x02:Removes vehicle from the server:0x03:Elimina un vehiculo del servidor
+0x01:description.es:0x02:Gets 3D position of vehicle:0x03:Obtiene la posicion 3D del vehiculo
+0x01:description.es:0x02:Teleports vehicle to coordinates:0x03:Teletransporta el vehiculo a unas coordenadas
+0x01:description.es:0x02:Repairs vehicle engine and body panels:0x03:Repara el motor y la carrocerÃ­a del vehiculo
+0x01:description.es:0x02:Sets license plate text:0x03:Define el texto de la patente
+0x01:description.es:0x02:Returns vehicle model ID:0x03:Devuelve el ID del modelo del vehiculo
+0x01:description.es:0x02:Adds car mod component:0x03:Agrega un componente de tuning al auto
+0x01:description.es:0x02:Removes car mod component:0x03:Quita un componente de tuning del auto
+0x01:description.es:0x02:Changes body color of vehicle:0x03:Cambia el color de la carrocerÃ­a del vehiculo
+0x01:description.es:0x02:Changes paintjob livery of vehicle:0x03:Cambia la pintura o livery del vehiculo
+0x01:description.es:0x02:Creates global world object:0x03:Crea un objeto global en el mundo
+0x01:description.es:0x02:Destroys world object:0x03:Destruye un objeto del mundo
+0x01:description.es:0x02:Smoothly moves object to target position:0x03:Mueve un objeto suavemente hasta la posicion objetivo
+0x01:description.es:0x02:Halts object movement immediately:0x03:Detiene de inmediato el movimiento de un objeto
+0x01:description.es:0x02:Creates world pickup model:0x03:Crea un pickup en el mundo
+0x01:description.es:0x02:Removes pickup:0x03:Elimina un pickup
+0x01:description.es:0x02:Displays modal GUI dialog window to player:0x03:Muestra una ventana de dialogo GUI modal al jugador
+0x01:description.es:0x02:Creates global on-screen text draw:0x03:Crea un text draw global en pantalla
+0x01:description.es:0x02:Destroys global text draw:0x03:Destruye un text draw global
+0x01:description.es:0x02:Displays text draw to player:0x03:Muestra un text draw a un jugador
+0x01:description.es:0x02:Hides text draw from player:0x03:Oculta un text draw al jugador
+0x01:description.es:0x02:Updates text draw string:0x03:Actualiza el string de un text draw
+0x01:description.es:0x02:Opens file on disk:0x03:Abre un archivo del disco
+0x01:description.es:0x02:Closes open file handle:0x03:Cierra un handle de archivo abierto
+0x01:description.es:0x02:Writes text line to file:0x03:Escribe una linea de texto en un archivo
+0x01:description.es:0x02:Reads text line from file:0x03:Lee una linea de texto de un archivo
+0x01:description.es:0x02:Checks if file exists on server disk:0x03:Comprueba si un archivo existe en el disco del servidor
+0x01:description.es:0x02:Deletes file from server disk:0x03:Elimina un archivo del disco del servidor
+0x01:description.es:0x02:Callback triggered when the gamemode loads:0x03:Callback que se dispara cuando se carga el gamemode
+0x01:description.es:0x02:Callback triggered when the gamemode shuts down:0x03:Callback que se dispara cuando se detiene el gamemode
+0x01:description.es:0x02:Callback triggered when a filterscript loads:0x03:Callback que se dispara cuando se carga un filterscript
+0x01:description.es:0x02:Callback triggered when a filterscript unloads:0x03:Callback que se dispara cuando se descarga un filterscript
+0x01:description.es:0x02:Callback triggered when a player joins the server:0x03:Callback que se dispara cuando un jugador se conecta al servidor
+0x01:description.es:0x02:Callback triggered when a player leaves the server:0x03:Callback que se dispara cuando un jugador se va del servidor
+0x01:description.es:0x02:Callback triggered when a player spawns in the world:0x03:Callback que se dispara cuando un jugador spawnea en el mundo
+0x01:description.es:0x02:Callback triggered when a player dies or is killed:0x03:Callback que se dispara cuando un jugador muere o es asesinado
+0x01:description.es:0x02:Callback triggered when a vehicle spawns:0x03:Callback que se dispara cuando spawnea un vehiculo
+0x01:description.es:0x02:Callback triggered when a vehicle is destroyed:0x03:Callback que se dispara cuando se destruye un vehiculo
+0x01:description.es:0x02:Callback triggered when a player sends public chat:0x03:Callback que se dispara cuando un jugador envia un chat publico
+0x01:description.es:0x02:Callback triggered when a player enters a slash command:0x03:Callback que se dispara cuando un jugador escribe un comando con barra
+0x01:description.es:0x02:Callback triggered when a player views class selection:0x03:Callback que se dispara cuando un jugador ve la seleccion de clase
+0x01:description.es:0x02:Callback triggered when a player starts entering a vehicle:0x03:Callback que se dispara cuando un jugador empieza a entrar a un vehiculo
+0x01:description.es:0x02:Callback triggered when a player starts exiting a vehicle:0x03:Callback que se dispara cuando un jugador empieza a salir de un vehiculo
+0x01:description.es:0x02:Callback triggered when a player changes state (foot, car, etc.):0x03:Callback que se dispara cuando cambia el estado de un jugador (a pie, en auto, etc.)
+0x01:description.es:0x02:Callback triggered when a player enters standard checkpoint:0x03:Callback que se dispara cuando un jugador entra en un checkpoint comun
+0x01:description.es:0x02:Callback triggered when a player leaves standard checkpoint:0x03:Callback que se dispara cuando un jugador sale de un checkpoint comun
+0x01:description.es:0x02:Callback triggered when entering race checkpoint:0x03:Callback que se dispara al entrar en un checkpoint de carrera
+0x01:description.es:0x02:Callback triggered when leaving race checkpoint:0x03:Callback que se dispara al salir de un checkpoint de carrera
+0x01:description.es:0x02:Callback triggered on server console RCON command:0x03:Callback que se dispara ante un comando RCON desde la consola del servidor
+0x01:description.es:0x02:Callback triggered when player clicks Spawn button:0x03:Callback que se dispara cuando el jugador presiona el boton Spawn
+0x01:description.es:0x02:Callback triggered when a moving object finishes its travel:0x03:Callback que se dispara cuando un objeto en movimiento termina su recorrido
+0x01:description.es:0x02:Callback triggered when player object finishes moving:0x03:Callback que se dispara cuando el objeto de un jugador termina de moverse
+0x01:description.es:0x02:Callback triggered when a player walks over a pickup:0x03:Callback que se dispara cuando un jugador pasa sobre un pickup
+0x01:description.es:0x02:Callback triggered when a vehicle modification is installed:0x03:Callback que se dispara cuando se instala una modificacion de vehiculo
+0x01:description.es:0x02:Callback triggered when a vehicle paintjob is applied:0x03:Callback que se dispara cuando se aplica una pintura a un vehiculo
+0x01:description.es:0x02:Callback triggered when a vehicle color is changed:0x03:Callback que se dispara cuando cambia el color de un vehiculo
+0x01:description.es:0x02:Callback triggered on vehicle damage parts update:0x03:Callback que se dispara al actualizarse el dano de las partes de un vehiculo
+0x01:description.es:0x02:Callback triggered periodically for unoccupied vehicles:0x03:Callback que se dispara periodicamente para vehiculos sin conductor
+0x01:description.es:0x02:Callback triggered when selecting a menu option:0x03:Callback que se dispara al elegir una opcion de un menu
+0x01:description.es:0x02:Callback triggered when player cancels out of a menu:0x03:Callback que se dispara cuando un jugador cancela un menu
+0x01:description.es:0x02:Callback triggered when user interacts with a GUI dialog:0x03:Callback que se dispara cuando el usuario interactua con un dialogo GUI
+0x01:description.es:0x02:Callback triggered on clicking personal text draw:0x03:Callback que se dispara al hacer clic en un text draw personal
+0x01:description.es:0x02:Callback triggered on clicking global text draw:0x03:Callback que se dispara al hacer clic en un text draw global
+0x01:description.es:0x02:Callback triggered when clicking player in scoreboard:0x03:Callback que se dispara al hacer clic en un jugador del scoreboard
+0x01:description.es:0x02:Callback triggered on incoming raw client connection:0x03:Callback que se dispara ante una conexion cruda de un cliente entrante
+0x01:description.es:0x02:Callback triggered when vehicle trailer sync updates:0x03:Callback que se dispara al actualizarse la sincronizacion del trailer de un vehiculo
+0x01:description.es:0x02:Callback triggered when siren toggles on/off:0x03:Callback que se dispara cuando la sirena se enciende o se apaga
+0x01:description.es:0x02:Callback triggered when a player damages someone:0x03:Callback que se dispara cuando un jugador lastima a otro
+0x01:description.es:0x02:Callback triggered when a player suffers damage:0x03:Callback que se dispara cuando un jugador recibe dano
+0x01:description.es:0x02:Callback triggered on bullet fired by weapon:0x03:Callback que se dispara cuando un arma dispara una bala
 0x01:item|DIRECTIVE|#include:0x02:Include an external source or header file
 0x01:item|DIRECTIVE|#define:0x02:Define a preprocessor macro or constant
 0x01:item|DIRECTIVE|#undef:0x02:Undefine an existing macro

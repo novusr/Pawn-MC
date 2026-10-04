@@ -48,14 +48,14 @@ Current app metadata (`app/build.gradle.kts`): `applicationId` `com.rvdjv.pawnmc
 | Workspace sessions | Up to 3 open folders, each with its own tree, opened editors, and search hits |
 | Workspace-wide tools | Find/replace across every file of a workspace, plus search-in-workspace |
 | Editor terminal portal | In-editor command line (`help`, `docs`, `pawncc`, `switch`, `clear`) with sandboxed source resolution inside the workspace root |
-| Localization | Indonesian and English strings served from `_dat/_extract.dat` |
-| Pawn symbol data | Keywords, natives, and forwards loaded from `_dat/_internal.dat` (natives/forwards grouped by include) |
+| Localization | Indonesian, English, and Spanish (Argentina) strings served from `_dat/_dat_extract.dat` |
+| Pawn symbol data | Keywords, natives, and forwards loaded from `_dat/_dat_internal.dat` (natives/forwards grouped by include) |
 | Editor appearance | Custom Xed editor background with presets and a hex picker |
 | Theme and language | Light/dark/system theme with an in-app language selector |
 | Version selection | Switch between Pawn compiler versions 3.10.7 and 3.10.11 |
 | Native compilation | Execute Pawn compilation through the native layer |
 | Output capture | Read compiler output and parse exit codes and error counts |
-| Output explanations | Local hints for Pawn warning/error codes, stored in `_dat/_explain.dat` |
+| Output explanations | Local hints for Pawn warning/error codes, stored in `_dat/_dat_explain.dat` |
 | Auto fallback | Retry using an alternate compiler version after repeated errors |
 | Settings screen | Manage app configuration, include paths, and compiler preferences |
 | GitHub update check | Compare installed app version with the latest release assets |
@@ -99,17 +99,17 @@ Current app metadata (`app/build.gradle.kts`): `applicationId` `com.rvdjv.pawnmc
 | app/src/main/cpp/Compiler.h | Native compiler declarations |
 | app/src/main/res/xml/file_paths.xml | FileProvider paths for the APK install flow |
 | app/src/main/res/xml/backup_rules.xml, data_extraction_rules.xml | Backup/data extraction rules |
-| app/src/main/res/values/strings.xml, themes.xml | Minimal resources (UI strings live in `_dat/_extract.dat`) |
+| app/src/main/res/values/strings.xml, themes.xml | Minimal resources (UI strings live in `_dat/_dat_extract.dat`) |
 | app/src/main/res/mipmap-*, drawable/ic_launcher_* | Launcher icons |
 
 ### 4.3 Data Assets (`_dat/`, packaged via `assets.srcDir`)
 
 | File | Purpose |
 |---|---|
-| _dat/_extract.dat | Single source of localisation data (id/en), packaged as an asset |
-| _dat/_explain.dat | Compiler message explanations (`code` -> hint), packaged as an asset |
-| _dat/_internal.dat | Pawn symbol data: item descriptions plus natives/forwards grouped by include |
-| _dat/_simulation.dat | Localised strings for the editor terminal portal (`key.id` / `key.en`) |
+| _dat/_dat_extract.dat | Single source of localisation data (id/en/es), packaged as an asset |
+| _dat/_dat_explain.dat | Compiler message explanations (`code` -> hint), packaged as an asset |
+| _dat/_dat_internal.dat | Pawn symbol data: item descriptions plus natives/forwards grouped by include |
+| _dat/_dat_simulation.dat | Localised strings for the editor terminal portal (`key.id` / `key.en`) |
 
 ---
 
@@ -120,18 +120,18 @@ Current app metadata (`app/build.gradle.kts`): `applicationId` `com.rvdjv.pawnmc
 | File / Path | Purpose |
 |---|---|
 | data/config/CompilerConfig.kt | All compiler settings and app preferences in SharedPreferences; compile option lists; include path normalisation/dedupe; script extension handling |
-| data/config/AppLocalization.kt | Loads and parses `_dat/_extract.dat`; no bundled copy of the strings |
+| data/config/AppLocalization.kt | Loads and parses `_dat/_dat_extract.dat`; no bundled copy of the strings |
 | data/compiler/Compiler.kt | Facade of the compiler layer; forwards the public API to the focused compiler helpers |
-| data/compiler/CompilerRunner.kt | Legacy execution layer file; **not referenced by any caller** — the live entry is `Runner` |
+| data/compiler/CompilerRunner.kt | Legacy execution layer file; **not referenced by any caller** â€” the live entry is `Runner` |
 | data/compiler/Runner.kt | Live execution layer: native library loading, compile execution, argument building, fallback retry, forced-mode handling |
 | data/compiler/Names.kt | Shared compiler names, extensions, folder variants, flags, thresholds |
 | data/compiler/Detection.kt | Nearby `pawncc` detection, binary metadata/MD5 reading, include path selection |
 | data/compiler/CaseConversion.kt | "Ignore case" conversion: folder backup, lowercase names, `#include` rewriting |
-| data/compiler/Explainer.kt | Annotates raw compiler output with local hints from `_dat/_explain.dat` |
-| data/compiler/Explanations.kt | Reads, parses and caches `_dat/_explain.dat` |
+| data/compiler/Explainer.kt | Annotates raw compiler output with local hints from `_dat/_dat_explain.dat` |
+| data/compiler/Explanations.kt | Reads, parses and caches `_dat/_dat_explain.dat` |
 | data/update/UpdateManager.kt | GitHub release fetcher, semantic version comparison, APK asset selection/download, install intent preparation |
 | data/pawn/Registry.kt | Curated Pawn keywords, directives, natives, forwards; merges include-derived symbols for completion and highlighting |
-| data/pawn/InternDat.kt | Parses `_dat/_internal.dat` into items and per-include symbol groups (asset + filesystem fallbacks, cached) |
+| data/pawn/InternDat.kt | Parses `_dat/_dat_internal.dat` into items and per-include symbol groups (asset + filesystem fallbacks, cached) |
 | data/pawn/Index.kt | `PawnIndex` expose of the parsed include groups for native/forward lookups |
 
 ### 5.2 UI Layer
@@ -151,7 +151,7 @@ Current app metadata (`app/build.gradle.kts`): `applicationId` `com.rvdjv.pawnmc
 | interface/editor/XedWorkspaceViewModel.kt | Up to 3 workspaces with trees, open documents, search and replace |
 | interface/editor/XedWorkspacePanel.kt | Floating workspace explorer: opened editors, folder tree, search hits |
 | interface/editor/WorkspaceFolderPicker.kt | Builds `ACTION_OPEN_DOCUMENT_TREE` intents (Downloads start location) and resolves a tree URI to a real `File` |
-| interface/editor/XedMCPortal.kt | Editor terminal: command tokenizer, `pawncc` invocation sandboxing, `switch` suggestions, `_simulation.dat` lookup, and the floating portal UI |
+| interface/editor/XedMCPortal.kt | Editor terminal: command tokenizer, `pawncc` invocation sandboxing, `switch` suggestions, `_dat_simulation.dat` lookup, and the floating portal UI |
 | interface/editor/XedToolPanel.kt | Search / replace panel for workspace-wide operations |
 | interface/editor/XedCodeEditor.kt | Thin wrapper around the Sora CodeEditor widget |
 | interface/editor/pawn/PawnLanguage.kt | Pawn language implementation for the editor (completion, indent, symbols) |
@@ -169,11 +169,11 @@ Current app metadata (`app/build.gradle.kts`): `applicationId` `com.rvdjv.pawnmc
 | app/src/test/.../data/update/UpdateManagerTest.kt | Version comparison / update regression tests |
 | app/src/test/.../data/config/AppLocalizationTest.kt | Localisation parsing and lookup regression tests |
 | app/src/test/.../data/config/CompilerConfigTest.kt | Include path normalisation, dedupe, path resolution |
-| app/src/test/.../data/compiler/ExplanationsTest.kt | `_dat/_explain.dat` parsing regression tests |
+| app/src/test/.../data/compiler/ExplanationsTest.kt | `_dat/_dat_explain.dat` parsing regression tests |
 | app/src/test/.../data/compiler/SuccessTest.kt | Successful compile path expectations |
 | app/src/test/.../data/compiler/FailTest.kt | Failing compile path expectations |
 | app/src/test/.../data/compiler/IgnoreCaseWorkflowTest.kt | Ignore-case conversion workflow regression tests |
-| app/src/test/.../interface/editor/XedEditorTest.kt | Editor symbol/completion parsing, `_internal.dat` descriptions |
+| app/src/test/.../interface/editor/XedEditorTest.kt | Editor symbol/completion parsing, `_dat_internal.dat` descriptions |
 | app/src/test/.../ExampleUnitTest.kt | Template unit test |
 | app/src/androidTest/.../ExampleInstrumentedTest.kt | Template instrumented test |
 
@@ -187,15 +187,15 @@ Current app metadata (`app/build.gradle.kts`): `applicationId` `com.rvdjv.pawnmc
 | Native compiler | cpp/CMakeLists.txt, cpp/Compiler.cpp, cpp/Compiler.h | JNI bridge (`Runner_compile/getOutput/getErrors`) and native compile support |
 | Compiler config | data/config/CompilerConfig.kt | Persistent compile configuration |
 | Compile engine | data/compiler/Compiler.kt, Runner.kt, CompilerRunner.kt (legacy) | Compile logic, output capture, fallback retry |
-| Pawn symbol data | data/pawn/Registry.kt, InternDat.kt, Index.kt | Completion and highlighting data from `_dat/_internal.dat` |
+| Pawn symbol data | data/pawn/Registry.kt, InternDat.kt, Index.kt | Completion and highlighting data from `_dat/_dat_internal.dat` |
 | Update flow | data/update/UpdateManager.kt | GitHub API interactions and APK update install pipeline |
 | Main app UI | interface/main/MainScreen.kt | Main compile entry point, self tests |
 | Editor UI | interface/editor/XedEditorScreen.kt | Code canvas, tab strip, floating controls |
 | Editor terminal | interface/editor/XedMCPortal.kt | Command line, `pawncc` sandboxed invocation, version switch |
 | Workspace model | interface/editor/XedWorkspaceViewModel.kt | Folder trees, open documents, search/replace |
 | SAF access | interface/editor/WorkspaceFolderPicker.kt | System folder picker intent and tree-URI to `File` resolution |
-| Localization | data/config/AppLocalization.kt, _dat/_extract.dat | Single-source id/en strings |
-| Compiler explanations | data/compiler/Explanations.kt, _dat/_explain.dat | Single-source hints for Pawn compiler messages |
+| Localization | data/config/AppLocalization.kt, _dat/_dat_extract.dat | Single-source id/en/es strings |
+| Compiler explanations | data/compiler/Explanations.kt, _dat/_dat_explain.dat | Single-source hints for Pawn compiler messages |
 | Settings UI | interface/settings/SettingsScreen.kt | App configuration and update controls |
 | File browser | interface/filebrowser/FileBrowserDialog.kt | Storage browsing and file selection |
 | CI | .github/workflows/ci.yml | Lint, debug build, unit tests, artifact upload |
@@ -233,7 +233,7 @@ Current app metadata (`app/build.gradle.kts`): `applicationId` `com.rvdjv.pawnmc
 | 3 | `Compiler.compile()` is invoked; version chosen by forced mode or nearby detection |
 | 4 | Compiler options are built from config |
 | 5 | Native compile output is parsed (exit code, error count) |
-| 6 | Output is annotated via `Explainer` with `_dat/_explain.dat` hints |
+| 6 | Output is annotated via `Explainer` with `_dat/_dat_explain.dat` hints |
 | 7 | Output log and compile result are shown in UI |
 | 8 | If errors repeat and fallback is allowed, compile is retried on the other version |
 
@@ -272,11 +272,11 @@ Current app metadata (`app/build.gradle.kts`): `applicationId` `com.rvdjv.pawnmc
 | Include path hygiene | Only `.pawn`, `.pwn`, `.p` and `.inc` are treated as script extensions and stripped from include/compile paths |
 | Compose state in lists | The workspace tree must be remembered against `tree` and `collapsedPaths`, otherwise folder toggles never recompose |
 | Single scrolling surface | The explorer keeps opened editors, tree and hits in one LazyColumn; competing scroll containers swallow taps |
-| Single localisation source | `_dat/_extract.dat` is the only place UI strings live; `AppLocalization` must never duplicate them |
-| Single explanation source | `_dat/_explain.dat` is the only place compiler message hints live; `Explanations` parses it once per process |
-| Single symbol source | Pawn keywords/natives/forwards come from `_dat/_internal.dat` via `InternDat`/`PawnIndex`; `Registry` only curates and merges |
-| Terminal portal data | Portal text comes from `_dat/_simulation.dat` with per-language `key.id` / `key.en` lookup and English fallback |
-| Assets packaging | `assets.srcDir(rootProject.file("_dat"))` ships the whole folder, so all four `.dat` files reach the app; JVM tests fall back to reading `_dat/...` from the filesystem |
+| Single localisation source | `_dat/_dat_extract.dat` is the only place UI strings live; `AppLocalization` must never duplicate them |
+| Single explanation source | `_dat/_dat_explain.dat` is the only place compiler message hints live; `Explanations` parses it once per process |
+| Single symbol source | Pawn keywords/natives/forwards come from `_dat/_dat_internal.dat` via `InternDat`/`PawnIndex`; `Registry` only curates and merges |
+| Terminal portal data | Portal text comes from `_dat/_dat_simulation.dat` with per-language `key.id` / `key.en` / `key.es` lookup and English fallback |
+| Assets packaging | `assets.srcDir(rootProject.file("_dat"))` ships the whole folder, so all four `_dat_*.dat` files reach the app; JVM tests fall back to reading `_dat/...` from the filesystem |
 | Compiler layer split | `Compiler` stays a thin facade while implementation is split by single responsibility |
 | Dead file | `data/compiler/CompilerRunner.kt` duplicates `Runner.kt` and has no references; it should be deleted to avoid two divergent execution layers |
 | Naming inside a package | Files in `data/compiler` drop the redundant `Compiler` prefix because the package already states it |
@@ -319,10 +319,10 @@ Current app metadata (`app/build.gradle.kts`): `applicationId` `com.rvdjv.pawnmc
 | Medium | Extend the terminal portal (`docs` content source, richer `switch` handling, output history) |
 | Medium | Improve log export and compile result history |
 | Medium | Extend workspace support: rename/move files, drag-and-drop in the explorer, richer replace previews |
-| Medium | Grow `_dat/_internal.dat` symbol coverage and add tests guarding the data-file parsers |
+| Medium | Grow `_dat/_dat_internal.dat` symbol coverage and add tests guarding the data-file parsers |
 | Low | Extend theme and app customisation options (editor background presets, accent density) |
-| Low | Keep localisation strings in sync in `_dat/_extract.dat` only, and add keys as the UI grows |
-| Low | Extend `_dat/_explain.dat` with more Pawn message codes and keep it as the only place hints are maintained |
+| Low | Keep localisation strings in sync in `_dat/_dat_extract.dat` only, and add keys as the UI grows |
+| Low | Extend `_dat/_dat_explain.dat` with more Pawn message codes and keep it as the only place hints are maintained |
 
 ---
 
@@ -350,10 +350,10 @@ The most relevant files to understand the project are:
 | app/src/main/java/com/rvdjv/pawnmc/interface/settings/SettingsScreen.kt | Settings and update actions |
 | app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | Release update logic |
 | app/src/main/cpp/Compiler.cpp | Native bridge implementation |
-| _dat/_extract.dat | Localisation data for Indonesian and English |
-| _dat/_explain.dat | Local explanations of Pawn compiler messages |
-| _dat/_internal.dat | Pawn natives/forwards/descriptions |
-| _dat/_simulation.dat | Terminal portal strings |
+| _dat/_dat_extract.dat | Localisation data for Indonesian, English, and Spanish (Argentina) |
+| _dat/_dat_explain.dat | Local explanations of Pawn compiler messages |
+| _dat/_dat_internal.dat | Pawn natives/forwards/descriptions |
+| _dat/_dat_simulation.dat | Terminal portal strings |
 
 ---
 

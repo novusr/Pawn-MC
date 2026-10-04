@@ -427,11 +427,19 @@ fun XedEditorScreen(
     noticeMessage?.let { message ->
         AlertDialog(
             onDismissRequest = { noticeMessage = null },
-            title = { Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Informasi" else "Notice") },
+            title = { Text(when (appLanguage) {
+                CompilerConfig.AppLanguage.ID -> "Informasi"
+                CompilerConfig.AppLanguage.ES -> "Informacion"
+                CompilerConfig.AppLanguage.EN -> "Notice"
+            }) },
             text = { Text(message) },
             confirmButton = {
                 TextButton(onClick = { noticeMessage = null }) {
-                    Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Tutup" else "Dismiss")
+                    Text(when (appLanguage) {
+                        CompilerConfig.AppLanguage.ID -> "Tutup"
+                        CompilerConfig.AppLanguage.ES -> "Cerrar"
+                        CompilerConfig.AppLanguage.EN -> "Dismiss"
+                    })
                 }
             }
         )

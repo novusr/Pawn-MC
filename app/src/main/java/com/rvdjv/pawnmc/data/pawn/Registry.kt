@@ -16,10 +16,14 @@ data class _item(
     val name: String,
     val description: String,
     val kind: PawnItemKind,
-    val descriptionId: String? = null
+    val descriptionId: String? = null,
+    val descriptionEs: String? = null,
 ) {
-    fun descriptionFor(language: CompilerConfig.AppLanguage): String =
-        if (language == CompilerConfig.AppLanguage.ID) descriptionId ?: description else description
+    fun descriptionFor(language: CompilerConfig.AppLanguage): String = when (language) {
+        CompilerConfig.AppLanguage.ID -> descriptionId ?: description
+        CompilerConfig.AppLanguage.ES -> descriptionEs ?: description
+        CompilerConfig.AppLanguage.EN -> description
+    }
 }
 
 /**
@@ -65,12 +69,12 @@ object PawnRegistry {
         val natives = PawnIndex.INCLUDES.flatMap { it.natives }
             .filterNot { it.name in nativeSet || it.name in keywordSet }
             .distinctBy { it.name }
-        addAll(natives.map { _item(it.name, it.description, it.kind, it.descriptionId) })
+        addAll(natives.map { _item(it.name, it.description, it.kind, it.descriptionId, it.descriptionEs) })
 
         val forwards = PawnIndex.INCLUDES.flatMap { it.forwards }
             .filterNot { it.name in callbackSet || it.name in keywordSet }
             .distinctBy { it.name }
-        addAll(forwards.map { _item(it.name, it.description, it.kind, it.descriptionId) })
+        addAll(forwards.map { _item(it.name, it.description, it.kind, it.descriptionId, it.descriptionEs) })
     }
 
     private val keywordSet: Set<String> by lazy {

@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.data.compiler
+﻿package com.rvdjv.pawnmc.data.compiler
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -6,7 +6,7 @@ import org.junit.Test
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 
 /**
- * Regression tests for the `_dat/_explain.dat` parser.
+ * Regression tests for the `_dat/_dat_explain.dat` parser.
  *
  * The explanations themselves are external data, so only the decoding contract is
  * asserted here: the last entry of a duplicated code wins, comments are ignored and
@@ -54,6 +54,7 @@ class ExplanationsTest {
             """
             0x01:013.en:0x02:No entry point was found.
             0x01:013.id:0x02:Titik masuk program tidak ditemukan.
+            0x01:013.es:0x02:No se encontro el punto de entrada.
             0x01:017:0x02:Undefined symbol.
             """.trimIndent()
         )
@@ -63,8 +64,20 @@ class ExplanationsTest {
             Explanations.resolve(parsed, "013", CompilerConfig.AppLanguage.ID)
         )
         assertEquals(
+            "No se encontro el punto de entrada.",
+            Explanations.resolve(parsed, "013", CompilerConfig.AppLanguage.ES)
+        )
+        assertEquals(
+            "No entry point was found.",
+            Explanations.resolve(parsed, "013", CompilerConfig.AppLanguage.EN)
+        )
+        assertEquals(
             "Undefined symbol.",
             Explanations.resolve(parsed, "017", CompilerConfig.AppLanguage.ID)
+        )
+        assertEquals(
+            "Undefined symbol.",
+            Explanations.resolve(parsed, "017", CompilerConfig.AppLanguage.ES)
         )
     }
 

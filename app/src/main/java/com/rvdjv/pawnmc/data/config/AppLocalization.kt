@@ -21,6 +21,36 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         map
     }
 
+    /** English text -> Spanish (Argentina) text. */
+    private val enToEsMap: Map<String, String> by lazy {
+        val map = mutableMapOf<String, String>()
+        for ((k, v) in entries) {
+            if (k.endsWith(".en")) {
+                val base = k.removeSuffix(".en")
+                val esVal = entries["$base.es"]
+                if (esVal != null) {
+                    map[v.trim().lowercase()] = esVal
+                }
+            }
+        }
+        map
+    }
+
+    /** Spanish (Argentina) text -> English text. */
+    private val esToEnMap: Map<String, String> by lazy {
+        val map = mutableMapOf<String, String>()
+        for ((k, v) in entries) {
+            if (k.endsWith(".es")) {
+                val base = k.removeSuffix(".es")
+                val enVal = entries["$base.en"]
+                if (enVal != null) {
+                    map[v.trim().lowercase()] = enVal
+                }
+            }
+        }
+        map
+    }
+
     private val idToEnMap: Map<String, String> by lazy {
         val map = mutableMapOf<String, String>()
         for ((k, v) in entries) {
@@ -44,12 +74,21 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         if (direct != null) return direct
 
         // Value or phrase-based fallback
-        if (language == CompilerConfig.AppLanguage.ID) {
-            enToIdMap[normalizedKey.lowercase()]?.let { return it }
-            enToIdMap[fallback.trim().lowercase()]?.let { return it }
-        } else {
-            idToEnMap[normalizedKey.lowercase()]?.let { return it }
-            idToEnMap[fallback.trim().lowercase()]?.let { return it }
+        when (language) {
+            CompilerConfig.AppLanguage.ID -> {
+                enToIdMap[normalizedKey.lowercase()]?.let { return it }
+                enToIdMap[fallback.trim().lowercase()]?.let { return it }
+            }
+            CompilerConfig.AppLanguage.ES -> {
+                enToEsMap[normalizedKey.lowercase()]?.let { return it }
+                enToEsMap[fallback.trim().lowercase()]?.let { return it }
+            }
+            CompilerConfig.AppLanguage.EN -> {
+                idToEnMap[normalizedKey.lowercase()]?.let { return it }
+                esToEnMap[normalizedKey.lowercase()]?.let { return it }
+                idToEnMap[fallback.trim().lowercase()]?.let { return it }
+                esToEnMap[fallback.trim().lowercase()]?.let { return it }
+            }
         }
 
         return fallback
@@ -60,10 +99,10 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
     }
 
     companion object {
-        private const val ASSET_PATH = "_extract.dat"
+        private const val ASSET_PATH = "_dat_extract.dat"
 
         fun localizedContext(context: Context, language: CompilerConfig.AppLanguage): Context {
-            val locale = Locale.forLanguageTag(if (language == CompilerConfig.AppLanguage.ID) "id" else "en")
+            val locale = Locale.forLanguageTag(language.localeTag())
             Locale.setDefault(locale)
             val configuration = Configuration(context.resources.configuration).apply {
                 setLocale(locale)
@@ -73,7 +112,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         }
 
         /**
-         * Reads the localisation table from `_dat/_extract.dat` only.
+         * Reads the localisation table from `_dat/_dat_extract.dat` only.
          *
          * The asset is the single source of truth; there is deliberately no bundled copy
          * and no comparison between the asset and anything else, so a string only ever has
@@ -85,7 +124,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
             }.getOrNull()?.takeIf { it.isNotBlank() }
 
             val fileData = if (assetData == null) {
-                sequenceOf(java.io.File("_dat/_extract.dat"), java.io.File(ASSET_PATH))
+                sequenceOf(java.io.File("_dat/_dat_extract.dat"), java.io.File(ASSET_PATH))
                     .mapNotNull { file -> runCatching { file.takeIf { it.isFile }?.readText() }.getOrNull() }
                     .firstOrNull { it.isNotBlank() }
             } else null

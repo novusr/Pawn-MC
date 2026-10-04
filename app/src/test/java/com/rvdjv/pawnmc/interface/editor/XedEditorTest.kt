@@ -297,6 +297,8 @@ class XedEditorTest {
             """
                 0x01:description.id:0x02:Declares a local or global variable:0x03:Mendeklarasikan variabel lokal atau global
                 0x01:description.id:0x02:Prints a plain string:0x03:Mencetak teks biasa
+                0x01:description.es:0x02:Declares a local or global variable:0x03:Declara una variable local o global
+                0x01:description.es:0x02:Prints a plain string:0x03:Imprime un texto simple
                 0x01:item|KEYWORD|new:0x02:Declares a local or global variable
                 0x01:item|FUNCTION|print:0x02:Prints a plain string: print(const string[])
                 0x01:item|KEYWORD|stock:0x02:Description without translation
@@ -311,5 +313,8 @@ class XedEditorTest {
         assertEquals("Declares a local or global variable", keyword.descriptionFor(CompilerConfig.AppLanguage.EN))
         assertEquals("Mencetak teks biasa: print(const string[])", function.descriptionFor(CompilerConfig.AppLanguage.ID))
         assertEquals("Description without translation", untranslated.descriptionFor(CompilerConfig.AppLanguage.ID))
+        assertEquals("Declara una variable local o global", keyword.descriptionFor(CompilerConfig.AppLanguage.ES))
+        assertEquals("Imprime un texto simple: print(const string[])", function.descriptionFor(CompilerConfig.AppLanguage.ES))
+        assertEquals("Description without translation", untranslated.descriptionFor(CompilerConfig.AppLanguage.ES))
     }
 }
