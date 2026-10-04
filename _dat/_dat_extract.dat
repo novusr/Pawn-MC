@@ -1,526 +1,709 @@
-﻿# External compile-time localization data for PawnMC
+# External compile-time localization data for PawnMC
 0x01:settings.title.id:0x02:Pengaturan
 0x01:settings.title.en:0x02:Settings
+0x01:settings.title.ru:0x02:Настройки
 0x01:settings.title.es:0x02:Configuracion
 0x01:settings.general.id:0x02:Umum
 0x01:settings.general.en:0x02:General
+0x01:settings.general.ru:0x02:Основные
 0x01:settings.general.es:0x02:General
 0x01:settings.general.desc.id:0x02:Preferensi dasar yang dipakai di seluruh aplikasi: bahasa antarmuka, tema tampilan, dan compiler yang dipakai untuk membangun skrip.
 0x01:settings.general.desc.en:0x02:Core preferences applied across the whole app: interface language, colour theme, and which compiler is used to build your scripts.
+0x01:settings.general.desc.ru:0x02:Основные параметры, применяемые ко всему приложению: язык интерфейса, цветовая тема и компилятор, используемый для сборки скриптов.
 0x01:settings.general.desc.es:0x02:Preferencias basicas que se aplican a toda la app: idioma de la interfaz, tema de color y que compilador se usa para construir tus scripts.
 0x01:settings.compiler.version.id:0x02:Versi Compiler
 0x01:settings.compiler.version.en:0x02:Compiler Version
+0x01:settings.compiler.version.ru:0x02:Версия компилятора
 0x01:settings.compiler.version.es:0x02:Version del compilador
 0x01:settings.compiler.version.desc.id:0x02:Pilih rilis pawncc yang dipakai saat kompilasi. Berpindah versi memuat ulang pustaka compiler, jadi aplikasi perlu dimulai ulang setelah berubah.
 0x01:settings.compiler.version.desc.en:0x02:Chooses which pawncc release performs the compilation. Switching versions reloads the compiler library, so the app has to restart once the change is applied.
+0x01:settings.compiler.version.desc.ru:0x02:Определяет, какая версия pawncc выполняет компиляцию. Смена версии перезагружает библиотеку компилятора, поэтому после применения изменения приложение нужно перезапустить.
 0x01:settings.compiler.version.desc.es:0x02:Elige que version de pawncc realiza la compilacion. Cambiar de version recarga la libreria del compilador, asi que la app tiene que reiniciarse una vez aplicado el cambio.
 0x01:settings.compiler.version.3107.label.id:0x02:Pawn 3.10.7
 0x01:settings.compiler.version.3107.label.en:0x02:Pawn 3.10.7
+0x01:settings.compiler.version.3107.label.ru:0x02:Pawn 3.10.7
 0x01:settings.compiler.version.3107.label.es:0x02:Pawn 3.10.7
 0x01:settings.compiler.version.3107.desc.id:0x02:Versi stabil
 0x01:settings.compiler.version.3107.desc.en:0x02:Stable release
+0x01:settings.compiler.version.3107.desc.ru:0x02:Стабильный выпуск
 0x01:settings.compiler.version.3107.desc.es:0x02:Version estable
 0x01:settings.compiler.version.31011.label.id:0x02:Pawn 3.10.11
 0x01:settings.compiler.version.31011.label.en:0x02:Pawn 3.10.11
+0x01:settings.compiler.version.31011.label.ru:0x02:Pawn 3.10.11
 0x01:settings.compiler.version.31011.label.es:0x02:Pawn 3.10.11
 0x01:settings.compiler.version.31011.desc.id:0x02:Rilis yang lebih baru
 0x01:settings.compiler.version.31011.desc.en:0x02:Newer release
+0x01:settings.compiler.version.31011.desc.ru:0x02:Более новый выпуск
 0x01:settings.compiler.version.31011.desc.es:0x02:Version mas reciente
 0x01:settings.compiler.forced.desc.id:0x02:Saat dipaksa, versi yang dipilih di atas selalu dipakai. Saat otomatis, compiler di dekat berkas yang sedang diedit lebih diprioritaskan bila versinya cocok.
 0x01:settings.compiler.forced.desc.en:0x02:When forced, the version picked above is always used. When automatic, a compiler sitting next to the file you are editing is preferred whenever its version matches.
+0x01:settings.compiler.forced.desc.ru:0x02:При принудительном режиме всегда используется версия, выбранная выше. В автоматическом режиме предпочтение отдаётся компилятору рядом с редактируемым файлом, если его версия подходит.
 0x01:settings.compiler.forced.desc.es:0x02:Cuando es forzado, siempre se usa la version elegida arriba. Cuando es automatico, se prefiere el compilador que esta junto al archivo que estas editando siempre que su version coincida.
 0x01:settings.language.id:0x02:Bahasa
 0x01:settings.language.en:0x02:Language
+0x01:settings.language.ru:0x02:Язык
 0x01:settings.language.es:0x02:Idioma
 0x01:settings.language.desc.id:0x02:Bahasa untuk semua teks antarmuka, termasuk pesan compiler dan uraian pengaturan.
 0x01:settings.language.desc.en:0x02:Language used for every piece of interface text, including compiler messages and settings descriptions.
+0x01:settings.language.desc.ru:0x02:Язык для всего текста интерфейса, включая сообщения компилятора и описания настроек.
 0x01:settings.language.desc.es:0x02:Idioma que se usa para todo el texto de la interfaz, incluidos los mensajes del compilador y las descripciones de la configuracion.
 0x01:settings.language.option.id.label.id:0x02:Bahasa Indonesia
 0x01:settings.language.option.id.label.en:0x02:Indonesian
+0x01:settings.language.option.id.label.ru:0x02:Индонезийский
 0x01:settings.language.option.id.label.es:0x02:Indonesio
 0x01:settings.language.option.id.desc.id:0x02:Gunakan Bahasa Indonesia untuk antarmuka aplikasi.
 0x01:settings.language.option.id.desc.en:0x02:Use Indonesian for the app interface.
+0x01:settings.language.option.id.desc.ru:0x02:Использовать индонезийский для интерфейса приложения.
 0x01:settings.language.option.id.desc.es:0x02:Usar indonesio para la interfaz de la app.
 0x01:settings.language.option.en.label.id:0x02:Bahasa Inggris
 0x01:settings.language.option.en.label.en:0x02:English (EN/US)
+0x01:settings.language.option.en.label.ru:0x02:Английский (EN/US)
 0x01:settings.language.option.en.label.es:0x02:Ingles (EN/US)
 0x01:settings.language.option.en.desc.id:0x02:Gunakan Bahasa Inggris untuk antarmuka aplikasi.
 0x01:settings.language.option.en.desc.en:0x02:Use English for the app interface.
+0x01:settings.language.option.en.desc.ru:0x02:Использовать английский для интерфейса приложения.
 0x01:settings.language.option.en.desc.es:0x02:Usar ingles para la interfaz de la app.
 0x01:settings.language.option.es.label.id:0x02:Spanyol Argentina
 0x01:settings.language.option.es.label.en:0x02:Spanish (Argentina)
+0x01:settings.language.option.es.label.ru:0x02:Испанский (Аргентина)
 0x01:settings.language.option.es.label.es:0x02:Espanol (AR)
 0x01:settings.language.option.es.desc.id:0x02:Gunakan bahasa Spanyol Argentina untuk antarmuka aplikasi.
 0x01:settings.language.option.es.desc.en:0x02:Use Argentine Spanish for the app interface.
+0x01:settings.language.option.es.desc.ru:0x02:Использовать аргентинский испанский для интерфейса приложения.
 0x01:settings.language.option.es.desc.es:0x02:Usa espanol rioplatense para la interfaz de la app.
+0x01:settings.language.option.ru.label.id:0x02:Bahasa Rusia
+0x01:settings.language.option.ru.label.en:0x02:Russian
+0x01:settings.language.option.ru.label.ru:0x02:Русский
+0x01:settings.language.option.ru.label.es:0x02:Ruso
+0x01:settings.language.option.ru.desc.id:0x02:Gunakan bahasa Rusia untuk antarmuka aplikasi.
+0x01:settings.language.option.ru.desc.en:0x02:Use Russian for the app interface.
+0x01:settings.language.option.ru.desc.ru:0x02:Использовать русский для интерфейса приложения.
+0x01:settings.language.option.ru.desc.es:0x02:Usar ruso para la interfaz de la app.
 0x01:settings.language.selector.id:0x02:Pilih Bahasa
 0x01:settings.language.selector.en:0x02:Select Language
+0x01:settings.language.selector.ru:0x02:Выбор языка
 0x01:settings.language.selector.es:0x02:Seleccionar idioma
 0x01:main.output.download.action.id:0x02:Unduh log output
 0x01:main.output.download.action.en:0x02:Download output log
+0x01:main.output.download.action.ru:0x02:Скачать журнал вывода
 0x01:main.output.download.action.es:0x02:Descargar el log de salida
 0x01:main.output.download.success.id:0x02:Log berhasil diunduh
 0x01:main.output.download.success.en:0x02:Log downloaded successfully
+0x01:main.output.download.success.ru:0x02:Журнал успешно скачан
 0x01:main.output.download.success.es:0x02:Log descargado correctamente
 0x01:main.output.download.failed.id:0x02:Gagal mengunduh log
 0x01:main.output.download.failed.en:0x02:Failed to download log
+0x01:main.output.download.failed.ru:0x02:Не удалось скачать журнал
 0x01:main.output.download.failed.es:0x02:No se pudo descargar el log
 0x01:settings.theme.id:0x02:Tema
 0x01:settings.theme.en:0x02:Theme
+0x01:settings.theme.ru:0x02:Тема
 0x01:settings.theme.es:0x02:Tema
 0x01:settings.theme.desc.id:0x02:Mengatur apakah aplikasi mengikuti tema sistem, selalu terang, atau selalu gelap. Pilihan ini juga menentukan latar editor Xed.
 0x01:settings.theme.desc.en:0x02:Controls whether the app follows the system theme, or is pinned to light or dark. This choice also drives the Xed editor background.
+0x01:settings.theme.desc.ru:0x02:Определяет, следует ли приложение системной теме или всегда использует светлую либо тёмную. Этот выбор также задаёт фон редактора Xed.
 0x01:settings.theme.desc.es:0x02:Controla si la app sigue el tema del sistema o queda fija en claro u oscuro. Esta eleccion tambien define el fondo del editor Xed.
 0x01:settings.theme.option.system.label.id:0x02:Ikuti Sistem
 0x01:settings.theme.option.system.label.en:0x02:System Default
+0x01:settings.theme.option.system.label.ru:0x02:Как в системе
 0x01:settings.theme.option.system.label.es:0x02:Predeterminado del sistema
 0x01:settings.theme.option.system.desc.id:0x02:Ikuti tema terang atau gelap perangkat.
 0x01:settings.theme.option.system.desc.en:0x02:Follow the device's light or dark theme.
+0x01:settings.theme.option.system.desc.ru:0x02:Следовать светлой или тёмной теме устройства.
 0x01:settings.theme.option.system.desc.es:0x02:Sigue el tema claro u oscuro del dispositivo.
 0x01:settings.theme.option.light.label.id:0x02:Terang
 0x01:settings.theme.option.light.label.en:0x02:Light
+0x01:settings.theme.option.light.label.ru:0x02:Светлая
 0x01:settings.theme.option.light.label.es:0x02:Claro
 0x01:settings.theme.option.light.desc.id:0x02:Selalu gunakan tema terang.
 0x01:settings.theme.option.light.desc.en:0x02:Always use the light theme.
+0x01:settings.theme.option.light.desc.ru:0x02:Всегда использовать светлую тему.
 0x01:settings.theme.option.light.desc.es:0x02:Usar siempre el tema claro.
 0x01:settings.theme.option.dark.label.id:0x02:Gelap
 0x01:settings.theme.option.dark.label.en:0x02:Dark
+0x01:settings.theme.option.dark.label.ru:0x02:Тёмная
 0x01:settings.theme.option.dark.label.es:0x02:Oscuro
 0x01:settings.theme.option.dark.desc.id:0x02:Selalu gunakan tema gelap.
 0x01:settings.theme.option.dark.desc.en:0x02:Always use the dark theme.
+0x01:settings.theme.option.dark.desc.ru:0x02:Всегда использовать тёмную тему.
 0x01:settings.theme.option.dark.desc.es:0x02:Usar siempre el tema oscuro.
 0x01:settings.theme.selector.id:0x02:Pilih Tema
 0x01:settings.theme.selector.en:0x02:Select Theme
+0x01:settings.theme.selector.ru:0x02:Выбор темы
 0x01:settings.theme.selector.es:0x02:Seleccionar tema
 0x01:settings.compiler.options.id:0x02:Opsi Compiler
 0x01:settings.compiler.options.en:0x02:Compiler Options
+0x01:settings.compiler.options.ru:0x02:Параметры компилятора
 0x01:settings.compiler.options.es:0x02:Opciones del compilador
 0x01:settings.compiler.options.desc.id:0x02:Flag yang diteruskan langsung ke pawncc saat membangun skrip. Perubahan di sini berlaku pada kompilasi berikutnya.
 0x01:settings.compiler.options.desc.en:0x02:Flags passed straight through to pawncc when a script is built. Changes here take effect on the next compilation.
+0x01:settings.compiler.options.desc.ru:0x02:Флаги, которые напрямую передаются pawncc при сборке скрипта. Изменения здесь вступают в силу при следующей компиляции.
 0x01:settings.compiler.options.desc.es:0x02:Flags que se pasan directamente a pawncc al construir un script. Los cambios aqui se aplican en la proxima compilacion.
 0x01:settings.option.semicolons.id:0x02:Titik Koma Wajib
 0x01:settings.option.semicolons.en:0x02:Mandatory Semicolons
+0x01:settings.option.semicolons.ru:0x02:Обязательные точки с запятой
 0x01:settings.option.semicolons.es:0x02:Punto y coma obligatorio
 0x01:settings.option.semicolons.desc.id:0x02:Wajibkan titik koma di akhir setiap pernyataan
 0x01:settings.option.semicolons.desc.en:0x02:Require semicolons at the end of statements
+0x01:settings.option.semicolons.desc.ru:0x02:Требовать точку с запятой в конце операторов
 0x01:settings.option.semicolons.desc.es:0x02:Exigir punto y coma al final de las sentencias
 0x01:settings.option.parentheses.id:0x02:Tanda Kurung Wajib
 0x01:settings.option.parentheses.en:0x02:Mandatory Parentheses
+0x01:settings.option.parentheses.ru:0x02:Обязательные скобки
 0x01:settings.option.parentheses.es:0x02:Parentesis obligatorios
 0x01:settings.option.parentheses.desc.id:0x02:Wajibkan tanda kurung pada pernyataan kontrol
 0x01:settings.option.parentheses.desc.en:0x02:Require parentheses in control statements
+0x01:settings.option.parentheses.desc.ru:0x02:Требовать скобки в управляющих операторах
 0x01:settings.option.parentheses.desc.es:0x02:Exigir parentesis en las sentencias de control
 0x01:settings.option.debug.id:0x02:Tingkat Debug
 0x01:settings.option.debug.en:0x02:Debug Level
+0x01:settings.option.debug.ru:0x02:Уровень отладки
 0x01:settings.option.debug.es:0x02:Nivel de depuracion
 0x01:settings.option.debug.desc.id:0x02:Menentukan berapa banyak informasi debug dan pemeriksaan runtime yang dibangkitkan compiler. Level lebih tinggi menambah pemeriksaan tetapi memperlambat dan memperbesar hasil.
 0x01:settings.option.debug.desc.en:0x02:Controls how much debug information and runtime checking the compiler generates. Higher levels add more checks at the cost of build time and a larger output file.
+0x01:settings.option.debug.desc.ru:0x02:Определяет, сколько отладочной информации и проверок во время выполнения генерирует компилятор. Более высокие уровни добавляют проверки ценой времени сборки и размера выходного файла.
 0x01:settings.option.debug.desc.es:0x02:Define cuanta informacion de depuracion y comprobacion en tiempo de ejecucion genera el compilador. Los niveles mas altos agregan comprobaciones a costa de tiempo de compilacion y un archivo de salida mas grande.
 0x01:settings.option.debug.level.0.label.id:0x02:Nonaktif (-d0)
 0x01:settings.option.debug.level.0.label.en:0x02:Disabled (-d0)
+0x01:settings.option.debug.level.0.label.ru:0x02:Отключено (-d0)
 0x01:settings.option.debug.level.0.label.es:0x02:Desactivado (-d0)
 0x01:settings.option.debug.level.0.desc.id:0x02:Tidak menyertakan simbol debug atau validasi runtime.
 0x01:settings.option.debug.level.0.desc.en:0x02:No debug symbols or runtime validation.
+0x01:settings.option.debug.level.0.desc.ru:0x02:Без символов отладки и проверок во время выполнения.
 0x01:settings.option.debug.level.0.desc.es:0x02:Sin simbolos de depuracion ni validacion en tiempo de ejecucion.
 0x01:settings.option.debug.level.1.label.id:0x02:Validasi Runtime (-d1)
 0x01:settings.option.debug.level.1.label.en:0x02:Runtime Validation (-d1)
+0x01:settings.option.debug.level.1.label.ru:0x02:Проверки во время выполнения (-d1)
 0x01:settings.option.debug.level.1.label.es:0x02:Validacion en tiempo de ejecucion (-d1)
 0x01:settings.option.debug.level.1.desc.id:0x02:Memeriksa batas array tanpa menyertakan simbol debug.
 0x01:settings.option.debug.level.1.desc.en:0x02:Checks array bounds without including debug symbols.
+0x01:settings.option.debug.level.1.desc.ru:0x02:Проверяет границы массивов без включения символов отладки.
 0x01:settings.option.debug.level.1.desc.es:0x02:Comprueba los limites de los arrays sin incluir simbolos de depuracion.
 0x01:settings.option.debug.level.2.label.id:0x02:Debug Lengkap (-d2)
 0x01:settings.option.debug.level.2.label.en:0x02:Full Debugging (-d2)
+0x01:settings.option.debug.level.2.label.ru:0x02:Полная отладка (-d2)
 0x01:settings.option.debug.level.2.label.es:0x02:Depuracion completa (-d2)
 0x01:settings.option.debug.level.2.desc.id:0x02:Menyertakan informasi debug lengkap dan pemeriksaan runtime.
 0x01:settings.option.debug.level.2.desc.en:0x02:Includes full debug information and runtime checks.
+0x01:settings.option.debug.level.2.desc.ru:0x02:Включает полную отладочную информацию и проверки во время выполнения.
 0x01:settings.option.debug.level.2.desc.es:0x02:Incluye informacion de depuracion completa y comprobaciones en tiempo de ejecucion.
 0x01:settings.option.debug.level.3.label.id:0x02:Debug Maksimal (-d3)
 0x01:settings.option.debug.level.3.label.en:0x02:Maximum Debug (-d3)
+0x01:settings.option.debug.level.3.label.ru:0x02:Максимальная отладка (-d3)
 0x01:settings.option.debug.level.3.label.es:0x02:Depuracion maxima (-d3)
 0x01:settings.option.debug.level.3.desc.id:0x02:Debug paling terperinci; optimisasi otomatis dinonaktifkan.
 0x01:settings.option.debug.level.3.desc.en:0x02:Most detailed debugging; optimization is disabled automatically.
+0x01:settings.option.debug.level.3.desc.ru:0x02:Наиболее подробная отладка; оптимизация отключается автоматически.
 0x01:settings.option.debug.level.3.desc.es:0x02:Depuracion mas detallada; la optimizacion se desactiva automaticamente.
 0x01:settings.option.optimization.id:0x02:Tingkat Optimasi
 0x01:settings.option.optimization.en:0x02:Optimization Level
+0x01:settings.option.optimization.ru:0x02:Уровень оптимизации
 0x01:settings.option.optimization.es:0x02:Nivel de optimizacion
 0x01:settings.option.optimization.desc.id:0x02:Menentukan seberapa agresif compiler menyederhanakan bytecode. Optimasi lebih tinggi menghasilkan AMX yang lebih kecil dan lebih cepat, tetapi menyulitkan penelusuran debug.
 0x01:settings.option.optimization.desc.en:0x02:Determines how aggressively the compiler simplifies the bytecode. Higher levels yield a smaller and faster AMX, but make debugging traces harder to follow.
+0x01:settings.option.optimization.desc.ru:0x02:Определяет, насколько агрессивно компилятор упрощает байткод. Более высокие уровни дают меньший и быстрый AMX, но затрудняют разбор отладочных трасс.
 0x01:settings.option.optimization.desc.es:0x02:Define que tan agresivamente el compilador simplifica el bytecode. Los niveles mas altos producen un AMX mas chico y mas rapido, pero hacen mas dificil seguir una traza de depuracion.
 0x01:settings.option.optimization.level.0.label.id:0x02:Nonaktif (-O0)
 0x01:settings.option.optimization.level.0.label.en:0x02:Disabled (-O0)
+0x01:settings.option.optimization.level.0.label.ru:0x02:Отключено (-O0)
 0x01:settings.option.optimization.level.0.label.es:0x02:Desactivado (-O0)
 0x01:settings.option.optimization.level.0.desc.id:0x02:Tidak melakukan optimisasi; paling aman tetapi ukuran hasil terbesar.
 0x01:settings.option.optimization.level.0.desc.en:0x02:No optimization; safest, but produces the largest output.
+0x01:settings.option.optimization.level.0.desc.ru:0x02:Без оптимизации; самый безопасный вариант, но даёт самый большой выход.
 0x01:settings.option.optimization.level.0.desc.es:0x02:Sin optimizacion; la opcion mas segura, pero genera la salida mas grande.
 0x01:settings.option.optimization.level.1.label.id:0x02:Seimbang (-O1)
 0x01:settings.option.optimization.level.1.label.en:0x02:Balanced (-O1)
+0x01:settings.option.optimization.level.1.label.ru:0x02:Сбалансированный (-O1)
 0x01:settings.option.optimization.level.1.label.es:0x02:Equilibrado (-O1)
 0x01:settings.option.optimization.level.1.desc.id:0x02:Optimisasi standar yang menjaga stabilitas.
 0x01:settings.option.optimization.level.1.desc.en:0x02:Default optimization pass for stable builds.
+0x01:settings.option.optimization.level.1.desc.ru:0x02:Стандартный проход оптимизации для стабильных сборок.
 0x01:settings.option.optimization.level.1.desc.es:0x02:Pasada de optimizacion estandar para compilaciones estables.
 0x01:settings.option.optimization.level.2.label.id:0x02:Agresif (-O2)
 0x01:settings.option.optimization.level.2.label.en:0x02:Aggressive (-O2)
+0x01:settings.option.optimization.level.2.label.ru:0x02:Агрессивный (-O2)
 0x01:settings.option.optimization.level.2.label.es:0x02:Agresivo (-O2)
 0x01:settings.option.optimization.level.2.desc.id:0x02:Optimisasi maksimum untuk kecepatan dan ukuran.
 0x01:settings.option.optimization.level.2.desc.en:0x02:Maximum optimization for speed and size.
+0x01:settings.option.optimization.level.2.desc.ru:0x02:Максимальная оптимизация скорости и размера.
 0x01:settings.option.optimization.level.2.desc.es:0x02:Optimizacion maxima para velocidad y tamano.
 0x01:settings.option.optimization.v3107.notice.id:0x02:Optimisasi agresif (-O2) hanya tersedia dengan Pawn 3.10.11.
 0x01:settings.option.optimization.v3107.notice.en:0x02:Aggressive optimization (-O2) is available with Pawn 3.10.11.
+0x01:settings.option.optimization.v3107.notice.ru:0x02:Агрессивная оптимизация (-O2) доступна только с Pawn 3.10.11.
 0x01:settings.option.optimization.v3107.notice.es:0x02:La optimizacion agresiva (-O2) esta disponible con Pawn 3.10.11.
 0x01:settings.option.ignorecase.id:0x02:Abaikan Huruf Besar/Kecil
 0x01:settings.option.ignorecase.en:0x02:Filesystem
+0x01:settings.option.ignorecase.ru:0x02:Файловая система
 0x01:settings.option.ignorecase.es:0x02:Sistema de archivos
 0x01:settings.option.ignorecase.desc.id:0x02:Membuat salinan cadangan folder (\"nama-folder.backup\"), lalu mengubah semua nama file selain file yang dipilih dan seluruh referensi #include menjadi huruf kecil. Dijalankan sekali per folder, karena melewati Android yang peka huruf besar/kecil.
 0x01:settings.option.ignorecase.desc.en:0x02:Backs the folder up as \"folder.backup\", then lowercases every file name except the one you selected and rewrites every #include reference to lowercase. It runs once per folder because Android storage is case sensitive.
+0x01:settings.option.ignorecase.desc.ru:0x02:Создаёт резервную копию папки ("folder.backup"), затем переводит имена всех файлов в нижний регистр, кроме выбранного, и переписывает в нижний регистр все ссылки #include. Выполняется один раз для папки, потому что хранилище Android различает регистр символов.
 0x01:settings.option.ignorecase.desc.es:0x02:Crea una copia de seguridad de la carpeta ("carpeta.backup"), luego pasa a minusculas todos los nombres de archivo salvo el que seleccionaste y reescribe en minusculas cada referencia #include. Se ejecuta una vez por carpeta porque el almacenamiento de Android distingue mayusculas de minusculas.
 0x01:settings.option.explain.id:0x02:Jelaskan Output
 0x01:settings.option.explain.en:0x02:Explain Output
+0x01:settings.option.explain.ru:0x02:Объяснять вывод
 0x01:settings.option.explain.es:0x02:Explicar la salida
 0x01:settings.option.explain.desc.id:0x02:Tambahkan penjelasan yang mudah dipahami di samping peringatan, pesan error, dan pesan fatal.
 0x01:settings.option.explain.desc.en:0x02:Add human-readable explanations next to warnings, errors, and fatal messages extracted from the compiler log.
+0x01:settings.option.explain.desc.ru:0x02:Добавляет понятные пояснения рядом с предупреждениями, ошибками и фатальными сообщениями, извлечёнными из журнала компилятора.
 0x01:settings.option.explain.desc.es:0x02:Agrega explicaciones legibles junto a las advertencias, errores y mensajes fatales extraidos del log del compilador.
 0x01:settings.option.customflags.id:0x02:Flag Kustom
 0x01:settings.option.customflags.en:0x02:Custom Flags
+0x01:settings.option.customflags.ru:0x02:Свои флаги
 0x01:settings.option.customflags.es:0x02:Flags personalizados
 0x01:settings.option.customflags.desc.id:0x02:Parameter compiler tambahan, dipisahkan spasi
 0x01:settings.option.customflags.desc.en:0x02:Extra compiler parameters, space separated
+0x01:settings.option.customflags.desc.ru:0x02:Дополнительные параметры компилятора, разделённые пробелами
 0x01:settings.option.customflags.desc.es:0x02:Parametros adicionales del compilador, separados por espacios
 0x01:settings.include.paths.id:0x02:Path Include
 0x01:settings.include.paths.en:0x02:Include Paths
+0x01:settings.include.paths.ru:0x02:Пути include
 0x01:settings.include.paths.es:0x02:Rutas de include
 0x01:settings.include.paths.desc.id:0x02:Daftar folder yang ditelusuri compiler saat menyelesaikan #include. Path yang tidak ada lagi akan dibuang otomatis saat aplikasi dibuka.
 0x01:settings.include.paths.desc.en:0x02:Folders the compiler searches when resolving #include. Paths that no longer exist are pruned automatically on app start.
+0x01:settings.include.paths.desc.ru:0x02:Папки, которые компилятор просматривает при разрешении #include. Несуществующие пути автоматически удаляются при запуске приложения.
 0x01:settings.include.paths.desc.es:0x02:Carpetas que el compilador revisa al resolver los #include. Las rutas que ya no existen se eliminan solas al iniciar la app.
 0x01:settings.updates.id:0x02:Pembaruan
 0x01:settings.updates.en:0x02:Updates
+0x01:settings.updates.ru:0x02:Обновления
 0x01:settings.updates.es:0x02:Actualizaciones
 0x01:settings.updates.desc.id:0x02:Memeriksa rilis baru di GitHub dan mengunduh APK bila tersedia. Pembaruan dipasang lewat dialog sistem Android.
 0x01:settings.updates.desc.en:0x02:Checks GitHub for a newer release and downloads the APK when one is attached. Updates are installed through the standard Android system dialog.
+0x01:settings.updates.desc.ru:0x02:Проверяет GitHub на наличие более нового выпуска и скачивает APK, если он прикреплён. Обновления устанавливаются через стандартный системный диалог Android.
 0x01:settings.updates.desc.es:0x02:Busca una version mas nueva en GitHub y descarga el APK cuando hay uno adjunto. Las actualizaciones se instalan mediante el dialogo estandar de Android.
 0x01:settings.about.id:0x02:Tentang
 0x01:settings.about.en:0x02:About
+0x01:settings.about.ru:0x02:О приложении
 0x01:settings.about.es:0x02:Acerca de
 0x01:settings.about.desc.id:0x02:Informasi versi aplikasi dan tautan ke repositori sumber.
 0x01:settings.about.desc.en:0x02:Application version information and a link to the source repository.
+0x01:settings.about.desc.ru:0x02:Сведения о версии приложения и ссылка на репозиторий исходного кода.
 0x01:settings.about.desc.es:0x02:Informacion de la version de la app y un enlace al repositorio del codigo fuente.
 0x01:settings.about.version.id:0x02:Versi Aplikasi
 0x01:settings.about.version.en:0x02:App Version
+0x01:settings.about.version.ru:0x02:Версия приложения
 0x01:settings.about.version.es:0x02:Version de la app
 0x01:settings.about.version.desc.id:0x02:Versi rilis PawnMC yang sedang terpasang di perangkat ini.
 0x01:settings.about.version.desc.en:0x02:The PawnMC release currently installed on this device.
+0x01:settings.about.version.desc.ru:0x02:Выпуск PawnMC, установленный на этом устройстве.
 0x01:settings.about.version.desc.es:0x02:La version de PawnMC instalada actualmente en este dispositivo.
 0x01:settings.about.github.id:0x02:Lihat di GitHub
 0x01:settings.about.github.en:0x02:View on GitHub
+0x01:settings.about.github.ru:0x02:Открыть на GitHub
 0x01:settings.about.github.es:0x02:Ver en GitHub
 0x01:settings.about.github.desc.id:0x02:Buka repositori sumber resmi untuk melihat riwayat rilis, melaporkan masalah, atau menyalin dan membangun sendiri.
 0x01:settings.about.github.desc.en:0x02:Opens the official source repository for release history, issue reports, and self-hosting instructions.
+0x01:settings.about.github.desc.ru:0x02:Открывает официальный репозиторий исходного кода с историей выпусков, отчётами об ошибках и инструкциями по самостоятельной сборке.
 0x01:settings.about.github.desc.es:0x02:Abre el repositorio oficial del codigo fuente para ver el historial de versiones, reportar problemas o compilarlo por tu cuenta.
 0x01:settings.about.restart.id:0x02:Mulai Ulang Aplikasi
 0x01:settings.about.restart.en:0x02:Restart Application
+0x01:settings.about.restart.ru:0x02:Перезапустить приложение
 0x01:settings.about.restart.es:0x02:Reiniciar la aplicacion
 0x01:settings.about.restart.desc.id:0x02:Menutup lalu membuka kembali PawnMC agar seluruh pengaturan diterapkan dari awal. Proses kompilasi yang sedang berjalan akan dibatalkan.
 0x01:settings.about.restart.desc.en:0x02:Closes and reopens PawnMC so every setting is applied from scratch. A compilation that is currently running is cancelled.
+0x01:settings.about.restart.desc.ru:0x02:Закрывает и снова открывает PawnMC, чтобы все настройки применились с самого начала. Идущая компиляция отменяется.
 0x01:settings.about.restart.desc.es:0x02:Cierra y vuelve a abrir PawnMC para que todos los ajustes se apliquen desde cero. Se cancela la compilacion que este en ejecucion.
 0x01:settings.restart.confirm.title.id:0x02:Mulai Ulang Aplikasi
 0x01:settings.restart.confirm.title.en:0x02:Restart Application
+0x01:settings.restart.confirm.title.ru:0x02:Перезапустить приложение
 0x01:settings.restart.confirm.title.es:0x02:Reiniciar la aplicacion
 0x01:settings.restart.confirm.text.id:0x02:PawnMC akan segera ditutup lalu dibuka kembali. Simpan dulu berkas yang sedang dibuka di Xed Editor, karena proses kompilasi yang sedang berjalan akan dibatalkan. Apakah Anda ingin memulai ulang sekarang?
 0x01:settings.restart.confirm.text.en:0x02:PawnMC will close and reopen immediately. Save any open file in the Xed Editor first, because a compilation that is currently running is cancelled. Would you like to restart now?
+0x01:settings.restart.confirm.text.ru:0x02:PawnMC закроется и сразу откроется снова. Сначала сохраните открытые файлы в Xed Editor, поскольку идущая компиляция будет отменена. Перезапустить сейчас?
 0x01:settings.restart.confirm.text.es:0x02:PawnMC se va a cerrar y abrir de inmediato. Guarda primero cualquier archivo abierto en el Xed Editor, porque se cancela la compilacion que este en ejecucion. Queres reiniciar ahora?
 0x01:settings.restart.confirm.button.id:0x02:Mulai Ulang Sekarang
 0x01:settings.restart.confirm.button.en:0x02:Restart Now
+0x01:settings.restart.confirm.button.ru:0x02:Перезапустить сейчас
 0x01:settings.restart.confirm.button.es:0x02:Reiniciar ahora
 0x01:settings.editor.id:0x02:Xed Editor
 0x01:settings.editor.en:0x02:Xed Editor
+0x01:settings.editor.ru:0x02:Xed Editor
 0x01:settings.editor.es:0x02:Xed Editor
 0x01:settings.editor.desc.id:0x02:Preferensi tampilan untuk editor kode bawaan. Perubahan langsung diterapkan ke editor yang sedang terbuka.
 0x01:settings.editor.desc.en:0x02:Appearance preferences for the built-in code editor. Changes apply to the open editor immediately.
+0x01:settings.editor.desc.ru:0x02:Параметры внешнего вида встроенного редактора кода. Изменения сразу применяются к открытому редактору.
 0x01:settings.editor.desc.es:0x02:Preferencias de apariencia del editor de codigo integrado. Los cambios se aplican de inmediato al editor abierto.
 0x01:settings.editor.background.id:0x02:Latar Editor
 0x01:settings.editor.background.en:0x02:Editor Background
+0x01:settings.editor.background.ru:0x02:Фон редактора
 0x01:settings.editor.background.es:0x02:Fondo del editor
 0x01:settings.editor.background.desc.id:0x02:Pilih warna latar editor. Bawaan mengikuti tema aplikasi, sedangkan warna khusus menggantikannya sepenuhnya.
 0x01:settings.editor.background.desc.en:0x02:Pick the editor canvas colour. The default follows the app theme; a custom pick replaces it completely.
+0x01:settings.editor.background.desc.ru:0x02:Выберите цвет полотна редактора. По умолчанию он следует теме приложения; собственный цвет полностью его заменяет.
 0x01:settings.editor.background.desc.es:0x02:Elegi el color del lienzo del editor. El predeterminado sigue el tema de la app; un color personalizado lo reemplaza por completo.
 0x01:settings.editor.background.default.id:0x02:Bawaan
 0x01:settings.editor.background.default.en:0x02:Default
+0x01:settings.editor.background.default.ru:0x02:По умолчанию
 0x01:settings.editor.background.default.es:0x02:Predeterminado
 0x01:settings.editor.background.reset.id:0x02:Kembalikan ke bawaan
 0x01:settings.editor.background.reset.en:0x02:Reset to default
+0x01:settings.editor.background.reset.ru:0x02:Сбросить к значению по умолчанию
 0x01:settings.editor.background.reset.es:0x02:Restablecer al predeterminado
 0x01:settings.editor.background.presets.id:0x02:Varian latar yang tersedia
 0x01:settings.editor.background.presets.en:0x02:Available background variants
+0x01:settings.editor.background.presets.ru:0x02:Доступные варианты фона
 0x01:settings.editor.background.presets.es:0x02:Variantes de fondo disponibles
 0x01:settings.editor.background.hex.id:0x02:Kode warna heksadesimal
 0x01:settings.editor.background.hex.en:0x02:Hex colour code
+0x01:settings.editor.background.hex.ru:0x02:Hex-код цвета
 0x01:settings.editor.background.hex.es:0x02:Codigo de color hexadecimal
 0x01:settings.editor.background.invalid.id:0x02:Kode warna tidak valid, gunakan format #RRGGBB
 0x01:settings.editor.background.invalid.en:0x02:Invalid colour code, expected the #RRGGBB format
+0x01:settings.editor.background.invalid.ru:0x02:Некорректный код цвета, ожидается формат #RRGGBB
 0x01:settings.editor.background.invalid.es:0x02:Codigo de color invalido, se esperaba el formato #RRGGBB
 0x01:settings.include.pruned.id:0x02:Path include yang tidak ada lagi telah dihapus
 0x01:settings.include.pruned.en:0x02:Include paths that no longer exist were removed
+0x01:settings.include.pruned.ru:0x02:Несуществующие пути include были удалены
 0x01:settings.include.pruned.es:0x02:Se eliminaron las rutas de include que ya no existen
 0x01:settings.include.rejected.id:0x02:Path sudah terdaftar atau folder tidak ditemukan
 0x01:settings.include.rejected.en:0x02:Path already added or folder not found
+0x01:settings.include.rejected.ru:0x02:Путь уже добавлен или папка не найдена
 0x01:settings.include.rejected.es:0x02:La ruta ya estaba agregada o no se encontro la carpeta
 0x01:settings.include.add.id:0x02:Tambah Path Include
 0x01:settings.include.add.en:0x02:Add Include Path
+0x01:settings.include.add.ru:0x02:Добавить путь include
 0x01:settings.include.add.es:0x02:Agregar ruta de include
 0x01:settings.include.empty.id:0x02:Belum ada path include yang dikonfigurasi
 0x01:settings.include.empty.en:0x02:No include paths configured
+0x01:settings.include.empty.ru:0x02:Пути include не настроены
 0x01:settings.include.empty.es:0x02:No hay rutas de include configuradas
 0x01:settings.updates.check.id:0x02:Periksa Pembaruan
 0x01:settings.updates.check.en:0x02:Check for updates
+0x01:settings.updates.check.ru:0x02:Проверить обновления
 0x01:settings.updates.check.es:0x02:Buscar actualizaciones
 0x01:settings.updates.ready.id:0x02:Perbarui PawnMC
 0x01:settings.updates.ready.en:0x02:Update PawnMC
+0x01:settings.updates.ready.ru:0x02:Обновить PawnMC
 0x01:settings.updates.ready.es:0x02:Actualizar PawnMC
 0x01:settings.updates.latest.id:0x02:Anda menggunakan versi terbaru
 0x01:settings.updates.latest.en:0x02:You're on the latest version
+0x01:settings.updates.latest.ru:0x02:У вас установлена последняя версия
 0x01:settings.updates.latest.es:0x02:Estas usando la version mas reciente
 0x01:main.busy.notice.id:0x02:Pengaturan, Xed Editor, dan Self-Test sementara tidak tersedia sampai proses kompilasi selesai.
 0x01:main.busy.notice.en:0x02:Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete.
+0x01:main.busy.notice.ru:0x02:Настройки, Xed Editor и Self-Test временно недоступны до завершения компиляции.
 0x01:main.busy.notice.es:0x02:Configuracion, Xed Editor y Self-Test no estan disponibles hasta que termine la compilacion.
 0x01:main.busy.completed.id:0x02:Kompilasi selesai. Pengaturan, Xed Editor, dan Self-Test sudah tersedia kembali.
 0x01:main.busy.completed.en:0x02:Compilation finished. Settings, Xed Editor, and Self-Test are available again.
+0x01:main.busy.completed.ru:0x02:Компиляция завершена. Настройки, Xed Editor и Self-Test снова доступны.
 0x01:main.busy.completed.es:0x02:Compilacion terminada. Configuracion, Xed Editor y Self-Test vuelven a estar disponibles.
 0x01:main.busy.dismiss.id:0x02:Tutup pemberitahuan kompilasi
 0x01:main.busy.dismiss.en:0x02:Dismiss compilation notice
+0x01:main.busy.dismiss.ru:0x02:Закрыть уведомление о компиляции
 0x01:main.busy.dismiss.es:0x02:Cerrar el aviso de compilacion
 0x01:main.busy.toast.id:0x02:Pengaturan, editor, dan self-test tidak tersedia saat proses kompilasi berjalan
 0x01:main.busy.toast.en:0x02:Settings, editor, and self-test are unavailable while compiling
+0x01:main.busy.toast.ru:0x02:Настройки, редактор и self-test недоступны во время компиляции
 0x01:main.busy.toast.es:0x02:Configuracion, editor y self-test no estan disponibles mientras se compila
 0x01:settings.include.paths.notice.title.id:0x02:Catatan
 0x01:settings.include.paths.notice.title.en:0x02:Note
+0x01:settings.include.paths.notice.title.ru:0x02:Примечание
 0x01:settings.include.paths.notice.title.es:0x02:Nota
 0x01:settings.include.paths.notice.desc.id:0x02:Saat file dipilih, PawnMC memilih satu folder include dengan urutan 'pawno/include', 'qawno/include', lalu 'includes'. Jika semuanya tidak tersedia, 'include/' tetap ditambahkan sebagai fallback. Folder 'gamemodes/' tidak ditambahkan otomatis. Ekstensi .pawn, .pwn, .p, dan .inc dihapus otomatis dari path include.
 0x01:settings.include.paths.notice.desc.en:0x02:When a file is selected, PawnMC chooses one include folder in this order: 'pawno/include', 'qawno/include', then 'includes'. If none exists, 'include/' is still added as a fallback. 'gamemodes/' is not added automatically. The .pawn, .pwn, .p, and .inc extensions are removed automatically from include paths.
+0x01:settings.include.paths.notice.desc.ru:0x02:При выборе файла PawnMC выбирает одну папку include в таком порядке: 'pawno/include', 'qawno/include', затем 'includes'. Если ни одной нет, всё равно добавляется 'include/' как запасной вариант. 'gamemodes/' автоматически не добавляется. Расширения .pawn, .pwn, .p и .inc автоматически удаляются из путей include.
 0x01:settings.include.paths.notice.desc.es:0x02:Cuando se elige un archivo, PawnMC selecciona una carpeta de include en este orden: 'pawno/include', 'qawno/include' y luego 'includes'. Si no existe ninguna, igual se agrega 'include/' como alternativa. 'gamemodes/' no se agrega automaticamente. Las extensiones .pawn, .pwn, .p y .inc se eliminan automaticamente de las rutas de include.
 0x01:settings.include.extension.stripped.id:0x02:Ekstensi script (.pawn, .pwn, .p, .inc) dihapus otomatis dan path disimpan sebagai:
 0x01:settings.include.extension.stripped.en:0x02:The script extension (.pawn, .pwn, .p, .inc) was removed automatically and the path was saved as:
+0x01:settings.include.extension.stripped.ru:0x02:Расширение скрипта (.pawn, .pwn, .p, .inc) было автоматически удалено, а путь сохранён как:
 0x01:settings.include.extension.stripped.es:0x02:La extension del script (.pawn, .pwn, .p, .inc) se elimino automaticamente y la ruta se guardo como:
 0x01:settings.include.extension.list.id:0x02:.pawn, .pwn, .p, .inc
 0x01:settings.include.extension.list.en:0x02:.pawn, .pwn, .p, .inc
+0x01:settings.include.extension.list.ru:0x02:.pawn, .pwn, .p, .inc
 0x01:settings.include.extension.list.es:0x02:.pawn, .pwn, .p, .inc
 0x01:app.name.id:0x02:PawnMC
 0x01:app.name.en:0x02:PawnMC
+0x01:app.name.ru:0x02:PawnMC
 0x01:app.name.es:0x02:PawnMC
 0x01:app.tagline.id:0x02:Menyusun ide saat bepergian.
 0x01:app.tagline.en:0x02:Compiling ideas on the go.
+0x01:app.tagline.ru:0x02:Компилируем идеи на ходу.
 0x01:app.tagline.es:0x02:Compilando ideas donde estes.
 0x01:main.header.expand.id:0x02:Tampilkan menu
 0x01:main.header.expand.en:0x02:Show menu
+0x01:main.header.expand.ru:0x02:Показать меню
 0x01:main.header.expand.es:0x02:Mostrar el menu
 0x01:main.header.collapse.id:0x02:Sembunyikan menu
 0x01:main.header.collapse.en:0x02:Hide menu
+0x01:main.header.collapse.ru:0x02:Скрыть меню
 0x01:main.header.collapse.es:0x02:Ocultar el menu
 0x01:main.perm.grand.title.id:0x02:Izin Grand Permissions Dibutuhkan!
 0x01:main.perm.grand.title.en:0x02:Grand Permissions Required!
+0x01:main.perm.grand.title.ru:0x02:Требуются Grand Permissions!
 0x01:main.perm.grand.title.es:0x02:Se necesitan permisos totales!
 0x01:main.perm.grand.desc.id:0x02:Izin Semua Berkas (Grand Permissions) diperlukan PawnMC agar bisa mengompilasi berkas pawn dan menulis hasil amx ke lokasi mana pun.
 0x01:main.perm.grand.desc.en:0x02:PawnMC needs Grand Permissions (All files access) so it can compile pawn files and write the amx output anywhere.
+0x01:main.perm.grand.desc.ru:0x02:PawnMC нужны Grand Permissions (доступ ко всем файлам), чтобы компилировать файлы pawn и записывать вывод amx в любое место.
 0x01:main.perm.grand.desc.es:0x02:PawnMC necesita Permisos Totales (acceso a todos los archivos) para poder compilar archivos pawn y escribir la salida amx donde le indiques.
 0x01:main.perm.grand.grant.id:0x02:Beri Izin
 0x01:main.perm.grand.grant.en:0x02:Grant
+0x01:main.perm.grand.grant.ru:0x02:Предоставить
 0x01:main.perm.grand.grant.es:0x02:Otorgar
 0x01:main.perm.grand.later.id:0x02:Nanti
 0x01:main.perm.grand.later.en:0x02:Not now
+0x01:main.perm.grand.later.ru:0x02:Не сейчас
 0x01:main.perm.grand.later.es:0x02:Ahora no
 0x01:settings.close.id:0x02:Tutup
 0x01:settings.close.en:0x02:Close
+0x01:settings.close.ru:0x02:Закрыть
 0x01:settings.close.es:0x02:Cerrar
 0x01:settings.cancel.id:0x02:Batal
 0x01:settings.cancel.en:0x02:Cancel
+0x01:settings.cancel.ru:0x02:Отмена
 0x01:settings.cancel.es:0x02:Cancelar
 0x01:settings.save.id:0x02:Simpan
 0x01:settings.save.en:0x02:Save
+0x01:settings.save.ru:0x02:Сохранить
 0x01:settings.save.es:0x02:Guardar
 0x01:settings.back.id:0x02:Kembali
 0x01:settings.back.en:0x02:Back
+0x01:settings.back.ru:0x02:Назад
 0x01:settings.back.es:0x02:Volver
 0x01:xed.quickkeys.hide.id:0x02:Sembunyikan Tombol Cepat
 0x01:xed.quickkeys.hide.en:0x02:Hide Quick Keys
+0x01:xed.quickkeys.hide.ru:0x02:Скрыть быстрые клавиши
 0x01:xed.quickkeys.hide.es:0x02:Ocultar teclas rapidas
 0x01:xed.quickkeys.show.id:0x02:Tampilkan Tombol Cepat
 0x01:xed.quickkeys.show.en:0x02:Show Quick Keys
+0x01:xed.quickkeys.show.ru:0x02:Показать быстрые клавиши
 0x01:xed.quickkeys.show.es:0x02:Mostrar teclas rapidas
 0x01:xed.about.menu.id:0x02:Tentang Xed Editor
 0x01:xed.about.menu.en:0x02:About Xed Editor
+0x01:xed.about.menu.ru:0x02:О Xed Editor
 0x01:xed.about.menu.es:0x02:Acerca de Xed Editor
 0x01:xed.about.title.id:0x02:Tentang Xed Editor
 0x01:xed.about.title.en:0x02:About Xed Editor
+0x01:xed.about.title.ru:0x02:О Xed Editor
 0x01:xed.about.title.es:0x02:Acerca de Xed Editor
 0x01:xed.about.intro.id:0x02:Xed adalah editor kode Pawn dengan syntax highlighting, saran kode, alat workspace, dan kompilasi langsung.
 0x01:xed.about.intro.en:0x02:Xed is a Pawn code editor with syntax highlighting, completion, workspace tools, and direct compilation.
+0x01:xed.about.intro.ru:0x02:Xed — редактор кода Pawn с подсветкой синтаксиса, автодополнением, инструментами workspace и прямой компиляцией.
 0x01:xed.about.intro.es:0x02:Xed es un editor de codigo Pawn con resaltado de sintaxis, autocompletado, herramientas de workspace y compilacion directa.
 0x01:xed.about.close.id:0x02:Tutup
 0x01:xed.about.close.en:0x02:Close
+0x01:xed.about.close.ru:0x02:Закрыть
 0x01:xed.about.close.es:0x02:Cerrar
 0x01:xed.about.back.title.id:0x02:Kembali
 0x01:xed.about.back.title.en:0x02:Back
+0x01:xed.about.back.title.ru:0x02:Назад
 0x01:xed.about.back.title.es:0x02:Volver
 0x01:xed.about.back.desc.id:0x02:Kembali ke pemilihan berkas dan layar compiler.
 0x01:xed.about.back.desc.en:0x02:Return to the file selection and compiler screen.
+0x01:xed.about.back.desc.ru:0x02:Вернуться к выбору файла и экрану компилятора.
 0x01:xed.about.back.desc.es:0x02:Vuelve a la seleccion de archivos y a la pantalla del compilador.
 0x01:xed.about.undo.title.id:0x02:Urungkan
 0x01:xed.about.undo.title.en:0x02:Undo
+0x01:xed.about.undo.title.ru:0x02:Отменить
 0x01:xed.about.undo.title.es:0x02:Deshacer
 0x01:xed.about.undo.desc.id:0x02:Urungkan perubahan terakhir.
 0x01:xed.about.undo.desc.en:0x02:Undo the most recent edit.
+0x01:xed.about.undo.desc.ru:0x02:Отменить последнее изменение.
 0x01:xed.about.undo.desc.es:0x02:Deshace la ultima edicion.
 0x01:xed.about.redo.title.id:0x02:Ulangi
 0x01:xed.about.redo.title.en:0x02:Redo
+0x01:xed.about.redo.title.ru:0x02:Повторить
 0x01:xed.about.redo.title.es:0x02:Rehacer
 0x01:xed.about.redo.desc.id:0x02:Pulihkan perubahan terakhir yang diurungkan.
 0x01:xed.about.redo.desc.en:0x02:Restore the most recently undone edit.
+0x01:xed.about.redo.desc.ru:0x02:Восстановить последнее отменённое изменение.
 0x01:xed.about.redo.desc.es:0x02:Restaura la ultima edicion deshecha.
 0x01:xed.about.options.title.id:0x02:Opsi Editor
 0x01:xed.about.options.title.en:0x02:Editor options
+0x01:xed.about.options.title.ru:0x02:Параметры редактора
 0x01:xed.about.options.title.es:0x02:Opciones del editor
 0x01:xed.about.options.desc.id:0x02:Buka workspace, alat pencarian dan penggantian, kontrol tampilan, tombol cepat, dan halaman Tentang.
 0x01:xed.about.options.desc.en:0x02:Open workspace, search and replace tools, view controls, quick keys, and this About page.
+0x01:xed.about.options.desc.ru:0x02:Открыть workspace, инструменты поиска и замены, настройки вида, быстрые клавиши и эту страницу «О программе».
 0x01:xed.about.options.desc.es:0x02:Abre el workspace, las herramientas de buscar y reemplazar, los controles de vista, las teclas rapidas y esta pagina Acerca de.
 0x01:xed.about.open_workspace.title.id:0x02:Buka Folder Workspace
 0x01:xed.about.open_workspace.title.en:0x02:Open Workspace Folder
+0x01:xed.about.open_workspace.title.ru:0x02:Открыть папку workspace
 0x01:xed.about.open_workspace.title.es:0x02:Abrir carpeta de workspace
 0x01:xed.about.open_workspace.desc.id:0x02:Pilih folder lokal dan telusuri berkasnya di panel workspace.
 0x01:xed.about.open_workspace.desc.en:0x02:Choose a local folder and browse its files in the workspace panel.
+0x01:xed.about.open_workspace.desc.ru:0x02:Выберите локальную папку и просматривайте её файлы на панели workspace.
 0x01:xed.about.open_workspace.desc.es:0x02:Elegi una carpeta local y explora sus archivos en el panel del workspace.
 0x01:xed.about.close_workspace.title.id:0x02:Tutup Workspace
 0x01:xed.about.close_workspace.title.en:0x02:Close Workspace
+0x01:xed.about.close_workspace.title.ru:0x02:Закрыть workspace
 0x01:xed.about.close_workspace.title.es:0x02:Cerrar el workspace
 0x01:xed.about.close_workspace.desc.id:0x02:Tutup workspace aktif tanpa menutup workspace lain yang masih terbuka.
 0x01:xed.about.close_workspace.desc.en:0x02:Close the active workspace while keeping other open workspaces available.
+0x01:xed.about.close_workspace.desc.ru:0x02:Закрывает активный workspace, оставляя другие открытые workspace доступными.
 0x01:xed.about.close_workspace.desc.es:0x02:Cierra el workspace activo dejando disponibles los demas workspaces abiertos.
 0x01:xed.about.close_all.title.id:0x02:Tutup Semua Workspace
 0x01:xed.about.close_all.title.en:0x02:Close All Workspaces
+0x01:xed.about.close_all.title.ru:0x02:Закрыть все workspace
 0x01:xed.about.close_all.title.es:0x02:Cerrar todos los workspaces
 0x01:xed.about.close_all.desc.id:0x02:Tutup semua workspace yang sedang terbuka di Xed.
 0x01:xed.about.close_all.desc.en:0x02:Close every workspace currently open in Xed.
+0x01:xed.about.close_all.desc.ru:0x02:Закрывает все workspace, открытые в Xed.
 0x01:xed.about.close_all.desc.es:0x02:Cierra todos los workspaces que estan abiertos en Xed.
 0x01:xed.about.search_workspace.title.id:0x02:Cari di Workspace
 0x01:xed.about.search_workspace.title.en:0x02:Search in Workspace
+0x01:xed.about.search_workspace.title.ru:0x02:Поиск в workspace
 0x01:xed.about.search_workspace.title.es:0x02:Buscar en el workspace
 0x01:xed.about.search_workspace.desc.id:0x02:Cari teks di seluruh berkas dalam workspace aktif.
 0x01:xed.about.search_workspace.desc.en:0x02:Find text across files in the active workspace.
+0x01:xed.about.search_workspace.desc.ru:0x02:Ищет текст по всем файлам активного workspace.
 0x01:xed.about.search_workspace.desc.es:0x02:Busca texto en todos los archivos del workspace activo.
 0x01:xed.about.replace_file.title.id:0x02:Ganti Kata per Berkas
 0x01:xed.about.replace_file.title.en:0x02:Replace Words per File
+0x01:xed.about.replace_file.title.ru:0x02:Замена слов в файле
 0x01:xed.about.replace_file.title.es:0x02:Reemplazar palabras por archivo
 0x01:xed.about.replace_file.desc.id:0x02:Ganti kecocokan di berkas saat ini, satu kemunculan atau semuanya.
 0x01:xed.about.replace_file.desc.en:0x02:Replace matches in the current file, one occurrence or all at once.
+0x01:xed.about.replace_file.desc.ru:0x02:Заменяет совпадения в текущем файле: одно или все сразу.
 0x01:xed.about.replace_file.desc.es:0x02:Reemplaza las coincidencias del archivo actual, una sola o todas.
 0x01:xed.about.replace_workspace.title.id:0x02:Ganti Kata di Semua Berkas
 0x01:xed.about.replace_workspace.title.en:0x02:Replace Words All Files
+0x01:xed.about.replace_workspace.title.ru:0x02:Замена слов во всех файлах
 0x01:xed.about.replace_workspace.title.es:0x02:Reemplazar palabras en todos los archivos
 0x01:xed.about.replace_workspace.desc.id:0x02:Ganti teks yang cocok di seluruh berkas workspace.
 0x01:xed.about.replace_workspace.desc.en:0x02:Replace matching text across the workspace files.
+0x01:xed.about.replace_workspace.desc.ru:0x02:Заменяет совпадающий текст во всех файлах workspace.
 0x01:xed.about.replace_workspace.desc.es:0x02:Reemplaza el texto coincidente en todos los archivos del workspace.
 0x01:xed.about.workspace_panel.title.id:0x02:Tampilkan atau Sembunyikan Panel Workspace
 0x01:xed.about.workspace_panel.title.en:0x02:Show or Hide Workspace Panel
+0x01:xed.about.workspace_panel.title.ru:0x02:Показать или скрыть панель workspace
 0x01:xed.about.workspace_panel.title.es:0x02:Mostrar u ocultar el panel de workspace
 0x01:xed.about.workspace_panel.desc.id:0x02:Tampilkan atau sembunyikan panel berisi berkas terbuka, folder, dan hasil pencarian.
 0x01:xed.about.workspace_panel.desc.en:0x02:Toggle the panel containing open files, folders, and search results.
+0x01:xed.about.workspace_panel.desc.ru:0x02:Показывает или скрывает панель с открытыми файлами, папками и результатами поиска.
 0x01:xed.about.workspace_panel.desc.es:0x02:Muestra u oculta el panel con los archivos abiertos, las carpetas y los resultados de busqueda.
 0x01:xed.about.select_all.title.id:0x02:Pilih Semua
 0x01:xed.about.select_all.title.en:0x02:Select All
+0x01:xed.about.select_all.title.ru:0x02:Выделить всё
 0x01:xed.about.select_all.title.es:0x02:Seleccionar todo
 0x01:xed.about.select_all.desc.id:0x02:Pilih seluruh teks di berkas saat ini.
 0x01:xed.about.select_all.desc.en:0x02:Select all text in the current file.
+0x01:xed.about.select_all.desc.ru:0x02:Выделяет весь текст в текущем файле.
 0x01:xed.about.select_all.desc.es:0x02:Selecciona todo el texto del archivo actual.
 0x01:xed.about.jump.title.id:0x02:Lompat ke Baris
 0x01:xed.about.jump.title.en:0x02:Jump to Line
+0x01:xed.about.jump.title.ru:0x02:Перейти к строке
 0x01:xed.about.jump.title.es:0x02:Ir a la linea
 0x01:xed.about.jump.desc.id:0x02:Pindahkan kursor langsung ke nomor baris tertentu.
 0x01:xed.about.jump.desc.en:0x02:Move the cursor directly to a line number.
+0x01:xed.about.jump.desc.ru:0x02:Перемещает курсор напрямую к номеру строки.
 0x01:xed.about.jump.desc.es:0x02:Mueve el cursor directo a un numero de linea.
 0x01:xed.about.wrap.title.id:0x02:Bungkus Baris
 0x01:xed.about.wrap.title.en:0x02:Word Wrap
+0x01:xed.about.wrap.title.ru:0x02:Перенос слов
 0x01:xed.about.wrap.title.es:0x02:Ajuste de linea
 0x01:xed.about.wrap.desc.id:0x02:Aktifkan atau nonaktifkan pembungkusan baris.
 0x01:xed.about.wrap.desc.en:0x02:Turn line wrapping on or off.
+0x01:xed.about.wrap.desc.ru:0x02:Включает или отключает перенос строк.
 0x01:xed.about.wrap.desc.es:0x02:Activa o desactiva el ajuste de linea.
 0x01:xed.about.read_only.title.id:0x02:Mode Hanya Baca
 0x01:xed.about.read_only.title.en:0x02:Read-Only Mode
+0x01:xed.about.read_only.title.ru:0x02:Режим только для чтения
 0x01:xed.about.read_only.title.es:0x02:Modo solo lectura
 0x01:xed.about.read_only.desc.id:0x02:Cegah pengeditan sampai mode edit diaktifkan kembali.
 0x01:xed.about.read_only.desc.en:0x02:Prevent edits until editing is enabled again.
+0x01:xed.about.read_only.desc.ru:0x02:Запрещает редактирование, пока режим редактирования не будет включён снова.
 0x01:xed.about.read_only.desc.es:0x02:Impide editar hasta que se vuelva a habilitar la edicion.
 0x01:xed.about.line_numbers.title.id:0x02:Nomor Baris
 0x01:xed.about.line_numbers.title.en:0x02:Line Numbers
+0x01:xed.about.line_numbers.title.ru:0x02:Номера строк
 0x01:xed.about.line_numbers.title.es:0x02:Numeros de linea
 0x01:xed.about.line_numbers.desc.id:0x02:Tampilkan atau sembunyikan nomor baris dan kolom saat ini.
 0x01:xed.about.line_numbers.desc.en:0x02:Show or hide line numbers and the current column.
+0x01:xed.about.line_numbers.desc.ru:0x02:Показывает или скрывает номера строк и текущий столбец.
 0x01:xed.about.line_numbers.desc.es:0x02:Muestra u oculta los numeros de linea y la columna actual.
 0x01:xed.about.quickkeys_toggle.title.id:0x02:Tombol Cepat
 0x01:xed.about.quickkeys_toggle.title.en:0x02:Quick Keys Toggle
+0x01:xed.about.quickkeys_toggle.title.ru:0x02:Переключение быстрых клавиш
 0x01:xed.about.quickkeys_toggle.title.es:0x02:Alternar teclas rapidas
 0x01:xed.about.quickkeys_toggle.desc.id:0x02:Tampilkan atau sembunyikan bar bawah berisi TAB, simbol, dan angka.
 0x01:xed.about.quickkeys_toggle.desc.en:0x02:Show or hide the bottom row with TAB, symbols, and digits.
+0x01:xed.about.quickkeys_toggle.desc.ru:0x02:Показывает или скрывает нижний ряд с TAB, символами и цифрами.
 0x01:xed.about.quickkeys_toggle.desc.es:0x02:Muestra u oculta la fila de abajo con TAB, simbolos y numeros.
 0x01:xed.about.about.title.id:0x02:Tentang Xed Editor
 0x01:xed.about.about.title.en:0x02:About Xed Editor
+0x01:xed.about.about.title.ru:0x02:О Xed Editor
 0x01:xed.about.about.title.es:0x02:Acerca de Xed Editor
 0x01:xed.about.about.desc.id:0x02:Buka panduan alat dan kontrol Xed ini.
 0x01:xed.about.about.desc.en:0x02:Open this guide to Xed's tools and controls.
+0x01:xed.about.about.desc.ru:0x02:Открыть это руководство по инструментам и элементам управления Xed.
 0x01:xed.about.about.desc.es:0x02:Abre esta guia de las herramientas y controles de Xed.
 0x01:xed.about.search_file.title.id:0x02:Cari di Berkas
 0x01:xed.about.search_file.title.en:0x02:Search in File
+0x01:xed.about.search_file.title.ru:0x02:Поиск в файле
 0x01:xed.about.search_file.title.es:0x02:Buscar en el archivo
 0x01:xed.about.search_file.desc.id:0x02:Cari teks di berkas saat ini dan berpindah di antara hasilnya.
 0x01:xed.about.search_file.desc.en:0x02:Find text in the current file and move between matches.
+0x01:xed.about.search_file.desc.ru:0x02:Ищет текст в текущем файле и переходит между совпадениями.
 0x01:xed.about.search_file.desc.es:0x02:Busca texto en el archivo actual y se mueve entre las coincidencias.
 0x01:xed.about.open_folder.title.id:0x02:Buka Folder
 0x01:xed.about.open_folder.title.en:0x02:Open Folder
+0x01:xed.about.open_folder.title.ru:0x02:Открыть папку
 0x01:xed.about.open_folder.title.es:0x02:Abrir carpeta
 0x01:xed.about.open_folder.desc.id:0x02:Pilih folder workspace dari toolbar mengambang.
 0x01:xed.about.open_folder.desc.en:0x02:Choose a workspace folder from the floating toolbar.
+0x01:xed.about.open_folder.desc.ru:0x02:Выберите папку workspace из всплывающей панели.
 0x01:xed.about.open_folder.desc.es:0x02:Elegi una carpeta de workspace desde la barra flotante.
 0x01:xed.about.save.title.id:0x02:Simpan
 0x01:xed.about.save.title.en:0x02:Save
+0x01:xed.about.save.title.ru:0x02:Сохранить
 0x01:xed.about.save.title.es:0x02:Guardar
 0x01:xed.about.save.desc.id:0x02:Simpan berkas aktif.
 0x01:xed.about.save.desc.en:0x02:Save the active file.
+0x01:xed.about.save.desc.ru:0x02:Сохранить активный файл.
 0x01:xed.about.save.desc.es:0x02:Guarda el archivo activo.
 0x01:xed.about.save_as_all.title.id:0x02:Simpan Sebagai atau Simpan Semua
 0x01:xed.about.save_as_all.title.en:0x02:Save As or Save All
+0x01:xed.about.save_as_all.title.ru:0x02:Сохранить как или сохранить все
 0x01:xed.about.save_as_all.title.es:0x02:Guardar como o guardar todo
 0x01:xed.about.save_as_all.desc.id:0x02:Simpan berkas saat ini dengan nama baru, atau simpan semua berkas workspace yang berubah.
 0x01:xed.about.save_as_all.desc.en:0x02:Save the current file under a new name, or save all modified workspace files.
+0x01:xed.about.save_as_all.desc.ru:0x02:Сохранить текущий файл под новым именем или сохранить все изменённые файлы workspace.
 0x01:xed.about.save_as_all.desc.es:0x02:Guarda el archivo actual con un nombre nuevo, o guarda todos los archivos modificados del workspace.
 0x01:xed.about.compile.title.id:0x02:Kompilasi
 0x01:xed.about.compile.title.en:0x02:Compile
+0x01:xed.about.compile.title.ru:0x02:Компилировать
 0x01:xed.about.compile.title.es:0x02:Compilar
 0x01:xed.about.compile.desc.id:0x02:Simpan perubahan workspace yang terbuka lalu kompilasi berkas Pawn aktif.
 0x01:xed.about.compile.desc.en:0x02:Save open workspace changes and compile the active Pawn file.
+0x01:xed.about.compile.desc.ru:0x02:Сохранить открытые изменения workspace и скомпилировать активный файл Pawn.
 0x01:xed.about.compile.desc.es:0x02:Guarda los cambios abiertos del workspace y compila el archivo Pawn activo.
 0x01:xed.about.explorer.title.id:0x02:Tombol Panel Workspace
 0x01:xed.about.explorer.title.en:0x02:Workspace Panel Button
+0x01:xed.about.explorer.title.ru:0x02:Кнопка панели workspace
 0x01:xed.about.explorer.title.es:0x02:Boton del panel de workspace
 0x01:xed.about.explorer.desc.id:0x02:Tampilkan atau sembunyikan panel workspace mengambang.
 0x01:xed.about.explorer.desc.en:0x02:Show or hide the floating workspace panel.
+0x01:xed.about.explorer.desc.ru:0x02:Показывает или скрывает всплывающую панель workspace.
 0x01:xed.about.explorer.desc.es:0x02:Muestra u oculta el panel de workspace flotante.
 0x01:xed.about.tabs.title.id:0x02:Tab Berkas
 0x01:xed.about.tabs.title.en:0x02:File Tabs
+0x01:xed.about.tabs.title.ru:0x02:Вкладки файлов
 0x01:xed.about.tabs.title.es:0x02:Pestanas de archivos
 0x01:xed.about.tabs.desc.id:0x02:Beralih antarberkas terbuka atau tutup berkas melalui tab-nya.
 0x01:xed.about.tabs.desc.en:0x02:Switch between open files or close a file from its tab.
+0x01:xed.about.tabs.desc.ru:0x02:Переключайтесь между открытыми файлами или закрывайте файл по его вкладке.
 0x01:xed.about.tabs.desc.es:0x02:Cambia entre archivos abiertos o cierra un archivo desde su pestana.
 0x01:xed.about.new_tab.title.id:0x02:Tambah atau Buka Berkas
 0x01:xed.about.new_tab.title.en:0x02:Add or Open File
+0x01:xed.about.new_tab.title.ru:0x02:Добавить или открыть файл
 0x01:xed.about.new_tab.title.es:0x02:Agregar o abrir archivo
 0x01:xed.about.new_tab.desc.id:0x02:Buka panel workspace atau pilih folder lain.
 0x01:xed.about.new_tab.desc.en:0x02:Open the workspace panel or choose another folder.
+0x01:xed.about.new_tab.desc.ru:0x02:Открыть панель workspace или выбрать другую папку.
 0x01:xed.about.new_tab.desc.es:0x02:Abre el panel del workspace o elegi otra carpeta.
 0x01:xed.about.tab_key.title.id:0x02:TAB
 0x01:xed.about.tab_key.title.en:0x02:TAB
+0x01:xed.about.tab_key.title.ru:0x02:TAB
 0x01:xed.about.tab_key.title.es:0x02:TAB
 0x01:xed.about.tab_key.desc.id:0x02:Masukkan satu tingkat indentasi pada posisi kursor.
 0x01:xed.about.tab_key.desc.en:0x02:Insert one indentation level at the cursor.
+0x01:xed.about.tab_key.desc.ru:0x02:Вставляет один уровень отступа в позицию курсора.
 0x01:xed.about.tab_key.desc.es:0x02:Inserta un nivel de indentacion en la posicion del cursor.
 0x01:xed.about.symbol_keys.title.id:0x02:Tombol Simbol dan Angka
 0x01:xed.about.symbol_keys.title.en:0x02:Symbol and Number Keys
+0x01:xed.about.symbol_keys.title.ru:0x02:Клавиши символов и цифр
 0x01:xed.about.symbol_keys.title.es:0x02:Teclas de simbolos y numeros
 0x01:xed.about.symbol_keys.desc.id:0x02:Masukkan kurung kurawal, tanda kurung, kurung siku, tanda baca, atau angka pada posisi kursor.
 0x01:xed.about.symbol_keys.desc.en:0x02:Insert braces, parentheses, brackets, punctuation, or digits at the cursor.
+0x01:xed.about.symbol_keys.desc.ru:0x02:Вставляет скобки, кавычки, знаки препинания или цифры в позицию курсора.
 0x01:xed.about.symbol_keys.desc.es:0x02:Inserta llaves, parentesis, corchetes, signos de puntuacion o numeros en la posicion del cursor.

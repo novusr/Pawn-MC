@@ -110,7 +110,7 @@ private val SpaceXL = 32.dp
 private val CardShape = RoundedCornerShape(20.dp)
 private val PillShape = RoundedCornerShape(28.dp)
 private val ActionButtonHeight = 48.dp
-private const val OUTPUT_PLACEHOLDER = "Ready to compile...\n"
+private const val OUTPUT_PLACEHOLDER = "Ah shit, here we go again.\n"
 private val OutputPanelHeight = 240.dp
 
 private enum class CompileStatus(val label: String) {

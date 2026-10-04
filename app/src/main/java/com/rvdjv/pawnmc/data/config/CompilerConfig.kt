@@ -232,12 +232,14 @@ class CompilerConfig private constructor(context: Context) {
     enum class AppLanguage(val value: String, val label: String, val description: String) {
         ID("id", "Indonesia", "Bahasa Indonesia"),
         EN("en", "English (EN/US)", "English language"),
-        ES("es", "Espanol (AR)", "Espanol rioplatense (Argentina)");
+        ES("es", "Espanol (AR)", "Espanol rioplatense (Argentina)"),
+        RU("ru", "Russkiy (RU)", "Russkiy yazyk");
 
         /** BCP-47 tag used when the Android context has to be localised. */
         fun localeTag(): String = when (this) {
             ID -> "id"
             ES -> "es-AR"
+            RU -> "ru"
             EN -> "en"
         }
 
@@ -245,6 +247,7 @@ class CompilerConfig private constructor(context: Context) {
             fun fromValue(value: String?): AppLanguage = when {
                 value.equals("in", ignoreCase = true) -> ID
                 value.equals("es-ar", ignoreCase = true) || value.equals("es_ar", ignoreCase = true) -> ES
+                value.equals("ru-ru", ignoreCase = true) || value.equals("ru_ru", ignoreCase = true) -> RU
                 else -> entries.find { it.value.equals(value, ignoreCase = true) } ?: ID
             }
         }

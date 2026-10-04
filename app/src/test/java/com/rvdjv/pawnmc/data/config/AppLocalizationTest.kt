@@ -15,6 +15,10 @@ class AppLocalizationTest {
         assertEquals(CompilerConfig.AppLanguage.ES, CompilerConfig.AppLanguage.fromValue("ES"))
         assertEquals(CompilerConfig.AppLanguage.ES, CompilerConfig.AppLanguage.fromValue("es-AR"))
         assertEquals(CompilerConfig.AppLanguage.ES, CompilerConfig.AppLanguage.fromValue("es_AR"))
+        assertEquals(CompilerConfig.AppLanguage.RU, CompilerConfig.AppLanguage.fromValue("ru"))
+        assertEquals(CompilerConfig.AppLanguage.RU, CompilerConfig.AppLanguage.fromValue("RU"))
+        assertEquals(CompilerConfig.AppLanguage.RU, CompilerConfig.AppLanguage.fromValue("ru-RU"))
+        assertEquals(CompilerConfig.AppLanguage.RU, CompilerConfig.AppLanguage.fromValue("ru_RU"))
     }
 
     @Test
@@ -22,6 +26,7 @@ class AppLocalizationTest {
         assertEquals("id", CompilerConfig.AppLanguage.ID.localeTag())
         assertEquals("en", CompilerConfig.AppLanguage.EN.localeTag())
         assertEquals("es-AR", CompilerConfig.AppLanguage.ES.localeTag())
+        assertEquals("ru", CompilerConfig.AppLanguage.RU.localeTag())
     }
 
     @Test
@@ -102,6 +107,40 @@ class AppLocalizationTest {
         // English still recovers from both Indonesian and Spanish source text
         assertEquals("Settings", localizer.get("Pengaturan", CompilerConfig.AppLanguage.EN))
         assertEquals("Settings", localizer.get("Configuracion", CompilerConfig.AppLanguage.EN))
+    }
+
+    @Test
+    fun `localization translates English words to Russian when RU is selected`() {
+        val localizer = AppLocalization.parseLocalizationData(
+            """
+            0x01:settings.general.id:0x02:Umum
+            0x01:settings.general.en:0x02:General
+            0x01:settings.general.es:0x02:General
+            0x01:settings.general.ru:0x02:Основные
+            0x01:settings.language.id:0x02:Bahasa
+            0x01:settings.language.en:0x02:Language
+            0x01:settings.language.es:0x02:Idioma
+            0x01:settings.language.ru:0x02:Язык
+            0x01:settings.title.id:0x02:Pengaturan
+            0x01:settings.title.en:0x02:Settings
+            0x01:settings.title.es:0x02:Configuracion
+            0x01:settings.title.ru:0x02:Настройки
+            """.trimIndent()
+        ).let { parsed ->
+            val constructor = AppLocalization::class.java.getDeclaredConstructor(Map::class.java)
+            constructor.isAccessible = true
+            constructor.newInstance(parsed)
+        }
+
+        // Key-based translation
+        assertEquals("Основные", localizer.get("settings.general", CompilerConfig.AppLanguage.RU))
+
+        // Phrase / word-based translation
+        assertEquals("Язык", localizer.get("Language", CompilerConfig.AppLanguage.RU))
+        assertEquals("Настройки", localizer.get("Settings", CompilerConfig.AppLanguage.RU))
+
+        // English recovers from Russian source text as well
+        assertEquals("Settings", localizer.get("Настройки", CompilerConfig.AppLanguage.EN))
     }
 
     @Test

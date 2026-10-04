@@ -1,4 +1,4 @@
-﻿# Indonesian completion descriptions are keyed by the matching English description.
+# Indonesian completion descriptions are keyed by the matching English description.
 # Function signature suffixes are retained by InternDat when only their summary is translated.
 0x01:description.id:0x02:Include an external source or header file:0x03:Sertakan file sumber atau header eksternal
 0x01:description.id:0x02:Define a preprocessor macro or constant:0x03:Tentukan makro preprosesor atau konstanta
@@ -276,6 +276,283 @@
 0x01:description.id:0x02:Callback triggered when a player damages someone:0x03:Callback yang dipanggil saat pemain melukai seseorang
 0x01:description.id:0x02:Callback triggered when a player suffers damage:0x03:Callback yang dipanggil saat pemain menerima kerusakan
 0x01:description.id:0x02:Callback triggered on bullet fired by weapon:0x03:Callback yang dipanggil saat senjata menembakkan peluru
+# Russian completion descriptions, keyed by the matching English description.
+0x01:description.ru:0x02:Include an external source or header file:0x03:Подключает внешний исходный файл или заголовочный файл
+0x01:description.ru:0x02:Define a preprocessor macro or constant:0x03:Определяет макрос или константу препроцессора
+0x01:description.ru:0x02:Undefine an existing macro:0x03:Отменяет определение существующего макроса
+0x01:description.ru:0x02:Conditional compilation check:0x03:Проверка условной компиляции
+0x01:description.ru:0x02:Alternative conditional compilation check:0x03:Альтернативная проверка условной компиляции
+0x01:description.ru:0x02:Default conditional compilation branch:0x03:Ветка по умолчанию при условной компиляции
+0x01:description.ru:0x02:End of conditional compilation block:0x03:Конец блока условной компиляции
+0x01:description.ru:0x02:Stops reading the current file:0x03:Прекращает чтение текущего файла
+0x01:description.ru:0x02:Include a file only if it has not been included yet:0x03:Подключает файл, только если он ещё не подключался
+0x01:description.ru:0x02:Stop reading the current file without an error:0x03:Прекращает чтение текущего файла без ошибки
+0x01:description.ru:0x02:Set the file name reported by diagnostics:0x03:Задаёт имя файла, отображаемое в диагностике
+0x01:description.ru:0x02:Enable, disable or raise a compiler warning:0x03:Включает, отключает или повышает уровень предупреждения компилятора
+0x01:description.ru:0x02:Compile-time assertion check:0x03:Проверка утверждения во время компиляции
+0x01:description.ru:0x02:Emit user-defined compilation error:0x03:Выводит пользовательскую ошибку компиляции
+0x01:description.ru:0x02:Compiler control directive:0x03:Директива управления компилятором
+0x01:description.ru:0x02:Emit raw AMX bytecode opcode:0x03:Выдаёт необработанный опкод байткода AMX
+0x01:description.ru:0x02:Set line number and optional filename:0x03:Задаёт номер строки и необязательное имя файла
+0x01:description.ru:0x02:Pragma to set tab indent width:0x03:Pragma для задания ширины отступа табуляции
+0x01:description.ru:0x02:Pragma to set AMX stack/heap memory size:0x03:Pragma для задания размера памяти стека и кучи AMX
+0x01:description.ru:0x02:Pragma to change escape character:0x03:Pragma для смены символа экранирования
+0x01:description.ru:0x02:Pragma to mark symbol as deprecated:0x03:Pragma для пометки символа как устаревшего
+0x01:description.ru:0x02:Pragma to enforce or relax semicolons:0x03:Pragma для обязательности или необязательности точек с запятой
+0x01:description.ru:0x02:Declares variable or function compiled only if used:0x03:Объявляет переменную или функцию, компилируемую только при использовании
+0x01:description.ru:0x02:Declares an exported function callable by AMX:0x03:Объявляет экспортируемую функцию, вызываемую из AMX
+0x01:description.ru:0x02:Forward declaration for public functions:0x03:Предварительное объявление публичных функций
+0x01:description.ru:0x02:Hooks a callback or function so multiple handlers can be chained:0x03:Перехватывает callback или функцию, чтобы можно было связать несколько обработчиков
+0x01:description.ru:0x02:Declares a C/C++ native plugin or host function:0x03:Объявляет native-функцию плагина или хоста на C/C++
+0x01:description.ru:0x02:Declares a local or global variable:0x03:Объявляет локальную или глобальную переменную
+0x01:description.ru:0x02:Declares static scoped variable or private function:0x03:Объявляет статическую переменную с областью видимости или приватную функцию
+0x01:description.ru:0x02:Declares an immutable constant variable:0x03:Объявляет неизменяемую константную переменную
+0x01:description.ru:0x02:Defines an enumerated constant structure:0x03:Определяет структуру перечисляемых констант
+0x01:description.ru:0x02:State machine transition declaration:0x03:Объявление перехода конечного автомата
+0x01:description.ru:0x02:Jump unconditionally to label:0x03:Безусловный переход к метке
+0x01:description.ru:0x02:Break out of loop or switch block:0x03:Выход из цикла или блока switch
+0x01:description.ru:0x02:Skip to next iteration of loop:0x03:Переход к следующей итерации цикла
+0x01:description.ru:0x02:Return value and exit function:0x03:Возвращает значение и завершает функцию
+0x01:description.ru:0x02:Conditional branch statement:0x03:Оператор условного перехода
+0x01:description.ru:0x02:Alternative conditional branch:0x03:Альтернативная ветка условия
+0x01:description.ru:0x02:Loop while condition is true:0x03:Цикл, пока условие истинно
+0x01:description.ru:0x02:Loop executing at least once:0x03:Цикл, выполняющийся хотя бы один раз
+0x01:description.ru:0x02:Standard for-loop statement:0x03:Оператор цикла for
+0x01:description.ru:0x02:Multi-branch switch statement:0x03:Оператор switch с несколькими ветками
+0x01:description.ru:0x02:Case label in switch statement:0x03:Метка case в операторе switch
+0x01:description.ru:0x02:Default branch in switch statement:0x03:Ветка по умолчанию в операторе switch
+0x01:description.ru:0x02:Returns size in cells or array dimensions:0x03:Возвращает размер в ячейках или размерности массива
+0x01:description.ru:0x02:Returns tag integer representing data type:0x03:Возвращает целое tag, представляющее тип данных
+0x01:description.ru:0x02:Runtime assertion condition:0x03:Условие утверждения во время выполнения
+0x01:description.ru:0x02:Pawn abstract machine sleep call:0x03:Вызов sleep абстрактной машины Pawn
+0x01:description.ru:0x02:Sub-cell character packing indexer:0x03:Индексатор упаковки символов в sub-cell
+0x01:description.ru:0x02:Preprocessor check for a defined macro:0x03:Проверка препроцессора на наличие определённого макроса
+0x01:description.ru:0x02:Inline AMX bytecode opcode:0x03:Встроенный опкод байткода AMX
+0x01:description.ru:0x02:Argument list marker for a raw EMIT:0x03:Маркер списка аргументов для прямого EMIT
+0x01:description.ru:0x02:Terminate the script immediately:0x03:Немедленно завершает скрипт
+0x01:description.ru:0x02:User defined operator overload declaration:0x03:Объявление перегрузки оператора пользователем
+0x01:description.ru:0x02:Start of a multi-line block comment:0x03:Начало многострочного блочного комментария
+0x01:description.ru:0x02:End of a multi-line block comment:0x03:Конец многострочного блочного комментария
+0x01:description.ru:0x02:Block comment continuation of the previous line:0x03:Продолжение блочного комментария с предыдущей строки
+0x01:description.ru:0x02:Unsigned right shift assignment:0x03:Присваивание сдвига вправо без знака
+0x01:description.ru:0x02:Left shift assignment:0x03:Присваивание сдвига влево
+0x01:description.ru:0x02:Arithmetic right shift assignment:0x03:Присваивание арифметического сдвига вправо
+0x01:description.ru:0x02:Multiplication assignment:0x03:Присваивание умножения
+0x01:description.ru:0x02:Division assignment:0x03:Присваивание деления
+0x01:description.ru:0x02:Modulo assignment:0x03:Присваивание остатка от деления
+0x01:description.ru:0x02:Addition assignment:0x03:Присваивание сложения
+0x01:description.ru:0x02:Subtraction assignment:0x03:Присваивание вычитания
+0x01:description.ru:0x02:Bitwise AND assignment:0x03:Присваивание побитового И
+0x01:description.ru:0x02:Bitwise XOR assignment:0x03:Присваивание побитового ИСКЛЮЧАЮЩЕГО ИЛИ
+0x01:description.ru:0x02:Bitwise OR assignment:0x03:Присваивание побитового ИЛИ
+0x01:description.ru:0x02:Unsigned right shift:0x03:Сдвиг вправо без знака
+0x01:description.ru:0x02:Arithmetic right shift:0x03:Арифметический сдвиг вправо
+0x01:description.ru:0x02:Left shift:0x03:Сдвиг влево
+0x01:description.ru:0x02:Logical OR:0x03:Логическое ИЛИ
+0x01:description.ru:0x02:Logical AND:0x03:Логическое И
+0x01:description.ru:0x02:Equality comparison:0x03:Сравнение на равенство
+0x01:description.ru:0x02:Inequality comparison:0x03:Сравнение на неравенство
+0x01:description.ru:0x02:Less than or equal comparison:0x03:Сравнение меньше или равно
+0x01:description.ru:0x02:Greater than or equal comparison:0x03:Сравнение больше или равно
+0x01:description.ru:0x02:Pre/post increment:0x03:Префиксный или постфиксный инкремент
+0x01:description.ru:0x02:Pre/post decrement:0x03:Префиксный или постфиксный декремент
+0x01:description.ru:0x02:Ellipsis / argument spread:0x03:Многоточие или разворачивание аргументов
+0x01:description.ru:0x02:Argument range marker:0x03:Маркер диапазона аргументов
+0x01:description.ru:0x02:Tag scope separator:0x03:Разделитель области видимости tag
+0x01:description.ru:0x02:Addition:0x03:Сложение
+0x01:description.ru:0x02:Subtraction or negation:0x03:Вычитание или отрицание
+0x01:description.ru:0x02:Multiplication:0x03:Умножение
+0x01:description.ru:0x02:Division:0x03:Деление
+0x01:description.ru:0x02:Modulo:0x03:Остаток от деления
+0x01:description.ru:0x02:Assignment:0x03:Присваивание
+0x01:description.ru:0x02:Logical NOT:0x03:Логическое НЕ
+0x01:description.ru:0x02:Less than comparison:0x03:Сравнение меньше
+0x01:description.ru:0x02:Greater than comparison:0x03:Сравнение больше
+0x01:description.ru:0x02:Bitwise AND:0x03:Побитовое И
+0x01:description.ru:0x02:Bitwise OR:0x03:Побитовое ИЛИ
+0x01:description.ru:0x02:Bitwise XOR:0x03:Побитовое ИСКЛЮЧАЮЩЕЕ ИЛИ
+0x01:description.ru:0x02:Bitwise NOT:0x03:Побитовое НЕ
+0x01:description.ru:0x02:Ternary conditional marker:0x03:Маркер условия тернарного оператора
+0x01:description.ru:0x02:Ternary else marker:0x03:Маркер else в тернарном операторе
+0x01:description.ru:0x02:Array member or argument range separator:0x03:Разделитель элементов массива или диапазона аргументов
+0x01:description.ru:0x02:Argument separator:0x03:Разделитель аргументов
+0x01:description.ru:0x02:Statement terminator:0x03:Завершитель оператора
+0x01:description.ru:0x02:Floating point single-precision tag:0x03:Tag вещественного числа одинарной точности
+0x01:description.ru:0x02:Boolean true/false data tag:0x03:Tag данных логического типа true/false
+0x01:description.ru:0x02:File handle tag for file operations:0x03:Tag дескриптора файла для операций с файлами
+0x01:description.ru:0x02:Global text draw identifier tag:0x03:Tag идентификатора глобального TextDraw
+0x01:description.ru:0x02:Player-specific text draw identifier tag:0x03:Tag идентификатора TextDraw для конкретного игрока
+0x01:description.ru:0x02:Game menu identifier tag:0x03:Tag идентификатора игрового меню
+0x01:description.ru:0x02:Global 3D text label identifier tag:0x03:Tag идентификатора глобальной 3D-метки
+0x01:description.ru:0x02:Player-specific 3D text label identifier tag:0x03:Tag идентификатора 3D-метки для конкретного игрока
+0x01:description.ru:0x02:Boolean true literal (1):0x03:Литерал логического true (1)
+0x01:description.ru:0x02:Boolean false literal (0):0x03:Литерал логического false (0)
+0x01:description.ru:0x02:Maximum signed 32-bit cell value:0x03:Максимальное значение ячейки со знаком 32 бит
+0x01:description.ru:0x02:Minimum signed 32-bit cell value:0x03:Минимальное значение ячейки со знаком 32 бит
+0x01:description.ru:0x02:Special ID representing no valid player (65535):0x03:Специальный ID, означающий отсутствие игрока (65535)
+0x01:description.ru:0x02:Special ID representing no valid vehicle (65535):0x03:Специальный ID, означающий отсутствие транспорта (65535)
+0x01:description.ru:0x02:Special ID representing no valid object (65535):0x03:Специальный ID, означающий отсутствие объекта (65535)
+0x01:description.ru:0x02:Invalid timer handle representation:0x03:Представление недопустимого дескриптора таймера
+0x01:description.ru:0x02:Maximum player slots on server (default 50/500/1000):0x03:Максимум игровых слотов на сервере (по умолчанию 50/500/1000)
+0x01:description.ru:0x02:Maximum vehicle slots on server (default 2000):0x03:Максимум слотов транспорта на сервере (по умолчанию 2000)
+0x01:description.ru:0x02:Maximum global object limit (1000):0x03:Максимальный лимит глобальных объектов (1000)
+0x01:description.ru:0x02:Maximum static actors on server (1000):0x03:Максимум статических акторов на сервере (1000)
+0x01:description.ru:0x02:Maximum global text draws (2048):0x03:Максимум глобальных TextDraw (2048)
+0x01:description.ru:0x02:Maximum menu instances (128):0x03:Максимум экземпляров меню (128)
+0x01:description.ru:0x02:Maximum gang zones (1024):0x03:Максимум зон банд (1024)
+0x01:description.ru:0x02:Player special action: None:0x03:Особое действие игрока: нет
+0x01:description.ru:0x02:Player special action: Ducking:0x03:Особое действие игрока: приседание
+0x01:description.ru:0x02:Player special action: Jetpack:0x03:Особое действие игрока: реактивный ранец
+0x01:description.ru:0x02:Player state: None:0x03:Состояние игрока: нет
+0x01:description.ru:0x02:Player state: On Foot:0x03:Состояние игрока: пешком
+0x01:description.ru:0x02:Player state: Driver of a vehicle:0x03:Состояние игрока: за рулём транспорта
+0x01:description.ru:0x02:Player state: Passenger in a vehicle:0x03:Состояние игрока: пассажир транспорта
+0x01:description.ru:0x02:Player state: Dead/Wasted:0x03:Состояние игрока: погиб
+0x01:description.ru:0x02:Player state: Spawned:0x03:Состояние игрока: заспавнен
+0x01:description.ru:0x02:Player state: Spectating:0x03:Состояние игрока: наблюдение
+0x01:description.ru:0x02:Native provided by the Pawn/SA-MP include set:0x03:Native-функция из набора include Pawn/SA-MP
+0x01:description.ru:0x02:Prints a plain string to server log without formatting:0x03:Печатает обычную строку в лог сервера без форматирования
+0x01:description.ru:0x02:Prints formatted string to server log:0x03:Печатает форматированную строку в лог сервера
+0x01:description.ru:0x02:Formats string buffer with specifiers:0x03:Форматирует буфер строки по спецификаторам
+0x01:description.ru:0x02:Returns length of string in characters:0x03:Возвращает длину строки в символах
+0x01:description.ru:0x02:Concatenates two strings together:0x03:Соединяет две строки
+0x01:description.ru:0x02:Deletes characters from start to end index:0x03:Удаляет символы от начального до конечного индекса
+0x01:description.ru:0x02:Inserts string at given index:0x03:Вставляет строку по заданному индексу
+0x01:description.ru:0x02:Compares two strings:0x03:Сравнивает две строки
+0x01:description.ru:0x02:Finds substring in target string:0x03:Ищет подстроку в строке
+0x01:description.ru:0x02:Converts string characters into an integer:0x03:Преобразует символы строки в целое число
+0x01:description.ru:0x02:Converts integer into decimal string:0x03:Преобразует целое число в десятичную строку
+0x01:description.ru:0x02:Extracts substring from source into dest:0x03:Копирует подстроку из источника в приёмник
+0x01:description.ru:0x02:Calls function after interval in ms:0x03:Вызывает функцию через указанный интервал в мс
+0x01:description.ru:0x02:Calls function with arguments after interval:0x03:Вызывает функцию с аргументами через указанный интервал
+0x01:description.ru:0x02:Cancels an active timer:0x03:Отменяет активный таймер
+0x01:description.ru:0x02:Returns millisecond count since system start:0x03:Возвращает количество миллисекунд с момента запуска системы
+0x01:description.ru:0x02:Returns configured player slot limit:0x03:Возвращает настроенный лимит игровых слотов
+0x01:description.ru:0x02:Returns random integer between 0 and max - 1:0x03:Возвращает случайное целое от 0 до max - 1
+0x01:description.ru:0x02:Returns smaller of two integer values:0x03:Возвращает меньшее из двух целых значений
+0x01:description.ru:0x02:Returns larger of two integer values:0x03:Возвращает большее из двух целых значений
+0x01:description.ru:0x02:Constrains value between min and max bounds:0x03:Ограничивает значение между границами min и max
+0x01:description.ru:0x02:Sends chat message to single player:0x03:Отправляет сообщение в чат одному игроку
+0x01:description.ru:0x02:Broadcasts chat message to all players:0x03:Отправляет сообщение в чат всем игрокам
+0x01:description.ru:0x02:Emulates chat from one player to another:0x03:Имитирует сообщение в чат от одного игрока к другому
+0x01:description.ru:0x02:Emulates chat from one player to all:0x03:Имитирует сообщение в чат от одного игрока ко всем
+0x01:description.ru:0x02:Executes an RCON command line directly:0x03:Непосредственно выполняет строку команды RCON
+0x01:description.ru:0x02:Displays arcade style game text on all screens:0x03:Показывает игровой текст в стиле аркады на всех экранах
+0x01:description.ru:0x02:Displays arcade style game text to player:0x03:Показывает игроку текст в стиле аркады
+0x01:description.ru:0x02:Configures default spawn coordinates & gear:0x03:Настраивает координаты и снаряжение по умолчанию для спавна
+0x01:description.ru:0x02:Forces immediate respawn for player:0x03:Принудительно вызывает немедленный респавн игрока
+0x01:description.ru:0x02:Teleports player to 3D world coordinates:0x03:Телепортирует игрока в координаты 3D мира
+0x01:description.ru:0x02:Teleports player searching for highest ground:0x03:Телепортирует игрока, ища самую высокую точку земли
+0x01:description.ru:0x02:Gets current 3D position of player:0x03:Возвращает текущую позицию игрока в 3D
+0x01:description.ru:0x02:Sets heading compass direction angle:0x03:Задаёт угол направления по компасу
+0x01:description.ru:0x02:Gets heading compass direction angle:0x03:Возвращает угол направления по компасу
+0x01:description.ru:0x02:Tests if player is within sphere radius:0x03:Проверяет, находится ли игрок в радиусе сферы
+0x01:description.ru:0x02:Tests if player is connected:0x03:Проверяет, подключён ли игрок
+0x01:description.ru:0x02:Tests if player is in specific vehicle:0x03:Проверяет, находится ли игрок в конкретном транспорте
+0x01:description.ru:0x02:Tests if player is inside any vehicle:0x03:Проверяет, находится ли игрок в каком-либо транспорте
+0x01:description.ru:0x02:Sets current health points:0x03:Задаёт текущее количество здоровья
+0x01:description.ru:0x02:Gets current health points:0x03:Возвращает текущее количество здоровья
+0x01:description.ru:0x02:Sets current body armour points:0x03:Задаёт текущее количество брони
+0x01:description.ru:0x02:Gets current body armour points:0x03:Возвращает текущее количество брони
+0x01:description.ru:0x02:Adds or deducts money from player:0x03:Добавляет или вычитает деньги у игрока
+0x01:description.ru:0x02:Returns current player money balance:0x03:Возвращает текущий баланс денег игрока
+0x01:description.ru:0x02:Sets player money balance to zero:0x03:Обнуляет баланс денег игрока
+0x01:description.ru:0x02:Sets player scoreboard score:0x03:Задаёт счёт игрока в табличке результатов
+0x01:description.ru:0x02:Returns current player scoreboard score:0x03:Возвращает текущий счёт игрока в таблице результатов
+0x01:description.ru:0x02:Returns current player character PED skin ID:0x03:Возвращает ID скина модели игрока
+0x01:description.ru:0x02:Changes character PED skin ID:0x03:Меняет ID скина модели игрока
+0x01:description.ru:0x02:Returns current character PED skin ID:0x03:Возвращает текущий ID скина модели игрока
+0x01:description.ru:0x02:Awards weapon and ammo to player:0x03:Выдаёт игроку оружие и боеприпасы
+0x01:description.ru:0x02:Removes all weapons from player:0x03:Забирает всё оружие у игрока
+0x01:description.ru:0x02:Returns currently held weapon ID:0x03:Возвращает ID оружия, которое сейчас в руках
+0x01:description.ru:0x02:Changes player nickname:0x03:Меняет ник игрока
+0x01:description.ru:0x02:Retrieves player nickname:0x03:Возвращает ник игрока
+0x01:description.ru:0x02:Sets player radar blip and name tag color:0x03:Задаёт цвет точки на радаре и метки ника игрока
+0x01:description.ru:0x02:Returns player color:0x03:Возвращает цвет игрока
+0x01:description.ru:0x02:Changes building interior ID:0x03:Меняет ID интерьера здания
+0x01:description.ru:0x02:Gets building interior ID:0x03:Возвращает ID интерьера здания
+0x01:description.ru:0x02:Sets virtual world dimension ID:0x03:Задаёт ID измерения виртуального мира
+0x01:description.ru:0x02:Gets virtual world dimension ID:0x03:Возвращает ID измерения виртуального мира
+0x01:description.ru:0x02:Retrieves player IP address:0x03:Возвращает IP-адрес игрока
+0x01:description.ru:0x02:Returns player latency in ms:0x03:Возвращает пинг игрока в мс
+0x01:description.ru:0x02:Kicks a player from the server:0x03:Кикает игрока с сервера
+0x01:description.ru:0x02:Bans player IP address:0x03:Банит IP-адрес игрока
+0x01:description.ru:0x02:Bans player IP address with custom reason:0x03:Банит IP-адрес игрока с указанием причины
+0x01:description.ru:0x02:Teleports player directly into vehicle:0x03:Телепортирует игрока прямо в транспорт
+0x01:description.ru:0x02:Ejects player from their vehicle:0x03:Высаживает игрока из транспорта
+0x01:description.ru:0x02:Returns vehicle ID player is inside:0x03:Возвращает ID транспорта, в котором находится игрок
+0x01:description.ru:0x02:Returns vehicle seat index of player:0x03:Возвращает индекс сиденья игрока в транспорте
+0x01:description.ru:0x02:Spawns a new vehicle:0x03:Создаёт новый транспорт
+0x01:description.ru:0x02:Removes vehicle from the server:0x03:Удаляет транспорт с сервера
+0x01:description.ru:0x02:Gets 3D position of vehicle:0x03:Возвращает позицию транспорта в 3D
+0x01:description.ru:0x02:Teleports vehicle to coordinates:0x03:Телепортирует транспорт в указанные координаты
+0x01:description.ru:0x02:Repairs vehicle engine and body panels:0x03:Чинит двигатель и панели кузова транспорта
+0x01:description.ru:0x02:Sets license plate text:0x03:Задаёт текст номерного знака
+0x01:description.ru:0x02:Returns vehicle model ID:0x03:Возвращает ID модели транспорта
+0x01:description.ru:0x02:Adds car mod component:0x03:Добавляет компонент модификации транспорта
+0x01:description.ru:0x02:Removes car mod component:0x03:Убирает компонент модификации транспорта
+0x01:description.ru:0x02:Changes body color of vehicle:0x03:Меняет цвет кузова транспорта
+0x01:description.ru:0x02:Changes paintjob livery of vehicle:0x03:Меняет покраску транспорта
+0x01:description.ru:0x02:Creates global world object:0x03:Создаёт глобальный объект в мире
+0x01:description.ru:0x02:Destroys world object:0x03:Удаляет объект мира
+0x01:description.ru:0x02:Smoothly moves object to target position:0x03:Плавно перемещает объект в целевую позицию
+0x01:description.ru:0x02:Halts object movement immediately:0x03:Немедленно останавливает движение объекта
+0x01:description.ru:0x02:Creates world pickup model:0x03:Создаёт модель pickup в мире
+0x01:description.ru:0x02:Removes pickup:0x03:Удаляет pickup
+0x01:description.ru:0x02:Displays modal GUI dialog window to player:0x03:Показывает игроку модальное окно GUI
+0x01:description.ru:0x02:Creates global on-screen text draw:0x03:Создаёт глобальный TextDraw на экране
+0x01:description.ru:0x02:Destroys global text draw:0x03:Удаляет глобальный TextDraw
+0x01:description.ru:0x02:Displays text draw to player:0x03:Показывает TextDraw игроку
+0x01:description.ru:0x02:Hides text draw from player:0x03:Скрывает TextDraw от игрока
+0x01:description.ru:0x02:Updates text draw string:0x03:Обновляет строку TextDraw
+0x01:description.ru:0x02:Opens file on disk:0x03:Открывает файл на диске
+0x01:description.ru:0x02:Closes open file handle:0x03:Закрывает открытый дескриптор файла
+0x01:description.ru:0x02:Writes text line to file:0x03:Записывает строку текста в файл
+0x01:description.ru:0x02:Reads text line from file:0x03:Читает строку текста из файла
+0x01:description.ru:0x02:Checks if file exists on server disk:0x03:Проверяет, существует ли файл на диске сервера
+0x01:description.ru:0x02:Deletes file from server disk:0x03:Удаляет файл с диска сервера
+0x01:description.ru:0x02:Callback triggered when the gamemode loads:0x03:Callback, вызываемый при загрузке игрового режима
+0x01:description.ru:0x02:Callback triggered when the gamemode shuts down:0x03:Callback, вызываемый при выключении игрового режима
+0x01:description.ru:0x02:Callback triggered when a filterscript loads:0x03:Callback, вызываемый при загрузке filterscript
+0x01:description.ru:0x02:Callback triggered when a filterscript unloads:0x03:Callback, вызываемый при выгрузке filterscript
+0x01:description.ru:0x02:Callback triggered when a player joins the server:0x03:Callback, вызываемый когда игрок заходит на сервер
+0x01:description.ru:0x02:Callback triggered when a player leaves the server:0x03:Callback, вызываемый когда игрок покидает сервер
+0x01:description.ru:0x02:Callback triggered when a player spawns in the world:0x03:Callback, вызываемый при спавне игрока в мире
+0x01:description.ru:0x02:Callback triggered when a player dies or is killed:0x03:Callback, вызываемый при гибели игрока
+0x01:description.ru:0x02:Callback triggered when a vehicle spawns:0x03:Callback, вызываемый при спавне транспорта
+0x01:description.ru:0x02:Callback triggered when a vehicle is destroyed:0x03:Callback, вызываемый при уничтожении транспорта
+0x01:description.ru:0x02:Callback triggered when a player sends public chat:0x03:Callback, вызываемый когда игрок пишет в общий чат
+0x01:description.ru:0x02:Callback triggered when a player enters a slash command:0x03:Callback, вызываемый когда игрок вводит команду со слешем
+0x01:description.ru:0x02:Callback triggered when a player views class selection:0x03:Callback, вызываемый при показе выбора класса
+0x01:description.ru:0x02:Callback triggered when a player starts entering a vehicle:0x03:Callback, вызываемый когда игрок начинает садиться в транспорт
+0x01:description.ru:0x02:Callback triggered when a player starts exiting a vehicle:0x03:Callback, вызываемый когда игрок начинает выходить из транспорта
+0x01:description.ru:0x02:Callback triggered when a player changes state (foot, car, etc.):0x03:Callback, вызываемый при смене состояния игрока (пешком, в машине и т. д.)
+0x01:description.ru:0x02:Callback triggered when a player enters standard checkpoint:0x03:Callback, вызываемый при входе игрока в обычный чекпоинт
+0x01:description.ru:0x02:Callback triggered when a player leaves standard checkpoint:0x03:Callback, вызываемый при выходе игрока из обычного чекпоинта
+0x01:description.ru:0x02:Callback triggered when entering race checkpoint:0x03:Callback, вызываемый при входе в гоночный чекпоинт
+0x01:description.ru:0x02:Callback triggered when leaving race checkpoint:0x03:Callback, вызываемый при выходе из гоночного чекпоинта
+0x01:description.ru:0x02:Callback triggered on server console RCON command:0x03:Callback, вызываемый при команде RCON в консоли сервера
+0x01:description.ru:0x02:Callback triggered when player clicks Spawn button:0x03:Callback, вызываемый когда игрок нажимает кнопку Spawn
+0x01:description.ru:0x02:Callback triggered when a moving object finishes its travel:0x03:Callback, вызываемый когда движущийся объект заканчивает путь
+0x01:description.ru:0x02:Callback triggered when player object finishes moving:0x03:Callback, вызываемый когда объект игрока заканчивает движение
+0x01:description.ru:0x02:Callback triggered when a player walks over a pickup:0x03:Callback, вызываемый когда игрок проходит по pickup
+0x01:description.ru:0x02:Callback triggered when a vehicle modification is installed:0x03:Callback, вызываемый при установке модификации транспорта
+0x01:description.ru:0x02:Callback triggered when a vehicle paintjob is applied:0x03:Callback, вызываемый при применении покраски транспорта
+0x01:description.ru:0x02:Callback triggered when a vehicle color is changed:0x03:Callback, вызываемый при смене цвета транспорта
+0x01:description.ru:0x02:Callback triggered on vehicle damage parts update:0x03:Callback, вызываемый при обновлении повреждений транспорта
+0x01:description.ru:0x02:Callback triggered periodically for unoccupied vehicles:0x03:Callback, вызываемый периодически для транспорта без водителя
+0x01:description.ru:0x02:Callback triggered when selecting a menu option:0x03:Callback, вызываемый при выборе пункта меню
+0x01:description.ru:0x02:Callback triggered when player cancels out of a menu:0x03:Callback, вызываемый когда игрок выходит из меню
+0x01:description.ru:0x02:Callback triggered when user interacts with a GUI dialog:0x03:Callback, вызываемый при взаимодействии с диалогом GUI
+0x01:description.ru:0x02:Callback triggered on clicking personal text draw:0x03:Callback, вызываемый при нажатии на личный TextDraw
+0x01:description.ru:0x02:Callback triggered on clicking global text draw:0x03:Callback, вызываемый при нажатии на глобальный TextDraw
+0x01:description.ru:0x02:Callback triggered when clicking player in scoreboard:0x03:Callback, вызываемый при нажатии на игрока в таблице результатов
+0x01:description.ru:0x02:Callback triggered on incoming raw client connection:0x03:Callback, вызываемый при входящем сыром подключении клиента
+0x01:description.ru:0x02:Callback triggered when vehicle trailer sync updates:0x03:Callback, вызываемый при обновлении синхронизации прицепа
+0x01:description.ru:0x02:Callback triggered when siren toggles on/off:0x03:Callback, вызываемый при включении и выключении сирены
+0x01:description.ru:0x02:Callback triggered when a player damages someone:0x03:Callback, вызываемый когда игрок наносит урон другому
+0x01:description.ru:0x02:Callback triggered when a player suffers damage:0x03:Callback, вызываемый когда игрок получает урон
+0x01:description.ru:0x02:Callback triggered on bullet fired by weapon:0x03:Callback, вызываемый при выстреле из оружия
 # Spanish (Argentina) completion descriptions, keyed by the matching English description.
 0x01:description.es:0x02:Include an external source or header file:0x03:Incluye un archivo fuente o header externo
 0x01:description.es:0x02:Define a preprocessor macro or constant:0x03:Define una macro del preprocesador o una constante
@@ -486,12 +763,12 @@
 0x01:description.es:0x02:Removes vehicle from the server:0x03:Elimina un vehiculo del servidor
 0x01:description.es:0x02:Gets 3D position of vehicle:0x03:Obtiene la posicion 3D del vehiculo
 0x01:description.es:0x02:Teleports vehicle to coordinates:0x03:Teletransporta el vehiculo a unas coordenadas
-0x01:description.es:0x02:Repairs vehicle engine and body panels:0x03:Repara el motor y la carrocerÃ­a del vehiculo
+0x01:description.es:0x02:Repairs vehicle engine and body panels:0x03:Repara el motor y la carrocerÃƒÂ­a del vehiculo
 0x01:description.es:0x02:Sets license plate text:0x03:Define el texto de la patente
 0x01:description.es:0x02:Returns vehicle model ID:0x03:Devuelve el ID del modelo del vehiculo
 0x01:description.es:0x02:Adds car mod component:0x03:Agrega un componente de tuning al auto
 0x01:description.es:0x02:Removes car mod component:0x03:Quita un componente de tuning del auto
-0x01:description.es:0x02:Changes body color of vehicle:0x03:Cambia el color de la carrocerÃ­a del vehiculo
+0x01:description.es:0x02:Changes body color of vehicle:0x03:Cambia el color de la carrocerÃƒÂ­a del vehiculo
 0x01:description.es:0x02:Changes paintjob livery of vehicle:0x03:Cambia la pintura o livery del vehiculo
 0x01:description.es:0x02:Creates global world object:0x03:Crea un objeto global en el mundo
 0x01:description.es:0x02:Destroys world object:0x03:Destruye un objeto del mundo

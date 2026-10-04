@@ -48,7 +48,7 @@ Current app metadata (`app/build.gradle.kts`): `applicationId` `com.rvdjv.pawnmc
 | Workspace sessions | Up to 3 open folders, each with its own tree, opened editors, and search hits |
 | Workspace-wide tools | Find/replace across every file of a workspace, plus search-in-workspace |
 | Editor terminal portal | In-editor command line (`help`, `docs`, `pawncc`, `switch`, `clear`) with sandboxed source resolution inside the workspace root |
-| Localization | Indonesian, English, and Spanish (Argentina) strings served from `_dat/_dat_extract.dat` |
+| Localization | Indonesian, English, Spanish (Argentina), and Russian strings served from `_dat/_dat_extract.dat` |
 | Pawn symbol data | Keywords, natives, and forwards loaded from `_dat/_dat_internal.dat` (natives/forwards grouped by include) |
 | Editor appearance | Custom Xed editor background with presets and a hex picker |
 | Theme and language | Light/dark/system theme with an in-app language selector |
@@ -350,7 +350,7 @@ The most relevant files to understand the project are:
 | app/src/main/java/com/rvdjv/pawnmc/interface/settings/SettingsScreen.kt | Settings and update actions |
 | app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt | Release update logic |
 | app/src/main/cpp/Compiler.cpp | Native bridge implementation |
-| _dat/_dat_extract.dat | Localisation data for Indonesian, English, and Spanish (Argentina) |
+| _dat/_dat_extract.dat | Localisation data for Indonesian, English, Spanish (Argentina), and Russian |
 | _dat/_dat_explain.dat | Local explanations of Pawn compiler messages |
 | _dat/_dat_internal.dat | Pawn natives/forwards/descriptions |
 | _dat/_dat_simulation.dat | Terminal portal strings |

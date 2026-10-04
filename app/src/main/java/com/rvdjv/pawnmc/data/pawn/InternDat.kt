@@ -10,6 +10,7 @@ internal data class PawnInternalSymbol(
     val description: String,
     val descriptionId: String? = null,
     val descriptionEs: String? = null,
+    val descriptionRu: String? = null,
 )
 
 internal data class InternDatset(
@@ -64,6 +65,7 @@ internal object InternDat {
 
         val descriptionTranslations = translationTable("description.id")
         val descriptionTranslationsEs = translationTable("description.es")
+        val descriptionTranslationsRu = translationTable("description.ru")
 
         fun localizedTranslation(
             table: Map<String, String>,
@@ -74,19 +76,20 @@ internal object InternDat {
             }
 
         rows.forEach { (key, rawDescription) ->
-            if (key.size == 1 && (key[0] == "description.id" || key[0] == "description.es")) return@forEach
+            if (key.size == 1 && key[0] in setOf("description.id", "description.es", "description.ru")) return@forEach
             val descriptionParts = rawDescription.split(":0x03:", limit = 2)
             val description = descriptionParts.first().trim()
             val descriptionId = descriptionParts.getOrNull(1)?.trim()?.takeIf { it.isNotEmpty() }
                 ?: localizedTranslation(descriptionTranslations, description)
             val descriptionEs = localizedTranslation(descriptionTranslationsEs, description)
+            val descriptionRu = localizedTranslation(descriptionTranslationsRu, description)
             if (description.isEmpty()) return@forEach
 
             when {
                 key.size == 3 && key[0] == "item" -> {
                     val kind = runCatching { PawnItemKind.valueOf(key[1]) }.getOrNull()
                         ?: return@forEach
-                    items += _item(key[2], description, kind, descriptionId, descriptionEs)
+                    items += _item(key[2], description, kind, descriptionId, descriptionEs, descriptionRu)
                 }
                 key.size == 3 && key[0] in setOf("native", "forward") -> {
                     symbols += PawnInternalSymbol(
@@ -96,6 +99,7 @@ internal object InternDat {
                         description = description,
                         descriptionId = descriptionId,
                         descriptionEs = descriptionEs,
+                        descriptionRu = descriptionRu,
                     )
                 }
             }

@@ -18,10 +18,12 @@ data class _item(
     val kind: PawnItemKind,
     val descriptionId: String? = null,
     val descriptionEs: String? = null,
+    val descriptionRu: String? = null,
 ) {
     fun descriptionFor(language: CompilerConfig.AppLanguage): String = when (language) {
         CompilerConfig.AppLanguage.ID -> descriptionId ?: description
         CompilerConfig.AppLanguage.ES -> descriptionEs ?: description
+        CompilerConfig.AppLanguage.RU -> descriptionRu ?: description
         CompilerConfig.AppLanguage.EN -> description
     }
 }

@@ -36,6 +36,36 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         map
     }
 
+    /** English text -> Russian text. */
+    private val enToRuMap: Map<String, String> by lazy {
+        val map = mutableMapOf<String, String>()
+        for ((k, v) in entries) {
+            if (k.endsWith(".en")) {
+                val base = k.removeSuffix(".en")
+                val ruVal = entries["$base.ru"]
+                if (ruVal != null) {
+                    map[v.trim().lowercase()] = ruVal
+                }
+            }
+        }
+        map
+    }
+
+    /** Russian text -> English text. */
+    private val ruToEnMap: Map<String, String> by lazy {
+        val map = mutableMapOf<String, String>()
+        for ((k, v) in entries) {
+            if (k.endsWith(".ru")) {
+                val base = k.removeSuffix(".ru")
+                val enVal = entries["$base.en"]
+                if (enVal != null) {
+                    map[v.trim().lowercase()] = enVal
+                }
+            }
+        }
+        map
+    }
+
     /** Spanish (Argentina) text -> English text. */
     private val esToEnMap: Map<String, String> by lazy {
         val map = mutableMapOf<String, String>()
@@ -83,11 +113,17 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
                 enToEsMap[normalizedKey.lowercase()]?.let { return it }
                 enToEsMap[fallback.trim().lowercase()]?.let { return it }
             }
+            CompilerConfig.AppLanguage.RU -> {
+                enToRuMap[normalizedKey.lowercase()]?.let { return it }
+                enToRuMap[fallback.trim().lowercase()]?.let { return it }
+            }
             CompilerConfig.AppLanguage.EN -> {
                 idToEnMap[normalizedKey.lowercase()]?.let { return it }
                 esToEnMap[normalizedKey.lowercase()]?.let { return it }
+                ruToEnMap[normalizedKey.lowercase()]?.let { return it }
                 idToEnMap[fallback.trim().lowercase()]?.let { return it }
                 esToEnMap[fallback.trim().lowercase()]?.let { return it }
+                ruToEnMap[fallback.trim().lowercase()]?.let { return it }
             }
         }
 
