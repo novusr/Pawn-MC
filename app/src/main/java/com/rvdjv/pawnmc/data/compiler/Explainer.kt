@@ -1,5 +1,6 @@
 package com.rvdjv.pawnmc.data.compiler
 
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 import java.io.File
 
 /**

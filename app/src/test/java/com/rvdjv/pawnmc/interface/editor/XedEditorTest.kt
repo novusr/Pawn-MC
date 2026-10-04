@@ -1,7 +1,9 @@
 package com.rvdjv.pawnmc.`interface`.editor
 
 import com.rvdjv.pawnmc.data.pawn.PawnRegistry
+import com.rvdjv.pawnmc.data.pawn.InternDat
 import com.rvdjv.pawnmc.`interface`.editor.pawn.PawnSourceSymbols
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -15,6 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class XedEditorTest {
@@ -242,5 +245,71 @@ class XedEditorTest {
         assertEquals(null, normalizeNewPawnFileName("../outside.pwn"))
         assertEquals(null, normalizeNewPawnFileName("notes.txt"))
         assertEquals(null, normalizeNewPawnFileName(" "))
+    }
+
+    @Test
+    fun `terminal tokenizer supports quoted paths without shell expansion`() {
+        assertEquals(
+            listOf("pawncc", "gamemodes/test mode.pwn", "-d=3"),
+            XedTerminalCommandParser.tokenize("pawncc \"gamemodes/test mode.pwn\" -d=3")
+        )
+        assertEquals(null, XedTerminalCommandParser.tokenize("pawncc \"unfinished path.pwn"))
+        assertEquals(listOf("help"), XedTerminalCommandParser.suggestions("h", "mode.pwn"))
+        assertEquals(listOf("pawncc \"mode.pwn\""), XedTerminalCommandParser.suggestions("pawncc ", "mode.pwn"))
+        assertEquals(listOf("clear"), XedTerminalCommandParser.suggestions("cle", "mode.pwn"))
+        assertEquals(listOf("celar"), XedTerminalCommandParser.suggestions("cel", "mode.pwn"))
+        assertEquals(
+            listOf("switch 3.10.7", "switch 3.10.11"),
+            XedTerminalCommandParser.suggestions("switch 3", "mode.pwn")
+        )
+    }
+
+    @Test
+    fun `pawncc source is confined to workspace and Pawn files`() {
+        val workspace = tempFolder.newFolder("workspace")
+        val source = File(workspace, "mode.pwn").apply { writeText("main() {}") }
+        val outside = tempFolder.newFile("outside.pwn")
+
+        assertEquals(
+            source.canonicalFile,
+            XedTerminalCommandParser.pawnccInvocation(listOf("mode.pwn", "-d=3"), workspace)?.source
+        )
+        assertEquals(null, XedTerminalCommandParser.pawnccInvocation(emptyList(), workspace))
+        assertEquals(null, XedTerminalCommandParser.pawnccInvocation(listOf("-d=3"), workspace))
+        assertEquals(null, XedTerminalCommandParser.pawnccInvocation(listOf("../${outside.name}"), workspace))
+        assertEquals(null, XedTerminalCommandParser.pawnccInvocation(listOf("notes.txt"), workspace))
+    }
+
+    @Test
+    fun `simulation data preserves localized Markdown docs`() {
+        val entries = XedSimulationData.parse(
+            "0x01:terminal.docs.id:0x02:# MC Developer Portal\\nDokumentasi\n" +
+                "0x01:terminal.docs.en:0x02:# MC Developer Portal\\nDocumentation"
+        )
+
+        assertEquals("# MC Developer Portal\nDokumentasi", entries["terminal.docs.id"])
+        assertEquals("# MC Developer Portal\nDocumentation", entries["terminal.docs.en"])
+    }
+
+    @Test
+    fun `internal completion descriptions localize and preserve signatures`() {
+        val dataset = InternDat.parse(
+            """
+                0x01:description.id:0x02:Declares a local or global variable:0x03:Mendeklarasikan variabel lokal atau global
+                0x01:description.id:0x02:Prints a plain string:0x03:Mencetak teks biasa
+                0x01:item|KEYWORD|new:0x02:Declares a local or global variable
+                0x01:item|FUNCTION|print:0x02:Prints a plain string: print(const string[])
+                0x01:item|KEYWORD|stock:0x02:Description without translation
+            """.trimIndent()
+        )
+
+        val keyword = dataset.items.first { it.name == "new" }
+        val function = dataset.items.first { it.name == "print" }
+        val untranslated = dataset.items.first { it.name == "stock" }
+
+        assertEquals("Mendeklarasikan variabel lokal atau global", keyword.descriptionFor(CompilerConfig.AppLanguage.ID))
+        assertEquals("Declares a local or global variable", keyword.descriptionFor(CompilerConfig.AppLanguage.EN))
+        assertEquals("Mencetak teks biasa: print(const string[])", function.descriptionFor(CompilerConfig.AppLanguage.ID))
+        assertEquals("Description without translation", untranslated.descriptionFor(CompilerConfig.AppLanguage.ID))
     }
 }

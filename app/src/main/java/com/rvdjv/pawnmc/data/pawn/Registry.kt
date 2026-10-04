@@ -1,5 +1,7 @@
 package com.rvdjv.pawnmc.data.pawn
 
+import com.rvdjv.pawnmc.data.config.CompilerConfig
+
 enum class PawnItemKind {
     KEYWORD,
     DIRECTIVE,
@@ -13,8 +15,12 @@ enum class PawnItemKind {
 data class _item(
     val name: String,
     val description: String,
-    val kind: PawnItemKind
-)
+    val kind: PawnItemKind,
+    val descriptionId: String? = null
+) {
+    fun descriptionFor(language: CompilerConfig.AppLanguage): String =
+        if (language == CompilerConfig.AppLanguage.ID) descriptionId ?: description else description
+}
 
 /**
  * Dedicated Pawn language registry holding official Pawn specifications,
@@ -59,12 +65,12 @@ object PawnRegistry {
         val natives = PawnIndex.INCLUDES.flatMap { it.natives }
             .filterNot { it.name in nativeSet || it.name in keywordSet }
             .distinctBy { it.name }
-        addAll(natives.map { _item(it.name, it.description, it.kind) })
+        addAll(natives.map { _item(it.name, it.description, it.kind, it.descriptionId) })
 
         val forwards = PawnIndex.INCLUDES.flatMap { it.forwards }
             .filterNot { it.name in callbackSet || it.name in keywordSet }
             .distinctBy { it.name }
-        addAll(forwards.map { _item(it.name, it.description, it.kind) })
+        addAll(forwards.map { _item(it.name, it.description, it.kind, it.descriptionId) })
     }
 
     private val keywordSet: Set<String> by lazy {
@@ -134,7 +140,10 @@ object PawnRegistry {
         OPERATORS.mapTo(mutableSetOf()) { it.name }
     }
 
-    fun getCompletions(prefix: String): List<_item> {
+    fun getCompletions(
+        prefix: String,
+        language: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+    ): List<_item> {
         val query = prefix.trim()
         if (query.isEmpty()) return emptyList()
         val queryLower = query.lowercase()
@@ -142,6 +151,8 @@ object PawnRegistry {
             item.name.lowercase().startsWith(queryLower) ||
                 (query.startsWith("#") && item.name.startsWith(query, ignoreCase = true)) ||
                 item.name.removePrefix("#").lowercase().startsWith(queryLower)
-        }.take(35)
+        }.take(35).map { item ->
+            item.copy(description = item.descriptionFor(language))
+        }
     }
 }

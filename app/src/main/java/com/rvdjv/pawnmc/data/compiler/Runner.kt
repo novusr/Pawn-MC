@@ -154,6 +154,20 @@ object Runner {
         return n_result
     }
 
+    /** Runs pawncc with exactly the arguments entered by the manual console. */
+    fun compileManual(
+        sourceFile: String,
+        options: List<String>,
+        version: CompilerConfig.CompilerVersion
+    ): Pair<Int, String> = compileWithVersion(sourceFile, options, version, manualArguments = true)
+
+    internal fun compilerArgumentsForManual(sourceFile: String, options: List<String>): List<String> =
+        buildList {
+            add(STR_PAWNCC_BINARY_NAME)
+            add(sourceFile)
+            addAll(options)
+        }
+
     internal fun compilerOptionsForVersion(
         options: List<String>,
         version: CompilerConfig.CompilerVersion
@@ -205,7 +219,8 @@ object Runner {
     private fun compileWithVersion(
         sourceFile: String,
         options: List<String>,
-        version: CompilerConfig.CompilerVersion
+        version: CompilerConfig.CompilerVersion,
+        manualArguments: Boolean = false
     ): Pair<Int, String> {
         if (!ensureInitialized(version)) {
             return -1 to "Failed to load compiler library"
@@ -224,7 +239,11 @@ object Runner {
             ?.onFailure { Log.e("Compiler",
             "Failed to delete old log file: ${n_logFile.absolutePath}", it) }
 
-        val n_args = compilerArgumentsForVersion(sourceFile, options, version)
+        val n_args = if (manualArguments) {
+            compilerArgumentsForManual(sourceFile, options)
+        } else {
+            compilerArgumentsForVersion(sourceFile, options, version)
+        }
         val n_output = compile(n_args.toTypedArray())
         val n_parsedResult = parseCompilerOutput(n_output)
 

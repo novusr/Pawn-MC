@@ -177,6 +177,16 @@ class SuccessTest {
     }
 
     @Test
+    fun `manual console arguments pass through without GUI defaults`() {
+        val options = listOf("-d=3", "-i=custom/includes", "-o=custom.amx")
+
+        assertEquals(
+            listOf("pawncc", "/workspace/mode.pwn") + options,
+            Compiler.compilerArgumentsForManual("/workspace/mode.pwn", options)
+        )
+    }
+
+    @Test
     fun `sscanf compatibility define is moved to the end without duplicates`() {
         val options = listOf(
             "-i=/project/include",

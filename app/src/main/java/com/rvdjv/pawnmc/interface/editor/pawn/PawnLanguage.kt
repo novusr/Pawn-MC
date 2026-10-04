@@ -4,6 +4,7 @@ import android.os.Bundle
 import com.rvdjv.pawnmc.data.pawn._item
 import com.rvdjv.pawnmc.data.pawn.PawnItemKind
 import com.rvdjv.pawnmc.data.pawn.PawnRegistry
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
@@ -24,7 +25,9 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch
  * operator table and the include-derived natives and forwards, so the popup
  * and the syntax highlighter always agree on what the language contains.
  */
-class PawnLanguage : Language {
+class PawnLanguage(
+    private val appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+) : Language {
 
     private val analyzeManager = PawnManager()
     private val symbolPairs = SymbolPairMatch.DefaultSymbolPairs()
@@ -83,9 +86,14 @@ class PawnLanguage : Language {
         prefix: String,
         localFunctions: List<PawnLocalFunction>
     ) {
-        val matchingItems = PawnRegistry.getCompletions(prefix) + localFunctions
+        val localFunctionDescription = if (appLanguage == CompilerConfig.AppLanguage.ID) {
+            "Dideklarasikan di berkas ini"
+        } else {
+            "Declared in this file"
+        }
+        val matchingItems = PawnRegistry.getCompletions(prefix, appLanguage) + localFunctions
             .filter { it.name.startsWith(prefix, ignoreCase = true) }
-            .map { _item(it.name, it.description, PawnItemKind.FUNCTION) }
+            .map { _item(it.name, "$localFunctionDescription: ${it.description.substringAfter(": ")}", PawnItemKind.FUNCTION) }
         for (item in matchingItems) {
             publisher.checkCancelled()
             val itemKind = when (item.kind) {

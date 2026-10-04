@@ -8,6 +8,7 @@ internal data class PawnInternalSymbol(
     val kind: PawnItemKind,
     val name: String,
     val description: String,
+    val descriptionId: String? = null,
 )
 
 internal data class InternDatset(
@@ -38,36 +39,55 @@ internal object InternDat {
     internal fun parse(raw: String): InternDatset {
         val items = mutableListOf<_item>()
         val symbols = mutableListOf<PawnInternalSymbol>()
-
-        raw.lineSequence()
+        val rows = raw.lineSequence()
             .map(String::trim)
             .filter { it.isNotEmpty() && !it.startsWith("#") }
-            .forEach { line ->
+            .mapNotNull { line ->
                 val clean = line.replace("\u0000", "")
-                if (!clean.startsWith("0x01:")) return@forEach
+                if (!clean.startsWith("0x01:")) return@mapNotNull null
                 val splitIndex = clean.indexOf(":0x02:")
-                if (splitIndex < 0) return@forEach
+                if (splitIndex < 0) return@mapNotNull null
 
                 val key = clean.substring(5, splitIndex).split('|')
-                val description = clean.substring(splitIndex + 6).trim()
-                if (description.isEmpty()) return@forEach
+                key to clean.substring(splitIndex + 6).trim()
+            }
+            .toList()
 
-                when {
-                    key.size == 3 && key[0] == "item" -> {
-                        val kind = runCatching { PawnItemKind.valueOf(key[1]) }.getOrNull()
-                            ?: return@forEach
-                        items += _item(key[2], description, kind)
-                    }
-                    key.size == 3 && key[0] in setOf("native", "forward") -> {
-                        symbols += PawnInternalSymbol(
-                            include = key[1],
-                            kind = if (key[0] == "native") PawnItemKind.FUNCTION else PawnItemKind.CALLBACK,
-                            name = key[2],
-                            description = description,
-                        )
-                    }
+        val descriptionTranslations = rows.mapNotNull { (key, value) ->
+            if (key.size != 1 || key[0] != "description.id") return@mapNotNull null
+            val pair = value.split(":0x03:", limit = 2)
+            if (pair.size != 2 || pair[0].isBlank() || pair[1].isBlank()) null
+            else pair[0].trim() to pair[1].trim()
+        }.toMap()
+
+        rows.forEach { (key, rawDescription) ->
+            if (key.size == 1 && key[0] == "description.id") return@forEach
+            val descriptionParts = rawDescription.split(":0x03:", limit = 2)
+            val description = descriptionParts.first().trim()
+            val descriptionId = descriptionParts.getOrNull(1)?.trim()?.takeIf { it.isNotEmpty() }
+                ?: descriptionTranslations[description]
+                ?: description.substringBefore(": ").takeIf { it != description }?.let { prefix ->
+                    descriptionTranslations[prefix]?.let { "$it: ${description.substringAfter(": ")}" }
+                }
+            if (description.isEmpty()) return@forEach
+
+            when {
+                key.size == 3 && key[0] == "item" -> {
+                    val kind = runCatching { PawnItemKind.valueOf(key[1]) }.getOrNull()
+                        ?: return@forEach
+                    items += _item(key[2], description, kind, descriptionId)
+                }
+                key.size == 3 && key[0] in setOf("native", "forward") -> {
+                    symbols += PawnInternalSymbol(
+                        include = key[1],
+                        kind = if (key[0] == "native") PawnItemKind.FUNCTION else PawnItemKind.CALLBACK,
+                        name = key[2],
+                        description = description,
+                        descriptionId = descriptionId,
+                    )
                 }
             }
+        }
 
         return InternDatset(items, symbols)
     }

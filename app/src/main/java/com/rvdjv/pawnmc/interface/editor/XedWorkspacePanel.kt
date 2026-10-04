@@ -2,6 +2,7 @@ package com.rvdjv.pawnmc.`interface`.editor
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,17 +28,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.sp
 import com.rvdjv.pawnmc.`interface`.PawnIcons
 import java.io.File
+import kotlin.math.roundToInt
 
 /** Minimum height of a touch target in the panel, per the accessibility guidance. */
 private val PanelRowMinHeight = 44.dp
@@ -66,6 +71,7 @@ fun XedWorkspacePanel(
     onSelectFile: (File) -> Unit,
     onOpenHit: (WorkspaceSearchHit) -> Unit,
     onClosePanel: () -> Unit = {},
+    onHeaderDrag: (IntOffset) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val workspace = session.activeWorkspace
@@ -91,7 +97,8 @@ fun XedWorkspacePanel(
         SectionHeader(
             title = (workspace?.name ?: "No workspace").uppercase(),
             subtitle = workspace?.root?.path ?: "Open a folder to browse it here",
-            onClose = onClosePanel
+            onClose = onClosePanel,
+            onDrag = onHeaderDrag
         )
 
         LazyColumn(modifier = Modifier.fillMaxWidth()) {
@@ -254,14 +261,31 @@ private fun WorkspaceSwitcherRow(session: XedWorkspaceViewModel) {
 }
 
 @Composable
-private fun SectionHeader(title: String, subtitle: String?, onClose: () -> Unit = {}) {
+private fun SectionHeader(
+    title: String,
+    subtitle: String?,
+    onClose: () -> Unit = {},
+    onDrag: (IntOffset) -> Unit = {}
+) {
+    val currentOnDrag = rememberUpdatedState(onDrag)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .pointerInput(Unit) {
+                    detectDragGestures { change, dragAmount ->
+                        change.consume()
+                        currentOnDrag.value(
+                            IntOffset(dragAmount.x.roundToInt(), dragAmount.y.roundToInt())
+                        )
+                    }
+                }
+        ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleSmall,

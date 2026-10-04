@@ -53,6 +53,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.PrecisionManufacturing
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -116,6 +117,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.`interface`.PawnIcons
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
@@ -209,6 +211,11 @@ fun XedEditorScreen(
     }
 
     var isExplorerVisible by remember { mutableStateOf(false) }
+    var explorerOffset by remember { mutableStateOf(IntOffset.Zero) }
+    var isPawnTerminalVisible by remember { mutableStateOf(false) }
+    var pawnConsoleVersion by remember {
+        mutableStateOf(CompilerConfig.CompilerVersion.V3107)
+    }
     var explorerWidth by remember { mutableFloatStateOf(320f) }
     var toolPanelMode by remember { mutableStateOf<XedToolPanelMode?>(null) }
     var toolFind by remember { mutableStateOf("") }
@@ -1141,7 +1148,7 @@ fun XedEditorScreen(
                                     editable = !isReadOnly
                                     setTextSize(14f)
                                     setColorScheme(editorScheme)
-                                    setEditorLanguage(PawnLanguage())
+                                    setEditorLanguage(PawnLanguage(appLanguage))
                                     setText(workspace.activeDocument?.content ?: viewModel.fileContent ?: "")
                                     // Reserve room for the "-<column>" suffix now
                                     // that the document is loaded; later edits are
@@ -1210,33 +1217,54 @@ fun XedEditorScreen(
                 // Floating explorer: it sits above the code canvas instead of being
                 // welded to the right edge, matching the rest of the Xed surfaces.
                 if (isExplorerVisible) {
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainer,
-                        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
-                        shadowElevation = 10.dp,
-                        modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(start = 10.dp, top = 10.dp)
-                            .width(explorerWidth.dp)
-                            .fillMaxHeight(0.86f)
-                    ) {
-                        XedWorkspacePanel(
-                            session = workspace,
-                            outputText = compileOutput,
-                            onOpenFile = openWorkspaceFile,
-                            onCloseFile = { file -> workspace.closeDocument(file) },
-                            onSelectFile = { file -> workspace.setActive(file) },
-                            onOpenHit = { hit ->
-                                workspace.openFile(hit.file)
-                                // The buffer is filled asynchronously, so the jump has
-                                // to wait for the reload to land in the widget.
-                                editorRef?.postDelayed({
-                                    editorRef?.jumpToLine((hit.line - 1).coerceAtLeast(0))
-                                }, 250)
-                            },
-                            onClosePanel = { isExplorerVisible = false }
+                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                        val density = LocalDensity.current
+                        val panelWidth = explorerWidth.dp.coerceAtMost(maxWidth - 20.dp)
+                        val maxOffsetX = with(density) {
+                            (maxWidth - panelWidth - 20.dp).toPx().coerceAtLeast(0f).roundToInt()
+                        }
+                        val maxOffsetY = with(density) {
+                            (maxHeight * 0.14f - 20.dp).toPx().coerceAtLeast(0f).roundToInt()
+                        }
+                        val clampedExplorerOffset = IntOffset(
+                            explorerOffset.x.coerceIn(0, maxOffsetX),
+                            explorerOffset.y.coerceIn(0, maxOffsetY)
                         )
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = MaterialTheme.colorScheme.surfaceContainer,
+                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
+                            shadowElevation = 10.dp,
+                            modifier = Modifier
+                                .align(Alignment.TopStart)
+                                .offset { clampedExplorerOffset }
+                                .padding(start = 10.dp, top = 10.dp)
+                                .width(panelWidth)
+                                .fillMaxHeight(0.86f)
+                        ) {
+                            XedWorkspacePanel(
+                                session = workspace,
+                                outputText = compileOutput,
+                                onOpenFile = openWorkspaceFile,
+                                onCloseFile = { file -> workspace.closeDocument(file) },
+                                onSelectFile = { file -> workspace.setActive(file) },
+                                onOpenHit = { hit ->
+                                    workspace.openFile(hit.file)
+                                    // The buffer is filled asynchronously, so the jump has
+                                    // to wait for the reload to land in the widget.
+                                    editorRef?.postDelayed({
+                                        editorRef?.jumpToLine((hit.line - 1).coerceAtLeast(0))
+                                    }, 250)
+                                },
+                                onClosePanel = { isExplorerVisible = false },
+                                onHeaderDrag = { delta ->
+                                    explorerOffset = IntOffset(
+                                        (clampedExplorerOffset.x + delta.x).coerceIn(0, maxOffsetX),
+                                        (clampedExplorerOffset.y + delta.y).coerceIn(0, maxOffsetY)
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
                 }
@@ -1268,6 +1296,16 @@ fun XedEditorScreen(
                             .padding(12.dp)
                     )
                 }
+
+                FloatingRoundAction(
+                    size = PANEL_BUTTON_SIZE,
+                    icon = Icons.Filled.TouchApp,
+                    contentDescription = "Open Pawn terminal",
+                    testTag = "editor_terminal_toggle",
+                    isActive = isPawnTerminalVisible,
+                    reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP,
+                    onClick = { isPawnTerminalVisible = !isPawnTerminalVisible }
+                )
 
                 // Keep the workspace toggle above the toolbar so it remains reachable
                 // while the explorer panel is open.
@@ -1337,6 +1375,49 @@ fun XedEditorScreen(
                     },
                     modifier = Modifier.align(Alignment.TopStart)
                 )
+
+                if (isPawnTerminalVisible) {
+                    val terminalSource = activeDocument?.file
+                        ?: viewModel.filePath.takeIf { it.isNotBlank() }?.let { File(it) }
+                    XedMCPortal(
+                        context = context,
+                        language = appLanguage,
+                        activeSource = terminalSource,
+                        workspaceRoot = workspace.activeWorkspace?.root ?: terminalSource?.parentFile,
+                        selectedVersion = pawnConsoleVersion,
+                        onVersionChange = { pawnConsoleVersion = it },
+                        onClose = { isPawnTerminalVisible = false },
+                        onCompile = { source, manualOptions, version ->
+                            var allSaved = true
+                            if (workspace.isWorkspaceOpen) {
+                                workspace.openWorkspaces.forEach { openWorkspace ->
+                                    val dirtyCount = openWorkspace.documents.count { it.isDirty }
+                                    if (workspace.saveAll(openWorkspace) != dirtyCount) allSaved = false
+                                }
+                            } else if (viewModel.hasUnsavedChanges) {
+                                allSaved = viewModel.saveFileSync(editorRef?.text?.toString() ?: "")
+                            }
+
+                            if (!allSaved) {
+                                "Compilation cancelled because a file could not be saved."
+                            } else {
+                                withContext(Dispatchers.IO) {
+                                    val result = Compiler.compileManual(
+                                        sourceFile = source.absolutePath,
+                                        options = manualOptions,
+                                        version = version
+                                    )
+                                    val explained = Compiler.explainCompilerOutput(
+                                        rawText = result.second,
+                                        cacheDir = context.cacheDir,
+                                        language = appLanguage
+                                    )
+                                    "$explained\nExit code: ${result.first}"
+                                }
+                            }
+                        }
+                    )
+                }
             }
 
             if (isQuickSymbolBarVisible) {

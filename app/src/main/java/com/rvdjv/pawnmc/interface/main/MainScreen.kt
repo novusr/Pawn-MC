@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Surface
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -477,16 +478,15 @@ fun MainScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(horizontal = SpaceL)
         ) {
-            Spacer(modifier = Modifier.height(SpaceM))
+            item { Spacer(modifier = Modifier.height(SpaceM)) }
 
-            ScreenHeader(
+            item { ScreenHeader(
                 isCompiling = viewModel.isCompiling,
                 actionsVisible = headerActionsVisible,
                 onToggleActions = onToggleActions,
@@ -529,27 +529,30 @@ fun MainScreen(
                 },
                 localizer = localizer,
                 appLanguage = appLanguage
-            )
+            ) }
 
             if (showCompilingNotice) {
-                Spacer(modifier = Modifier.height(SpaceS))
-                CompilingBlockedNotice(
-                    localizer = localizer,
-                    appLanguage = appLanguage,
-                    isCompiling = viewModel.isCompiling,
-                    onDismiss = { showCompilingNotice = false }
-                )
+                item {
+                    Spacer(modifier = Modifier.height(SpaceS))
+                    CompilingBlockedNotice(
+                        localizer = localizer,
+                        appLanguage = appLanguage,
+                        isCompiling = viewModel.isCompiling,
+                        onDismiss = { showCompilingNotice = false }
+                    )
+                }
             }
 
             if (selfTestResults.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(SpaceS))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                    )
-                ) {
+                item {
+                    Spacer(modifier = Modifier.height(SpaceS))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                        )
+                    ) {
                     Column(modifier = Modifier.padding(SpaceS)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -593,12 +596,13 @@ fun MainScreen(
                             }
                         }
                     }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(SpaceL))
+            item { Spacer(modifier = Modifier.height(SpaceL)) }
 
-            CompileActionCard(
+            item { CompileActionCard(
                 selectedFileName = viewModel.selectedFilePath?.let { File(it).name },
                 selectedFileSize = viewModel.selectedFilePath?.let { formatFileSize(File(it).length()) },
                 isCompiling = viewModel.isCompiling || viewModel.isPreparingFilesystem,
@@ -620,9 +624,9 @@ fun MainScreen(
                 },
                 localizer = localizer,
                 appLanguage = appLanguage
-            )
+            ) }
 
-            viewModel.selectionError?.let { error ->
+            viewModel.selectionError?.let { error -> item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = SpaceS, start = SpaceXS)
@@ -640,9 +644,9 @@ fun MainScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-            }
+            } }
 
-            viewModel.temporaryFileNotice?.let { notice ->
+            viewModel.temporaryFileNotice?.let { notice -> item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = SpaceS, start = SpaceXS)
@@ -660,9 +664,9 @@ fun MainScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-            }
+            } }
 
-            viewModel.filesystemNotice?.let { notice ->
+            viewModel.filesystemNotice?.let { notice -> item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = SpaceS, start = SpaceXS)
@@ -692,11 +696,11 @@ fun MainScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-            }
+            } }
 
-            Spacer(modifier = Modifier.height(SpaceXL))
+            item { Spacer(modifier = Modifier.height(SpaceXL)) }
 
-            CompilerLogsSection(
+            item { CompilerLogsSection(
                 outputText = viewModel.outputText,
                 status = deriveStatus(viewModel.isCompiling, viewModel.lastExitCode),
                 scrollState = outputScrollState,
@@ -723,9 +727,9 @@ fun MainScreen(
                 },
                 localizer = localizer,
                 appLanguage = appLanguage
-            )
+            ) }
 
-            Spacer(modifier = Modifier.height(SpaceL))
+            item { Spacer(modifier = Modifier.height(SpaceL)) }
         }
     }
 
@@ -751,7 +755,7 @@ fun MainScreen(
 private val HeaderActionShadowColor = Color(0xFF9E9E9E)
 
 /** Elevation of the header action shadow while the temporary menu is revealed. */
-private val HeaderActionShadowElevation = 12.dp
+private val HeaderActionShadowElevation = 4.dp
 private val HeaderActionButtonSize = 48.dp
 private val HeaderActionIconSize = 24.dp
 
@@ -797,7 +801,7 @@ private fun ScreenHeader(
                 onToggle = onToggleActions
             )
 
-            AnimatedVisibility(visible = actionsVisible) {
+            if (actionsVisible) {
                 Row(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically

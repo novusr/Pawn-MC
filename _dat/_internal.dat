@@ -1,3 +1,281 @@
+# Indonesian completion descriptions are keyed by the matching English description.
+# Function signature suffixes are retained by InternDat when only their summary is translated.
+0x01:description.id:0x02:Include an external source or header file:0x03:Sertakan file sumber atau header eksternal
+0x01:description.id:0x02:Define a preprocessor macro or constant:0x03:Tentukan makro preprosesor atau konstanta
+0x01:description.id:0x02:Undefine an existing macro:0x03:Hapus definisi makro yang sudah ada
+0x01:description.id:0x02:Conditional compilation check:0x03:Periksa kondisi kompilasi bersyarat
+0x01:description.id:0x02:Alternative conditional compilation check:0x03:Periksa kondisi alternatif untuk kompilasi bersyarat
+0x01:description.id:0x02:Default conditional compilation branch:0x03:Cabang bawaan pada kompilasi bersyarat
+0x01:description.id:0x02:End of conditional compilation block:0x03:Akhiri blok kompilasi bersyarat
+0x01:description.id:0x02:Stops reading the current file:0x03:Hentikan pembacaan file saat ini
+0x01:description.id:0x02:Include a file only if it has not been included yet:0x03:Sertakan file hanya jika belum pernah disertakan
+0x01:description.id:0x02:Stop reading the current file without an error:0x03:Hentikan pembacaan file saat ini tanpa menghasilkan error
+0x01:description.id:0x02:Set the file name reported by diagnostics:0x03:Tetapkan nama file yang ditampilkan pada diagnostik
+0x01:description.id:0x02:Enable, disable or raise a compiler warning:0x03:Aktifkan, nonaktifkan, atau tingkatkan peringatan compiler
+0x01:description.id:0x02:Compile-time assertion check:0x03:Periksa assertion saat kompilasi
+0x01:description.id:0x02:Emit user-defined compilation error:0x03:Tampilkan error kompilasi yang ditentukan pengguna
+0x01:description.id:0x02:Compiler control directive:0x03:Direktif untuk mengatur perilaku compiler
+0x01:description.id:0x02:Emit raw AMX bytecode opcode:0x03:Keluarkan opcode bytecode AMX secara langsung
+0x01:description.id:0x02:Set line number and optional filename:0x03:Tetapkan nomor baris dan nama file opsional
+0x01:description.id:0x02:Pragma to set tab indent width:0x03:Pragma untuk mengatur lebar indentasi tab
+0x01:description.id:0x02:Pragma to set AMX stack/heap memory size:0x03:Pragma untuk mengatur ukuran memori stack/heap AMX
+0x01:description.id:0x02:Pragma to change escape character:0x03:Pragma untuk mengubah karakter escape
+0x01:description.id:0x02:Pragma to mark symbol as deprecated:0x03:Pragma untuk menandai simbol sebagai usang
+0x01:description.id:0x02:Pragma to enforce or relax semicolons:0x03:Pragma untuk mewajibkan atau melonggarkan penggunaan titik koma
+0x01:description.id:0x02:Declares variable or function compiled only if used:0x03:Mendeklarasikan variabel atau fungsi yang dikompilasi hanya jika digunakan
+0x01:description.id:0x02:Declares an exported function callable by AMX:0x03:Mendeklarasikan fungsi ekspor yang dapat dipanggil oleh AMX
+0x01:description.id:0x02:Forward declaration for public functions:0x03:Deklarasi awal untuk fungsi public
+0x01:description.id:0x02:Hooks a callback or function so multiple handlers can be chained:0x03:Mengaitkan callback atau fungsi agar beberapa handler dapat dirangkai
+0x01:description.id:0x02:Declares a C/C++ native plugin or host function:0x03:Mendeklarasikan fungsi native dari plugin C/C++ atau host
+0x01:description.id:0x02:Declares a local or global variable:0x03:Mendeklarasikan variabel lokal atau global
+0x01:description.id:0x02:Declares static scoped variable or private function:0x03:Mendeklarasikan variabel dengan cakupan statis atau fungsi privat
+0x01:description.id:0x02:Declares an immutable constant variable:0x03:Mendeklarasikan variabel konstanta yang nilainya tidak dapat diubah
+0x01:description.id:0x02:Defines an enumerated constant structure:0x03:Mendefinisikan struktur konstanta enumerasi
+0x01:description.id:0x02:State machine transition declaration:0x03:Deklarasi transisi mesin status
+0x01:description.id:0x02:Jump unconditionally to label:0x03:Melompat tanpa syarat ke label
+0x01:description.id:0x02:Break out of loop or switch block:0x03:Keluar dari blok perulangan atau switch
+0x01:description.id:0x02:Skip to next iteration of loop:0x03:Lewati ke iterasi perulangan berikutnya
+0x01:description.id:0x02:Return value and exit function:0x03:Mengembalikan nilai lalu mengakhiri fungsi
+0x01:description.id:0x02:Conditional branch statement:0x03:Pernyataan percabangan bersyarat
+0x01:description.id:0x02:Alternative conditional branch:0x03:Cabang alternatif pada kondisi
+0x01:description.id:0x02:Loop while condition is true:0x03:Perulangan selama kondisi bernilai benar
+0x01:description.id:0x02:Loop executing at least once:0x03:Perulangan yang dijalankan setidaknya satu kali
+0x01:description.id:0x02:Standard for-loop statement:0x03:Pernyataan perulangan for standar
+0x01:description.id:0x02:Multi-branch switch statement:0x03:Pernyataan switch dengan beberapa cabang
+0x01:description.id:0x02:Case label in switch statement:0x03:Label case pada pernyataan switch
+0x01:description.id:0x02:Default branch in switch statement:0x03:Cabang default pada pernyataan switch
+0x01:description.id:0x02:Returns size in cells or array dimensions:0x03:Mengembalikan ukuran dalam cell atau dimensi array
+0x01:description.id:0x02:Returns tag integer representing data type:0x03:Mengembalikan bilangan tag yang mewakili tipe data
+0x01:description.id:0x02:Runtime assertion condition:0x03:Memeriksa kondisi assertion saat program berjalan
+0x01:description.id:0x02:Pawn abstract machine sleep call:0x03:Memanggil sleep pada mesin abstrak Pawn
+0x01:description.id:0x02:Sub-cell character packing indexer:0x03:Indeks pengemasan karakter sub-cell
+0x01:description.id:0x02:Preprocessor check for a defined macro:0x03:Memeriksa apakah makro sudah didefinisikan
+0x01:description.id:0x02:Inline AMX bytecode opcode:0x03:Opcode bytecode AMX inline
+0x01:description.id:0x02:Argument list marker for a raw EMIT:0x03:Penanda daftar argumen untuk EMIT langsung
+0x01:description.id:0x02:Terminate the script immediately:0x03:Mengakhiri skrip seketika
+0x01:description.id:0x02:User defined operator overload declaration:0x03:Deklarasi overload operator buatan pengguna
+0x01:description.id:0x02:Start of a multi-line block comment:0x03:Awal komentar blok multibaris
+0x01:description.id:0x02:End of a multi-line block comment:0x03:Akhir komentar blok multibaris
+0x01:description.id:0x02:Block comment continuation of the previous line:0x03:Kelanjutan komentar blok dari baris sebelumnya
+0x01:description.id:0x02:Unsigned right shift assignment:0x03:Assignment geser kanan tanpa tanda
+0x01:description.id:0x02:Left shift assignment:0x03:Assignment geser kiri
+0x01:description.id:0x02:Arithmetic right shift assignment:0x03:Assignment geser kanan aritmetis
+0x01:description.id:0x02:Multiplication assignment:0x03:Assignment perkalian
+0x01:description.id:0x02:Division assignment:0x03:Assignment pembagian
+0x01:description.id:0x02:Modulo assignment:0x03:Assignment modulo
+0x01:description.id:0x02:Addition assignment:0x03:Assignment penjumlahan
+0x01:description.id:0x02:Subtraction assignment:0x03:Assignment pengurangan
+0x01:description.id:0x02:Bitwise AND assignment:0x03:Assignment AND bitwise
+0x01:description.id:0x02:Bitwise XOR assignment:0x03:Assignment XOR bitwise
+0x01:description.id:0x02:Bitwise OR assignment:0x03:Assignment OR bitwise
+0x01:description.id:0x02:Unsigned right shift:0x03:Pergeseran kanan tanpa tanda
+0x01:description.id:0x02:Arithmetic right shift:0x03:Pergeseran kanan aritmetis
+0x01:description.id:0x02:Left shift:0x03:Pergeseran kiri
+0x01:description.id:0x02:Logical OR:0x03:OR logis
+0x01:description.id:0x02:Logical AND:0x03:AND logis
+0x01:description.id:0x02:Equality comparison:0x03:Perbandingan kesamaan
+0x01:description.id:0x02:Inequality comparison:0x03:Perbandingan ketidaksamaan
+0x01:description.id:0x02:Less than or equal comparison:0x03:Perbandingan kurang dari atau sama dengan
+0x01:description.id:0x02:Greater than or equal comparison:0x03:Perbandingan lebih dari atau sama dengan
+0x01:description.id:0x02:Pre/post increment:0x03:Increment sebelum atau sesudah nilai
+0x01:description.id:0x02:Pre/post decrement:0x03:Decrement sebelum atau sesudah nilai
+0x01:description.id:0x02:Ellipsis / argument spread:0x03:Elipsis atau perluasan argumen
+0x01:description.id:0x02:Argument range marker:0x03:Penanda rentang argumen
+0x01:description.id:0x02:Tag scope separator:0x03:Pemisah cakupan tag
+0x01:description.id:0x02:Addition:0x03:Penjumlahan
+0x01:description.id:0x02:Subtraction or negation:0x03:Pengurangan atau negasi
+0x01:description.id:0x02:Multiplication:0x03:Perkalian
+0x01:description.id:0x02:Division:0x03:Pembagian
+0x01:description.id:0x02:Modulo:0x03:Modulo
+0x01:description.id:0x02:Assignment:0x03:Assignment
+0x01:description.id:0x02:Logical NOT:0x03:NOT logis
+0x01:description.id:0x02:Less than comparison:0x03:Perbandingan kurang dari
+0x01:description.id:0x02:Greater than comparison:0x03:Perbandingan lebih dari
+0x01:description.id:0x02:Bitwise AND:0x03:AND bitwise
+0x01:description.id:0x02:Bitwise OR:0x03:OR bitwise
+0x01:description.id:0x02:Bitwise XOR:0x03:XOR bitwise
+0x01:description.id:0x02:Bitwise NOT:0x03:NOT bitwise
+0x01:description.id:0x02:Ternary conditional marker:0x03:Penanda kondisi ternary
+0x01:description.id:0x02:Ternary else marker:0x03:Penanda else pada operator ternary
+0x01:description.id:0x02:Array member or argument range separator:0x03:Pemisah anggota array atau rentang argumen
+0x01:description.id:0x02:Argument separator:0x03:Pemisah argumen
+0x01:description.id:0x02:Statement terminator:0x03:Penutup pernyataan
+0x01:description.id:0x02:Floating point single-precision tag:0x03:Tag bilangan floating-point presisi tunggal
+0x01:description.id:0x02:Boolean true/false data tag:0x03:Tag data boolean true/false
+0x01:description.id:0x02:File handle tag for file operations:0x03:Tag handle file untuk operasi berkas
+0x01:description.id:0x02:Global text draw identifier tag:0x03:Tag identitas text draw global
+0x01:description.id:0x02:Player-specific text draw identifier tag:0x03:Tag identitas text draw khusus pemain
+0x01:description.id:0x02:Game menu identifier tag:0x03:Tag identitas menu game
+0x01:description.id:0x02:Global 3D text label identifier tag:0x03:Tag identitas label teks 3D global
+0x01:description.id:0x02:Player-specific 3D text label identifier tag:0x03:Tag identitas label teks 3D khusus pemain
+0x01:description.id:0x02:Boolean true literal (1):0x03:Literal boolean true (1)
+0x01:description.id:0x02:Boolean false literal (0):0x03:Literal boolean false (0)
+0x01:description.id:0x02:Maximum signed 32-bit cell value:0x03:Nilai cell signed 32-bit maksimum
+0x01:description.id:0x02:Minimum signed 32-bit cell value:0x03:Nilai cell signed 32-bit minimum
+0x01:description.id:0x02:Special ID representing no valid player (65535):0x03:ID khusus yang menandakan tidak ada pemain valid (65535)
+0x01:description.id:0x02:Special ID representing no valid vehicle (65535):0x03:ID khusus yang menandakan tidak ada kendaraan valid (65535)
+0x01:description.id:0x02:Special ID representing no valid object (65535):0x03:ID khusus yang menandakan tidak ada objek valid (65535)
+0x01:description.id:0x02:Invalid timer handle representation:0x03:Representasi handle timer yang tidak valid
+0x01:description.id:0x02:Maximum player slots on server (default 50/500/1000):0x03:Batas slot pemain server (bawaan 50/500/1000)
+0x01:description.id:0x02:Maximum vehicle slots on server (default 2000):0x03:Batas slot kendaraan server (bawaan 2000)
+0x01:description.id:0x02:Maximum global object limit (1000):0x03:Batas jumlah objek global (1000)
+0x01:description.id:0x02:Maximum static actors on server (1000):0x03:Batas jumlah actor statis server (1000)
+0x01:description.id:0x02:Maximum global text draws (2048):0x03:Batas jumlah text draw global (2048)
+0x01:description.id:0x02:Maximum menu instances (128):0x03:Batas jumlah instance menu (128)
+0x01:description.id:0x02:Maximum gang zones (1024):0x03:Batas jumlah zona geng (1024)
+0x01:description.id:0x02:Player special action: None:0x03:Aksi khusus pemain: Tidak ada
+0x01:description.id:0x02:Player special action: Ducking:0x03:Aksi khusus pemain: Menunduk
+0x01:description.id:0x02:Player special action: Jetpack:0x03:Aksi khusus pemain: Jetpack
+0x01:description.id:0x02:Player state: None:0x03:Status pemain: Tidak ada
+0x01:description.id:0x02:Player state: On Foot:0x03:Status pemain: Berjalan kaki
+0x01:description.id:0x02:Player state: Driver of a vehicle:0x03:Status pemain: Mengemudikan kendaraan
+0x01:description.id:0x02:Player state: Passenger in a vehicle:0x03:Status pemain: Menjadi penumpang kendaraan
+0x01:description.id:0x02:Player state: Dead/Wasted:0x03:Status pemain: Mati
+0x01:description.id:0x02:Player state: Spawned:0x03:Status pemain: Sudah spawn
+0x01:description.id:0x02:Player state: Spectating:0x03:Status pemain: Sedang menonton
+0x01:description.id:0x02:Native provided by the Pawn/SA-MP include set:0x03:Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP
+0x01:description.id:0x02:Prints a plain string to server log without formatting:0x03:Mencetak teks biasa ke log server tanpa pemformatan
+0x01:description.id:0x02:Prints formatted string to server log:0x03:Mencetak teks berformat ke log server
+0x01:description.id:0x02:Formats string buffer with specifiers:0x03:Memformat buffer string menggunakan penentu format
+0x01:description.id:0x02:Returns length of string in characters:0x03:Mengembalikan panjang string dalam karakter
+0x01:description.id:0x02:Concatenates two strings together:0x03:Menggabungkan dua string
+0x01:description.id:0x02:Deletes characters from start to end index:0x03:Menghapus karakter dari indeks awal sampai indeks akhir
+0x01:description.id:0x02:Inserts string at given index:0x03:Menyisipkan string pada indeks yang ditentukan
+0x01:description.id:0x02:Compares two strings:0x03:Membandingkan dua string
+0x01:description.id:0x02:Finds substring in target string:0x03:Mencari substring pada string target
+0x01:description.id:0x02:Converts string characters into an integer:0x03:Mengubah karakter string menjadi bilangan bulat
+0x01:description.id:0x02:Converts integer into decimal string:0x03:Mengubah bilangan bulat menjadi string desimal
+0x01:description.id:0x02:Extracts substring from source into dest:0x03:Mengambil substring dari sumber ke tujuan
+0x01:description.id:0x02:Calls function after interval in ms:0x03:Memanggil fungsi setelah jeda dalam milidetik
+0x01:description.id:0x02:Calls function with arguments after interval:0x03:Memanggil fungsi dengan argumen setelah jeda
+0x01:description.id:0x02:Cancels an active timer:0x03:Membatalkan timer yang sedang aktif
+0x01:description.id:0x02:Returns millisecond count since system start:0x03:Mengembalikan jumlah milidetik sejak sistem dimulai
+0x01:description.id:0x02:Returns configured player slot limit:0x03:Mengembalikan batas slot pemain yang dikonfigurasi
+0x01:description.id:0x02:Returns random integer between 0 and max - 1:0x03:Mengembalikan bilangan bulat acak antara 0 dan max - 1
+0x01:description.id:0x02:Returns smaller of two integer values:0x03:Mengembalikan nilai terkecil dari dua bilangan bulat
+0x01:description.id:0x02:Returns larger of two integer values:0x03:Mengembalikan nilai terbesar dari dua bilangan bulat
+0x01:description.id:0x02:Constrains value between min and max bounds:0x03:Membatasi nilai di antara batas min dan max
+0x01:description.id:0x02:Sends chat message to single player:0x03:Mengirim pesan chat kepada satu pemain
+0x01:description.id:0x02:Broadcasts chat message to all players:0x03:Mengirim pesan chat kepada semua pemain
+0x01:description.id:0x02:Emulates chat from one player to another:0x03:Meniru pesan chat dari satu pemain ke pemain lain
+0x01:description.id:0x02:Emulates chat from one player to all:0x03:Meniru pesan chat dari satu pemain kepada semua pemain
+0x01:description.id:0x02:Executes an RCON command line directly:0x03:Menjalankan baris perintah RCON secara langsung
+0x01:description.id:0x02:Displays arcade style game text on all screens:0x03:Menampilkan teks bergaya arcade di semua layar
+0x01:description.id:0x02:Displays arcade style game text to player:0x03:Menampilkan teks bergaya arcade kepada pemain
+0x01:description.id:0x02:Configures default spawn coordinates & gear:0x03:Mengatur koordinat dan perlengkapan spawn bawaan
+0x01:description.id:0x02:Forces immediate respawn for player:0x03:Memaksa pemain untuk segera spawn ulang
+0x01:description.id:0x02:Teleports player to 3D world coordinates:0x03:Memindahkan pemain ke koordinat dunia 3D
+0x01:description.id:0x02:Teleports player searching for highest ground:0x03:Memindahkan pemain sambil mencari permukaan tanah tertinggi
+0x01:description.id:0x02:Gets current 3D position of player:0x03:Mengambil posisi 3D pemain saat ini
+0x01:description.id:0x02:Sets heading compass direction angle:0x03:Mengatur sudut arah hadap pemain
+0x01:description.id:0x02:Gets heading compass direction angle:0x03:Mengambil sudut arah hadap pemain
+0x01:description.id:0x02:Tests if player is within sphere radius:0x03:Memeriksa apakah pemain berada dalam radius bola
+0x01:description.id:0x02:Tests if player is connected:0x03:Memeriksa apakah pemain sedang terhubung
+0x01:description.id:0x02:Tests if player is in specific vehicle:0x03:Memeriksa apakah pemain berada di kendaraan tertentu
+0x01:description.id:0x02:Tests if player is inside any vehicle:0x03:Memeriksa apakah pemain berada di kendaraan mana pun
+0x01:description.id:0x02:Sets current health points:0x03:Mengatur jumlah health saat ini
+0x01:description.id:0x02:Gets current health points:0x03:Mengambil jumlah health saat ini
+0x01:description.id:0x02:Sets current body armour points:0x03:Mengatur jumlah armor saat ini
+0x01:description.id:0x02:Gets current body armour points:0x03:Mengambil jumlah armor saat ini
+0x01:description.id:0x02:Adds or deducts money from player:0x03:Menambah atau mengurangi uang pemain
+0x01:description.id:0x02:Returns current player money balance:0x03:Mengembalikan saldo uang pemain saat ini
+0x01:description.id:0x02:Sets player money balance to zero:0x03:Mengatur saldo uang pemain menjadi nol
+0x01:description.id:0x02:Sets player scoreboard score:0x03:Mengatur skor pemain pada papan skor
+0x01:description.id:0x02:Returns current player scoreboard score:0x03:Mengembalikan skor pemain saat ini pada papan skor
+0x01:description.id:0x02:Returns current player character PED skin ID:0x03:Mengembalikan ID skin karakter pemain saat ini
+0x01:description.id:0x02:Changes character PED skin ID:0x03:Mengubah ID skin karakter pemain
+0x01:description.id:0x02:Returns current character PED skin ID:0x03:Mengembalikan ID skin karakter pemain saat ini
+0x01:description.id:0x02:Awards weapon and ammo to player:0x03:Memberikan senjata dan amunisi kepada pemain
+0x01:description.id:0x02:Removes all weapons from player:0x03:Menghapus semua senjata dari pemain
+0x01:description.id:0x02:Returns currently held weapon ID:0x03:Mengembalikan ID senjata yang sedang dipegang
+0x01:description.id:0x02:Changes player nickname:0x03:Mengubah nama pemain
+0x01:description.id:0x02:Retrieves player nickname:0x03:Mengambil nama pemain
+0x01:description.id:0x02:Sets player radar blip and name tag color:0x03:Mengatur warna blip radar dan name tag pemain
+0x01:description.id:0x02:Returns player color:0x03:Mengembalikan warna pemain
+0x01:description.id:0x02:Changes building interior ID:0x03:Mengubah ID interior bangunan
+0x01:description.id:0x02:Gets building interior ID:0x03:Mengambil ID interior bangunan
+0x01:description.id:0x02:Sets virtual world dimension ID:0x03:Mengatur ID dimensi virtual world
+0x01:description.id:0x02:Gets virtual world dimension ID:0x03:Mengambil ID dimensi virtual world
+0x01:description.id:0x02:Retrieves player IP address:0x03:Mengambil alamat IP pemain
+0x01:description.id:0x02:Returns player latency in ms:0x03:Mengembalikan latensi pemain dalam milidetik
+0x01:description.id:0x02:Kicks a player from the server:0x03:Mengeluarkan pemain dari server
+0x01:description.id:0x02:Bans player IP address:0x03:Memblokir alamat IP pemain
+0x01:description.id:0x02:Bans player IP address with custom reason:0x03:Memblokir alamat IP pemain dengan alasan khusus
+0x01:description.id:0x02:Teleports player directly into vehicle:0x03:Memindahkan pemain langsung ke dalam kendaraan
+0x01:description.id:0x02:Ejects player from their vehicle:0x03:Mengeluarkan pemain dari kendaraannya
+0x01:description.id:0x02:Returns vehicle ID player is inside:0x03:Mengembalikan ID kendaraan yang dinaiki pemain
+0x01:description.id:0x02:Returns vehicle seat index of player:0x03:Mengembalikan indeks kursi kendaraan pemain
+0x01:description.id:0x02:Spawns a new vehicle:0x03:Memunculkan kendaraan baru
+0x01:description.id:0x02:Removes vehicle from the server:0x03:Menghapus kendaraan dari server
+0x01:description.id:0x02:Gets 3D position of vehicle:0x03:Mengambil posisi 3D kendaraan
+0x01:description.id:0x02:Teleports vehicle to coordinates:0x03:Memindahkan kendaraan ke koordinat tertentu
+0x01:description.id:0x02:Repairs vehicle engine and body panels:0x03:Memperbaiki mesin dan bodi kendaraan
+0x01:description.id:0x02:Sets license plate text:0x03:Mengatur teks pelat nomor
+0x01:description.id:0x02:Returns vehicle model ID:0x03:Mengembalikan ID model kendaraan
+0x01:description.id:0x02:Adds car mod component:0x03:Menambahkan komponen modifikasi kendaraan
+0x01:description.id:0x02:Removes car mod component:0x03:Menghapus komponen modifikasi kendaraan
+0x01:description.id:0x02:Changes body color of vehicle:0x03:Mengubah warna bodi kendaraan
+0x01:description.id:0x02:Changes paintjob livery of vehicle:0x03:Mengubah livery cat kendaraan
+0x01:description.id:0x02:Creates global world object:0x03:Membuat objek global di dunia
+0x01:description.id:0x02:Destroys world object:0x03:Menghapus objek dunia
+0x01:description.id:0x02:Smoothly moves object to target position:0x03:Memindahkan objek dengan halus ke posisi tujuan
+0x01:description.id:0x02:Halts object movement immediately:0x03:Menghentikan pergerakan objek seketika
+0x01:description.id:0x02:Creates world pickup model:0x03:Membuat pickup di dunia
+0x01:description.id:0x02:Removes pickup:0x03:Menghapus pickup
+0x01:description.id:0x02:Displays modal GUI dialog window to player:0x03:Menampilkan dialog GUI modal kepada pemain
+0x01:description.id:0x02:Creates global on-screen text draw:0x03:Membuat text draw global di layar
+0x01:description.id:0x02:Destroys global text draw:0x03:Menghapus text draw global
+0x01:description.id:0x02:Displays text draw to player:0x03:Menampilkan text draw kepada pemain
+0x01:description.id:0x02:Hides text draw from player:0x03:Menyembunyikan text draw dari pemain
+0x01:description.id:0x02:Updates text draw string:0x03:Memperbarui string pada text draw
+0x01:description.id:0x02:Opens file on disk:0x03:Membuka file di penyimpanan
+0x01:description.id:0x02:Closes open file handle:0x03:Menutup handle file yang terbuka
+0x01:description.id:0x02:Writes text line to file:0x03:Menulis baris teks ke file
+0x01:description.id:0x02:Reads text line from file:0x03:Membaca baris teks dari file
+0x01:description.id:0x02:Checks if file exists on server disk:0x03:Memeriksa apakah file tersedia di penyimpanan server
+0x01:description.id:0x02:Deletes file from server disk:0x03:Menghapus file dari penyimpanan server
+0x01:description.id:0x02:Callback triggered when the gamemode loads:0x03:Callback yang dipanggil saat gamemode dimuat
+0x01:description.id:0x02:Callback triggered when the gamemode shuts down:0x03:Callback yang dipanggil saat gamemode dihentikan
+0x01:description.id:0x02:Callback triggered when a filterscript loads:0x03:Callback yang dipanggil saat filterscript dimuat
+0x01:description.id:0x02:Callback triggered when a filterscript unloads:0x03:Callback yang dipanggil saat filterscript dilepas
+0x01:description.id:0x02:Callback triggered when a player joins the server:0x03:Callback yang dipanggil saat pemain bergabung ke server
+0x01:description.id:0x02:Callback triggered when a player leaves the server:0x03:Callback yang dipanggil saat pemain meninggalkan server
+0x01:description.id:0x02:Callback triggered when a player spawns in the world:0x03:Callback yang dipanggil saat pemain spawn di dunia
+0x01:description.id:0x02:Callback triggered when a player dies or is killed:0x03:Callback yang dipanggil saat pemain mati atau terbunuh
+0x01:description.id:0x02:Callback triggered when a vehicle spawns:0x03:Callback yang dipanggil saat kendaraan spawn
+0x01:description.id:0x02:Callback triggered when a vehicle is destroyed:0x03:Callback yang dipanggil saat kendaraan dihancurkan
+0x01:description.id:0x02:Callback triggered when a player sends public chat:0x03:Callback yang dipanggil saat pemain mengirim chat publik
+0x01:description.id:0x02:Callback triggered when a player enters a slash command:0x03:Callback yang dipanggil saat pemain memasukkan perintah slash
+0x01:description.id:0x02:Callback triggered when a player views class selection:0x03:Callback yang dipanggil saat pemain melihat pilihan kelas
+0x01:description.id:0x02:Callback triggered when a player starts entering a vehicle:0x03:Callback yang dipanggil saat pemain mulai masuk kendaraan
+0x01:description.id:0x02:Callback triggered when a player starts exiting a vehicle:0x03:Callback yang dipanggil saat pemain mulai keluar kendaraan
+0x01:description.id:0x02:Callback triggered when a player changes state (foot, car, etc.):0x03:Callback yang dipanggil saat status pemain berubah (berjalan, berkendara, dan lainnya)
+0x01:description.id:0x02:Callback triggered when a player enters standard checkpoint:0x03:Callback yang dipanggil saat pemain memasuki checkpoint biasa
+0x01:description.id:0x02:Callback triggered when a player leaves standard checkpoint:0x03:Callback yang dipanggil saat pemain meninggalkan checkpoint biasa
+0x01:description.id:0x02:Callback triggered when entering race checkpoint:0x03:Callback yang dipanggil saat memasuki checkpoint balapan
+0x01:description.id:0x02:Callback triggered when leaving race checkpoint:0x03:Callback yang dipanggil saat meninggalkan checkpoint balapan
+0x01:description.id:0x02:Callback triggered on server console RCON command:0x03:Callback yang dipanggil saat perintah RCON dijalankan di konsol server
+0x01:description.id:0x02:Callback triggered when player clicks Spawn button:0x03:Callback yang dipanggil saat pemain menekan tombol Spawn
+0x01:description.id:0x02:Callback triggered when a moving object finishes its travel:0x03:Callback yang dipanggil saat objek selesai bergerak
+0x01:description.id:0x02:Callback triggered when player object finishes moving:0x03:Callback yang dipanggil saat objek pemain selesai bergerak
+0x01:description.id:0x02:Callback triggered when a player walks over a pickup:0x03:Callback yang dipanggil saat pemain melewati pickup
+0x01:description.id:0x02:Callback triggered when a vehicle modification is installed:0x03:Callback yang dipanggil saat modifikasi kendaraan dipasang
+0x01:description.id:0x02:Callback triggered when a vehicle paintjob is applied:0x03:Callback yang dipanggil saat livery kendaraan diterapkan
+0x01:description.id:0x02:Callback triggered when a vehicle color is changed:0x03:Callback yang dipanggil saat warna kendaraan diubah
+0x01:description.id:0x02:Callback triggered on vehicle damage parts update:0x03:Callback yang dipanggil saat kondisi kerusakan kendaraan diperbarui
+0x01:description.id:0x02:Callback triggered periodically for unoccupied vehicles:0x03:Callback yang dipanggil berkala untuk kendaraan tanpa pengemudi
+0x01:description.id:0x02:Callback triggered when selecting a menu option:0x03:Callback yang dipanggil saat memilih opsi menu
+0x01:description.id:0x02:Callback triggered when player cancels out of a menu:0x03:Callback yang dipanggil saat pemain membatalkan menu
+0x01:description.id:0x02:Callback triggered when user interacts with a GUI dialog:0x03:Callback yang dipanggil saat pengguna berinteraksi dengan dialog GUI
+0x01:description.id:0x02:Callback triggered on clicking personal text draw:0x03:Callback yang dipanggil saat text draw pribadi diklik
+0x01:description.id:0x02:Callback triggered on clicking global text draw:0x03:Callback yang dipanggil saat text draw global diklik
+0x01:description.id:0x02:Callback triggered when clicking player in scoreboard:0x03:Callback yang dipanggil saat pemain diklik pada papan skor
+0x01:description.id:0x02:Callback triggered on incoming raw client connection:0x03:Callback yang dipanggil saat koneksi client mentah masuk
+0x01:description.id:0x02:Callback triggered when vehicle trailer sync updates:0x03:Callback yang dipanggil saat sinkronisasi trailer kendaraan diperbarui
+0x01:description.id:0x02:Callback triggered when siren toggles on/off:0x03:Callback yang dipanggil saat sirene dinyalakan atau dimatikan
+0x01:description.id:0x02:Callback triggered when a player damages someone:0x03:Callback yang dipanggil saat pemain melukai seseorang
+0x01:description.id:0x02:Callback triggered when a player suffers damage:0x03:Callback yang dipanggil saat pemain menerima kerusakan
+0x01:description.id:0x02:Callback triggered on bullet fired by weapon:0x03:Callback yang dipanggil saat senjata menembakkan peluru
 0x01:item|DIRECTIVE|#include:0x02:Include an external source or header file
 0x01:item|DIRECTIVE|#define:0x02:Define a preprocessor macro or constant
 0x01:item|DIRECTIVE|#undef:0x02:Undefine an existing macro

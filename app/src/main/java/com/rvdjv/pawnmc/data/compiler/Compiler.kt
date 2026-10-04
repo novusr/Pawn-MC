@@ -153,6 +153,16 @@ object Compiler {
         version: CompilerConfig.CompilerVersion = CompilerConfig.CompilerVersion.V3107
     ): Pair<Int, String> = Runner.compile(sourceFile, options, version)
 
+    /** Runs a console-specified pawncc invocation without GUI options or automatic fallback. */
+    fun compileManual(
+        sourceFile: String,
+        options: List<String>,
+        version: CompilerConfig.CompilerVersion
+    ): Pair<Int, String> = Runner.compileManual(sourceFile, options, version)
+
+    internal fun compilerArgumentsForManual(sourceFile: String, options: List<String>): List<String> =
+        Runner.compilerArgumentsForManual(sourceFile, options)
+
     internal fun compilerOptionsForVersion(
         options: List<String>,
         version: CompilerConfig.CompilerVersion
