@@ -20,8 +20,8 @@ internal data class InternDatset(
 
 internal object InternDat {
 
-    private const val ASSET_PATH = "_dat_internal.dat"
-    private const val FALLBACK_PATH = "_dat/_dat_internal.dat"
+    private const val ASSET_PATH = "_data_mc_26_internal.dat"
+    private const val FALLBACK_PATH = "data/_data_mc_26_internal.dat"
 
     @Volatile
     private var cached: InternDatset? = null
@@ -50,7 +50,7 @@ internal object InternDat {
                 val splitIndex = clean.indexOf(":0x02:")
                 if (splitIndex < 0) return@mapNotNull null
 
-                val key = clean.substring(5, splitIndex).split('|')
+                val key = clean.substring(5, splitIndex).split('|', limit = 3)
                 key to clean.substring(splitIndex + 6).trim()
             }
             .toList()
@@ -109,7 +109,7 @@ internal object InternDat {
     }
 
     private fun readFromFileSystem(): String? =
-        sequenceOf(File(FALLBACK_PATH), File("../$FALLBACK_PATH"), File("_dat_internal.dat"))
+        sequenceOf(File(FALLBACK_PATH), File("../$FALLBACK_PATH"), File(ASSET_PATH))
             .mapNotNull { file -> runCatching { file.takeIf(File::isFile)?.readText() }.getOrNull() }
             .firstOrNull { it.isNotBlank() }
 }

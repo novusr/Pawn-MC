@@ -6,8 +6,10 @@
 }
 
 # Keep Activities (referenced in AndroidManifest.xml)
--keep class com.rvdjv.pawnmc.MainActivity
--keep class com.rvdjv.pawnmc.SettingsActivity
+# `interface` is a Kotlin keyword, so the package is escaped as `interface` in
+# source files; ProGuard needs the plain name here.
+-keep class com.rvdjv.pawnmc.interface.main.MainActivity
+-keep class com.rvdjv.pawnmc.interface.settings.SettingsActivity
 
 # Keep CompilerConfig enums (used for SharedPreferences serialization)
 -keep class com.rvdjv.pawnmc.data.config.CompilerConfig$CompilerVersion { *; }

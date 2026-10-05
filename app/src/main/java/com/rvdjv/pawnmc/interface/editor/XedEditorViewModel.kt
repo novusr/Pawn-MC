@@ -14,7 +14,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class XedEditorViewModel(
-    initialFilePath: String
+    initialFilePath: String,
+    context: Context? = null
 ) : ViewModel() {
 
     /**
@@ -35,8 +36,11 @@ class XedEditorViewModel(
     /**
      * Workspace opened from the editor. Empty until the user picks a folder, so
      * the single-file flow keeps working exactly as before.
+     *
+     * The context is handed over so the folders picked here survive a restart: the
+     * view model writes them to the config and re-opens them on the next launch.
      */
-    val workspace = XedWorkspaceViewModel()
+    val workspace = XedWorkspaceViewModel(context)
 
     var isLoading by mutableStateOf(true)
         private set
@@ -104,13 +108,38 @@ class XedEditorViewModel(
                 // The file the user picked on the main screen becomes the first tab of
                 // the Xed workspace, so the tab strip and the explorer are usable right
                 // away instead of only after a folder is opened from the editor.
+                //
+                // When a workspace folder was already restored from the previous run,
+                // the decision is left to the helper below instead: a remembered
+                // workspace outranks the temporary main-screen file.
                 if (!workspace.isWorkspaceOpen) {
                     workspace.registerExternalFile(file)
+                } else {
+                    reopenRestoredFileAsTab()
                 }
             } catch (e: Exception) {
                 loadError = "Failed to open file: ${e.localizedMessage ?: "Unknown error"}"
                 isLoading = false
             }
+        }
+    }
+
+    /**
+     * Opens the remembered file as a tab of the restored workspace.
+     *
+     * Restoring a folder brings back the tree but no editor buffer, which would
+     * leave the editor blank. When the last file the main screen had selected lives
+     * inside one of the restored folders it is opened as its active tab, so the app
+     * comes back exactly where it was left. A file outside every restored folder is
+     * ignored here: it is the temporary main-screen selection and must not drag the
+     * Xed workspace back to the `TMP` folder.
+     */
+    private fun reopenRestoredFileAsTab() {
+        val restored = workspace.openWorkspaces.any { workspaceRoot ->
+            file.absolutePath.startsWith(workspaceRoot.root.absolutePath + File.separator)
+        }
+        if (restored) {
+            workspace.registerExternalFile(file)
         }
     }
 
@@ -174,7 +203,6 @@ class XedEditorViewModelFactory(private val filePath: String) : ViewModelProvide
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
-
 /**
  * Builds the editor view model for the whole activity.
  *
@@ -192,7 +220,9 @@ class XedEditorViewModelFactoryForActivity(context: Context) : ViewModelProvider
             @Suppress("UNCHECKED_CAST")
             val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(appContext)
             val path = config.n_last_selected_file_path.orEmpty()
-            return XedEditorViewModel(path) as T
+            // The context lets the view model persist the Xed workspace folders, so
+            // a folder picked in the editor is still open on the next launch.
+            return XedEditorViewModel(path, appContext) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

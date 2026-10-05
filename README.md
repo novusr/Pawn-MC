@@ -57,6 +57,3 @@ git clone --recursive https://github.com/novusr/Pawn-MC.git
 cd Pawn-MC
 ./gradlew assembleDebug
 ```
-
-## Enjoy
-![img](https://raw.githubusercontent.com/machijine/mc-content/refs/heads/main/content/ENJOY.gif)

@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.data.config
+package com.rvdjv.pawnmc.data.config
 
 import android.content.Context
 import android.content.res.Configuration
@@ -135,7 +135,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
     }
 
     companion object {
-        private const val ASSET_PATH = "_dat_extract.dat"
+        private const val ASSET_PATH = "_data_mc_26_extract.dat"
 
         fun localizedContext(context: Context, language: CompilerConfig.AppLanguage): Context {
             val locale = Locale.forLanguageTag(language.localeTag())
@@ -148,7 +148,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         }
 
         /**
-         * Reads the localisation table from `_dat/_dat_extract.dat` only.
+         * Reads the localisation table from `data/_data_mc_26_extract.dat` only.
          *
          * The asset is the single source of truth; there is deliberately no bundled copy
          * and no comparison between the asset and anything else, so a string only ever has
@@ -160,7 +160,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
             }.getOrNull()?.takeIf { it.isNotBlank() }
 
             val fileData = if (assetData == null) {
-                sequenceOf(java.io.File("_dat/_dat_extract.dat"), java.io.File(ASSET_PATH))
+                sequenceOf(java.io.File("data/_data_mc_26_extract.dat"), java.io.File(ASSET_PATH))
                     .mapNotNull { file -> runCatching { file.takeIf { it.isFile }?.readText() }.getOrNull() }
                     .firstOrNull { it.isNotBlank() }
             } else null

@@ -38,9 +38,9 @@ android {
 
     sourceSets {
         getByName("main") {
-            // `_dat/_dat_extract.dat` is the single source of localisation data and ships
-            // as an asset, so nothing else in the app duplicates it.
-            assets.srcDir(rootProject.file("_dat"))
+            // `data/_data_mc_26_extract.dat` is the single source of localisation data
+            // and ships as an asset, so nothing else in the app duplicates it.
+            assets.srcDir(rootProject.file("data"))
         }
     }
 

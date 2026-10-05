@@ -4,19 +4,20 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandMore
@@ -48,6 +49,14 @@ import kotlin.math.roundToInt
 private val PanelRowMinHeight = 44.dp
 
 /**
+ * How many lines of compiler output the explorer shows.
+ *
+ * Capping the text instead of scrolling it inside the item keeps one single scroll
+ * gesture for the whole panel, which is what made the explorer draggy.
+ */
+private const val OUTPUT_MAX_LINES = 8
+
+/**
  * Floating workspace panel: the opened editors, the folder tree of the active
  * workspace and the workspace-wide search hits, laid out like the Visual Studio Code
  * explorer.
@@ -61,6 +70,22 @@ private val PanelRowMinHeight = 44.dp
  * rather than being rebuilt inside the item loop. `flattenWorkspaceNodes` is a plain
  * function, so Compose cannot observe the snapshot reads inside it; without the
  * `remember` the flat list was computed once and folder toggles never recomposed it.
+ *
+ * ## Scrolling
+ *
+ * Three things used to make dragging the explorer stutter, and all three are fixed
+ * here:
+ *
+ * 1. The compiler output was an item with its **own** `verticalScroll`. A nested
+ *    scroller inside a [LazyColumn] item steals the drag and forces the parent to
+ *    remeasure the whole item on every frame. The output is now clipped with
+ *    `maxLines` instead, so the list keeps the single scroll gesture.
+ * 2. The [LazyColumn] had no bounded height inside the [Column], so it was measured
+ *    against the unbounded remaining space and remeasured on every parent layout. It
+ *    now takes the leftover height through `weight(1f)`.
+ * 3. Items had no `contentType`, so [LazyColumn] could not reuse a row composable
+ *    for a row of another kind and had to rebuild each one while scrolling. Folders,
+ *    files, opened editors and search hits now advertise their own content type.
  */
 @Composable
 fun XedWorkspacePanel(
@@ -71,6 +96,7 @@ fun XedWorkspacePanel(
     onSelectFile: (File) -> Unit,
     onOpenHit: (WorkspaceSearchHit) -> Unit,
     onClosePanel: () -> Unit = {},
+    onOpenFolder: () -> Unit = {},
     onHeaderDrag: (IntOffset) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -82,6 +108,17 @@ fun XedWorkspacePanel(
     // flattened list together with the rows rendered from it.
     val flatNodes: List<FlatNode> = remember(tree, collapsedPaths, workspace) {
         if (workspace == null) emptyList() else flattenWorkspaceNodes(workspace)
+    }
+
+    // An explicit state so the scroll position survives a panel that is temporarily
+    // hidden or recomposed, and so a fling is not restarted from the top.
+    val explorerListState = rememberLazyListState()
+
+    // `documents` is a SnapshotStateList, so `toList()` would hand the list a fresh
+    // instance on every recomposition and make it re-diff the rows. Keyed on the
+    // size, the snapshot conversion happens only when a tab really opened or closed.
+    val openDocuments: List<OpenDocument> = remember(workspace) {
+        workspace?.documents?.toList().orEmpty()
     }
 
     Column(
@@ -98,19 +135,29 @@ fun XedWorkspacePanel(
             title = (workspace?.name ?: "No workspace").uppercase(),
             subtitle = workspace?.root?.path ?: "Open a folder to browse it here",
             onClose = onClosePanel,
+            // The folder picker lives in the panel itself, so a workspace folder can
+            // be chosen from right where it is browsed. The folder is remembered
+            // permanently, unlike the single temporary file the main screen picks.
+            onOpenFolder = onOpenFolder,
             onDrag = onHeaderDrag
         )
 
-        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+        LazyColumn(
+            state = explorerListState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
             // Captured into a local so the null check above survives the lambda: the
             // smart cast of a nullable local is not available inside a composable lambda.
             val current = workspace
-            if (current != null && current.documents.isNotEmpty()) {
-                item(key = "__opened_editors__") { SectionLabel("Opened Editors") }
+            if (current != null && openDocuments.isNotEmpty()) {
+                item(key = "__opened_editors__", contentType = "section-label") { SectionLabel("Opened Editors") }
 
                 items(
-                    items = current.documents.toList(),
-                    key = { doc: OpenDocument -> "open:${doc.file.absolutePath}" }
+                    items = openDocuments,
+                    key = { doc: OpenDocument -> "open:${doc.file.absolutePath}" },
+                    contentType = { "open-document" }
                 ) { document ->
                     OpenEditorRow(
                         name = document.name,
@@ -122,12 +169,17 @@ fun XedWorkspacePanel(
                     )
                 }
 
-                item(key = "__explorer__") { SectionLabel("Explorer") }
+                item(key = "__explorer__", contentType = "section-label") { SectionLabel("Explorer") }
             }
 
             items(
                     items = flatNodes,
-                    key = { entry: FlatNode -> "node:${entry.node.key}" }
+                    key = { entry: FlatNode -> "node:${entry.node.key}" },
+                    // Lets the list reuse a row composable for a row of the same kind
+                    // while scrolling, instead of rebuilding every row it draws.
+                    contentType = { entry: FlatNode ->
+                        if (entry.node.isDirectory) "folder" else "file"
+                    }
                 ) { entry ->
                 val node = entry.node
                 val current2 = workspace
@@ -150,30 +202,36 @@ fun XedWorkspacePanel(
 
             val current3 = workspace
             if (outputText.isNotBlank()) {
-                item(key = "__compiler_output__") {
+                item(key = "__compiler_output__", contentType = "compiler-output") {
                     SectionLabel("Output")
+                    // Clipped with `maxLines` instead of an inner `verticalScroll`: a
+                    // nested scroller inside a LazyColumn item fights the outer drag
+                    // and remeasures the whole item on every frame, which is what made
+                    // the explorer feel sticky while scrolling.
                     Text(
                         text = outputText,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = OUTPUT_MAX_LINES,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 180.dp)
-                            .verticalScroll(rememberScrollState())
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     )
                 }
             }
             if (current3 != null && current3.searchQuery.isNotEmpty()) {
-                item(key = "__search_results__") {
+                item(key = "__search_results__", contentType = "section-label") {
                     SectionLabel(
                         if (current3.isSearching) "Searching..." else "Results (${current3.searchResults.size})"
                     )
                 }
                 items(
                     items = current3.searchResults,
-                    key = { hit: WorkspaceSearchHit -> "hit:${hit.file.absolutePath}:${hit.line}" }
+                    key = { hit: WorkspaceSearchHit -> "hit:${hit.file.absolutePath}:${hit.line}" },
+                    contentType = { "search-hit" }
                 ) { hit ->
                     SearchHitRow(hit = hit, onOpen = { onOpenHit(hit) })
                 }
@@ -250,7 +308,7 @@ private fun WorkspaceSwitcherRow(session: XedWorkspaceViewModel) {
         if (session.openWorkspaces.size < MAX_OPEN_WORKSPACES) {
             val remaining = MAX_OPEN_WORKSPACES - session.openWorkspaces.size
             Text(
-                text = "$remaining slot(s) free",
+                text = "$remaining free",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -265,26 +323,48 @@ private fun SectionHeader(
     title: String,
     subtitle: String?,
     onClose: () -> Unit = {},
+    onOpenFolder: () -> Unit = {},
     onDrag: (IntOffset) -> Unit = {}
 ) {
     val currentOnDrag = rememberUpdatedState(onDrag)
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .pointerInput(Unit) {
-                    detectDragGestures { change, dragAmount ->
-                        change.consume()
-                        currentOnDrag.value(
-                            IntOffset(dragAmount.x.roundToInt(), dragAmount.y.roundToInt())
-                        )
-                    }
+            .pointerInput(Unit) {
+                detectDragGestures { change, dragAmount ->
+                    change.consume()
+                    currentOnDrag.value(
+                        IntOffset(dragAmount.x.roundToInt(), dragAmount.y.roundToInt())
+                    )
                 }
+            }
+    ) {
+        // Grab bar: makes the panel obviously draggable, the same cue the floating
+        // compile button and the rectangle toolbar use.
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 6.dp, bottom = 2.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(20.dp)
+                    .height(3.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(2.dp)
+                    )
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 12.dp, end = 4.dp, top = 2.dp, bottom = 4.dp)
+        ) {
+        Column(
+            modifier = Modifier.weight(1f)
         ) {
         Text(
             text = title,
@@ -302,12 +382,21 @@ private fun SectionHeader(
             )
         }
         }
+        IconButton(onClick = onOpenFolder, modifier = Modifier.size(32.dp)) {
+            Icon(
+                imageVector = PawnIcons.FolderRectOpen,
+                contentDescription = "Open workspace folder",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(16.dp)
+            )
+        }
         IconButton(onClick = onClose, modifier = Modifier.size(32.dp)) {
             Icon(
                 imageVector = Icons.Filled.Close,
                 contentDescription = "Close workspace panel",
                 modifier = Modifier.size(16.dp)
             )
+        }
         }
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

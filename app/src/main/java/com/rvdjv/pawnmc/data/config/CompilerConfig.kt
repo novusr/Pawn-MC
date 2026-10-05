@@ -129,6 +129,37 @@ class CompilerConfig private constructor(context: Context) {
         set(value) = prefs.edit(commit = true) { putString(KEY_APP_LANGUAGE, value.value) }
 
     //
+    // [xed workspace]
+    //
+
+    /**
+     * Workspace folders the Xed editor keeps open between runs, in the order they
+     * were opened; the first one comes back in front.
+     *
+     * The main screen cannot pick a folder, only a single file, and a file picked
+     * there is treated as temporary. Storing the folders here is what makes a
+     * workspace folder chosen inside the Xed editor itself survive leaving the
+     * editor, restarting the app or a reboot, instead of being thrown away with the
+     * temporary single-file selection.
+     *
+     * Stored as one `;` separated string rather than a string set, because a set has
+     * no order and would come back in an arbitrary one.
+     */
+    var n_xed_workspace_folders: List<String>
+        get() = (prefs.getString(KEY_XED_WORKSPACE_FOLDERS, "") ?: "")
+            .split(';')
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+        set(value) = prefs.edit {
+            putString(KEY_XED_WORKSPACE_FOLDERS, value.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(";"))
+        }
+
+    /** Forgets the remembered workspace folders, e.g. when the user resets Xed. */
+    fun clearXedWorkspaceFolders() {
+        prefs.edit { remove(KEY_XED_WORKSPACE_FOLDERS) }
+    }
+
+    //
     // [xed editor appearance]
     //
 
@@ -364,6 +395,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_FORCED_INCLUDE_PATH_AUTO = "forced_include_path_auto"
         private const val KEY_APP_THEME = "app_theme"
         private const val KEY_APP_LANGUAGE = "app_language"
+        private const val KEY_XED_WORKSPACE_FOLDERS = "xed_workspace_folders"
     private const val KEY_EDITOR_BG_COLOR = "editor_background_color"
 
         fun buildOptionsFor(

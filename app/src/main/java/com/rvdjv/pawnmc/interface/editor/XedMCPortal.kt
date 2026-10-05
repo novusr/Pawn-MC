@@ -156,7 +156,7 @@ internal object XedSimulationData {
     fun get(context: Context, key: String, language: CompilerConfig.AppLanguage): String {
         val entries = cached ?: synchronized(this) {
             cached ?: runCatching {
-                context.applicationContext.assets.open("_dat_simulation.dat")
+                context.applicationContext.assets.open("_data_mc_26_simulation.dat")
                     .bufferedReader().use { parse(it.readText()) }
             }.getOrDefault(emptyMap()).also { cached = it }
         }

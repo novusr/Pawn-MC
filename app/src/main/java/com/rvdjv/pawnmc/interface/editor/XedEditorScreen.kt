@@ -204,6 +204,10 @@ fun XedEditorScreen(
                 workspace.openWorkspaces.forEach { openWorkspace ->
                     workspace.refreshTree(openWorkspace)
                 }
+                // A folder that was deleted or unmounted while the app was in the
+                // background is dropped here, and the remembered list follows, so a
+                // dead path is not offered again on the next launch.
+                workspace.closeMissingWorkspaces()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -213,6 +217,7 @@ fun XedEditorScreen(
     var isExplorerVisible by remember { mutableStateOf(false) }
     var explorerOffset by remember { mutableStateOf(IntOffset.Zero) }
     var isPawnTerminalVisible by remember { mutableStateOf(false) }
+    var isWebPreviewVisible by remember { mutableStateOf(false) }
     var pawnConsoleVersion by remember {
         mutableStateOf(CompilerConfig.CompilerVersion.V3107)
     }
@@ -430,6 +435,7 @@ fun XedEditorScreen(
             title = { Text(when (appLanguage) {
                 CompilerConfig.AppLanguage.ID -> "Informasi"
                 CompilerConfig.AppLanguage.ES -> "Informacion"
+                CompilerConfig.AppLanguage.RU -> "Уведомление"
                 CompilerConfig.AppLanguage.EN -> "Notice"
             }) },
             text = { Text(message) },
@@ -438,6 +444,7 @@ fun XedEditorScreen(
                     Text(when (appLanguage) {
                         CompilerConfig.AppLanguage.ID -> "Tutup"
                         CompilerConfig.AppLanguage.ES -> "Cerrar"
+                        CompilerConfig.AppLanguage.RU -> "Закрыть"
                         CompilerConfig.AppLanguage.EN -> "Dismiss"
                     })
                 }
@@ -1222,17 +1229,24 @@ fun XedEditorScreen(
                     }
                 }
 
-                // Floating explorer: it sits above the code canvas instead of being
-                // welded to the right edge, matching the rest of the Xed surfaces.
+                // Floating explorer: like every other Xed surface it is a free-floating
+                // card that the user drags anywhere inside the editor canvas, not a
+                // docked sidebar welded to one edge.
                 if (isExplorerVisible) {
                     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                         val density = LocalDensity.current
-                        val panelWidth = explorerWidth.dp.coerceAtMost(maxWidth - 20.dp)
+                        val panelWidth = explorerWidth.dp
+                            .coerceAtMost(maxWidth - (EXPLORER_EDGE_MARGIN * 2))
+                        // The card is anchored to the top start, so the drag range is the
+                        // leftover room: horizontally minus the panel width, vertically
+                        // minus the height the card itself occupies.
                         val maxOffsetX = with(density) {
-                            (maxWidth - panelWidth - 20.dp).toPx().coerceAtLeast(0f).roundToInt()
+                            (maxWidth - panelWidth - EXPLORER_EDGE_MARGIN).toPx()
+                                .coerceAtLeast(0f).roundToInt()
                         }
                         val maxOffsetY = with(density) {
-                            (maxHeight * 0.14f - 20.dp).toPx().coerceAtLeast(0f).roundToInt()
+                            (maxHeight - maxHeight * EXPLORER_HEIGHT_FRACTION - EXPLORER_EDGE_MARGIN)
+                                .toPx().coerceAtLeast(0f).roundToInt()
                         }
                         val clampedExplorerOffset = IntOffset(
                             explorerOffset.x.coerceIn(0, maxOffsetX),
@@ -1246,9 +1260,10 @@ fun XedEditorScreen(
                             modifier = Modifier
                                 .align(Alignment.TopStart)
                                 .offset { clampedExplorerOffset }
-                                .padding(start = 10.dp, top = 10.dp)
+                                .padding(start = EXPLORER_EDGE_MARGIN, top = EXPLORER_EDGE_MARGIN)
                                 .width(panelWidth)
-                                .fillMaxHeight(0.86f)
+                                .fillMaxHeight(EXPLORER_HEIGHT_FRACTION)
+                                .zIndex(2f)
                         ) {
                             XedWorkspacePanel(
                                 session = workspace,
@@ -1265,6 +1280,7 @@ fun XedEditorScreen(
                                     }, 250)
                                 },
                                 onClosePanel = { isExplorerVisible = false },
+                                onOpenFolder = { folderPickerLauncher.launch(buildOpenFolderIntent()) },
                                 onHeaderDrag = { delta ->
                                     explorerOffset = IntOffset(
                                         (clampedExplorerOffset.x + delta.x).coerceIn(0, maxOffsetX),
@@ -1305,6 +1321,17 @@ fun XedEditorScreen(
                     )
                 }
 
+                // Web preview sits above the Pawn terminal button and shares its style.
+                FloatingRoundAction(
+                    size = PANEL_BUTTON_SIZE,
+                    icon = PawnIcons.WavingHand,
+                    contentDescription = "Open site preview",
+                    testTag = "editor_web_preview_toggle",
+                    isActive = isWebPreviewVisible,
+                    reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP,
+                    onClick = { isWebPreviewVisible = !isWebPreviewVisible }
+                )
+
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
                     icon = Icons.Filled.TouchApp,
@@ -1314,6 +1341,10 @@ fun XedEditorScreen(
                     reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP,
                     onClick = { isPawnTerminalVisible = !isPawnTerminalVisible }
                 )
+
+                if (isWebPreviewVisible) {
+                    XedWebPreviewOverlay(onClose = { isWebPreviewVisible = false })
+                }
 
                 // Keep the workspace toggle above the toolbar so it remains reachable
                 // while the explorer panel is open.
@@ -1641,6 +1672,23 @@ private val PANEL_BUTTON_SIZE = 48.dp
 
 /** Width of the rectangle-style floating toolbar. */
 private val TOOLBAR_WIDTH = 52.dp
+
+/**
+ * Height fraction of the canvas the floating workspace panel occupies.
+ *
+ * Deliberately below `1f`: the panel is a free-floating card, so it needs spare
+ * vertical room inside the canvas to be dragged around instead of filling the
+ * whole height and being pinned to the top edge.
+ */
+private const val EXPLORER_HEIGHT_FRACTION = 0.7f
+
+/**
+ * Gap kept between the floating workspace panel and the canvas edges.
+ *
+ * The drag range of the panel is derived from it, so the card can travel across the
+ * whole canvas without ever being clipped by the editor bounds.
+ */
+private val EXPLORER_EDGE_MARGIN = 10.dp
 
 /** Height of the rectangle-style floating toolbar (drag handle + four entries). */
 private val TOOLBAR_HEIGHT = 232.dp

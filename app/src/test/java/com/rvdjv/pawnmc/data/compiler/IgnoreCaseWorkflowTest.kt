@@ -95,7 +95,7 @@ class IgnoreCaseWorkflowTest {
         assertTrue(rewritten.contains("#include <bbb>"))
         assertTrue(rewritten.contains("#include 'ccd'"))
         assertTrue(rewritten.contains("#include <system>"))
-        assertEquals(source, Compiler.lowercaseIncludeReferences(rewritten))
+        assertEquals(rewritten, Compiler.lowercaseIncludeReferences(rewritten))
     }
 
     @Test

@@ -89,6 +89,7 @@ class PawnLanguage(
         val localFunctionDescription = when (appLanguage) {
             CompilerConfig.AppLanguage.ID -> "Dideklarasikan di berkas ini"
             CompilerConfig.AppLanguage.ES -> "Declarada en este archivo"
+            CompilerConfig.AppLanguage.RU -> "Объявлено в этом файле"
             CompilerConfig.AppLanguage.EN -> "Declared in this file"
         }
         val matchingItems = PawnRegistry.getCompletions(prefix, appLanguage) + localFunctions

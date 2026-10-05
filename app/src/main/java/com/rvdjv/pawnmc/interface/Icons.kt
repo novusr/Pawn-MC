@@ -557,6 +557,69 @@ object PawnIcons {
     }
 
     /**
+     * Waving hand icon for the site preview button.
+     *
+     * An open palm with four fingers, a thumb and three motion arcs on the right
+     * side, so the glyph reads as "a hand waving hello" at 24dp. Drawn as filled
+     * paths only, which keeps it compatible with every Compose icon version in
+     * use (the Material `WavingHand` glyph is not available in the pinned
+     * `material-icons-extended` release).
+     */
+    val WavingHand: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "PawnIcons.WavingHand",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            // Palm and fingers as one silhouette.
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(9.4f, 12.2f)
+                // Index finger.
+                lineTo(9.0f, 6.4f)
+                curveTo(8.9f, 5.4f, 9.6f, 4.6f, 10.4f, 4.7f)
+                curveTo(11.1f, 4.8f, 11.5f, 5.4f, 11.6f, 6.2f)
+                lineTo(12.1f, 10.0f)
+                // Middle finger.
+                lineTo(12.0f, 4.4f)
+                curveTo(12.0f, 3.3f, 12.8f, 2.6f, 13.6f, 2.7f)
+                curveTo(14.3f, 2.8f, 14.7f, 3.4f, 14.7f, 4.2f)
+                lineTo(14.8f, 10.2f)
+                // Ring finger.
+                lineTo(14.9f, 5.6f)
+                curveTo(14.9f, 4.6f, 15.6f, 3.9f, 16.4f, 4.0f)
+                curveTo(17.1f, 4.1f, 17.5f, 4.7f, 17.5f, 5.5f)
+                lineTo(17.4f, 10.6f)
+                // Pinky finger.
+                lineTo(17.6f, 7.6f)
+                curveTo(17.6f, 6.7f, 18.3f, 6.0f, 19.0f, 6.1f)
+                curveTo(19.7f, 6.2f, 20.1f, 6.8f, 20.0f, 7.6f)
+                lineTo(19.7f, 14.4f)
+                // Wrist.
+                curveTo(19.6f, 17.6f, 18.2f, 20.4f, 15.4f, 21.3f)
+                curveTo(12.8f, 22.1f, 10.2f, 20.8f, 9.0f, 18.6f)
+                curveTo(8.1f, 16.9f, 7.8f, 14.8f, 8.0f, 12.9f)
+                // Thumb.
+                curveTo(7.4f, 12.5f, 6.5f, 11.7f, 6.0f, 10.7f)
+                curveTo(5.6f, 9.8f, 6.0f, 8.9f, 6.8f, 8.7f)
+                curveTo(7.5f, 8.5f, 8.1f, 9.2f, 8.4f, 10.2f)
+                curveTo(8.7f, 11.0f, 9.0f, 11.6f, 9.4f, 12.2f)
+                close()
+            }
+            // Motion arcs on the waving side.
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round) {
+                moveTo(4.0f, 6.4f)
+                curveTo(3.0f, 7.9f, 2.8f, 9.5f, 3.3f, 11.0f)
+            }
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round) {
+                moveTo(1.5f, 4.6f)
+                curveTo(0.0f, 6.8f, -0.2f, 9.4f, 0.9f, 11.7f)
+            }
+        }.build()
+    }
+
+    /**
      * Workspace-panel icon: a rectangle with a narrow left sidebar, i.e. the file
      * explorer layout. Used by the floating workspace panel button.
      */

@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.data.compiler
+package com.rvdjv.pawnmc.data.compiler
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -6,7 +6,7 @@ import org.junit.Test
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 
 /**
- * Regression tests for the `_dat/_dat_explain.dat` parser.
+ * Regression tests for the `data/_data_mc_26_explain.dat` parser.
  *
  * The explanations themselves are external data, so only the decoding contract is
  * asserted here: the last entry of a duplicated code wins, comments are ignored and

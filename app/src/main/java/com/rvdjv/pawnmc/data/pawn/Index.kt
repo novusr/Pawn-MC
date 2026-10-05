@@ -1,8 +1,8 @@
-﻿package com.rvdjv.pawnmc.data.pawn
+package com.rvdjv.pawnmc.data.pawn
 
 /**
  * Native and forward symbols grouped by the SA-MP include file that declares them.
- * Names and descriptions are loaded from `_dat/_dat_internal.dat`.
+ * Names and descriptions are loaded from `data/_data_mc_26_internal.dat`.
  */
 internal data class PawnIncludeSymbols(
     val include: String,

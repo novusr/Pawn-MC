@@ -1625,3 +1625,4 @@
 0x01:native|time.inc|getdate:0x02:Native provided by the Pawn/SA-MP include set
 0x01:native|time.inc|gettime:0x02:Native provided by the Pawn/SA-MP include set
 0x01:native|time.inc|tickcount:0x02:Native provided by the Pawn/SA-MP include set
+0x01:forward|a_samp.inc|OnPlayerUpdate:0x02:Forward callback provided by the Pawn/SA-MP include set

@@ -216,6 +216,7 @@ class XedEditorTest {
         assertTrue(viewModel.hasUnsavedChanges)
 
         val updatedContent = "#include <a_samp>\n\nmain() {\n    print(\"Saved Directly\");\n}\n"
+        viewModel.onContentChanged(updatedContent)
         runBlocking {
             val success = viewModel.saveFileSync(updatedContent)
             assertTrue(success)
@@ -236,6 +237,125 @@ class XedEditorTest {
         document.markSaved("saved snapshot")
 
         assertTrue(document.isDirty)
+    }
+
+    @Test
+    fun `editor view model builds without a context so tests need no Android runtime`() {
+        val viewModel = XedEditorViewModel("")
+        assertFalse(viewModel.workspace.isWorkspaceOpen)
+    }
+
+    @Test
+    fun `workspace folders stay open for the life of the session and respect the limit`() {
+        val session = XedWorkspaceViewModel()
+        assertFalse(session.isWorkspaceOpen)
+
+        val first = tempFolder.newFolder("gamemodes")
+        val second = tempFolder.newFolder("scriptfiles")
+        val third = tempFolder.newFolder("pawno")
+        val fourth = tempFolder.newFolder("filterscripts")
+
+        listOf(first, second, third).forEach { session.openWorkspace(it) }
+        assertEquals(3, session.openWorkspaces.size)
+        assertEquals(third.absolutePath, session.activeWorkspace?.root?.absolutePath)
+
+        // The fourth folder is refused, and the refusal is reported instead of
+        // silently dropping a folder the user picked.
+        session.openWorkspace(fourth)
+        assertEquals(3, session.openWorkspaces.size)
+        assertEquals(MAX_OPEN_WORKSPACES, session.openWorkspaces.size)
+        assertTrue(session.statusMessage?.contains("close one first") == true)
+
+        // Reopening an already open folder just brings it to the front, no duplicate.
+        session.openWorkspace(first)
+        assertEquals(3, session.openWorkspaces.size)
+        assertEquals(first.absolutePath, session.activeWorkspace?.root?.absolutePath)
+
+        // Closing it again frees a slot for the folder that was refused.
+        session.closeWorkspace(session.activeWorkspace!!)
+        assertEquals(2, session.openWorkspaces.size)
+        session.openWorkspace(fourth)
+        assertEquals(3, session.openWorkspaces.size)
+        assertTrue(session.openWorkspaces.any { it.root.absolutePath == fourth.absolutePath })
+    }
+
+    @Test
+    fun `workspace folder must be a folder and missing folders are pruned`() {
+        val session = XedWorkspaceViewModel()
+        val notAFolder = tempFolder.newFile("main.pwn")
+
+        session.openWorkspace(notAFolder)
+        assertFalse(session.isWorkspaceOpen)
+        assertTrue(session.statusMessage?.startsWith("Not a folder") == true)
+
+        val gone = tempFolder.newFolder("removed")
+        session.openWorkspace(gone)
+        assertTrue(session.isWorkspaceOpen)
+
+        assertTrue(gone.deleteRecursively())
+        assertEquals(1, session.closeMissingWorkspaces())
+        assertFalse(session.isWorkspaceOpen)
+        assertEquals(null, session.activeWorkspace)
+    }
+
+    @Test
+    fun `closing every workspace leaves an empty session`() {
+        val session = XedWorkspaceViewModel()
+        session.openWorkspace(tempFolder.newFolder("gamemodes"))
+        session.openWorkspace(tempFolder.newFolder("scriptfiles"))
+        assertEquals(2, session.openWorkspaces.size)
+
+        session.closeAllWorkspaces()
+        assertFalse(session.isWorkspaceOpen)
+        assertEquals(0, session.openWorkspaces.size)
+        assertEquals(null, session.activeWorkspace)
+    }
+
+    @Test
+    fun `workspace tree lists folders before files and collapses folders`() {
+        val root = tempFolder.newFolder("tree")
+        File(root, "zulu.pwn").writeText("zulu")
+        File(root, "alpha.pwn").writeText("alpha")
+        File(root, "sub").mkdirs()
+        File(root, "sub/inner.pwn").writeText("inner")
+        File(root, "notes.txt").writeText("plain notes")
+
+        val session = XedWorkspaceViewModel()
+        session.openWorkspace(root)
+
+        // The scan runs on Dispatchers.IO, so wait for it rather than racing it.
+        val workspace = session.activeWorkspace!!
+        val tree = waitForTree(session, workspace)
+        val names = tree.map { it.file.name }
+
+        assertEquals(listOf("sub", "alpha.pwn", "notes.txt", "zulu.pwn"), names)
+
+        val sub = tree.first()
+        assertTrue(sub.isDirectory)
+        assertEquals(listOf("inner.pwn"), sub.children.map { it.file.name })
+
+        workspace.toggleFolder(sub)
+        assertFalse(workspace.isExpanded(sub))
+
+        workspace.toggleFolder(sub)
+        assertTrue(workspace.isExpanded(sub))
+    }
+
+    /** Polls until the background scan of [workspace] has landed. */
+    private fun waitForTree(
+        session: XedWorkspaceViewModel,
+        workspace: Workspace
+    ): List<WorkspaceNode> {
+        repeat(200) {
+            if (workspace.tree.isNotEmpty()) return workspace.tree
+            Thread.sleep(10)
+        }
+        session.refreshTree(workspace)
+        repeat(200) {
+            if (workspace.tree.isNotEmpty()) return workspace.tree
+            Thread.sleep(10)
+        }
+        return workspace.tree
     }
 
     @Test

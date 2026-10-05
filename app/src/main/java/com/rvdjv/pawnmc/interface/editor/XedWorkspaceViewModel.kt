@@ -1,5 +1,6 @@
 package com.rvdjv.pawnmc.`interface`.editor
 
+import android.content.Context
 import android.os.FileObserver
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -7,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -192,8 +194,17 @@ data class WorkspaceSearchHit(
  * Holds the workspaces opened in Xed Editor: up to [MAX_OPEN_WORKSPACES] folders
  * with their trees and opened editors, plus the replace/search operations that
  * span the files of the workspace that is in front.
+ *
+ * When a [Context] is supplied the open workspace folders are written to
+ * [CompilerConfig] and restored on the next launch, so a folder chosen in the Xed
+ * editor is not lost when the app is closed. The main screen only ever picks a
+ * single file and treats it as temporary; a workspace folder is a deliberate
+ * choice, so it is remembered on its own.
  */
-class XedWorkspaceViewModel : ViewModel() {
+class XedWorkspaceViewModel(context: Context? = null) : ViewModel() {
+
+    private val config: CompilerConfig? =
+        context?.let { CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(it) }
 
     private val workspaces = mutableStateListOf<Workspace>()
     private val scanning = mutableStateListOf<Workspace>()
@@ -228,6 +239,38 @@ class XedWorkspaceViewModel : ViewModel() {
     var statusMessage by mutableStateOf<String?>(null)
         private set
 
+    init {
+        restoreRememberedWorkspaces()
+    }
+
+    /**
+     * Re-opens the workspace folders stored by a previous run.
+     *
+     * Paths that no longer point at a folder are dropped from the store as well, so
+     * an SD card that is absent right now does not leave a permanently broken entry
+     * behind. The first folder in the stored order comes back in front, matching
+     * the order they were opened in.
+     */
+    private fun restoreRememberedWorkspaces() {
+        val store = config ?: return
+        val stored = store.n_xed_workspace_folders
+        if (stored.isEmpty()) return
+
+        // Duplicates are dropped but the order is kept: the first folder has to come
+        // back in front, exactly as it was in front when the app was left.
+        val requested = stored.distinct()
+        val surviving = requested.filter { File(it).isDirectory }
+        if (surviving.size != requested.size) {
+            store.n_xed_workspace_folders = surviving
+        }
+        if (surviving.isEmpty()) return
+
+        val restored = surviving.mapNotNull { path -> newWorkspaceFor(File(path), persist = false) }
+        if (restored.isNotEmpty()) {
+            activeWorkspace = restored.first()
+        }
+    }
+
     /**
      * Opens [dir] as a workspace, closing the file that was open in single-file
      * mode and bringing the new workspace to the front.
@@ -246,11 +289,9 @@ class XedWorkspaceViewModel : ViewModel() {
             statusMessage = "You can open up to $MAX_OPEN_WORKSPACES workspaces, close one first"
             return
         }
-        val workspace = Workspace(dir)
-        workspaces.add(workspace)
+        val workspace = newWorkspaceFor(dir) ?: return
         activateWorkspace(workspace)
         statusMessage = "Workspace opened: ${dir.name}"
-        scan(workspace)
     }
 
     /** Brings [workspace] to the front; the editor follows its active file. */
@@ -268,6 +309,7 @@ class XedWorkspaceViewModel : ViewModel() {
         stopWatchingWorkspace(workspace)
         workspaces.remove(workspace)
         scanning.remove(workspace)
+        persistWorkspaceFolders()
         val closingPath = closing?.root?.absolutePath
         if (activeWorkspace != null && activeWorkspace?.root?.absolutePath == closingPath) {
             activeWorkspace = workspaces.lastOrNull()
@@ -297,12 +339,26 @@ class XedWorkspaceViewModel : ViewModel() {
     }
 
     /** Creates and scans a workspace for [dir], or returns null when the limit is hit. */
-    private fun newWorkspaceFor(dir: File): Workspace? {
+    private fun newWorkspaceFor(dir: File, persist: Boolean = true): Workspace? {
         if (isAtWorkspaceLimit) return null
         val created = Workspace(dir)
         workspaces.add(created)
         scan(created)
+        if (persist) persistWorkspaceFolders()
         return created
+    }
+
+    /**
+     * Writes the open workspace folders to the config so they survive the process.
+     *
+     * A `null` config means the view model was built without a context (unit tests),
+     * and persistence is then simply skipped.
+     */
+    private fun persistWorkspaceFolders() {
+        // The list order mirrors the open order so the front workspace is restored
+        // in front, and duplicates are collapsed so closing and reopening a folder
+        // cannot leave the same path stored twice.
+        config?.n_xed_workspace_folders = workspaces.map { it.root.absolutePath }.distinct()
     }
 
     /**
@@ -325,6 +381,9 @@ class XedWorkspaceViewModel : ViewModel() {
         workspaces.clear()
         scanning.clear()
         activeWorkspace = null
+        // The store is cleared too, otherwise the next launch would silently bring
+        // every folder back and make this menu item look like it did nothing.
+        config?.clearXedWorkspaceFolders()
     }
 
     /** Re-scans a workspace folder; called after files are replaced on disk. */
@@ -368,7 +427,7 @@ class XedWorkspaceViewModel : ViewModel() {
         val observers = fileObservers.getOrPut(workspace) { mutableMapOf() }
         val wantedPaths = directories.mapTo(mutableSetOf()) { it.absolutePath }
         observers.keys.filterNot { it in wantedPaths }.toList().forEach { path ->
-            observers.remove(path)?.stopWatching()
+            observers.remove(path)?.let { runCatching { it.stopWatching() } }
         }
 
         val watchedEvents = FileObserver.CREATE or FileObserver.MOVED_TO or
@@ -378,12 +437,19 @@ class XedWorkspaceViewModel : ViewModel() {
             val path = directory.absolutePath
             if (path in observers) return@forEach
 
-            val observer = object : FileObserver(path, watchedEvents) {
-                override fun onEvent(event: Int, path: String?) {
-                    if (event and watchedEvents == 0) return
-                    viewModelScope.launch { scheduleWorkspaceRefresh(workspace) }
+            // Watch registration can be refused (an inotify watch limit, a provider
+            // that does not support watching, a unit test without the Android
+            // runtime). A missing watcher must never cost the tree itself, so the
+            // failure is swallowed and the folder simply stops auto-refreshing.
+            val observer = runCatching {
+                object : FileObserver(path, watchedEvents) {
+                    override fun onEvent(event: Int, path: String?) {
+                        if (event and watchedEvents == 0) return
+                        viewModelScope.launch { scheduleWorkspaceRefresh(workspace) }
+                    }
                 }
-            }
+            }.getOrNull() ?: return@forEach
+
             observer.startWatching()
             observers[path] = observer
         }
@@ -402,7 +468,7 @@ class XedWorkspaceViewModel : ViewModel() {
 
     private fun stopWatchingWorkspace(workspace: Workspace) {
         refreshJobs.remove(workspace)?.cancel()
-        fileObservers.remove(workspace)?.values?.forEach(FileObserver::stopWatching)
+        fileObservers.remove(workspace)?.values?.forEach { runCatching { it.stopWatching() } }
     }
 
     override fun onCleared() {
@@ -495,6 +561,8 @@ class XedWorkspaceViewModel : ViewModel() {
         if (activeWorkspace != null && activeWorkspace !in workspaces) {
             activeWorkspace = workspaces.lastOrNull()
         }
+        // A folder that vanished is not worth remembering, so the store follows.
+        persistWorkspaceFolders()
         return missing.size
     }
 

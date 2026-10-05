@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.data.compiler
+package com.rvdjv.pawnmc.data.compiler
 
 import android.content.Context
 import com.rvdjv.pawnmc.data.config.CompilerConfig
@@ -7,20 +7,20 @@ import java.io.File
 /**
  * Loader of the external compiler explanation table.
  *
- * `_dat/_dat_explain.dat` is the single source of truth for the local explanations of
+ * `data/_data_mc_26_explain.dat` is the single source of truth for the local explanations of
  * Pawn compiler messages. The asset is read once per process and cached; there is
  * deliberately no bundled copy in Kotlin sources, so a message only ever has to be
  * maintained in one place.
  *
- * The table uses the same encoding as `_dat/_dat_extract.dat`:
+ * The table uses the same encoding as `data/_data_mc_26_extract.dat`:
  * `0x01:<code>:0x02:<explanation>`, `#` starts a comment line. When a code is
  * listed twice the last entry wins, exactly like the previous in-memory map.
  */
 object Explanations {
 
-    private const val ASSET_PATH = "_dat_explain.dat"
+    private const val ASSET_PATH = "_data_mc_26_explain.dat"
 
-    private const val FALLBACK_PATH = "_dat/_dat_explain.dat"
+    private const val FALLBACK_PATH = "data/_data_mc_26_explain.dat"
 
     @Volatile
     private var cached: Map<String, String>? = null

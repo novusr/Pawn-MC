@@ -40,7 +40,7 @@ class MainViewModel(
         """.trimIndent()
 
         fun createTemporaryPawnFile(baseDir: File): File {
-            val directory = File(baseDir, "temporary")
+            val directory = File(baseDir, "TMP")
             if (!directory.exists()) {
                 directory.mkdirs()
             }
@@ -89,7 +89,7 @@ class MainViewModel(
     var isCompiling by mutableStateOf(false)
         private set
 
-    var outputText by mutableStateOf("Ready to compile...\n")
+    var outputText by mutableStateOf("Ah shit, here we go again.\n")
         private set
 
     var hasCompilerOutput by mutableStateOf(false)
@@ -247,13 +247,11 @@ class MainViewModel(
         val detectedVersion = Compiler.detectCompilerVersionForFile(sourcePath)
         if (detectedVersion != null) {
             config.n_compiler_version = detectedVersion
-            outputText += "Detected compiler: ${detectedVersion.label}\n"
             return
         }
 
         // Keep the compiler default at 3.10.7 when the EXE is absent or the metadata does not match any known version.
         config.n_compiler_version = CompilerConfig.CompilerVersion.V3107
-        outputText += "Compiler fallback: ${CompilerConfig.CompilerVersion.V3107.label}\n"
     }
 
     fun compileFile(path: String, isStoragePermissionGranted: Boolean, onPermissionRequired: () -> Unit) {
