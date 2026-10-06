@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.main
+﻿package com.rvdjv.pawnmc.`interface`.main
 
 import android.Manifest
 import android.content.ClipData
@@ -89,7 +89,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
-import com.rvdjv.pawnmc.`interface`.PawnIcons
+import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserMode
 import com.rvdjv.pawnmc.`interface`.theme.PawnMCTheme
@@ -102,25 +102,26 @@ import java.io.File
 import kotlinx.coroutines.delay
 import java.text.DecimalFormat
 
-private val SpaceXS = 4.dp
-private val SpaceS = 8.dp
-private val SpaceM = 16.dp
-private val SpaceL = 18.dp
-private val SpaceXL = 32.dp
-private val CardShape = RoundedCornerShape(20.dp)
-private val PillShape = RoundedCornerShape(28.dp)
-private val ActionButtonHeight = 48.dp
-private const val OUTPUT_PLACEHOLDER = "Ah shit, here we go again.\n"
-private val OutputPanelHeight = 240.dp
+internal val SpaceXS = 4.dp
+internal val SpaceS = 8.dp
+internal val SpaceM = 16.dp
+internal val SpaceL = 18.dp
+internal val SpaceXL = 32.dp
+internal val CardShape = RoundedCornerShape(20.dp)
+internal val PillShape = RoundedCornerShape(28.dp)
+internal val ActionButtonHeight = 48.dp
+internal const val OUTPUT_PLACEHOLDER = "Ah shit, here we go again.\n"
+internal val OutputPanelHeight = 240.dp
+internal fun shouldRestoreLastSelectedFile(workspaceAvailable: Boolean): Boolean = !workspaceAvailable
 
-private enum class CompileStatus(val label: String) {
+internal enum class CompileStatus(val label: String) {
     IDLE("IDLE :|"),
     COMPILING("COMPILING :?"),
     SUCCESS("SUCCESS :)"),
     ERROR("FAILED :(")
 }
 
-private fun deriveStatus(isCompiling: Boolean, lastExitCode: Int?): CompileStatus = when {
+internal fun deriveStatus(isCompiling: Boolean, lastExitCode: Int?): CompileStatus = when {
     isCompiling -> CompileStatus.COMPILING
     lastExitCode == null -> CompileStatus.IDLE
     lastExitCode == 0 -> CompileStatus.SUCCESS
@@ -133,11 +134,22 @@ fun MainScreen(
     viewModel: MainViewModel,
     onSettingsClick: () -> Unit,
     onEditorClick: () -> Unit,
-    initialUri: Uri? = null
+    initialUri: Uri? = null,
+    workspaceAvailable: Boolean = false,
+    /**
+     * Opens Settings focused on one section, used by the settings guide card.
+     *
+     * Kept separate from [onSettingsClick] so the caller can pass a target without the
+     * screen having to know how Settings is launched. The default keeps the screen
+     * previewable and testable on its own.
+     */
+    onOpenSettingsTarget: (SettingsTarget) -> Unit = { onSettingsClick() },
 ) {
     val context = LocalContext.current
     val outputScrollState = rememberScrollState()
-    val localizer = remember(context) { AppLocalization.load(context) }
+    // Shared across screens so the localisation asset is read and parsed only once
+    // per process; the main screen also warms it up in the background.
+    val localizer = remember(context) { AppLocalization.shared(context) }
     val appLanguage = viewModel.n_app_language
 
     // state dialog
@@ -202,17 +214,24 @@ fun MainScreen(
         }
     }
 
-    // load last selected file
+    // A remembered Xed workspace owns startup selection. Do not revive the main
+    // screen's stale single-file path (often TMP/unit.pwn) over an empty workspace.
     LaunchedEffect(Unit) {
-        viewModel.loadLastSelectedFile()
+        if (shouldRestoreLastSelectedFile(workspaceAvailable)) viewModel.loadLastSelectedFile()
 
         if (!hasStoragePermission(context)) {
             showPermissionDialog = true
         }
     }
 
-    LaunchedEffect(initialUri) {
-        viewModel.handleInitialUri(initialUri)
+    // A file opened from the system ("Open with" / tapping a .pwn) is only consumed once
+    // the permission dialog is out of the way. It is deliberately not part of the startup
+    // path: resolving the intent used to scan the file system before the first frame and
+    // pushed the window past the touch-feedback timeout, so the launch felt stuck.
+    LaunchedEffect(initialUri, isStoragePermissionGranted) {
+        if (isStoragePermissionGranted) {
+            viewModel.handleInitialUri(initialUri)
+        }
     }
 
     // Xed stays open while this mounted screen handles its compile request.
@@ -501,16 +520,25 @@ fun MainScreen(
                         return@ScreenHeader
                     }
                     val path = viewModel.selectedFilePath
-                    if (path.isNullOrBlank() || !File(path).exists()) {
-                        viewModel.ensureTemporaryFileSelected()
-                        Toast.makeText(
-                            context,
-                            viewModel.temporaryFileNotice ?: "This is a temporary file because you have not selected your own Pawn file yet.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        onEditorClick()
-                    } else {
-                        onEditorClick()
+                    when {
+                        workspaceAvailable -> onEditorClick()
+                        path.isNullOrBlank() -> {
+                            viewModel.ensureTemporaryFileSelected()
+                            Toast.makeText(
+                                context,
+                                viewModel.temporaryFileNotice ?: "This is a temporary file because you have not selected your own Pawn file yet.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            onEditorClick()
+                        }
+                        !File(path).isFile -> {
+                            Toast.makeText(
+                                context,
+                                "The selected Pawn file no longer exists. Browse and select it again.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        else -> onEditorClick()
                     }
                 },
                 onSettingsClick = {
@@ -730,6 +758,24 @@ fun MainScreen(
             ) }
 
             item { Spacer(modifier = Modifier.height(SpaceL)) }
+
+            // The empty space under the compiler output used to be dead room. It now
+            // carries the settings guide: one row per thing PawnMC can be configured to
+            // do, each one opening Settings *at that section* rather than at the top, so
+            // the card is a way in rather than an advertisement.
+            item { DeveloperPortalPromoCard(
+                onEntryClick = { target ->
+                    if (viewModel.isCompiling) {
+                        showCompilingBlockedToast()
+                    } else {
+                        onOpenSettingsTarget(target)
+                    }
+                },
+                localizer = localizer,
+                appLanguage = appLanguage
+            ) }
+
+            item { Spacer(modifier = Modifier.height(SpaceL)) }
         }
     }
 
@@ -760,7 +806,7 @@ private val HeaderActionButtonSize = 48.dp
 private val HeaderActionIconSize = 24.dp
 
 @Composable
-private fun ScreenHeader(
+internal fun ScreenHeader(
     onEditorClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onSelfTestClick: () -> Unit,
@@ -825,7 +871,7 @@ private fun ScreenHeader(
                         testTag = "xed_button",
                         icon = {
                             Icon(
-                                imageVector = PawnIcons.CodeEdit,
+                                imageVector = _Icons.CodeEdit,
                                 contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -930,7 +976,7 @@ private fun HeaderActionsToggleButton(
     }
 }
 @Composable
-private fun CompilingBlockedNotice(
+internal fun CompilingBlockedNotice(
     localizer: AppLocalization,
     appLanguage: CompilerConfig.AppLanguage,
     isCompiling: Boolean,
@@ -979,7 +1025,7 @@ private fun CompilingBlockedNotice(
     }
 }
 @Composable
-private fun CompileActionCard(
+internal fun CompileActionCard(
     selectedFileName: String?,
     selectedFileSize: String?,
     isCompiling: Boolean,
@@ -1090,7 +1136,7 @@ private fun CompileActionCard(
 }
 
 @Composable
-private fun CompilerLogsSection(
+internal fun CompilerLogsSection(
     outputText: String,
     status: CompileStatus,
     scrollState: androidx.compose.foundation.ScrollState,
@@ -1163,7 +1209,7 @@ private fun CompilerLogsSection(
 }
 
 @Composable
-private fun StatusChip(status: CompileStatus) {
+internal fun StatusChip(status: CompileStatus) {
     val (dotColor, containerColor, contentColor) = when (status) {
         CompileStatus.IDLE -> Triple(
             status_idle,
@@ -1213,7 +1259,7 @@ private fun StatusChip(status: CompileStatus) {
 }
 
 @Composable
-private fun OutputPanel(
+internal fun OutputPanel(
     outputText: String,
     isCompiling: Boolean,
     scrollState: androidx.compose.foundation.ScrollState
@@ -1249,131 +1295,3 @@ private fun OutputPanel(
     }
 }
 
-private fun formatFileSize(size: Long): String {
-    if (size <= 0) return "0 B"
-    val units = arrayOf("B", "KB", "MB", "GB")
-    val digitGroups = (Math.log10(size.toDouble()) / Math.log10(1024.0)).toInt()
-    val idx = digitGroups.coerceAtMost(units.size - 1)
-    return DecimalFormat("#,##0.#").format(size / Math.pow(1024.0, idx.toDouble())) + " " + units[idx]
-}
-
-// helper functions
-fun hasStoragePermission(context: Context): Boolean {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        android.os.Environment.isExternalStorageManager()
-    } else {
-        ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.READ_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED &&
-        ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        ) == PackageManager.PERMISSION_GRANTED
-    }
-}
-
-fun requestStoragePermission(
-    context: Context,
-    manageStorageLauncher: androidx.activity.result.ActivityResultLauncher<Intent>,
-    legacyPermissionLauncher: androidx.activity.result.ActivityResultLauncher<Array<String>>
-) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-            data = Uri.parse("package:${context.packageName}")
-        }
-        manageStorageLauncher.launch(intent)
-    } else {
-        legacyPermissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            )
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun CompileActionCardPreview() {
-    PawnMCTheme {
-        CompileActionCard(
-            selectedFileName = "main.p",
-            selectedFileSize = "12.4 KB",
-            isCompiling = false,
-            onChangeFileClick = {},
-            onCompileClick = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun CompileActionCardEmptyPreview() {
-    PawnMCTheme {
-        CompileActionCard(
-            selectedFileName = null,
-            selectedFileSize = null,
-            isCompiling = false,
-            onChangeFileClick = {},
-            onCompileClick = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun CompileActionCardCompilingPreview() {
-    PawnMCTheme {
-        CompileActionCard(
-            selectedFileName = "gamemode.pwn",
-            selectedFileSize = "48.2 KB",
-            isCompiling = true,
-            onChangeFileClick = {},
-            onCompileClick = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, heightDp = 340)
-@Composable
-private fun CompilerLogsSectionPreview() {
-    PawnMCTheme {
-        CompilerLogsSection(
-            outputText = "// System ready. Upload a .p file to begin.",
-            status = CompileStatus.IDLE,
-            scrollState = rememberScrollState(),
-            onCopyClick = {}
-        )
-    }
-}
-
-@Preview(showBackground = true, heightDp = 700)
-@Composable
-private fun MainScreenFullPreview() {
-    PawnMCTheme {
-        Column(modifier = Modifier.padding(SpaceL)) {
-            ScreenHeader(
-                onEditorClick = {},
-                onSettingsClick = {},
-                onSelfTestClick = {},
-                actionsVisible = true
-            )
-            Spacer(modifier = Modifier.height(SpaceL))
-            CompileActionCard(
-                selectedFileName = "main.p",
-                selectedFileSize = "12.4 KB",
-                isCompiling = false,
-                onChangeFileClick = {},
-                onCompileClick = {}
-            )
-            Spacer(modifier = Modifier.height(SpaceXL))
-            CompilerLogsSection(
-                outputText = "// System ready. Upload a .p file to begin.",
-                status = CompileStatus.IDLE,
-                scrollState = rememberScrollState(),
-                onCopyClick = {}
-            )
-        }
-    }
-}

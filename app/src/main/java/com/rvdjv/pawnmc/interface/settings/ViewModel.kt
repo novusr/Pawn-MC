@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.settings
+﻿package com.rvdjv.pawnmc.`interface`.settings
 
 import android.content.Context
 import androidx.compose.runtime.getValue
@@ -132,11 +132,15 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
 
     fun updateAppLanguage(language: CompilerConfig.AppLanguage) {
         config.n_app_language = language
+        // Marks the language as user-chosen so the first-launch device-locale
+        // detection can never overwrite this choice — the marker travels with the
+        // language through the JSON mirror and survives a reinstall.
+        config.markAppLanguageSet()
         n_app_language = language
     }
 
     /**
-     * Stores a custom Xed editor background colour, or clears it (pass `null`)
+     * Stores a custom editor canvas colour, or clears it (pass `null`)
      * so the editor falls back to the app theme surface ramp.
      */
     fun updateEditorBackgroundColor(hex: String?) {
@@ -226,9 +230,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
 class SettingsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
             val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context)
-            return SettingsViewModel(config) as T
+            // `Class.cast` checks the type instead of an unchecked `as T`, so a wrong
+            // model class fails at the factory rather than at the first use.
+            return modelClass.cast(SettingsViewModel(config))
+                ?: throw IllegalArgumentException("Unknown ViewModel class")
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

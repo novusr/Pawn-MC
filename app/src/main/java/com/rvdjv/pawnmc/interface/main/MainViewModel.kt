@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.main
+﻿package com.rvdjv.pawnmc.`interface`.main
 
 import android.content.Context
 import android.net.Uri
@@ -18,11 +18,12 @@ import java.io.File
 
 class MainViewModel(
     private val config: CompilerConfig,
-    private val appDirectory: File = File(".")
+    private val appDirectory: File = File("."),
+    private val context: Context? = null
 ) : ViewModel() {
 
     companion object {
-        const val TEMPORARY_FILE_NAME = "main.pwn"
+        const val TEMPORARY_FILE_NAME = "unit.pwn"
         const val TEMPORARY_FILE_NOTICE = "This is a temporary file because you have not selected your own Pawn file yet."
         const val IGNORE_CASE_BUSY_NOTICE =
             "Ignore case is enabled. Backing up this folder and converting every file name and #include reference to lowercase..."
@@ -33,14 +34,55 @@ class MainViewModel(
         const val IGNORE_CASE_FAILED_NOTICE =
             "Ignore case could not finish for this folder. The original files were left untouched."
         val TEMPORARY_FILE_CONTENT = """
-            native printf(const format[], {Float,_}:...);
+            /**
+             * <library>console</library>
+             * <summary>Prints a string to the server console (not in-game chat) and logs (server_log.txt).</summary>
+             * <param name="string">The string to print</param>
+             * <seealso name="printf"/>
+             */
+            native print(const string[]);
+
             main() {
-                printf("Hello, World!");
+                print("Hello, World!");
             }
+
+            public OnGameModeInit() {
+                print("OnGameModeInit!");
+                return 1;
+            }
+
+            public OnGameModeExit() {
+                print("OnGameModeExit!");
+                return 1;
+            }
+
+            public OnPlayerConnect(playerid) {
+                print("OnPlayerConnect!");
+                return 1;
+            }
+
+            public OnPlayerDisconnect(playerid, reason) {
+                print("OnPlayerDisconnect!");
+                return 1;
+            }
+
         """.trimIndent()
 
+        /**
+         * Creates the starter script in the user-visible app workspace.
+         *
+         * The file used to be written to `files/TMP/unit.pwn`, i.e. inside the app's
+         * private data: invisible to a file manager, deleted by an uninstall, and
+         * impossible to edit with anything but PawnMC. It now lives in
+         * [com.rvdjv.pawnmc.data.config.AppStorage.workspaceRoot] — the `PawnMC/workspace`
+         * folder on the app's shared directory — so the example project is a real,
+         * editable, copyable workspace the user owns.
+         *
+         * [baseDir] is kept as the parameter name so existing callers (including the unit
+         * tests) can pass any root; production callers pass the app data root.
+         */
         fun createTemporaryPawnFile(baseDir: File): File {
-            val directory = File(baseDir, "TMP")
+            val directory = if (baseDir.name == WORKSPACE_DIR_NAME) baseDir else File(baseDir, WORKSPACE_DIR_NAME)
             if (!directory.exists()) {
                 directory.mkdirs()
             }
@@ -51,6 +93,18 @@ class MainViewModel(
             }
             return tempFile
         }
+
+        /** Folder the starter script is written to, under the app data root. */
+        const val WORKSPACE_DIR_NAME = "workspace"
+
+        /**
+         * Where the starter script used to live, `files/TMP`.
+         *
+         * Only read from: a stored "last file" pointing at it has to be recognised as
+         * the starter (and therefore not restored) so the upgrade does not resurrect a
+         * dead path for a user who never left the temporary file.
+         */
+        const val LEGACY_TEMP_DIR_NAME = "TMP"
     }
 
     var n_app_theme by mutableStateOf(config.n_app_theme)
@@ -68,7 +122,7 @@ class MainViewModel(
     var selectionError by mutableStateOf<String?>(null)
         private set
 
-    /** Compile request queued by Xed and handled by the mounted main screen. */
+    /** Compile request queued by the editor and handled by the mounted main screen. */
     var pendingCompilePath by mutableStateOf<String?>(null)
         private set
 
@@ -98,6 +152,19 @@ class MainViewModel(
     var lastExitCode by mutableStateOf<Int?>(null)
         private set
 
+    private var detectedCompilerVersionCache: CompilerConfig.CompilerVersion? = null
+    private var detectedCompilerSourcePath: String? = null
+
+    /**
+     * Include folders this process already created, so the auto-detection launch does not
+     * repeat an `exists()` probe on every scan.
+     *
+     * Deliberately scoped to the view model rather than to the process: a folder can
+     * disappear (unmounted SD card, deleted project) while the app is alive, and the probe
+     * has to be allowed to recreate it.
+     */
+    private val validIncludePathCache = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+
     fun refreshTheme() {
         n_app_theme = config.n_app_theme
     }
@@ -107,7 +174,7 @@ class MainViewModel(
     }
 
     /**
-     * Re-reads the Xed editor background preference.
+     * Re-reads the editor background preference.
      *
      * Settings lives in its own activity, so the editor has to pick the value up
      * when the main activity resumes after the user changes it.
@@ -118,20 +185,48 @@ class MainViewModel(
 
     fun loadLastSelectedFile() {
         val lastPath = config.n_last_selected_file_path
-        if (lastPath != null && File(lastPath).exists()) {
+        val isTemporaryStarter = lastPath?.let(::File)?.let { file ->
+            file.name == TEMPORARY_FILE_NAME &&
+                (file.parentFile?.name == WORKSPACE_DIR_NAME || file.parentFile?.name == LEGACY_TEMP_DIR_NAME)
+        } == true
+        if (!isTemporaryStarter && lastPath != null && File(lastPath).exists()) {
             selectFile(lastPath, isStartupLoad = true)
+        } else {
+            selectedFilePath = null
+            config.n_last_selected_file_path = null
+            temporaryFileNotice = null
+            // Nothing to restore means the startup path still has to settle the compiler
+            // mode, which is filesystem work and belongs off the main thread.
+            warmUpCompilerDetection(null)
         }
     }
 
     fun handleInitialUri(uri: Uri?) {
         uri?.let { u ->
-            val path = u.path
+            val appContext = context ?: return@let
+            val path = when (u.scheme) {
+                "content" -> {
+                    val contentResolver = appContext.contentResolver
+                    val copied = runCatching {
+                        val extension = u.lastPathSegment?.substringAfterLast('.', "pwn") ?: "pwn"
+                        val fileName = "pawnmc-open-${System.nanoTime()}.$extension"
+                        val target = File(appContext.cacheDir, fileName)
+                        contentResolver.openInputStream(u)?.use { input ->
+                            target.outputStream().use { output -> input.copyTo(output) }
+                        }
+                        target
+                    }.getOrNull()
+                    copied?.absolutePath
+                }
+                else -> u.path
+            }
+
             if (path != null) {
                 val validExtensions = setOf("pawn", "pwn", "p", "inc")
                 if (File(path).extension.lowercase() in validExtensions) {
                     selectFile(path, openedFromIntent = true)
                 } else {
-                    selectionError = "Invalid file type! (only: .pawn .pwn .p)"
+                    selectionError = "Invalid file type! (only: .pawn .pwn .p .inc)"
                 }
             }
         }
@@ -227,32 +322,103 @@ class MainViewModel(
         }
     }
 
-    private fun applyCompilerAutoDetection(sourcePath: String) {
-        if (!config.n_forced_include_path_auto) {
-            // Discovery skips every folder the config already holds.
-            val currentPaths = config.n_include_paths
-            val autoIncludePaths = Compiler.discoverRelevantIncludePaths(sourcePath, currentPaths)
-            if (autoIncludePaths.isNotEmpty()) {
-                autoIncludePaths.forEach { includePath ->
-                    val directory = File(includePath)
-                    if (!directory.exists()) directory.mkdirs()
+    /**
+     * Reconciles the include paths and the compiler version with [sourcePath].
+     *
+     * Both discovery and detection read the file system (and [Compiler.detectCompilerVersionForFile]
+     * additionally hashes the compiler binary), so they run on the IO dispatcher and
+     * only the results are published back to the main thread. The launch is deliberately
+     * not joined: the caller is usually a UI event that must return immediately.
+     */
+    private fun applyCompilerAutoDetection(sourcePath: String?) {
+        viewModelScope.launch {
+            val n_detection = withContext(Dispatchers.IO) {
+                val n_currentPaths = config.n_include_paths
+                val n_autoIncludePaths = if (config.n_forced_include_path_auto) {
+                    emptyList()
+                } else {
+                    // Discovery skips every folder the config already holds.
+                    Compiler.discoverRelevantIncludePaths(sourcePath ?: "", n_currentPaths)
                 }
-                config.n_include_paths = currentPaths + autoIncludePaths
+
+                // Auto-detect only when automatic compiler selection is enabled, and only
+                // when the metadata on disk has not already produced exactly this result;
+                // detection hashes the whole compiler binary, so repeating it on every
+                // launch is pure duplicated IO.
+                val n_detected: CompilerConfig.CompilerVersion?
+                if (config.n_forced_compiler_mode) {
+                    n_detected = null
+                } else {
+                    val n_cached = cachedDetection(config, sourcePath)
+                    n_detected = n_cached ?: Compiler.detectCompilerVersionForFile(sourcePath ?: "")
+                }
+
+                DetectionResult(n_currentPaths, n_autoIncludePaths, n_detected)
             }
+
+            val n_currentPaths = n_detection.currentPaths
+            val n_autoIncludePaths = n_detection.autoIncludePaths
+            val n_detected = n_detection.detectedVersion
+            if (n_autoIncludePaths.isNotEmpty()) {                val n_createdPaths = withContext(Dispatchers.IO) {
+                    n_autoIncludePaths.filter { path ->
+                        val directory = File(path)
+                        !directory.exists() && directory.mkdirs()
+                    }
+                }
+                // Merge against the value the store holds now, so a path added from
+                // Settings while the scan was running is not written away.
+                config.n_include_paths = config.n_include_paths + n_autoIncludePaths
+                if (n_createdPaths.isNotEmpty()) {
+                    validIncludePathCache.removeAll(n_createdPaths.toSet())
+                }
+            }
+
+            if (config.n_forced_compiler_mode) return@launch
+
+            if (n_detected != null) {
+                config.n_compiler_version = n_detected
+                detectedCompilerVersionCache = n_detected
+                detectedCompilerSourcePath = sourcePath
+                return@launch
+            }
+            if (sourcePath.isNullOrBlank()) return@launch
+
+            // Keep the compiler default at 3.10.7 when the EXE is absent or the metadata
+            // does not match any known version.
+            config.n_compiler_version = CompilerConfig.CompilerVersion.V3107
+            detectedCompilerVersionCache = CompilerConfig.CompilerVersion.V3107
+            detectedCompilerSourcePath = sourcePath
         }
-
-        if (config.n_forced_compiler_mode) return
-
-        // Auto-detect only when automatic compiler selection is enabled.
-        val detectedVersion = Compiler.detectCompilerVersionForFile(sourcePath)
-        if (detectedVersion != null) {
-            config.n_compiler_version = detectedVersion
-            return
-        }
-
-        // Keep the compiler default at 3.10.7 when the EXE is absent or the metadata does not match any known version.
-        config.n_compiler_version = CompilerConfig.CompilerVersion.V3107
     }
+
+    /** Outcome of the IO-side half of [applyCompilerAutoDetection]. */
+    private data class DetectionResult(
+        val currentPaths: List<String>,
+        val autoIncludePaths: List<String>,
+        val detectedVersion: CompilerConfig.CompilerVersion?
+    )
+
+    /**
+     * The version the on-disk metadata produced for [sourcePath], or `null` when it has
+     * to be read again.
+     *
+     * The detection result is a pure function of the compiler metadata, and that metadata
+     * is stored in [config] by the detection itself, so a second run for the same source
+     * file in the same process cannot produce a different answer.
+     */
+    private fun cachedDetection(
+        config: CompilerConfig,
+        sourcePath: String?
+    ): CompilerConfig.CompilerVersion? =
+        detectedCompilerVersionCache.takeIf { it != null && detectedCompilerSourcePath == sourcePath }
+
+    /**
+     * Settles the compiler mode for a launch that has no source file yet.
+     *
+     * Kept separate from [applyCompilerAutoDetection] so the include-path discovery,
+     * which needs a real source path, is skipped instead of being called with a blank one.
+     */
+    private fun warmUpCompilerDetection(sourcePath: String?) = applyCompilerAutoDetection(sourcePath)
 
     fun compileFile(path: String, isStoragePermissionGranted: Boolean, onPermissionRequired: () -> Unit) {
         // A path typed with a script extension (`.pawn`, `.pwn`, `.p`, `.inc`) is cleaned
@@ -269,12 +435,11 @@ class MainViewModel(
         }
 
         val forcedCompilerMode = config.n_forced_compiler_mode
-        val detectedVersion = Compiler.detectCompilerVersionForFile(sourcePath)
-        val version = Compiler.compilerVersionForMode(
-            forcedMode = forcedCompilerMode,
-            selectedVersion = config.n_compiler_version,
-            detectedVersion = detectedVersion
-        )
+        // Detection is only consulted when forced mode is off, and it hashes the binary,
+        // so it runs once here and the result is handed to the config rather than being
+        // recomputed on the side.
+        val detectedVersion = if (forcedCompilerMode) null else Compiler.detectCompilerVersionForFile(sourcePath)
+        val version = config.repinCompilerModeFor(sourcePath, detectedVersion)
         if (!forcedCompilerMode) config.n_compiler_version = version
 
         // The conversion already happened when the file was browsed, so compiling
@@ -368,9 +533,15 @@ class MainViewModel(
 class MainViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
             val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context)
-            return MainViewModel(config, context.filesDir) as T
+            // `Class.cast` is the checked form of `as T`: it throws here instead of
+            // leaving an unchecked warning and a potential caller-side ClassCastException.
+            // The starter workspace is rooted on the app's shared data directory so the
+            // example script stays editable outside PawnMC; when shared storage is not
+            // mounted AppStorage falls back to the private root on its own.
+            val workspaceRoot = com.rvdjv.pawnmc.data.config.AppStorage.workspaceRoot(context)
+            return modelClass.cast(MainViewModel(config, workspaceRoot, context))
+                ?: throw IllegalArgumentException("Unknown ViewModel class")
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

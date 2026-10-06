@@ -76,10 +76,22 @@ data class UpdateCheckResult(
 )
 
 class UpdateManager(private val context: Context) {
-    private val hiddenBaseDir = File(context.filesDir, ".pawnmc").apply { mkdirs() }
+    private val hiddenBaseDir = hiddenBaseDir(context)
     private val versionFile = File(hiddenBaseDir, ".pawnmc_version.txt")
 
     companion object {
+        /**
+         * The app's hidden data directory, `files/.pawnmc`.
+         *
+         * It lives under `filesDir`, which Android preserves across an in-place APK
+         * update and which is separate from SharedPreferences, so the version marker
+         * survives even when the prefs are wiped by a manual reinstall. The path itself
+         * is owned by [com.rvdjv.pawnmc.data.config.AppStorage]; this accessor only keeps
+         * the name the rest of the compiler layer already calls.
+         */
+        fun hiddenBaseDir(context: Context): File =
+            com.rvdjv.pawnmc.data.config.AppStorage.privateRoot(context)
+
         @Volatile
         private var didWriteVersionInSession: Boolean = false
 

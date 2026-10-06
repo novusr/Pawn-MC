@@ -1,51 +1,150 @@
-package com.rvdjv.pawnmc.data.config
+﻿package com.rvdjv.pawnmc.data.config
 
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import java.util.Locale
 
 /**
  * compiler configuration options.
  */
 class CompilerConfig private constructor(context: Context) {
 
-    private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val appContext: Context = context.applicationContext
+
+    /** Application context for data-layer helpers that need one at call time. */
+    fun applicationContextHolder(): Context = appContext
+
+    private val prefs: SharedPreferences =
+        appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    /**
+     * True while [restoreFromFile] / [mirrorToFile] are writing through the setters.
+     *
+     * The recovery path drives itself by assigning to these same properties, so without
+     * the flag it would mirror on every single assignment and restore its own restore.
+     */
+    @Volatile
+    private var suppressMirror: Boolean = false
+
+    init {
+        // The mirror runs while the prefs object is already usable but before any
+        // getter has been called, so `attachBaseContext` still sees the restored
+        // language on the very first launch after a reinstall.
+        restoreFromFile()
+        // On a truly fresh install (no JSON anywhere) this seeds the mirror file
+        // immediately with the defaults, so the file the next reinstall will
+        // read back always exists from the very first run — it is not written
+        // only after the user happens to change a setting.
+        if (!CompilerConfigFile.exists(appContext)) {
+            mirrorToFile()
+        }
+    }
+
+    /**
+     * Repopulates the prefs from the JSON mirror.
+     *
+     * This is the path that makes a manual reinstall behave like an update: Android
+     * wipes SharedPreferences, the app starts with defaults, and this reads the file
+     * back out of `filesDir` — which the installer leaves alone — and assigns every
+     * value through the normal setters.
+     */
+    fun restoreFromFile() {
+        if (!CompilerConfigFile.restore(appContext, prefs)) return
+
+        suppressMirror = true
+        try {
+            n_debug_level = n_debug_level
+            n_optimization_level = n_optimization_level
+            n_ignore_case = n_ignore_case
+            n_explain_output = n_explain_output
+            n_mandatory_semicolons = n_mandatory_semicolons
+            n_mandatory_parentheses = n_mandatory_parentheses
+            n_custom_flags = n_custom_flags
+            n_include_paths = n_include_paths
+            n_compiler_version = n_compiler_version
+            n_app_theme = n_app_theme
+            n_app_language = n_app_language
+            n_editor_background_color = n_editor_background_color
+            // Workspace layout and the last-opened locations are part of the same
+            // restore pass: without reassigning them here the setters (and the
+            // mirror they trigger) would never see the restored values.
+            n_workspace_folders = n_workspace_folders
+            n_last_selected_file_path = n_last_selected_file_path
+            n_last_opened_dir_path = n_last_opened_dir_path
+        } finally {
+            suppressMirror = false
+        }
+        mirrorToFile()
+    }
+
+    /**
+     * Rewrites the JSON file from the current prefs.
+     *
+     * Called after every settings change, which is why it only serialises a dozen
+     * scalars: cheap enough to stay synchronous with the write that triggered it.
+     */
+    fun mirrorToFile() {
+        if (suppressMirror) return
+        CompilerConfigFile.mirror(appContext, prefs)
+    }
 
     //
     // [debug]
     //
     var n_debug_level: DebugLevel
         get() = DebugLevel.fromValue(prefs.getInt(KEY_DEBUG, DebugLevel.D3.value))
-        set(value) = prefs.edit { putInt(KEY_DEBUG, value.value) }
+        set(value) {
+            prefs.edit { putInt(KEY_DEBUG, value.value) }
+            mirrorToFile()
+        }
 
     var n_optimization_level: OptimizationLevel
         get() = OptimizationLevel.fromValue(prefs.getInt(KEY_OPTIMIZATION, OptimizationLevel.O1.value))
-        set(value) = prefs.edit { putInt(KEY_OPTIMIZATION, value.value) }
+        set(value) {
+            prefs.edit { putInt(KEY_OPTIMIZATION, value.value) }
+            mirrorToFile()
+        }
 
     var n_ignore_case: Boolean
         get() = prefs.getBoolean(KEY_IGNORE_CASE, false)
-        set(value) = prefs.edit { putBoolean(KEY_IGNORE_CASE, value) }
+        set(value) {
+            prefs.edit { putBoolean(KEY_IGNORE_CASE, value) }
+            mirrorToFile()
+        }
 
     var n_explain_output: Boolean
         get() = prefs.getBoolean(KEY_EXPLAIN_OUTPUT, false)
-        set(value) = prefs.edit { putBoolean(KEY_EXPLAIN_OUTPUT, value) }
+        set(value) {
+            prefs.edit { putBoolean(KEY_EXPLAIN_OUTPUT, value) }
+            mirrorToFile()
+        }
 
     //
     // [code style]
     //
     var n_mandatory_semicolons: Boolean
         get() = prefs.getBoolean(KEY_SEMICOLONS, true)
-        set(value) = prefs.edit { putBoolean(KEY_SEMICOLONS, value) }
+        set(value) {
+            prefs.edit { putBoolean(KEY_SEMICOLONS, value) }
+            mirrorToFile()
+        }
     var n_mandatory_parentheses: Boolean
         get() = prefs.getBoolean(KEY_PARENTHESES, true)
-        set(value) = prefs.edit { putBoolean(KEY_PARENTHESES, value) }
+        set(value) {
+            prefs.edit { putBoolean(KEY_PARENTHESES, value) }
+            mirrorToFile()
+        }
 
     //
     // [custom]
     //
     var n_custom_flags: String
         get() = prefs.getString(KEY_CUSTOM_FLAGS, "") ?: ""
-        set(value) = prefs.edit { putString(KEY_CUSTOM_FLAGS, value) }
+        set(value) {
+            prefs.edit { putString(KEY_CUSTOM_FLAGS, value) }
+            mirrorToFile()
+        }
 
     //
     // [include paths]
@@ -56,8 +155,11 @@ class CompilerConfig private constructor(context: Context) {
             if (stored.isEmpty()) return emptyList()
             return dedupePaths(stored.split(";"))
         }
-        set(value) = prefs.edit {
-            putString(KEY_INCLUDE_PATHS, dedupePaths(value).joinToString(";"))
+        set(value) {
+            prefs.edit {
+                putString(KEY_INCLUDE_PATHS, dedupePaths(value).joinToString(";"))
+            }
+            mirrorToFile()
         }
     //
     // [compiler version]
@@ -66,11 +168,17 @@ class CompilerConfig private constructor(context: Context) {
         get() = CompilerVersion.fromValue(
             prefs.getString(KEY_COMPILER_VERSION, CompilerVersion.V3107.value) ?: CompilerVersion.V3107.value
         )
-        set(value) = prefs.edit { putString(KEY_COMPILER_VERSION, value.value) }
+        set(value) {
+            prefs.edit { putString(KEY_COMPILER_VERSION, value.value) }
+            mirrorToFile()
+        }
 
     var n_last_selected_file_path: String?
         get() = prefs.getString(KEY_LAST_FILE, null)
-        set(value) = prefs.edit { putString(KEY_LAST_FILE, value) }
+        set(value) {
+            prefs.edit { putString(KEY_LAST_FILE, value) }
+            mirrorToFile()
+        }
 
     /**
      * Folder that already went through the ignore-case conversion.
@@ -88,13 +196,30 @@ class CompilerConfig private constructor(context: Context) {
         prefs.edit { remove(KEY_CASE_BACKUP_DIR) }
     }
 
+    /**
+     * Marks "Ignore case" as having been switched on by the automatic
+     * `cannot read from file` detection instead of by the user.
+     *
+     * The flag travels with [n_ignore_case]: the compile that runs after the
+     * automatic switch-on consumes it and drops both the flag and the switch, so
+     * a user-set "Ignore case" stays untouched while an automatic one behaves
+     * like a one-shot instruction. It is deliberately not mirrored to the JSON
+     * file — it only has to outlive a single failed compile.
+     */
+    var n_ignore_case_auto: Boolean
+        get() = prefs.getBoolean(KEY_IGNORE_CASE_AUTO, false)
+        set(value) = prefs.edit { putBoolean(KEY_IGNORE_CASE_AUTO, value) }
+
     var lastSelectedFilePath: String?
         get() = n_last_selected_file_path
         set(value) { n_last_selected_file_path = value }
 
     var n_last_opened_dir_path: String?
         get() = prefs.getString(KEY_LAST_DIR, null)
-        set(value) = prefs.edit { putString(KEY_LAST_DIR, value) }
+        set(value) {
+            prefs.edit { putString(KEY_LAST_DIR, value) }
+            mirrorToFile()
+        }
 
     var lastOpenedDirPath: String?
         get() = n_last_opened_dir_path
@@ -120,51 +245,147 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getBoolean(KEY_FORCED_INCLUDE_PATH_AUTO, false)
         set(value) = prefs.edit { putBoolean(KEY_FORCED_INCLUDE_PATH_AUTO, value) }
 
+    /**
+     * Settles the compiler version for [sourcePath] before a compile.
+     *
+     * This exists because the two compiler modes used to deadlock each other:
+     *
+     *  - The auto-detection path writes `n_compiler_version` whenever it recognises the
+     *    `pawncc` next to the file.
+     *  - Detection is disabled while forced mode is on, and forced mode is what the user
+     *    turns on to stop the app overriding their choice.
+     *
+     * The result was that a project shipping its own `pawno/pawncc.exe` kept compiling
+     * with the bundled library, and the only way out was to switch forced mode off and
+     * hope detection ran before the compile did. Detection now also runs here, on the
+     * path that is guaranteed to happen before the arguments are built, and the two
+     * modes are stated explicitly:
+     *
+     *  - forced on  -> the selected version is kept, detection is not consulted at all;
+     *  - forced off -> a recognised nearby compiler wins, and the bundled default is
+     *    used only when there is nothing to recognise.
+     *
+     * @param sourcePath file that is about to be compiled, or `null` on a bare launch
+     * @param detectedVersion already-resolved detection result, to avoid hashing twice
+     * @return the version the compile should actually use
+     */
+    fun repinCompilerModeFor(
+        sourcePath: String?,
+        detectedVersion: CompilerConfig.CompilerVersion? = null
+    ): CompilerVersion {
+        if (n_forced_compiler_mode) return n_compiler_version
+        if (sourcePath.isNullOrBlank()) return n_compiler_version
+
+        val n_resolved = detectedVersion ?: return n_compiler_version
+        if (n_resolved != n_compiler_version) {
+            n_compiler_version = n_resolved
+        }
+        return n_resolved
+    }
+
     var n_app_theme: AppTheme
         get() = AppTheme.fromValue(prefs.getString(KEY_APP_THEME, AppTheme.SYSTEM.value) ?: AppTheme.SYSTEM.value)
-        set(value) = prefs.edit { putString(KEY_APP_THEME, value.value) }
+        set(value) {
+            prefs.edit { putString(KEY_APP_THEME, value.value) }
+            mirrorToFile()
+        }
 
     var n_app_language: AppLanguage
         get() = AppLanguage.fromValue(prefs.getString(KEY_APP_LANGUAGE, AppLanguage.EN.value) ?: AppLanguage.EN.value)
-        set(value) = prefs.edit(commit = true) { putString(KEY_APP_LANGUAGE, value.value) }
+        set(value) {
+            prefs.edit(commit = true) { putString(KEY_APP_LANGUAGE, value.value) }
+            mirrorToFile()
+        }
+
+    /**
+     * Detects the Android device locale and sets the app language from it.
+     *
+     * This runs exactly once, on the very first launch of a fresh install
+     * ([KEY_APP_LANGUAGE_SET] is unset): the device's primary locale decides the
+     * starting language — an `id`/`in` locale starts in Indonesian, `es` in
+     * Spanish, `ru` in Russian, everything else in English — so the app is
+     * already in the user's language from the very first frame rather than only
+     * after a restart. A language the user picked in Settings is never touched:
+     * the marker is written even when the detected language matches the default,
+     * so every later launch keeps whatever the settings hold.
+     *
+     * Purely a convenience on top of Settings: nothing in the settings screen is
+     * removed or replaced by this, and the user can switch at any time.
+     */
+    fun applyDeviceLocaleOnFirstLaunch(context: Context) {
+        if (prefs.getBoolean(KEY_APP_LANGUAGE_SET, false)) return
+        val deviceLocale = try {
+            context.resources.configuration.locales[0]
+        } catch (_: Exception) {
+            Locale.getDefault()
+        }
+        val detected = when (deviceLocale?.language?.lowercase()) {
+            "id", "in" -> AppLanguage.ID
+            "es" -> AppLanguage.ES
+            "ru" -> AppLanguage.RU
+            else -> AppLanguage.EN
+        }
+        prefs.edit(commit = true) {
+            putString(KEY_APP_LANGUAGE, detected.value)
+            putBoolean(KEY_APP_LANGUAGE_SET, true)
+        }
+        mirrorToFile()
+    }
+
+    /**
+     * Records that the language is now user-chosen (or device-detected), so the
+     * first-launch auto-detection never runs again on this install.
+     *
+     * The settings screen calls this on every explicit language change so the
+     * marker also reaches a fresh install through the JSON mirror: without it a
+     * reinstall would run the device-locale detection again and overwrite the
+     * language the mirror had just restored.
+     */
+    fun markAppLanguageSet() {
+        prefs.edit { putBoolean(KEY_APP_LANGUAGE_SET, true) }
+        mirrorToFile()
+    }
 
     //
-    // [xed workspace]
+    // [workspace]
     //
 
     /**
-     * Workspace folders the Xed editor keeps open between runs, in the order they
+     * Workspace folders the editor keeps open between runs, in the order they
      * were opened; the first one comes back in front.
      *
      * The main screen cannot pick a folder, only a single file, and a file picked
      * there is treated as temporary. Storing the folders here is what makes a
-     * workspace folder chosen inside the Xed editor itself survive leaving the
+     * workspace folder chosen inside the editor itself survive leaving the
      * editor, restarting the app or a reboot, instead of being thrown away with the
      * temporary single-file selection.
      *
      * Stored as one `;` separated string rather than a string set, because a set has
      * no order and would come back in an arbitrary one.
      */
-    var n_xed_workspace_folders: List<String>
-        get() = (prefs.getString(KEY_XED_WORKSPACE_FOLDERS, "") ?: "")
+    var n_workspace_folders: List<String>
+        get() = (prefs.getString(KEY_WORKSPACE_FOLDERS, "") ?: "")
             .split(';')
             .map { it.trim() }
             .filter { it.isNotEmpty() }
-        set(value) = prefs.edit {
-            putString(KEY_XED_WORKSPACE_FOLDERS, value.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(";"))
+        set(value) {
+            prefs.edit {
+                putString(KEY_WORKSPACE_FOLDERS, value.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(";"))
+            }
+            mirrorToFile()
         }
 
-    /** Forgets the remembered workspace folders, e.g. when the user resets Xed. */
-    fun clearXedWorkspaceFolders() {
-        prefs.edit { remove(KEY_XED_WORKSPACE_FOLDERS) }
+    /** Forgets the remembered workspace folders, e.g. when the user closes every workspace. */
+    fun clearWorkspaceFolders() {
+        prefs.edit { remove(KEY_WORKSPACE_FOLDERS) }
     }
 
     //
-    // [xed editor appearance]
+    // [editor appearance]
     //
 
     /**
-     * Custom Xed editor canvas colour as `#RRGGBB`, or `null` when the editor
+     * Custom editor canvas colour as `#RRGGBB`, or `null` when the editor
      * should follow the app theme (the default behaviour).
      *
      * Stored as a string because SharedPreferences has no colour type, and the
@@ -173,9 +394,12 @@ class CompilerConfig private constructor(context: Context) {
      */
     var n_editor_background_color: String?
         get() = prefs.getString(KEY_EDITOR_BG_COLOR, null)?.let(::normalizeEditorBackgroundColor)
-        set(value) = prefs.edit {
-            val normalized = normalizeEditorBackgroundColor(value)
-            if (normalized == null) remove(KEY_EDITOR_BG_COLOR) else putString(KEY_EDITOR_BG_COLOR, normalized)
+        set(value) {
+            prefs.edit {
+                val normalized = normalizeEditorBackgroundColor(value)
+                if (normalized == null) remove(KEY_EDITOR_BG_COLOR) else putString(KEY_EDITOR_BG_COLOR, normalized)
+            }
+            mirrorToFile()
         }
 
     /**
@@ -375,28 +599,54 @@ class CompilerConfig private constructor(context: Context) {
         const val STR_PAWN_3107 = "pawnc3107"
         const val STR_PAWN_31011 = "pawnc31011"
 
-        private const val KEY_DEBUG            = "debug_level"
-        private const val KEY_OPTIMIZATION      = "optimization_level"
-        private const val KEY_IGNORE_CASE       = "ignore_case"
-        private const val KEY_EXPLAIN_OUTPUT    = "explain_output"
+        //
+        // Preference keys
+        //
+        // `internal`, not `private`: the JSON mirror cannot live in this class without
+        // turning every getter into a size-probe, so it lives in `CompilerConfigFile`
+        // and reads and writes these very keys. Keeping the literals here, next to the
+        // getters that use them, is what stops the prefs and the mirror from drifting
+        // apart. The non-mirrored keys below stay private because nothing outside reads
+        // them.
+        //
+        internal const val KEY_DEBUG            = "debug_level"
+        internal const val KEY_OPTIMIZATION      = "optimization_level"
+        internal const val KEY_IGNORE_CASE       = "ignore_case"
+        internal const val KEY_EXPLAIN_OUTPUT    = "explain_output"
         private const val PREFS_NAME           = "compiler_config"
-        private const val KEY_LAST_DIR         = "last_open_dir"
-        private const val KEY_LAST_FILE        = "last_sel_file"
+        // internal: the JSON mirror has to carry these across a reinstall — the last
+        // opened file/folder and workspace layout are what the editor reopens on
+        // launch, so a mirror that skipped them would feel like starting from zero.
+        internal const val KEY_LAST_DIR         = "last_open_dir"
+        internal const val KEY_LAST_FILE        = "last_sel_file"
         private const val KEY_CASE_BACKUP_DIR  = "case_insensitive_backup_dir"
-        private const val KEY_SEMICOLONS       = "semicolons"
-        private const val KEY_PARENTHESES      = "parentheses"
-        private const val KEY_CUSTOM_FLAGS     = "custom_flags"
-        private const val KEY_INCLUDE_PATHS    = "include_paths"
-        private const val KEY_COMPILER_VERSION = "compiler_version"
-        private const val KEY_DETECTED_PRODUCT_VERSION = "detected_compiler_product_version"
+        private const val KEY_IGNORE_CASE_AUTO = "ignore_case_auto"
+        internal const val KEY_SEMICOLONS       = "semicolons"
+        internal const val KEY_PARENTHESES      = "parentheses"
+        internal const val KEY_CUSTOM_FLAGS     = "custom_flags"
+        internal const val KEY_INCLUDE_PATHS    = "include_paths"
+        internal const val KEY_COMPILER_VERSION = "compiler_version"
+        internal const val KEY_DETECTED_PRODUCT_VERSION = "detected_compiler_product_version"
         private const val KEY_DETECTED_SIZE_BYTES = "detected_compiler_size_bytes"
         private const val KEY_DETECTED_MD5 = "detected_compiler_md5"
-        private const val KEY_FORCED_MODE = "forced_compiler_mode"
-        private const val KEY_FORCED_INCLUDE_PATH_AUTO = "forced_include_path_auto"
-        private const val KEY_APP_THEME = "app_theme"
-        private const val KEY_APP_LANGUAGE = "app_language"
-        private const val KEY_XED_WORKSPACE_FOLDERS = "xed_workspace_folders"
-    private const val KEY_EDITOR_BG_COLOR = "editor_background_color"
+
+        /**
+         * Compiler version handling, mirrored like the other preferences.
+         *
+         * `forced` means "use the version picked in Settings and nothing else"; when it
+         * is off the app keeps whichever version the user last picked but re-pins it to
+         * the metadata of the file it is about to compile ([repinCompilerModeFor]).
+         */
+        internal const val KEY_FORCED_MODE = "forced_compiler_mode"
+        internal const val KEY_FORCED_INCLUDE_PATH_AUTO = "forced_include_path_auto"
+        internal const val KEY_APP_THEME = "app_theme"
+        internal const val KEY_APP_LANGUAGE = "app_language"
+        // internal: the JSON mirror has to carry this marker across a reinstall, or
+        // `applyDeviceLocaleOnFirstLaunch` would overwrite the restored language with
+        // the device locale as if the install were brand new.
+        internal const val KEY_APP_LANGUAGE_SET = "app_language_set"
+        internal const val KEY_WORKSPACE_FOLDERS = "workspace_folders"
+        internal const val KEY_EDITOR_BG_COLOR = "editor_background_color"
 
         fun buildOptionsFor(
             debugLevel: DebugLevel = DebugLevel.D3,

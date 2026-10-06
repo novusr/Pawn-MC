@@ -1,0 +1,329 @@
+package com.rvdjv.pawnmc.data.compiler
+
+import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.`interface`.main.MainViewModel
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.io.File
+
+class SuccessTest {
+    @Test
+    fun `testing success build`() {
+        val output = """
+            Exit code: 0
+            source.pawn(10) : warning 217: "foo" is assigned a value but never used
+        """.trimIndent()
+
+        assertEquals(0, Compiler.extractErrorCount(output))
+        assertFalse(Compiler.shouldRetryWithFallback(output, 5))
+    }
+
+    @Test
+    fun `returns the other compiler version`() {
+        assertEquals(CompilerConfig.CompilerVersion.V31011, CompilerConfig.CompilerVersion.V3107.other())
+        assertEquals(CompilerConfig.CompilerVersion.V3107, CompilerConfig.CompilerVersion.V31011.other())
+    }
+
+    @Test
+    fun `forced compiler keeps the configured version instead of detection or fallback`() {
+        assertEquals(
+            CompilerConfig.CompilerVersion.V31011,
+            Compiler.compilerVersionForMode(
+                forcedMode = true,
+                selectedVersion = CompilerConfig.CompilerVersion.V31011,
+                detectedVersion = CompilerConfig.CompilerVersion.V3107
+            )
+        )
+        assertEquals(
+            CompilerConfig.CompilerVersion.V3107,
+            Compiler.compilerVersionForMode(
+                forcedMode = false,
+                selectedVersion = CompilerConfig.CompilerVersion.V31011,
+                detectedVersion = null
+            )
+        )
+    }
+
+    @Test
+    fun `matches detected compiler metadata by product version and size`() {
+        assertTrue(CompilerConfig.CompilerVersion.V31011.matchesDetected(CompilerConfig.STR_V31011, 19_000L, null))
+        assertTrue(CompilerConfig.CompilerVersion.V31011.matchesDetected(null, null, "9044b9ef65658c79851b4e2e249e5c75"))
+        assertTrue(CompilerConfig.CompilerVersion.V3107.matchesDetected(null, 28_000L, "a48e04d28e8cb77e0361ecb4dced2501"))
+        assertEquals(
+            CompilerConfig.CompilerVersion.V31011,
+            CompilerConfig.CompilerVersion.V3107.nearestSupportedEquivalent(null, 18_944L, null)
+        )
+        assertEquals(
+            CompilerConfig.CompilerVersion.V3107,
+            CompilerConfig.CompilerVersion.V31011.nearestSupportedEquivalent(null, 28_672L, null)
+        )
+    }
+
+    @Test
+    fun `detects product version and hashes a nearby pawncc exe`() {
+        val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-compiler-detection-${System.nanoTime()}")
+        val pawnoDir = File(root, "pawno")
+        val compilerFile = File(pawnoDir, "pawncc.exe")
+        val sourceFile = File(root, "gamemode.pwn")
+        val compilerBytes = ByteArray(18_944)
+        CompilerConfig.STR_V31011.toByteArray(Charsets.UTF_16LE).copyInto(compilerBytes)
+
+        pawnoDir.mkdirs()
+        compilerFile.writeBytes(compilerBytes)
+        sourceFile.writeText("main() {}\n")
+
+        try {
+            val detected = Compiler.detectNearbyCompiler(sourceFile.absolutePath)
+            val expectedMd5 = java.security.MessageDigest.getInstance("MD5")
+                .digest(compilerBytes)
+                .joinToString("") { "%02x".format(it) }
+
+            assertEquals(CompilerConfig.CompilerVersion.V31011, detected?.version)
+            assertEquals(CompilerConfig.STR_V31011, detected?.productVersion)
+            assertEquals(compilerFile.absolutePath, detected?.filePath)
+            assertEquals(expectedMd5, detected?.md5)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `build options include optimization level`() {
+        val options = CompilerConfig.buildOptionsFor(
+            optimizationLevel = CompilerConfig.OptimizationLevel.O2,
+            mandatorySemicolons = true,
+            mandatoryParentheses = true,
+            customFlags = "-v=0",
+            compilerVersion = CompilerConfig.CompilerVersion.V31011
+        )
+
+        assertTrue(options.contains("-O=2"))
+        assertTrue(options.contains("-v=0"))
+        assertTrue(options.contains("-;+"))
+    }
+
+    @Test
+    fun `optimization level two is restricted to pawn 3 10 11`() {
+        val version3107Options = CompilerConfig.buildOptionsFor(
+            optimizationLevel = CompilerConfig.OptimizationLevel.O2,
+            customFlags = "-O2 -O=2 -v=0",
+            compilerVersion = CompilerConfig.CompilerVersion.V3107
+        )
+        assertTrue(version3107Options.contains("-O=1"))
+        assertFalse(version3107Options.any { CompilerConfig.isO2OptimizationFlag(it) })
+        assertEquals(
+            CompilerConfig.OptimizationLevel.O1,
+            CompilerConfig.effectiveOptimizationLevel(
+                CompilerConfig.CompilerVersion.V3107,
+                CompilerConfig.OptimizationLevel.O2
+            )
+        )
+        assertEquals(
+            listOf(
+                CompilerConfig.OptimizationLevel.O0,
+                CompilerConfig.OptimizationLevel.O1
+            ),
+            CompilerConfig.optimizationLevelsFor(CompilerConfig.CompilerVersion.V3107)
+        )
+        assertEquals(
+            CompilerConfig.OptimizationLevel.O2,
+            CompilerConfig.effectiveOptimizationLevel(
+                CompilerConfig.CompilerVersion.V31011,
+                CompilerConfig.OptimizationLevel.O2
+            )
+        )
+    }
+
+    @Test
+    fun `fallback argument normalization removes o2 for pawn 3 10 7`() {
+        val options = Compiler.compilerOptionsForVersion(
+            listOf("-O=2", "-O2", "-d=3"),
+            CompilerConfig.CompilerVersion.V3107
+        )
+
+        assertFalse(options.any { CompilerConfig.isO2OptimizationFlag(it) })
+        assertTrue(options.contains("-O=1"))
+    }
+
+    @Test
+    fun `adds sscanf compatibility define as final compiler argument for pawn 3 10 7`() {
+        val options = listOf("-d=3", "-i=/project/include", "-i=/project/gamemodes", "-v=0")
+
+        val options3107 = Compiler.compilerOptionsForVersion(
+            options,
+            CompilerConfig.CompilerVersion.V3107
+        )
+        assertEquals(
+            options + "SSCANF_NO_NICE_FEATURES=1",
+            options3107
+        )
+
+        val options31011 = Compiler.compilerOptionsForVersion(
+            options,
+            CompilerConfig.CompilerVersion.V31011
+        )
+        assertEquals(options, options31011)
+
+        val compilerArguments = Compiler.compilerArgumentsForVersion(
+            "/project/main.pwn",
+            options,
+            CompilerConfig.CompilerVersion.V3107
+        )
+        assertEquals("pawncc", compilerArguments.first())
+        assertEquals("/project/main.pwn", compilerArguments[1])
+        assertEquals("SSCANF_NO_NICE_FEATURES=1", compilerArguments.last())
+    }
+
+    @Test
+    fun `manual console arguments pass through without GUI defaults`() {
+        val options = listOf("-d=3", "-i=custom/includes", "-o=custom.amx")
+
+        assertEquals(
+            listOf("pawncc", "/workspace/mode.pwn") + options,
+            Compiler.compilerArgumentsForManual("/workspace/mode.pwn", options)
+        )
+    }
+
+    @Test
+    fun `sscanf compatibility define is moved to the end without duplicates`() {
+        val options = listOf(
+            "-i=/project/include",
+            "-DSSCANF_NO_NICE_FEATURES=1",
+            "-v=0",
+            "SSCANF_NO_NICE_FEATURES=1",
+            "-DSSCANF_NO_NICE_FEATURES=1"
+        )
+
+        assertEquals(
+            listOf("-i=/project/include", "-v=0", "SSCANF_NO_NICE_FEATURES=1"),
+            Compiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V3107)
+        )
+        assertEquals(
+            listOf("-i=/project/include", "SSCANF_NO_NICE_FEATURES=1", "-v=0"),
+            Compiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V31011)
+        )
+    }
+
+    @Test
+    fun `case-insensitive workspace lowercases filenames and include statements`() {
+        val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-ignore-case-${System.nanoTime()}")
+        val originalDir = File(root, "Gamemodes")
+        val includeFile = File(originalDir, "Aaa.inc")
+        val sourceFile = File(originalDir, "Main.PWN")
+
+        originalDir.mkdirs()
+        includeFile.writeText("stock foo() { return 1; }\n")
+        sourceFile.writeText("#include \"Aaa.inc\"\n#include \"Other.Inc\"\n")
+
+        try {
+            val result = Compiler.convertFolderToLowerCase(sourceFile.absolutePath)
+            val workingDir = result.workingDir
+
+            assertEquals(CaseConversion.ConversionStatus.CONVERTED, result.status)
+            assertTrue(File(workingDir, "Main.PWN").exists())
+            assertTrue(File(workingDir, "aaa.inc").exists())
+            assertTrue(File(workingDir, "Main.PWN").readText().contains("#include \"aaa.inc\""))
+            assertTrue(File(workingDir, "Main.PWN").readText().contains("#include \"other.inc\""))
+            assertTrue(Compiler.backupDirFor(workingDir).isDirectory)
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `selects the first existing include convention then stable include fallback`() {
+        val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-include-discovery-${System.nanoTime()}")
+        val sourceFile = File(root, "gamemodes/main.pwn")
+        sourceFile.parentFile?.mkdirs()
+        sourceFile.writeText("main() { return; }\n")
+        File(root, "pawno/include").mkdirs()
+        File(root, "qawno/include").mkdirs()
+        File(root, "includes").mkdirs()
+
+        try {
+            assertEquals(
+                listOf(CompilerConfig.normalPath(File(root, "pawno/include").absolutePath)),
+                Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
+            )
+
+            File(root, "pawno/include").delete()
+            assertEquals(
+                listOf(CompilerConfig.normalPath(File(root, "qawno/include").absolutePath)),
+                Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
+            )
+
+            File(root, "qawno/include").delete()
+            assertEquals(
+                listOf(CompilerConfig.normalPath(File(root, "includes").absolutePath)),
+                Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
+            )
+
+            File(root, "includes").delete()
+            val fallback = CompilerConfig.normalPath(File(root, "include").absolutePath)
+            assertEquals(listOf(fallback), Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath))
+            assertFalse(File(fallback).exists())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `skips include roots that are already registered`() {
+        val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-include-known-${System.nanoTime()}")
+        val sourceFile = File(root, "gamemodes/main.pwn")
+        sourceFile.parentFile?.mkdirs()
+        sourceFile.writeText("main() { return; }\n")
+        File(root, "qawno/include").mkdirs()
+
+        try {
+            val known = listOf(CompilerConfig.normalPath(File(root, "qawno/include").absolutePath))
+            val paths = Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath, known)
+
+            assertTrue(paths.isEmpty())
+        } finally {
+            root.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `creates temporary pawn file with hello world snippet`() {
+        val tempDir = File(System.getProperty("java.io.tmpdir"), "pawnmc-${System.nanoTime()}")
+        require(tempDir.mkdirs()) { "Unable to create temp dir for test" }
+
+        val tempFile = MainViewModel.createTemporaryPawnFile(tempDir)
+
+        try {
+            assertTrue(tempFile.exists())
+            assertEquals("main.pwn", tempFile.name)
+            // The starter lives in `workspace/` under the app data root rather than in the
+            // old private `TMP/` folder, so it can be opened and edited outside PawnMC.
+            assertEquals(MainViewModel.WORKSPACE_DIR_NAME, tempFile.parentFile?.name)
+            val content = tempFile.readText()
+            assertTrue(content.contains("native printf"))
+            assertTrue(content.contains("printf(\"Hello, World!\");"))
+        } finally {
+            tempFile.delete()
+            tempDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `starter workspace is reused instead of an extra nesting level`() {
+        val tempDir = File(System.getProperty("java.io.tmpdir"), "pawnmc-ws-${System.nanoTime()}")
+        val workspaceDir = File(tempDir, MainViewModel.WORKSPACE_DIR_NAME)
+        require(workspaceDir.mkdirs()) { "Unable to create workspace dir for test" }
+
+        val tempFile = MainViewModel.createTemporaryPawnFile(workspaceDir)
+
+        try {
+            // Passing the workspace directory itself must not produce
+            // `workspace/workspace/main.pwn`; that would silently create a second copy
+            // the next time the editor opened.
+            assertEquals(workspaceDir.absolutePath, tempFile.parentFile?.absolutePath)
+        } finally {
+            tempDir.deleteRecursively()
+        }
+    }
+}

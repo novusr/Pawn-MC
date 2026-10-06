@@ -12,7 +12,6 @@ import com.rvdjv.pawnmc.data.config.AppLocalization
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,15 +64,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -85,8 +90,9 @@ import androidx.core.content.ContextCompat
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.data.update.UpdateStatus
-import com.rvdjv.pawnmc.`interface`.editor.buildOpenFolderIntent
-import com.rvdjv.pawnmc.`interface`.editor.resolveTreeToFile
+import com.rvdjv.pawnmc.`interface`.main.SettingsTarget
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFolderPickerIntent
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveTreeToFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -118,49 +124,76 @@ private fun ThankYouLine(line: String) {
     val uriHandler = LocalUriHandler.current
     val linkColor = MaterialTheme.colorScheme.primary
 
-    val annotated = remember(line, linkColor) {
+    // `ClickableText` is deprecated: a click on a URL is an interaction with the link
+    // itself, not with a character offset. `LinkAnnotation.Url` carries both the target
+    // and the click handler, so no offset-to-annotation lookup is needed any more.
+    val annotated = remember(line, linkColor, uriHandler) {
         buildAnnotatedString {
             var last = 0
-            URL_REGEX.findAll(line).forEach { m ->
-                append(line.substring(last, m.range.first))
-                withStyle(
-                    SpanStyle(
-                        color = linkColor,
-                        textDecoration = TextDecoration.Underline
-                    )
+            URL_REGEX.findAll(line).forEach { match ->
+                append(line.substring(last, match.range.first))
+                withLink(
+                    LinkAnnotation.Url(
+                        url = match.value,
+                        styles = TextLinkStyles(
+                            style = SpanStyle(
+                                color = linkColor,
+                                textDecoration = TextDecoration.Underline,
+                            ),
+                        ),
+                        linkInteractionListener = { link ->
+                            val url = (link as? LinkAnnotation.Url)?.url
+                            if (url != null) runCatching { uriHandler.openUri(url) }
+                        },
+                    ),
                 ) {
-                    pushStringAnnotation(TAG_URL, m.value)
-                    append(m.value)
-                    pop()
+                    append(match.value)
                 }
-                last = m.range.last + 1
+                last = match.range.last + 1
             }
             if (last < line.length) append(line.substring(last))
         }
     }
 
-    ClickableText(
+    // A plain `Text` renders the annotated string and, because the span carries a
+    // `LinkAnnotation`, taps reach the listener above without any extra plumbing.
+    Text(
         text = annotated,
         style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
         modifier = Modifier.fillMaxWidth(),
-        onClick = { offset ->
-            annotated.getStringAnnotations(TAG_URL, offset, offset).firstOrNull()?.let { anno ->
-                runCatching { uriHandler.openUri(anno.item) }
-            }
-        }
     )
 }
-
-private const val TAG_URL = "url"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateBack: () -> Unit,
-    onRestartRequested: () -> Unit
+    onRestartRequested: () -> Unit,
+    /**
+     * Section the screen should scroll to on open, or `null` for the top.
+     *
+     * The settings guide card on the main screen passes this, so tapping "Include paths"
+     * lands on the include-path list instead of at the top of a screen that is several
+     * pages long. An unknown target is ignored and the screen opens normally.
+     */
+    focusTarget: SettingsTarget? = null
 ) {
     val context = LocalContext.current
+    val settingsScrollState = rememberScrollState()
+
+    // Y offset of each section, filled in by `onGloballyPositioned` as the screen is laid
+    // out. A plain map rather than one state per section: the screen only ever scrolls to
+    // one target, and a single map keeps the bookkeeping in one place.
+    val sectionOffsets = remember { mutableMapOf<SettingsTarget, Int>() }
+
+    // The deep link runs after layout, so the offsets are populated by the time it fires.
+    // Clamping keeps a target whose section is shorter than the viewport from trying to
+    // scroll past the end.
+    LaunchedEffect(focusTarget, sectionOffsets.size) {
+        val offset = focusTarget?.sectionKey?.let { sectionOffsets[it] } ?: return@LaunchedEffect
+        settingsScrollState.animateScrollTo(offset.coerceAtMost(settingsScrollState.maxValue))
+    }
     val updateManager = remember { UpdateManager(context) }
     val installLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -245,7 +278,9 @@ fun SettingsScreen(
         refreshUpdateStatus()
     }
 
-    val localizer = remember(context) { AppLocalization.load(context) }
+    // Shared across screens so the localisation asset is read and parsed only once
+    // per process; the main screen also warms it up in the background.
+    val localizer = remember(context) { AppLocalization.shared(context) }
     val appLanguage = viewModel.n_app_language
     val includeFolderPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -296,7 +331,7 @@ fun SettingsScreen(
         editingIncludePathIndex = index
         addingIncludePath = index == null
         viewModel.clearIncludePathExtensionNotice()
-        includeFolderPickerLauncher.launch(buildOpenFolderIntent())
+        includeFolderPickerLauncher.launch(buildFolderPickerIntent())
     }
 
     // Safety net for paths that vanished while the app was running (e.g. the SD card was
@@ -349,7 +384,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(settingsScrollState)
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
         ) {
             SectionIntro(
@@ -360,7 +395,10 @@ fun SettingsScreen(
                 )
             )
 
-            CategoryHeader(text = generalTitle)
+            CategoryHeader(
+                text = generalTitle,
+                modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.General)
+            )
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -433,7 +471,10 @@ fun SettingsScreen(
                 }
             }
 
-            CategoryHeader(text = localizer.get("settings.compiler.options", appLanguage, "Compiler Options"))
+            CategoryHeader(
+                text = localizer.get("settings.compiler.options", appLanguage, "Compiler Options"),
+                modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.CompilerOptions)
+            )
             SectionIntro(
                 text = localizer.get(
                     "settings.compiler.options.desc",
@@ -640,7 +681,10 @@ fun SettingsScreen(
                 }
             }
 
-            CategoryHeader(text = localizer.get("settings.updates", appLanguage, "Updates"))
+            CategoryHeader(
+                text = localizer.get("settings.updates", appLanguage, "Updates"),
+                modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.Updates)
+            )
             SectionIntro(
                 text = localizer.get(
                     "settings.updates.desc",
@@ -714,7 +758,10 @@ fun SettingsScreen(
                 }
             }
 
-            CategoryHeader(text = localizer.get("settings.include.paths", appLanguage, "Include Paths"))
+            CategoryHeader(
+                text = localizer.get("settings.include.paths", appLanguage, "Include Paths"),
+                modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.IncludePaths)
+            )
             SectionIntro(
                 text = localizer.get(
                     "settings.include.paths.desc",
@@ -837,7 +884,10 @@ fun SettingsScreen(
                 }
             }
 
-            CategoryHeader(text = localizer.get("settings.editor", appLanguage, "Xed Editor"))
+            CategoryHeader(
+                text = localizer.get("settings.editor", appLanguage, "Editor"),
+                modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.EditorAppearance)
+            )
             SectionIntro(
                 text = localizer.get(
                     "settings.editor.desc",
@@ -875,7 +925,10 @@ fun SettingsScreen(
                 }
             }
 
-            CategoryHeader(text = localizer.get("settings.about", appLanguage, "About"))
+            CategoryHeader(
+                text = localizer.get("settings.about", appLanguage, "About"),
+                modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.About)
+            )
             SectionIntro(
                 text = localizer.get(
                     "settings.about.desc",
@@ -1379,6 +1432,25 @@ fun CategoryHeader(text: String, modifier: Modifier = Modifier) {
 }
 
 /**
+ * Records the vertical offset of a settings section so [SettingsScreen]'s deep link can
+ * scroll to it, and hands the modifier back unchanged.
+ *
+ * A `Column` with `verticalScroll` has no item addressing - that is a `LazyColumn` feature -
+ * so the target is found by measuring instead of by index. `positionInParent()` is used
+ * rather than `positionInWindow()` because it is the offset inside the scrolling column,
+ * which is exactly the value `ScrollState.animateScrollTo` expects.
+ *
+ * The map is written during layout, which is why the caller reads it in an effect keyed on
+ * the map's size: the first pass fills the entries, the second observes them all.
+ */
+private fun Modifier.sectionOffset(
+    offsets: MutableMap<SettingsTarget, Int>,
+    target: SettingsTarget
+): Modifier = this.onGloballyPositioned { coordinates ->
+    offsets[target] = coordinates.positionInRoot().y.toInt()
+}
+
+/**
  * Explanatory paragraph rendered directly under a [CategoryHeader].
  *
  * Settings used to jump from a section title straight into its card, which left
@@ -1609,7 +1681,9 @@ private fun EditorBackgroundDialog(
     onDismiss: () -> Unit,
     onApply: (String?) -> Unit
 ) {
-    val localizer = remember(context) { AppLocalization.load(context) }
+    // Shared across screens so the localisation asset is read and parsed only once
+    // per process; the main screen also warms it up in the background.
+    val localizer = remember(context) { AppLocalization.shared(context) }
     val presets = EditorBackgroundPresets
 
     // The typed text is the single source of truth for the dialog: an empty
@@ -1796,3 +1870,24 @@ private fun luminance(argb: Int): Float {
 /** Converts a validated `#RRGGBB` string to an opaque ARGB int. */
 private fun hexToArgb(hex: String): Int =
     0xFF000000.toInt() or (hex.removePrefix("#").toIntOrNull(16) ?: 0)
+
+/**
+ * Section a [SettingsTarget] belongs to.
+ *
+ * Several guide-card entries point at the same section — language, theme and the compiler
+ * version all live in the general card — so this is a many-to-one mapping rather than a
+ * one-to-one enum, and the screen registers its offsets against the *section* keys that
+ * appear here.
+ */
+private val SettingsTarget.sectionKey: SettingsTarget
+    get() = when (this) {
+        SettingsTarget.Language,
+        SettingsTarget.CompilerVersion,
+        SettingsTarget.General -> SettingsTarget.General
+
+        SettingsTarget.CompilerOptions -> SettingsTarget.CompilerOptions
+        SettingsTarget.IncludePaths -> SettingsTarget.IncludePaths
+        SettingsTarget.EditorAppearance -> SettingsTarget.EditorAppearance
+        SettingsTarget.Updates -> SettingsTarget.Updates
+        SettingsTarget.About -> SettingsTarget.About
+    }

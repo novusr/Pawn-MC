@@ -1,0 +1,113 @@
+# PawnMC compiler message explanations - 2026 format
+#
+# Naming: _data_2026_exp.toml  (explain)
+# One table per Pawn compiler message code, taken straight from the warning,
+# error or fatal number in the compiler output.
+#
+#   [explain."013"]
+#   en = "..."
+#
+# Language leaves are id, en, es, ru. A missing leaf falls back to en.
+
+[explain."013"]
+id = "Titik masuk program tidak ditemukan. Pastikan Anda memilih file sumber yang benar dan file tersebut memiliki fungsi titik masuk yang diperlukan. Untuk uji cepat pada program mandiri, tambahkan `main() {}`; mode permainan mungkin memerlukan callback public tertentu."
+en = "No entry point was found. Check that you compiled the intended source file and that it contains the required entry function. For a quick standalone test, add `main() {}`; game modes may require a specific public callback instead."
+es = "No se encontro el punto de entrada. Verifica que hayas compilado el archivo fuente correcto y que contenga la funcion de entrada requerida. Para una prueba rapida independiente, agrega `main() {}`; los modos de juego pueden requerir un callback publico especifico."
+ru = "Точка входа не найдена. Проверьте, что скомпилирован нужный исходный файл и что в нём есть требуемая функция входа. Для быстрой автономной проверки добавьте `main() {}`; игровые режимы могут требовать определённый public-callback."
+
+[explain."015"]
+id = "Case default harus menjadi case terakhir. Letakkan default setelah semua blok case yang memiliki nilai eksplisit."
+en = "Default case must be the last case. Place default after all explicit case blocks."
+es = "El case default debe ser el ultimo. Coloca default despues de todos los bloques case explicitos."
+ru = "Ветка default должна быть последней. Разместите default после всех явных блоков case."
+
+[explain."016"]
+id = "Beberapa case default tidak diperbolehkan dalam satu pernyataan switch."
+en = "Multiple defaults are not allowed in the same switch statement."
+es = "No se permiten varios default en la misma sentencia switch."
+ru = "В одном операторе switch запрещено несколько веток default."
+
+[explain."017"]
+id = "Simbol tidak dikenal. Pastikan identifier sudah dideklarasikan atau disertakan, serta penulisannya sama persis dengan deklarasinya."
+en = "Undefined symbol. Check that the identifier is declared, included, and spelled exactly the same as the definition."
+es = "Simbolo no definido. Verifica que el identificador este declarado, incluido y escrito exactamente igual que en su definicion."
+ru = "Символ не определён. Проверьте, что идентификатор объявлен, подключён и написан точно так же, как в определении."
+
+[explain."021"]
+id = "Simbol sudah didefinisikan. Ada deklarasi ganda dalam cakupan yang sama."
+en = "Symbol already defined. A duplicate declaration exists in the same scope."
+es = "Simbolo ya definido. Existe una declaracion duplicada en el mismo ambito."
+ru = "Символ уже определён. В одной области видимости есть повторное объявление."
+
+[explain."024"]
+id = "Break atau continue digunakan di luar konteks yang sesuai. Keduanya harus berada di dalam blok perulangan atau switch."
+en = "Break or continue is out of context. It must be inside a loop or switch block."
+es = "break o continue esta fuera de contexto. Debe estar dentro de un bloque de bucle o de un switch."
+ru = "break или continue вне контекста. Их необходимо использовать внутри цикла или блока switch."
+
+[explain."040"]
+id = "Label case ganda. Setiap nilai case dalam pernyataan switch harus unik."
+en = "Duplicate case label. Each case value must be unique within the switch statement."
+es = "Etiqueta case duplicada. Cada valor de case debe ser unico dentro de la sentencia switch."
+ru = "Дублирующаяся метка case. Каждое значение case должно быть уникальным в пределах оператора switch."
+
+[explain."061"]
+id = "Include rekursif terdeteksi. Putus siklus include dengan include guard atau deklarasi forward."
+en = "Recursive include detected. Break the include cycle with guards or forward declarations."
+es = "Se detecto un include recursivo. Rompe el ciclo de includes con include guards o declaraciones forward."
+ru = "Обнаружено рекурсивное включение. Разорвите цикл include с помощью include guard или предварительных объявлений."
+
+[explain."100"]
+id = "File tidak dapat dibaca. Compiler tidak dapat membuka file sumber atau include. Periksa lokasi, izin akses, dan keberadaan file."
+en = "Cannot read from file. The compiler could not open the given source or include file. Check the path, permissions, and file existence."
+es = "No se puede leer el archivo. El compilador no pudo abrir el archivo fuente o include indicado. Revisa la ruta, los permisos y que el archivo exista."
+ru = "Не удаётся прочитать файл. Компилятор не смог открыть указанный исходный или include-файл. Проверьте путь, права доступа и существование файла."
+
+[explain."101"]
+id = "File tidak dapat ditulis. Compiler tidak dapat membuat atau menulis file keluaran. Periksa izin akses dan folder tujuan."
+en = "Cannot write to file. The output target could not be created or written to. Check permissions and the destination folder."
+es = "No se puede escribir el archivo. No se pudo crear ni escribir el destino de salida. Revisa los permisos y la carpeta de destino."
+ru = "Не удаётся записать файл. Не получилось создать или записать целевой файл вывода. Проверьте права доступа и папку назначения."
+
+[explain."200"]
+id = "Identifier terpotong karena batas implementasi. Gunakan nama yang lebih pendek dan unik agar tidak bertabrakan."
+en = "Identifier is truncated to the implementation limit. Use shorter, unique names to avoid collisions."
+es = "El identificador fue truncado por el limite de la implementacion. Usa nombres mas cortos y unicos para evitar colisiones."
+ru = "Идентификатор обрезан до предела реализации. Используйте более короткие уникальные имена, чтобы избежать совпадений."
+
+[explain."203"]
+id = "Simbol dideklarasikan tetapi tidak pernah digunakan. Kode tersebut mungkin sudah tidak diperlukan atau implementasinya belum selesai."
+en = "A symbol is declared but never used. It may be dead code or an unfinished implementation."
+es = "Un simbolo esta declarado pero nunca se usa. Puede ser codigo muerto o una implementacion sin terminar."
+ru = "Символ объявлен, но никогда не используется. Возможно, это мёртвый код или незавершённая реализация."
+
+[explain."204"]
+id = "Nilai telah diisi tetapi tidak pernah dibaca. Ini sering menandakan inisialisasi yang tidak perlu atau kesalahan logika."
+en = "A value is assigned but never read. This often indicates redundant initialization or a logic bug."
+es = "Se asigno un valor pero nunca se lee. Suele indicar una inicializacion redundante o un error de logica."
+ru = "Значение присваивается, но никогда не читается. Чаще всего это избыточная инициализация или ошибка в логике."
+
+[explain."205"]
+id = "Kode tidak diperlukan: ekspresi konstanta bernilai nol. Kondisi ini selalu salah sehingga bloknya tidak dapat dijalankan."
+en = "Redundant code: constant expression is zero. This condition is always false and makes the block unreachable."
+es = "Codigo redundante: la expresion constante es cero. Esta condicion siempre es falsa y vuelve inalcanzable el bloque."
+ru = "Лишний код: константное выражение равно нулю. Это условие всегда ложно, из-за чего блок недостижим."
+
+[explain."211"]
+id = "Kemungkinan terjadi assignment yang tidak disengaja. Assignment ditemukan dalam kondisi; gunakan == jika yang dimaksud adalah perbandingan."
+en = "Possibly unintended assignment. An assignment appears in a condition; use == for comparison instead."
+es = "Posible asignacion no intencional. Hay una asignacion dentro de una condicion; usa == si lo que querias era comparar."
+ru = "Возможно, это непреднамеренное присваивание. В условии используется присваивание; для сравнения укажите ==."
+
+[explain."214"]
+id = "Array atau string literal diberikan ke parameter non-const. Deklarasikan parameter sebagai const atau salin nilainya ke buffer yang dapat diubah."
+en = "Literal array or string passed to a non-const parameter. Declare the parameter as const or copy the data to a mutable buffer."
+es = "Se paso un array o string literal a un parametro que no es const. Declara el parametro como const o copia el dato a un buffer modificable."
+ru = "Литерал массива или строки передан в параметр, не объявленный как const. Объявите параметр как const или скопируйте данные в изменяемый буфер."
+
+[explain."217"]
+id = "Indentasi tidak konsisten. Peringatan ini hanya terkait tampilan, tetapi dapat menyamarkan kesalahan struktur dan menyulitkan pembacaan kode."
+en = "Loose indentation. This warning is cosmetic but can hide structural mistakes and make code harder to read."
+es = "Indentacion irregular. Esta advertencia es estetica, pero puede esconder errores estructurales y dificulta la lectura del codigo."
+ru = "Неровные отступы. Это предупреждение косметическое, но оно может скрывать структурные ошибки и затруднять чтение кода."
+

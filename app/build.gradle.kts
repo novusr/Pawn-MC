@@ -38,9 +38,15 @@ android {
 
     sourceSets {
         getByName("main") {
-            // `data/_data_mc_26_extract.dat` is the single source of localisation data
+            // `data/_data_2026_ect.toml` is the single source of localisation data
             // and ships as an asset, so nothing else in the app duplicates it.
             assets.srcDir(rootProject.file("data"))
+        }
+        getByName("test") {
+            java.srcDir(rootProject.file("test/app/unit"))
+        }
+        getByName("androidTest") {
+            java.srcDir(rootProject.file("test/app/instrumented"))
         }
     }
 
@@ -88,11 +94,21 @@ android {
         }
     }
     ndkVersion = "29.0.14206865"
-}
 
-val appApkNamePrefix = "pawnmc"
+    // The sandbox runs `libproot.so`, `libloader.so` and `libtermux.so` straight out of
+    // `nativeLibraryDir`, which Android requires them to live in to be execable.
+    // Without legacy packaging AGP leaves the libraries compressed inside the APK and
+    // maps them from there, so that directory stays empty and every exec fails with
+    // "inaccessible or not found". This is deliberately declared on the application
+    // module only: the `:terminal:*` libraries must not set it, because a library that
+    // requests legacy packaging changes how its own libraries are packaged and Gradle
+    // then reports a conflict between modules.
+    packaging { jniLibs { useLegacyPackaging = true }     }
+    }
 
-afterEvaluate {
+    val appApkNamePrefix = "pawnmc"
+
+    afterEvaluate {
     tasks.matching { task ->
         task.name.startsWith("assemble") || task.name.startsWith("package")
     }.configureEach {
@@ -137,6 +153,10 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.sora.editor)
+
+    // The in-editor terminal: proot sandbox + Termux VT emulator, opened from the
+    // floating Xed editor button.
+    implementation(project(":terminal:app"))
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
