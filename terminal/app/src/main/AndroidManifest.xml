@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <!--
+          Sessions live in a service so a running compile or `apt install` survives the
+          editor screen being closed. It is a plain started/bound service, not a
+          foreground one: it shows no notification and Android is free to stop it with
+          the rest of the app.
+        -->
+        <service
+            android:name="com.pawnmc.terminal.shell.TerminalService"
+            android:exported="false" />
+    </application>
+
+</manifest>

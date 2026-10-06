@@ -64,7 +64,10 @@ class XedEditorViewModel(
         private set
 
     init {
-        if (filePath.isNotBlank()) loadFile()
+        // A restored workspace owns the initial editor. Do not preload the remembered
+        // main-screen file (often the temporary unit.pwn) behind an empty workspace.
+        if (filePath.isNotBlank() && !workspace.isWorkspaceOpen) loadFile()
+        else isLoading = false
     }
 
     /**
@@ -76,8 +79,8 @@ class XedEditorViewModel(
     fun attachFile(path: String) {
         if (path.isBlank() || (path == filePath && loadedFilePath == path)) return
         filePath = path
-        // Inside a workspace the editor shows workspace buffers, so reloading the
-        // single-file content would only cost time.
+        // Preserve the main-screen selection as a fallback if the workspace is closed,
+        // but do not load it into or add it to an active workspace.
         if (!workspace.isWorkspaceOpen) loadFile()
     }
 
@@ -105,41 +108,10 @@ class XedEditorViewModel(
                 latestEditorContent = content
                 hasUnsavedChanges = false
                 isLoading = false
-                // The file the user picked on the main screen becomes the first tab of
-                // the Xed workspace, so the tab strip and the explorer are usable right
-                // away instead of only after a folder is opened from the editor.
-                //
-                // When a workspace folder was already restored from the previous run,
-                // the decision is left to the helper below instead: a remembered
-                // workspace outranks the temporary main-screen file.
-                if (!workspace.isWorkspaceOpen) {
-                    workspace.registerExternalFile(file)
-                } else {
-                    reopenRestoredFileAsTab()
-                }
             } catch (e: Exception) {
                 loadError = "Failed to open file: ${e.localizedMessage ?: "Unknown error"}"
                 isLoading = false
             }
-        }
-    }
-
-    /**
-     * Opens the remembered file as a tab of the restored workspace.
-     *
-     * Restoring a folder brings back the tree but no editor buffer, which would
-     * leave the editor blank. When the last file the main screen had selected lives
-     * inside one of the restored folders it is opened as its active tab, so the app
-     * comes back exactly where it was left. A file outside every restored folder is
-     * ignored here: it is the temporary main-screen selection and must not drag the
-     * Xed workspace back to the `TMP` folder.
-     */
-    private fun reopenRestoredFileAsTab() {
-        val restored = workspace.openWorkspaces.any { workspaceRoot ->
-            file.absolutePath.startsWith(workspaceRoot.root.absolutePath + File.separator)
-        }
-        if (restored) {
-            workspace.registerExternalFile(file)
         }
     }
 
@@ -197,8 +169,10 @@ class XedEditorViewModel(
 class XedEditorViewModelFactory(private val filePath: String) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(XedEditorViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return XedEditorViewModel(filePath) as T
+            // `Class.cast` is the checked form of `as T`, so a mismatched model class
+            // fails at the factory instead of leaving an unchecked warning behind.
+            return modelClass.cast(XedEditorViewModel(filePath))
+                ?: throw IllegalArgumentException("Unknown ViewModel class")
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
@@ -217,12 +191,14 @@ class XedEditorViewModelFactoryForActivity(context: Context) : ViewModelProvider
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(XedEditorViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
             val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(appContext)
             val path = config.n_last_selected_file_path.orEmpty()
             // The context lets the view model persist the Xed workspace folders, so
             // a folder picked in the editor is still open on the next launch.
-            return XedEditorViewModel(path, appContext) as T
+            // `Class.cast` performs the check generics cannot, so no unchecked warning
+            // is needed: a mismatched model class fails here rather than at the caller.
+            return modelClass.cast(XedEditorViewModel(path, appContext))
+                ?: throw IllegalArgumentException("Unknown ViewModel class")
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

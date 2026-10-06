@@ -226,9 +226,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
 class SettingsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
             val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context)
-            return SettingsViewModel(config) as T
+            // `Class.cast` checks the type instead of an unchecked `as T`, so a wrong
+            // model class fails at the factory rather than at the first use.
+            return modelClass.cast(SettingsViewModel(config))
+                ?: throw IllegalArgumentException("Unknown ViewModel class")
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

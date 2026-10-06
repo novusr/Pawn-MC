@@ -4,6 +4,7 @@ import com.rvdjv.pawnmc.data.pawn.PawnRegistry
 import com.rvdjv.pawnmc.data.pawn.InternDat
 import com.rvdjv.pawnmc.`interface`.editor.pawn.PawnSourceSymbols
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.`interface`.main.shouldRestoreLastSelectedFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -240,9 +241,33 @@ class XedEditorTest {
     }
 
     @Test
+    fun `remembered workspace prevents restoring stale standalone unit file`() {
+        assertFalse(shouldRestoreLastSelectedFile(workspaceAvailable = true))
+        assertTrue(shouldRestoreLastSelectedFile(workspaceAvailable = false))
+    }
+
+    @Test
     fun `editor view model builds without a context so tests need no Android runtime`() {
         val viewModel = XedEditorViewModel("")
         assertFalse(viewModel.workspace.isWorkspaceOpen)
+    }
+
+    @Test
+    fun `workspace folder opens without activating any previously selected file`() {
+        val root = tempFolder.newFolder("empty-workspace")
+        val staleStarter = File(tempFolder.root, "TMP/unit.pwn").apply {
+            parentFile?.mkdirs()
+            writeText("main() { print(\"stale\"); }")
+        }
+        assertTrue(staleStarter.isFile)
+
+        val session = XedWorkspaceViewModel()
+        session.openWorkspace(root)
+        val workspace = session.activeWorkspace
+        assertTrue(session.isWorkspaceOpen)
+        assertTrue(workspace?.documents?.isEmpty() == true)
+        assertEquals(null, workspace?.activeDocument)
+        assertEquals(root.absolutePath, workspace?.root?.absolutePath)
     }
 
     @Test
@@ -403,8 +428,11 @@ class XedEditorTest {
     @Test
     fun `simulation data preserves localized Markdown docs`() {
         val entries = XedSimulationData.parse(
-            "0x01:terminal.docs.id:0x02:# MC Developer Portal\\nDokumentasi\n" +
-                "0x01:terminal.docs.en:0x02:# MC Developer Portal\\nDocumentation"
+            """
+            [terminal.docs]
+            id = "# MC Developer Portal\nDokumentasi"
+            en = "# MC Developer Portal\nDocumentation"
+            """.trimIndent()
         )
 
         assertEquals("# MC Developer Portal\nDokumentasi", entries["terminal.docs.id"])
@@ -415,13 +443,12 @@ class XedEditorTest {
     fun `internal completion descriptions localize and preserve signatures`() {
         val dataset = InternDat.parse(
             """
-                0x01:description.id:0x02:Declares a local or global variable:0x03:Mendeklarasikan variabel lokal atau global
-                0x01:description.id:0x02:Prints a plain string:0x03:Mencetak teks biasa
-                0x01:description.es:0x02:Declares a local or global variable:0x03:Declara una variable local o global
-                0x01:description.es:0x02:Prints a plain string:0x03:Imprime un texto simple
-                0x01:item|KEYWORD|new:0x02:Declares a local or global variable
-                0x01:item|FUNCTION|print:0x02:Prints a plain string: print(const string[])
-                0x01:item|KEYWORD|stock:0x02:Description without translation
+            [item.KEYWORD]
+            "new" = { en = "Declares a local or global variable", id = "Mendeklarasikan variabel lokal atau global" }
+            "stock" = { en = "Description without translation", id = "Description without translation" }
+
+            [item.FUNCTION]
+            "print" = { en = "Prints a plain string: print(const string[])", id = "Mencetak teks biasa: print(const string[])" }
             """.trimIndent()
         )
 
@@ -433,8 +460,8 @@ class XedEditorTest {
         assertEquals("Declares a local or global variable", keyword.descriptionFor(CompilerConfig.AppLanguage.EN))
         assertEquals("Mencetak teks biasa: print(const string[])", function.descriptionFor(CompilerConfig.AppLanguage.ID))
         assertEquals("Description without translation", untranslated.descriptionFor(CompilerConfig.AppLanguage.ID))
-        assertEquals("Declara una variable local o global", keyword.descriptionFor(CompilerConfig.AppLanguage.ES))
-        assertEquals("Imprime un texto simple: print(const string[])", function.descriptionFor(CompilerConfig.AppLanguage.ES))
+        assertEquals("Declares a local or global variable", keyword.descriptionFor(CompilerConfig.AppLanguage.ES))
+        assertEquals("Prints a plain string: print(const string[])", function.descriptionFor(CompilerConfig.AppLanguage.ES))
         assertEquals("Description without translation", untranslated.descriptionFor(CompilerConfig.AppLanguage.ES))
     }
 }

@@ -7,7 +7,7 @@ import java.io.File
  * Human readable explanation of raw compiler output.
  *
  * Every warning/error line is copied verbatim and followed by an indented local
- * hint when the message code is documented in `data/_data_mc_26_explain.dat`. The wording of
+ * hint when the message code is documented in `data/_data_2026_exp.toml`. The wording of
  * every hint lives in that asset, never in this file.
  */
 object Explainer {

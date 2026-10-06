@@ -60,6 +60,18 @@ private fun downloadsInitialUri(): Uri? = Uri.parse(
 suspend fun resolveTreeToFile(context: Context, treeUri: Uri): File? =
     withContext(Dispatchers.IO) { resolveTree(context.contentResolver, treeUri) }
 
+/** Resolves a picked document on primary storage to a file the workspace can edit in place. */
+suspend fun resolveDocumentToFile(context: Context, uri: Uri): File? =
+    withContext(Dispatchers.IO) {
+        val id = runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull() ?: return@withContext null
+        if (!id.startsWith("primary:")) return@withContext null
+        val relative = id.removePrefix("primary:")
+        if (relative.isBlank()) return@withContext null
+        val root = File("/storage/emulated/0").canonicalFile
+        val file = File(root, relative).canonicalFile
+        file.takeIf { it.isFile && it.path.startsWith(root.path + File.separator) }
+    }
+
 private fun resolveTree(resolver: ContentResolver, treeUri: Uri): File? {
     val documentId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull() ?: return null
     if (!documentId.startsWith("primary:")) return null

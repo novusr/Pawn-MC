@@ -1,6 +1,7 @@
 package com.rvdjv.pawnmc.`interface`.editor
 
 import android.content.Context
+import android.os.Build
 import android.os.FileObserver
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -442,16 +443,47 @@ class XedWorkspaceViewModel(context: Context? = null) : ViewModel() {
             // runtime). A missing watcher must never cost the tree itself, so the
             // failure is swallowed and the folder simply stops auto-refreshing.
             val observer = runCatching {
-                object : FileObserver(path, watchedEvents) {
-                    override fun onEvent(event: Int, path: String?) {
-                        if (event and watchedEvents == 0) return
-                        viewModelScope.launch { scheduleWorkspaceRefresh(workspace) }
-                    }
-                }
+                createObserver(directory, path, watchedEvents, workspace)
             }.getOrNull() ?: return@forEach
 
             observer.startWatching()
             observers[path] = observer
+        }
+    }
+
+    /**
+     * Builds the watcher for one workspace folder.
+     *
+     * `FileObserver(String, Int)` is deprecated, but its replacement — the
+     * `FileObserver(File, Int)` overload — only exists from API 29 while this app still
+     * supports API 24. Using `File` unconditionally would turn a deprecation warning into
+     * a crash on older devices, so the version decides which overload is constructed and
+     * the deprecated one is suppressed for the API 24..28 branch only.
+     *
+     * A `File` cannot be handled directly by the constructor of the branch that takes a
+     * path, which is why the path is passed alongside the directory.
+     */
+    @Suppress("DEPRECATION")
+    private fun createObserver(
+        directory: File,
+        path: String,
+        watchedEvents: Int,
+        workspace: Workspace,
+    ): FileObserver {
+        val onEvent = { event: Int ->
+            if (event and watchedEvents != 0) {
+                viewModelScope.launch { scheduleWorkspaceRefresh(workspace) }
+            }
+        }
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            object : FileObserver(directory, watchedEvents) {
+                override fun onEvent(event: Int, path: String?) = onEvent(event)
+            }
+        } else {
+            object : FileObserver(path, watchedEvents) {
+                override fun onEvent(event: Int, path: String?) = onEvent(event)
+            }
         }
     }
 

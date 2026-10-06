@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="terminal_title">Terminal</string>
+    <string name="terminal_subtitle">Ubuntu sandbox</string>
+
+    <string name="terminal_preparing">Preparing the sandbox…</string>
+    <string name="terminal_downloading">Downloading the Ubuntu rootfs…</string>
+    <string name="terminal_extracting">Extracting the Ubuntu rootfs…</string>
+    <string name="terminal_setup_failed">The sandbox could not be prepared.</string>
+    <string name="terminal_setup_keep_open">Keep the app open until this finishes.</string>
+    <string name="terminal_retry">Retry</string>
+    <string name="terminal_close">Close</string>
+
+    <string name="terminal_session_new">New session</string>
+    <string name="terminal_session_close">Close session</string>
+    <string name="terminal_keyboard">Show keyboard</string>
+    <string name="terminal_interrupt">Send CTRL+C</string>
+    <string name="terminal_clear">Clear screen</string>
+    <string name="terminal_copy_output">Copy terminal output</string>
+    <string name="terminal_download_output">Download terminal output</string>
+    <string name="terminal_log_empty">Terminal output is empty</string>
+    <string name="terminal_log_copied">Terminal output copied</string>
+    <string name="terminal_log_saved">Terminal log saved</string>
+    <string name="terminal_log_save_failed">Could not save terminal log</string>
+    <string name="terminal_key_escape">ESC</string>
+    <string name="terminal_key_tab">TAB</string>
+    <string name="terminal_key_arrow_up">↑</string>
+    <string name="terminal_key_arrow_down">↓</string>
+    <string name="terminal_key_arrow_left">←</string>
+    <string name="terminal_key_arrow_right">→</string>
+    <string name="terminal_key_pipe">|</string>
+    <string name="terminal_key_slash">/</string>
+    <string name="terminal_key_dash">-</string>
+</resources>

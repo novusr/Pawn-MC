@@ -9,43 +9,125 @@ import androidx.core.content.edit
  */
 class CompilerConfig private constructor(context: Context) {
 
-    private val prefs: SharedPreferences = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val appContext: Context = context.applicationContext
+
+    private val prefs: SharedPreferences =
+        appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    /**
+     * True while [restoreFromFile] / [mirrorToFile] are writing through the setters.
+     *
+     * The recovery path drives itself by assigning to these same properties, so without
+     * the flag it would mirror on every single assignment and restore its own restore.
+     */
+    @Volatile
+    private var suppressMirror: Boolean = false
+
+    init {
+        // The mirror runs while the prefs object is already usable but before any
+        // getter has been called, so `attachBaseContext` still sees the restored
+        // language on the very first launch after a reinstall.
+        restoreFromFile()
+    }
+
+    /**
+     * Repopulates the prefs from the JSON mirror.
+     *
+     * This is the path that makes a manual reinstall behave like an update: Android
+     * wipes SharedPreferences, the app starts with defaults, and this reads the file
+     * back out of `filesDir` — which the installer leaves alone — and assigns every
+     * value through the normal setters.
+     */
+    fun restoreFromFile() {
+        if (!CompilerConfigFile.restore(appContext, prefs)) return
+
+        suppressMirror = true
+        try {
+            n_debug_level = n_debug_level
+            n_optimization_level = n_optimization_level
+            n_ignore_case = n_ignore_case
+            n_explain_output = n_explain_output
+            n_mandatory_semicolons = n_mandatory_semicolons
+            n_mandatory_parentheses = n_mandatory_parentheses
+            n_custom_flags = n_custom_flags
+            n_include_paths = n_include_paths
+            n_compiler_version = n_compiler_version
+            n_app_theme = n_app_theme
+            n_app_language = n_app_language
+            n_editor_background_color = n_editor_background_color
+        } finally {
+            suppressMirror = false
+        }
+        mirrorToFile()
+    }
+
+    /**
+     * Rewrites the JSON file from the current prefs.
+     *
+     * Called after every settings change, which is why it only serialises a dozen
+     * scalars: cheap enough to stay synchronous with the write that triggered it.
+     */
+    fun mirrorToFile() {
+        if (suppressMirror) return
+        CompilerConfigFile.mirror(appContext, prefs)
+    }
 
     //
     // [debug]
     //
     var n_debug_level: DebugLevel
         get() = DebugLevel.fromValue(prefs.getInt(KEY_DEBUG, DebugLevel.D3.value))
-        set(value) = prefs.edit { putInt(KEY_DEBUG, value.value) }
+        set(value) {
+            prefs.edit { putInt(KEY_DEBUG, value.value) }
+            mirrorToFile()
+        }
 
     var n_optimization_level: OptimizationLevel
         get() = OptimizationLevel.fromValue(prefs.getInt(KEY_OPTIMIZATION, OptimizationLevel.O1.value))
-        set(value) = prefs.edit { putInt(KEY_OPTIMIZATION, value.value) }
+        set(value) {
+            prefs.edit { putInt(KEY_OPTIMIZATION, value.value) }
+            mirrorToFile()
+        }
 
     var n_ignore_case: Boolean
         get() = prefs.getBoolean(KEY_IGNORE_CASE, false)
-        set(value) = prefs.edit { putBoolean(KEY_IGNORE_CASE, value) }
+        set(value) {
+            prefs.edit { putBoolean(KEY_IGNORE_CASE, value) }
+            mirrorToFile()
+        }
 
     var n_explain_output: Boolean
         get() = prefs.getBoolean(KEY_EXPLAIN_OUTPUT, false)
-        set(value) = prefs.edit { putBoolean(KEY_EXPLAIN_OUTPUT, value) }
+        set(value) {
+            prefs.edit { putBoolean(KEY_EXPLAIN_OUTPUT, value) }
+            mirrorToFile()
+        }
 
     //
     // [code style]
     //
     var n_mandatory_semicolons: Boolean
         get() = prefs.getBoolean(KEY_SEMICOLONS, true)
-        set(value) = prefs.edit { putBoolean(KEY_SEMICOLONS, value) }
+        set(value) {
+            prefs.edit { putBoolean(KEY_SEMICOLONS, value) }
+            mirrorToFile()
+        }
     var n_mandatory_parentheses: Boolean
         get() = prefs.getBoolean(KEY_PARENTHESES, true)
-        set(value) = prefs.edit { putBoolean(KEY_PARENTHESES, value) }
+        set(value) {
+            prefs.edit { putBoolean(KEY_PARENTHESES, value) }
+            mirrorToFile()
+        }
 
     //
     // [custom]
     //
     var n_custom_flags: String
         get() = prefs.getString(KEY_CUSTOM_FLAGS, "") ?: ""
-        set(value) = prefs.edit { putString(KEY_CUSTOM_FLAGS, value) }
+        set(value) {
+            prefs.edit { putString(KEY_CUSTOM_FLAGS, value) }
+            mirrorToFile()
+        }
 
     //
     // [include paths]
@@ -56,8 +138,11 @@ class CompilerConfig private constructor(context: Context) {
             if (stored.isEmpty()) return emptyList()
             return dedupePaths(stored.split(";"))
         }
-        set(value) = prefs.edit {
-            putString(KEY_INCLUDE_PATHS, dedupePaths(value).joinToString(";"))
+        set(value) {
+            prefs.edit {
+                putString(KEY_INCLUDE_PATHS, dedupePaths(value).joinToString(";"))
+            }
+            mirrorToFile()
         }
     //
     // [compiler version]
@@ -66,7 +151,10 @@ class CompilerConfig private constructor(context: Context) {
         get() = CompilerVersion.fromValue(
             prefs.getString(KEY_COMPILER_VERSION, CompilerVersion.V3107.value) ?: CompilerVersion.V3107.value
         )
-        set(value) = prefs.edit { putString(KEY_COMPILER_VERSION, value.value) }
+        set(value) {
+            prefs.edit { putString(KEY_COMPILER_VERSION, value.value) }
+            mirrorToFile()
+        }
 
     var n_last_selected_file_path: String?
         get() = prefs.getString(KEY_LAST_FILE, null)
@@ -122,11 +210,17 @@ class CompilerConfig private constructor(context: Context) {
 
     var n_app_theme: AppTheme
         get() = AppTheme.fromValue(prefs.getString(KEY_APP_THEME, AppTheme.SYSTEM.value) ?: AppTheme.SYSTEM.value)
-        set(value) = prefs.edit { putString(KEY_APP_THEME, value.value) }
+        set(value) {
+            prefs.edit { putString(KEY_APP_THEME, value.value) }
+            mirrorToFile()
+        }
 
     var n_app_language: AppLanguage
         get() = AppLanguage.fromValue(prefs.getString(KEY_APP_LANGUAGE, AppLanguage.EN.value) ?: AppLanguage.EN.value)
-        set(value) = prefs.edit(commit = true) { putString(KEY_APP_LANGUAGE, value.value) }
+        set(value) {
+            prefs.edit(commit = true) { putString(KEY_APP_LANGUAGE, value.value) }
+            mirrorToFile()
+        }
 
     //
     // [xed workspace]
@@ -173,9 +267,12 @@ class CompilerConfig private constructor(context: Context) {
      */
     var n_editor_background_color: String?
         get() = prefs.getString(KEY_EDITOR_BG_COLOR, null)?.let(::normalizeEditorBackgroundColor)
-        set(value) = prefs.edit {
-            val normalized = normalizeEditorBackgroundColor(value)
-            if (normalized == null) remove(KEY_EDITOR_BG_COLOR) else putString(KEY_EDITOR_BG_COLOR, normalized)
+        set(value) {
+            prefs.edit {
+                val normalized = normalizeEditorBackgroundColor(value)
+                if (normalized == null) remove(KEY_EDITOR_BG_COLOR) else putString(KEY_EDITOR_BG_COLOR, normalized)
+            }
+            mirrorToFile()
         }
 
     /**
@@ -375,28 +472,38 @@ class CompilerConfig private constructor(context: Context) {
         const val STR_PAWN_3107 = "pawnc3107"
         const val STR_PAWN_31011 = "pawnc31011"
 
-        private const val KEY_DEBUG            = "debug_level"
-        private const val KEY_OPTIMIZATION      = "optimization_level"
-        private const val KEY_IGNORE_CASE       = "ignore_case"
-        private const val KEY_EXPLAIN_OUTPUT    = "explain_output"
+        //
+        // Preference keys
+        //
+        // `internal`, not `private`: the JSON mirror cannot live in this class without
+        // turning every getter into a size-probe, so it lives in `CompilerConfigFile`
+        // and reads and writes these very keys. Keeping the literals here, next to the
+        // getters that use them, is what stops the prefs and the mirror from drifting
+        // apart. The non-mirrored keys below stay private because nothing outside reads
+        // them.
+        //
+        internal const val KEY_DEBUG            = "debug_level"
+        internal const val KEY_OPTIMIZATION      = "optimization_level"
+        internal const val KEY_IGNORE_CASE       = "ignore_case"
+        internal const val KEY_EXPLAIN_OUTPUT    = "explain_output"
         private const val PREFS_NAME           = "compiler_config"
         private const val KEY_LAST_DIR         = "last_open_dir"
         private const val KEY_LAST_FILE        = "last_sel_file"
         private const val KEY_CASE_BACKUP_DIR  = "case_insensitive_backup_dir"
-        private const val KEY_SEMICOLONS       = "semicolons"
-        private const val KEY_PARENTHESES      = "parentheses"
-        private const val KEY_CUSTOM_FLAGS     = "custom_flags"
-        private const val KEY_INCLUDE_PATHS    = "include_paths"
-        private const val KEY_COMPILER_VERSION = "compiler_version"
+        internal const val KEY_SEMICOLONS       = "semicolons"
+        internal const val KEY_PARENTHESES      = "parentheses"
+        internal const val KEY_CUSTOM_FLAGS     = "custom_flags"
+        internal const val KEY_INCLUDE_PATHS    = "include_paths"
+        internal const val KEY_COMPILER_VERSION = "compiler_version"
         private const val KEY_DETECTED_PRODUCT_VERSION = "detected_compiler_product_version"
         private const val KEY_DETECTED_SIZE_BYTES = "detected_compiler_size_bytes"
         private const val KEY_DETECTED_MD5 = "detected_compiler_md5"
         private const val KEY_FORCED_MODE = "forced_compiler_mode"
         private const val KEY_FORCED_INCLUDE_PATH_AUTO = "forced_include_path_auto"
-        private const val KEY_APP_THEME = "app_theme"
-        private const val KEY_APP_LANGUAGE = "app_language"
+        internal const val KEY_APP_THEME = "app_theme"
+        internal const val KEY_APP_LANGUAGE = "app_language"
         private const val KEY_XED_WORKSPACE_FOLDERS = "xed_workspace_folders"
-    private const val KEY_EDITOR_BG_COLOR = "editor_background_color"
+        internal const val KEY_EDITOR_BG_COLOR = "editor_background_color"
 
         fun buildOptionsFor(
             debugLevel: DebugLevel = DebugLevel.D3,

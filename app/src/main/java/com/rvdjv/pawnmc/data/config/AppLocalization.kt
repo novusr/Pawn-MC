@@ -3,6 +3,7 @@ package com.rvdjv.pawnmc.data.config
 import android.content.Context
 import android.content.res.Configuration
 import kotlin.math.min
+import java.io.File
 import java.util.Locale
 
 class AppLocalization private constructor(private val entries: Map<String, String>) {
@@ -135,7 +136,32 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
     }
 
     companion object {
-        private const val ASSET_PATH = "_data_mc_26_extract.dat"
+        /**
+         * Localisation table shipped as an asset.
+         *
+         * `_data_2026_ect.toml` replaces the old `_data_mc_26_extract.dat`. Every
+         * table is named after the setting it belongs to, so a lookup key is the
+         * same dotted name the UI already uses, the languages are the leaves, and
+         * the old `0x01` / `0x02` markers are gone.
+         */
+        private const val ASSET_PATH = "_data_2026_ect.toml"
+
+        private val FALLBACK_PATHS = listOf(
+            "data/_data_2026_ect.toml",
+            ASSET_PATH
+        )
+
+        /**
+         * Application context of the first [load] call, or `null` before it.
+         *
+         * Kept so [cached] can finish the load on whatever thread happens to need the
+         * strings first, without the caller having to pass a context around.
+         */
+        @Volatile
+        private var appContext: Context? = null
+
+        @Volatile
+        private var cached: AppLocalization? = null
 
         fun localizedContext(context: Context, language: CompilerConfig.AppLanguage): Context {
             val locale = Locale.forLanguageTag(language.localeTag())
@@ -148,19 +174,25 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         }
 
         /**
-         * Reads the localisation table from `data/_data_mc_26_extract.dat` only.
+         * Reads the localisation table from `data/_data_2026_ect.toml` only.
          *
          * The asset is the single source of truth; there is deliberately no bundled copy
          * and no comparison between the asset and anything else, so a string only ever has
          * to be maintained in one place.
          */
         fun load(context: Context): AppLocalization {
+            val n_context = context.applicationContext ?: context
+            appContext = n_context
             val assetData = runCatching {
-                context.assets.open(ASSET_PATH).bufferedReader().use { it.readText() }
+                n_context.assets.open(ASSET_PATH).bufferedReader().use { it.readText() }
             }.getOrNull()?.takeIf { it.isNotBlank() }
 
             val fileData = if (assetData == null) {
-                sequenceOf(java.io.File("data/_data_mc_26_extract.dat"), java.io.File(ASSET_PATH))
+                FALLBACK_PATHS.asSequence()
+                    // `java.io::File` cannot be used as a callable reference: Kotlin reads
+                    // `java.io` as a package and stops there, so the constructor has to be
+                    // invoked through a lambda.
+                    .map { path -> File(path) }
                     .mapNotNull { file -> runCatching { file.takeIf { it.isFile }?.readText() }.getOrNull() }
                     .firstOrNull { it.isNotBlank() }
             } else null
@@ -168,41 +200,43 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
             return AppLocalization(parseLocalizationData(assetData ?: fileData.orEmpty()))
         }
 
+        /**
+         * The shared localisation table, loaded on demand when it is not ready yet.
+         *
+         * Each screen calls this from `remember`, so without the cache every screen
+         * would re-read and re-parse the whole asset. The main screen only warms the
+         * cache up in the background; the first caller that gets there first derives
+         * it itself, so no screen can ever observe an empty table.
+         */
+        fun shared(context: Context): AppLocalization {
+            cached?.let { return it }
+            synchronized(this) {
+                cached?.let { return it }
+                return load(context).also { cached = it }
+            }
+        }
+
+        /**
+         * Flattens the TOML tables into the `dotted.key.<lang> -> value` map the rest
+         * of the class works with.
+         *
+         * `[settings.general]` with `en = "General"` becomes `settings.general.en =
+         * General`, which is exactly the shape the language lookup and the
+         * phrase-based fallbacks expect, so nothing downstream had to change when
+         * the storage format moved from `.dat` to TOML.
+         */
         fun parseLocalizationData(raw: String): Map<String, String> {
             if (raw.isBlank()) return emptyMap()
 
+            val document = TomlData.parse(raw)
             val result = linkedMapOf<String, String>()
-            raw.lineSequence()
-                .map { it.trim() }
-                .filter { it.isNotEmpty() && !it.startsWith("#") }
-                .forEach { line ->
-                    val clean = line.replace("\u0000", "")
-                    val entry = when {
-                        clean.startsWith("0x01:") && clean.contains(":0x02:") -> {
-                            val keyValue = clean.removePrefix("0x01:")
-                            val splitIndex = keyValue.indexOf(":0x02:")
-                            if (splitIndex < 0) null else {
-                                val key = keyValue.substring(0, splitIndex).trim()
-                                val value = keyValue.substring(splitIndex + 6).trim()
-                                key to value
-                            }
-                        }
-                        clean.contains("=") -> {
-                            val index = clean.indexOf('=')
-                            val key = clean.substring(0, index).trim()
-                            val value = clean.substring(index + 1).trim()
-                            key to value
-                        }
-                        else -> null
-                    }
-
-                    if (entry != null) {
-                        val key = normalizeKey(entry.first)
-                        if (key.isNotBlank()) {
-                            result[key] = entry.second
-                        }
-                    }
+            document.tablesUnder("").forEach { (table, entries) ->
+                val normalizedTable = normalizeKey(table)
+                if (normalizedTable.isBlank()) return@forEach
+                entries.forEach { (language, value) ->
+                    result["$normalizedTable.$language"] = value
                 }
+            }
             return result
         }
 

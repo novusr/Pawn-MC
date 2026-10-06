@@ -89,7 +89,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
-import com.rvdjv.pawnmc.`interface`.PawnIcons
+import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserMode
 import com.rvdjv.pawnmc.`interface`.theme.PawnMCTheme
@@ -112,6 +112,7 @@ private val PillShape = RoundedCornerShape(28.dp)
 private val ActionButtonHeight = 48.dp
 private const val OUTPUT_PLACEHOLDER = "Ah shit, here we go again.\n"
 private val OutputPanelHeight = 240.dp
+internal fun shouldRestoreLastSelectedFile(workspaceAvailable: Boolean): Boolean = !workspaceAvailable
 
 private enum class CompileStatus(val label: String) {
     IDLE("IDLE :|"),
@@ -133,11 +134,14 @@ fun MainScreen(
     viewModel: MainViewModel,
     onSettingsClick: () -> Unit,
     onEditorClick: () -> Unit,
-    initialUri: Uri? = null
+    initialUri: Uri? = null,
+    workspaceAvailable: Boolean = false,
 ) {
     val context = LocalContext.current
     val outputScrollState = rememberScrollState()
-    val localizer = remember(context) { AppLocalization.load(context) }
+    // Shared across screens so the localisation asset is read and parsed only once
+    // per process; the main screen also warms it up in the background.
+    val localizer = remember(context) { AppLocalization.shared(context) }
     val appLanguage = viewModel.n_app_language
 
     // state dialog
@@ -202,17 +206,24 @@ fun MainScreen(
         }
     }
 
-    // load last selected file
+    // A remembered Xed workspace owns startup selection. Do not revive the main
+    // screen's stale single-file path (often TMP/unit.pwn) over an empty workspace.
     LaunchedEffect(Unit) {
-        viewModel.loadLastSelectedFile()
+        if (shouldRestoreLastSelectedFile(workspaceAvailable)) viewModel.loadLastSelectedFile()
 
         if (!hasStoragePermission(context)) {
             showPermissionDialog = true
         }
     }
 
-    LaunchedEffect(initialUri) {
-        viewModel.handleInitialUri(initialUri)
+    // A file opened from the system ("Open with" / tapping a .pwn) is only consumed once
+    // the permission dialog is out of the way. It is deliberately not part of the startup
+    // path: resolving the intent used to scan the file system before the first frame and
+    // pushed the window past the touch-feedback timeout, so the launch felt stuck.
+    LaunchedEffect(initialUri, isStoragePermissionGranted) {
+        if (isStoragePermissionGranted) {
+            viewModel.handleInitialUri(initialUri)
+        }
     }
 
     // Xed stays open while this mounted screen handles its compile request.
@@ -501,16 +512,25 @@ fun MainScreen(
                         return@ScreenHeader
                     }
                     val path = viewModel.selectedFilePath
-                    if (path.isNullOrBlank() || !File(path).exists()) {
-                        viewModel.ensureTemporaryFileSelected()
-                        Toast.makeText(
-                            context,
-                            viewModel.temporaryFileNotice ?: "This is a temporary file because you have not selected your own Pawn file yet.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                        onEditorClick()
-                    } else {
-                        onEditorClick()
+                    when {
+                        workspaceAvailable -> onEditorClick()
+                        path.isNullOrBlank() -> {
+                            viewModel.ensureTemporaryFileSelected()
+                            Toast.makeText(
+                                context,
+                                viewModel.temporaryFileNotice ?: "This is a temporary file because you have not selected your own Pawn file yet.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            onEditorClick()
+                        }
+                        !File(path).isFile -> {
+                            Toast.makeText(
+                                context,
+                                "The selected Pawn file no longer exists. Browse and select it again.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                        else -> onEditorClick()
                     }
                 },
                 onSettingsClick = {
@@ -825,7 +845,7 @@ private fun ScreenHeader(
                         testTag = "xed_button",
                         icon = {
                             Icon(
-                                imageVector = PawnIcons.CodeEdit,
+                                imageVector = _Icons.CodeEdit,
                                 contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )

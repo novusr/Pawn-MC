@@ -86,6 +86,7 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
         Identifier(TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)),
         Directive(TextStyle.makeStyle(EditorColorScheme.ANNOTATION)),
         String(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
+        Comment(TextStyle.makeStyle(EditorColorScheme.COMMENT)),
         Operator(TextStyle.makeStyle(EditorColorScheme.OPERATOR)),
         BraceOpen(TextStyle.makeStyle(EditorColorScheme.OPERATOR)),
         BraceClose(TextStyle.makeStyle(EditorColorScheme.OPERATOR));
@@ -175,6 +176,7 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
         // --- Comments ---------------------------------------------------------------
 
         private fun skipLineComment() {
+            emit(Span(line, column, SpanKind.Comment))
             while (hasMore() && text[index] != '\n' && text[index] != '\r') {
                 index++
                 column++
@@ -182,20 +184,23 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
         }
 
         private fun skipBlockComment() {
+            emit(Span(line, column, SpanKind.Comment))
             // Consume the opening `/*`.
             index += 2
             column += 2
             while (hasMore()) {
-                when (val c = text[index]) {
+                when (text[index]) {
                     '\r' -> {
                         index += if (peekChar(1) == '\n') 2 else 1
                         line++
                         column = 0
+                        if (hasMore()) emit(Span(line, column, SpanKind.Comment))
                     }
                     '\n' -> {
                         index++
                         line++
                         column = 0
+                        if (hasMore()) emit(Span(line, column, SpanKind.Comment))
                     }
                     '*' -> if (peekChar(1) == '/') {
                         index += 2

@@ -30,15 +30,18 @@ class AppLocalizationTest {
     }
 
     @Test
-    fun `raw localization entries should parse both key value and hex tagged format`() {
+    fun `raw localization entries should flatten TOML tables into dotted language keys`() {
         val parsed = AppLocalization.parseLocalizationData(
             """
-            0x01:settings.general.id:0x02:Umum
-            0x01:settings.general.en:0x02:General
-            0x01:settings.general.es:0x02:General
-            settings.theme.id=Tema
-            settings.theme.en=Theme
-            settings.theme.es=Tema
+            [settings.general]
+            id = "Umum"
+            en = "General"
+            es = "General"
+
+            [settings.theme]
+            id = "Tema"
+            en = "Theme"
+            es = "Tema"
             """.trimIndent()
         )
 
@@ -53,12 +56,17 @@ class AppLocalizationTest {
     @Test
     fun `localization translates English words to Indonesian when ID is selected`() {
         val data = """
-            0x01:settings.general.id:0x02:Umum
-            0x01:settings.general.en:0x02:General
-            0x01:settings.language.id:0x02:Bahasa
-            0x01:settings.language.en:0x02:Language
-            0x01:settings.title.id:0x02:Pengaturan
-            0x01:settings.title.en:0x02:Settings
+            [settings.general]
+            id = "Umum"
+            en = "General"
+
+            [settings.language]
+            id = "Bahasa"
+            en = "Language"
+
+            [settings.title]
+            id = "Pengaturan"
+            en = "Settings"
         """.trimIndent()
 
         val parsed = AppLocalization.parseLocalizationData(data)
@@ -81,15 +89,20 @@ class AppLocalizationTest {
     fun `localization translates English words to Spanish when ES is selected`() {
         val localizer = AppLocalization.parseLocalizationData(
             """
-            0x01:settings.general.id:0x02:Umum
-            0x01:settings.general.en:0x02:General
-            0x01:settings.general.es:0x02:General
-            0x01:settings.language.id:0x02:Bahasa
-            0x01:settings.language.en:0x02:Language
-            0x01:settings.language.es:0x02:Idioma
-            0x01:settings.title.id:0x02:Pengaturan
-            0x01:settings.title.en:0x02:Settings
-            0x01:settings.title.es:0x02:Configuracion
+            [settings.general]
+            id = "Umum"
+            en = "General"
+            es = "General"
+
+            [settings.language]
+            id = "Bahasa"
+            en = "Language"
+            es = "Idioma"
+
+            [settings.title]
+            id = "Pengaturan"
+            en = "Settings"
+            es = "Configuracion"
             """.trimIndent()
         ).let { parsed ->
             val constructor = AppLocalization::class.java.getDeclaredConstructor(Map::class.java)
@@ -113,18 +126,23 @@ class AppLocalizationTest {
     fun `localization translates English words to Russian when RU is selected`() {
         val localizer = AppLocalization.parseLocalizationData(
             """
-            0x01:settings.general.id:0x02:Umum
-            0x01:settings.general.en:0x02:General
-            0x01:settings.general.es:0x02:General
-            0x01:settings.general.ru:0x02:Основные
-            0x01:settings.language.id:0x02:Bahasa
-            0x01:settings.language.en:0x02:Language
-            0x01:settings.language.es:0x02:Idioma
-            0x01:settings.language.ru:0x02:Язык
-            0x01:settings.title.id:0x02:Pengaturan
-            0x01:settings.title.en:0x02:Settings
-            0x01:settings.title.es:0x02:Configuracion
-            0x01:settings.title.ru:0x02:Настройки
+            [settings.general]
+            id = "Umum"
+            en = "General"
+            es = "General"
+            ru = "Основные"
+
+            [settings.language]
+            id = "Bahasa"
+            en = "Language"
+            es = "Idioma"
+            ru = "Язык"
+
+            [settings.title]
+            id = "Pengaturan"
+            en = "Settings"
+            es = "Configuracion"
+            ru = "Настройки"
             """.trimIndent()
         ).let { parsed ->
             val constructor = AppLocalization::class.java.getDeclaredConstructor(Map::class.java)
@@ -147,8 +165,9 @@ class AppLocalizationTest {
     fun `settings option descriptions resolve for both selected languages`() {
         val localizer = AppLocalization.parseLocalizationData(
             """
-            0x01:settings.option.debug.level.3.desc.id:0x02:Debug paling terperinci; optimisasi otomatis dinonaktifkan.
-            0x01:settings.option.debug.level.3.desc.en:0x02:Most detailed debugging; optimization is disabled automatically.
+            [settings.option.debug.level.3.desc]
+            id = "Debug paling terperinci; optimisasi otomatis dinonaktifkan."
+            en = "Most detailed debugging; optimization is disabled automatically."
             """.trimIndent()
         ).let { parsed ->
             val constructor = AppLocalization::class.java.getDeclaredConstructor(Map::class.java)

@@ -58,9 +58,9 @@ import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.FormatListNumbered
-import androidx.compose.material.icons.filled.WrapText
+import androidx.compose.material.icons.automirrored.filled.WrapText
 import androidx.compose.material.icons.filled.EditNote
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material3.AlertDialog
@@ -118,11 +118,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.data.compiler.Compiler
-import com.rvdjv.pawnmc.`interface`.PawnIcons
+import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.pawn.PawnRegistry
 import com.rvdjv.pawnmc.`interface`.editor.pawn.PawnLanguage
+import com.pawnmc.terminal.TerminalOverlay
+import com.pawnmc.terminal.TerminalRequest
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
@@ -146,7 +148,9 @@ fun XedEditorScreen(
     onCompileRequest: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
-    val localizer = remember(context) { AppLocalization.load(context) }
+    // Shared across screens so the localisation asset is read and parsed only once
+    // per process; the main screen also warms it up in the background.
+    val localizer = remember(context) { AppLocalization.shared(context) }
     val appLanguage = remember(context) { CompilerConfig.getInstance(context).n_app_language }
     val appColorScheme = MaterialTheme.colorScheme
     val editorScheme = remember(appColorScheme, editorBackgroundColor) {
@@ -217,7 +221,9 @@ fun XedEditorScreen(
     var isExplorerVisible by remember { mutableStateOf(false) }
     var explorerOffset by remember { mutableStateOf(IntOffset.Zero) }
     var isPawnTerminalVisible by remember { mutableStateOf(false) }
-    var isWebPreviewVisible by remember { mutableStateOf(false) }
+    // The Xed editor's sandbox button now opens the real sandbox terminal, so the flag that
+    // used to toggle the "coming soon" notice drives the overlay instead.
+    var isTerminalVisible by remember { mutableStateOf(false) }
     var pawnConsoleVersion by remember {
         mutableStateOf(CompilerConfig.CompilerVersion.V3107)
     }
@@ -236,6 +242,17 @@ fun XedEditorScreen(
     val activeDocument = workspace.activeDocument
     val hasUnsavedChanges =
         if (workspace.isWorkspaceOpen) workspace.hasDirtyDocuments else viewModel.hasUnsavedChanges
+    val displayFileName = if (workspace.isWorkspaceOpen) {
+        activeDocument?.name ?: "No file open"
+    } else {
+        viewModel.fileName
+    }
+    val displayFilePath = if (workspace.isWorkspaceOpen) {
+        activeDocument?.file?.path ?: workspace.activeWorkspace?.root?.path.orEmpty()
+    } else {
+        viewModel.filePath
+    }
+    val workspaceHasNoActiveFile = workspace.isWorkspaceOpen && activeDocument == null
 
     val folderPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -253,6 +270,28 @@ fun XedEditorScreen(
                     "That folder is not on local storage, Xed cannot browse it",
                     Toast.LENGTH_LONG
                 ).show()
+            }
+        }
+    }
+
+    val pawnFilePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val pickedUri = result.data?.data ?: return@rememberLauncherForActivityResult
+        scope.launch {
+            val file = resolveDocumentToFile(context, pickedUri)
+            when {
+                file == null -> Toast.makeText(
+                    context, "Choose a Pawn file on local primary storage", Toast.LENGTH_LONG
+                ).show()
+                file.extension.lowercase() !in setOf("pawn", "pwn", "p", "inc") -> Toast.makeText(
+                    context, "Only .pawn, .pwn, .p, and .inc files are supported", Toast.LENGTH_LONG
+                ).show()
+                else -> {
+                    workspace.registerExternalFile(file)
+                    if (workspace.activeDocument?.file == file) isExplorerVisible = true
+                    else Toast.makeText(context, "Could not open file (workspace limit reached)", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -720,14 +759,13 @@ fun XedEditorScreen(
                 title = {
                     Column {
                         Text(
-                            text = (activeDocument?.name ?: viewModel.fileName) +
-                                if (hasUnsavedChanges) " *" else "",
+                            text = displayFileName + if (hasUnsavedChanges) " *" else "",
                             style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = activeDocument?.file?.path ?: viewModel.filePath,
+                            text = displayFilePath,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -788,7 +826,7 @@ fun XedEditorScreen(
                     // bar only keeps history and the overflow menu.
                     Box {
                         IconButton(onClick = { showMenu = true }) {
-                            Icon(PawnIcons.Settings, contentDescription = "Editor options")
+                            Icon(_Icons.Settings, contentDescription = "Editor options")
                         }
                         DropdownMenu(
                             expanded = showMenu,
@@ -797,7 +835,7 @@ fun XedEditorScreen(
                             DropdownMenuItem(
                                 text = { Text("Open Workspace Folder...") },
                                 leadingIcon = {
-                                    Icon(PawnIcons.Workspace, contentDescription = null)
+                                    Icon(_Icons.Workspace, contentDescription = null)
                                 },
                                 onClick = {
                                     showMenu = false
@@ -887,7 +925,7 @@ fun XedEditorScreen(
                                 text = { Text(if (isExplorerVisible) "Hide Workspace Panel" else "Show Workspace Panel") },
                                 leadingIcon = {
                                     Icon(
-                                        imageVector = if (isExplorerVisible) Icons.Filled.ChevronRight else PawnIcons.PanelRect,
+                                        imageVector = if (isExplorerVisible) Icons.Filled.ChevronRight else _Icons.PanelRect,
                                         contentDescription = null
                                     )
                                 },
@@ -909,7 +947,7 @@ fun XedEditorScreen(
                             DropdownMenuItem(
                                 text = { Text("Jump to Line...") },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.KeyboardArrowRight, contentDescription = null)
+                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
                                 },
                                 onClick = {
                                     showMenu = false
@@ -919,7 +957,7 @@ fun XedEditorScreen(
                             DropdownMenuItem(
                                 text = { Text(if (isWordWrap) "Disable Word Wrap" else "Enable Word Wrap") },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.WrapText, contentDescription = null)
+                                    Icon(Icons.AutoMirrored.Filled.WrapText, contentDescription = null)
                                 },
                                 onClick = {
                                     showMenu = false
@@ -1099,6 +1137,7 @@ fun XedEditorScreen(
                     onCloseTab = { file -> workspace.closeDocument(file) },
                     onNewTabClick = { isExplorerVisible = !isExplorerVisible },
                     onOpenFileClick = { folderPickerLauncher.launch(buildOpenFolderIntent()) },
+                    onOpenPawnFileClick = { pawnFilePickerLauncher.launch(buildOpenFileIntent()) },
                     onCreateFileClick = {
                         newFileName = ""
                         showNewFileDialog = true
@@ -1140,9 +1179,9 @@ fun XedEditorScreen(
                         }
                     }
                     else -> {
-                        // Empty workspace: every tab was closed, so offer the two ways
-                        // back into content instead of a blank canvas.
-                        if (workspace.isWorkspaceOpen && workspace.documents.isEmpty()) {
+                        // An empty workspace must not fall through to a stale single-file
+                        // buffer such as TMP/unit.pwn; offer workspace navigation instead.
+                        if (workspaceHasNoActiveFile) {
                             EmptyWorkspaceView(
                                 onBrowseExplorer = { isExplorerVisible = !isExplorerVisible },
                                 onOpenFolder = { folderPickerLauncher.launch(buildOpenFolderIntent()) }
@@ -1164,7 +1203,7 @@ fun XedEditorScreen(
                                     setTextSize(14f)
                                     setColorScheme(editorScheme)
                                     setEditorLanguage(PawnLanguage(appLanguage))
-                                    setText(workspace.activeDocument?.content ?: viewModel.fileContent ?: "")
+                                    setText(if (workspace.isWorkspaceOpen) workspace.activeDocument?.content.orEmpty() else viewModel.fileContent.orEmpty())
                                     // Reserve room for the "-<column>" suffix now
                                     // that the document is loaded; later edits are
                                     // cheap enough to re-measure on the fly.
@@ -1321,15 +1360,17 @@ fun XedEditorScreen(
                     )
                 }
 
-                // Web preview sits above the Pawn terminal button and shares its style.
+                // sandbox button, kept in place above the Pawn terminal button. It opens the
+                // sandboxed Ubuntu terminal: proot plus a PTY backed shell rooted at the
+                // workspace, with the selected compiler exposed as `pawncc`.
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
-                    icon = PawnIcons.WavingHand,
-                    contentDescription = "Open site preview",
+                    icon = _Icons.WavingHand,
+                    contentDescription = "Open AI assistant",
                     testTag = "editor_web_preview_toggle",
-                    isActive = isWebPreviewVisible,
+                    isActive = isTerminalVisible,
                     reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP,
-                    onClick = { isWebPreviewVisible = !isWebPreviewVisible }
+                    onClick = { isTerminalVisible = !isTerminalVisible }
                 )
 
                 FloatingRoundAction(
@@ -1342,8 +1383,25 @@ fun XedEditorScreen(
                     onClick = { isPawnTerminalVisible = !isPawnTerminalVisible }
                 )
 
-                if (isWebPreviewVisible) {
-                    XedWebPreviewOverlay(onClose = { isWebPreviewVisible = false })
+                if (isTerminalVisible) {
+                    // The shell starts in the open workspace, or next to the file when the
+                    // editor is in single-file mode, and `pawncc` mirrors the version the
+                    // editor is currently set to compile with. `pawnConsoleVersion` tracks
+                    // the compiler the portal's `switch` command selected.
+                    val terminalSource = if (workspace.isWorkspaceOpen) {
+                        activeDocument?.file
+                    } else {
+                        viewModel.filePath.takeIf { it.isNotBlank() }?.let { File(it) }
+                    }
+                    TerminalOverlay(
+                        request = TerminalRequest(
+                            workingDirectory = (workspace.activeWorkspace?.root
+                                ?: terminalSource?.parentFile)?.absolutePath,
+                            compilerLibraryName =
+                                "lib${pawnConsoleVersion.libraryName}.so"
+                        ),
+                        onClose = { isTerminalVisible = false }
+                    )
                 }
 
                 // Keep the workspace toggle above the toolbar so it remains reachable
@@ -1382,9 +1440,9 @@ fun XedEditorScreen(
                 )
 
                 FloatingCompileButton(
-                    enabled = activeDocument != null || viewModel.filePath.isNotBlank(),
+                    enabled = if (workspace.isWorkspaceOpen) activeDocument != null else viewModel.filePath.isNotBlank(),
                     onClick = {
-                        val n_target = activeDocument?.file?.path ?: viewModel.filePath
+                        val n_target = if (workspace.isWorkspaceOpen) activeDocument?.file?.path.orEmpty() else viewModel.filePath
                         if (n_target.isBlank()) {
                             Toast.makeText(context, "Open a file first", Toast.LENGTH_SHORT).show()
                         } else {
@@ -1416,8 +1474,11 @@ fun XedEditorScreen(
                 )
 
                 if (isPawnTerminalVisible) {
-                    val terminalSource = activeDocument?.file
-                        ?: viewModel.filePath.takeIf { it.isNotBlank() }?.let { File(it) }
+                    val terminalSource = if (workspace.isWorkspaceOpen) {
+                        activeDocument?.file
+                    } else {
+                        viewModel.filePath.takeIf { it.isNotBlank() }?.let { File(it) }
+                    }
                     XedMCPortal(
                         context = context,
                         language = appLanguage,
@@ -1624,7 +1685,7 @@ private fun EmptyWorkspaceView(
             modifier = Modifier.padding(24.dp)
         ) {
             Icon(
-                imageVector = PawnIcons.PanelRect,
+                imageVector = _Icons.PanelRect,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(40.dp)
@@ -1644,12 +1705,12 @@ private fun EmptyWorkspaceView(
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 FilledTonalButton(onClick = onBrowseExplorer) {
-                    Icon(PawnIcons.PanelRect, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(_Icons.PanelRect, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Explorer")
                 }
                 FilledTonalButton(onClick = onOpenFolder) {
-                    Icon(PawnIcons.FolderRect, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(_Icons.FolderRect, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Open Folder")
                 }
@@ -1806,7 +1867,7 @@ private fun FloatingRectToolbar(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 ToolBarEntry(
-                    icon = PawnIcons.FolderRect,
+                    icon = _Icons.FolderRect,
                     contentDescription = "Open workspace folder",
                     testTag = "editor_floating_open_workspace",
                     onClick = onOpenWorkspaceClick
@@ -1814,7 +1875,7 @@ private fun FloatingRectToolbar(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 ToolBarEntry(
-                    icon = PawnIcons.Save,
+                    icon = _Icons.Save,
                     contentDescription = "Save file",
                     testTag = "editor_floating_save",
                     isActive = hasUnsavedChanges,
@@ -1823,7 +1884,7 @@ private fun FloatingRectToolbar(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 ToolBarEntry(
-                    icon = if (workspaceOpen) PawnIcons.SaveAll else PawnIcons.Save,
+                    icon = if (workspaceOpen) _Icons.SaveAll else _Icons.Save,
                     contentDescription = if (workspaceOpen) "Save All" else "Save As",
                     testTag = "editor_floating_save_all",
                     onClick = onSaveAllClick
@@ -2015,7 +2076,7 @@ private fun FloatingCompileButton(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = PawnIcons.WifiSignal,
+                    imageVector = _Icons.WifiSignal,
                     contentDescription = "Compile active file",
                     modifier = Modifier.size(30.dp)
                 )
@@ -2046,6 +2107,7 @@ private fun XedTabStrip(
     onCloseTab: (java.io.File) -> Unit,
     onNewTabClick: () -> Unit,
     onOpenFileClick: () -> Unit,
+    onOpenPawnFileClick: () -> Unit,
     onCreateFileClick: () -> Unit
 ) {
     var showAddMenu by remember { mutableStateOf(false) }
@@ -2092,9 +2154,9 @@ private fun XedTabStrip(
                     ) {
                         Icon(
                             imageVector = if (document.file.extension.equals("inc", ignoreCase = true)) {
-                                PawnIcons.IncludeRect
+                                _Icons.IncludeRect
                             } else {
-                                PawnIcons.FileRect
+                                _Icons.FileRect
                             },
                             contentDescription = null,
                             tint = if (document.file.extension.equals("inc", ignoreCase = true)) {
@@ -2143,7 +2205,7 @@ private fun XedTabStrip(
                     .testTag("editor_tab_explorer_toggle")
             ) {
                 Icon(
-                    imageVector = PawnIcons.PanelRect,
+                    imageVector = _Icons.PanelRect,
                     contentDescription = "Toggle workspace panel",
                     modifier = Modifier.size(18.dp)
                 )
@@ -2170,6 +2232,13 @@ private fun XedTabStrip(
                         onClick = {
                             showAddMenu = false
                             onOpenFileClick()
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Open Pawn file") },
+                        onClick = {
+                            showAddMenu = false
+                            onOpenPawnFileClick()
                         }
                     )
                     DropdownMenuItem(
@@ -2474,7 +2543,7 @@ private fun applyVividSyntaxPalette(scheme: EditorColorScheme, darkCanvas: Boole
  *
  * Hues are chosen so adjacent kinds never share a family: keywords are amber,
  * types are cyan, literals are orange, functions are blue, operators are
- * magenta, annotations are violet and comments are a desaturated slate.
+ * magenta, annotations are violet and comments are neutral grey.
  */
 private data class SyntaxPalette(
     val keyword: Int,
@@ -2494,7 +2563,7 @@ private val DarkPalette = SyntaxPalette(
     function = 0xFF8AB4F8.toInt(),
     operator = 0xFFE6A8FF.toInt(),
     annotation = 0xFF7EE081.toInt(),
-    comment = 0xFF9AA7BD.toInt(),
+    comment = 0xFF9CA3AF.toInt(),
     lineNumber = 0xFF7E8CA3.toInt()
 )
 
@@ -2511,7 +2580,7 @@ private val LightPalette = SyntaxPalette(
     function = 0xFF1D4ED8.toInt(),
     operator = 0xFF6B21C8.toInt(),
     annotation = 0xFF16753B.toInt(),
-    comment = 0xFF44546B.toInt(),
+    comment = 0xFF616161.toInt(),
     lineNumber = 0xFF64748B.toInt()
 )
 

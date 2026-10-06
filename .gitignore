@@ -9,7 +9,9 @@
 /.idea/assetWizardSettings.xml
 .DS_Store
 /build
+.vscode
 /captures
+tools
 .externalNativeBuild
 .cxx
 local.properties
@@ -20,3 +22,4 @@ RELEASE_NOTES_DRAFT.md
 TODO.txt
 COMMIT.txt
 .env
+Xed-Editor

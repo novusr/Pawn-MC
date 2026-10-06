@@ -1,0 +1,1072 @@
+# PawnMC localization data - 2026 format
+#
+# Naming: _data_2026_ect.toml  (extract)
+# Every table name is an existing setting name, so a lookup uses the same
+# dotted key the UI already passes to the localizer, for example
+#   localizer.get("settings.general", language)
+# reads the [settings.general] table below.
+#
+# Leaves are the interface languages: id, en, ru, es.
+
+[settings.title]
+id = "Pengaturan"
+en = "Settings"
+ru = "Настройки"
+es = "Configuracion"
+
+[settings.general]
+id = "Umum"
+en = "General"
+ru = "Основные"
+es = "General"
+
+[settings.general.desc]
+id = "Preferensi dasar yang dipakai di seluruh aplikasi: bahasa antarmuka, tema tampilan, dan compiler yang dipakai untuk membangun skrip."
+en = "Core preferences applied across the whole app: interface language, colour theme, and which compiler is used to build your scripts."
+ru = "Основные параметры, применяемые ко всему приложению: язык интерфейса, цветовая тема и компилятор, используемый для сборки скриптов."
+es = "Preferencias basicas que se aplican a toda la app: idioma de la interfaz, tema de color y que compilador se usa para construir tus scripts."
+
+[settings.compiler.version]
+id = "Versi Compiler"
+en = "Compiler Version"
+ru = "Версия компилятора"
+es = "Version del compilador"
+
+[settings.compiler.version.desc]
+id = "Pilih rilis pawncc yang dipakai saat kompilasi. Berpindah versi memuat ulang pustaka compiler, jadi aplikasi perlu dimulai ulang setelah berubah."
+en = "Chooses which pawncc release performs the compilation. Switching versions reloads the compiler library, so the app has to restart once the change is applied."
+ru = "Определяет, какая версия pawncc выполняет компиляцию. Смена версии перезагружает библиотеку компилятора, поэтому после применения изменения приложение нужно перезапустить."
+es = "Elige que version de pawncc realiza la compilacion. Cambiar de version recarga la libreria del compilador, asi que la app tiene que reiniciarse una vez aplicado el cambio."
+
+[settings.compiler.version.3107.label]
+id = "Pawn 3.10.7"
+en = "Pawn 3.10.7"
+ru = "Pawn 3.10.7"
+es = "Pawn 3.10.7"
+
+[settings.compiler.version.3107.desc]
+id = "Versi stabil"
+en = "Stable release"
+ru = "Стабильный выпуск"
+es = "Version estable"
+
+[settings.compiler.version.31011.label]
+id = "Pawn 3.10.11"
+en = "Pawn 3.10.11"
+ru = "Pawn 3.10.11"
+es = "Pawn 3.10.11"
+
+[settings.compiler.version.31011.desc]
+id = "Rilis yang lebih baru"
+en = "Newer release"
+ru = "Более новый выпуск"
+es = "Version mas reciente"
+
+[settings.compiler.forced.desc]
+id = "Saat dipaksa, versi yang dipilih di atas selalu dipakai. Saat otomatis, compiler di dekat berkas yang sedang diedit lebih diprioritaskan bila versinya cocok."
+en = "When forced, the version picked above is always used. When automatic, a compiler sitting next to the file you are editing is preferred whenever its version matches."
+ru = "При принудительном режиме всегда используется версия, выбранная выше. В автоматическом режиме предпочтение отдаётся компилятору рядом с редактируемым файлом, если его версия подходит."
+es = "Cuando es forzado, siempre se usa la version elegida arriba. Cuando es automatico, se prefiere el compilador que esta junto al archivo que estas editando siempre que su version coincida."
+
+[settings.language]
+id = "Bahasa"
+en = "Language"
+ru = "Язык"
+es = "Idioma"
+
+[settings.language.desc]
+id = "Bahasa untuk semua teks antarmuka, termasuk pesan compiler dan uraian pengaturan."
+en = "Language used for every piece of interface text, including compiler messages and settings descriptions."
+ru = "Язык для всего текста интерфейса, включая сообщения компилятора и описания настроек."
+es = "Idioma que se usa para todo el texto de la interfaz, incluidos los mensajes del compilador y las descripciones de la configuracion."
+
+[settings.language.option.id.label]
+id = "Bahasa Indonesia"
+en = "Indonesian"
+ru = "Индонезийский"
+es = "Indonesio"
+
+[settings.language.option.id.desc]
+id = "Gunakan Bahasa Indonesia untuk antarmuka aplikasi."
+en = "Use Indonesian for the app interface."
+ru = "Использовать индонезийский для интерфейса приложения."
+es = "Usar indonesio para la interfaz de la app."
+
+[settings.language.option.en.label]
+id = "Bahasa Inggris"
+en = "English (EN/US)"
+ru = "Английский (EN/US)"
+es = "Ingles (EN/US)"
+
+[settings.language.option.en.desc]
+id = "Gunakan Bahasa Inggris untuk antarmuka aplikasi."
+en = "Use English for the app interface."
+ru = "Использовать английский для интерфейса приложения."
+es = "Usar ingles para la interfaz de la app."
+
+[settings.language.option.es.label]
+id = "Spanyol Argentina"
+en = "Spanish (Argentina)"
+ru = "Испанский (Аргентина)"
+es = "Espanol (AR)"
+
+[settings.language.option.es.desc]
+id = "Gunakan bahasa Spanyol Argentina untuk antarmuka aplikasi."
+en = "Use Argentine Spanish for the app interface."
+ru = "Использовать аргентинский испанский для интерфейса приложения."
+es = "Usa espanol rioplatense para la interfaz de la app."
+
+[settings.language.option.ru.label]
+id = "Bahasa Rusia"
+en = "Russian"
+ru = "Русский"
+es = "Ruso"
+
+[settings.language.option.ru.desc]
+id = "Gunakan bahasa Rusia untuk antarmuka aplikasi."
+en = "Use Russian for the app interface."
+ru = "Использовать русский для интерфейса приложения."
+es = "Usar ruso para la interfaz de la app."
+
+[settings.language.selector]
+id = "Pilih Bahasa"
+en = "Select Language"
+ru = "Выбор языка"
+es = "Seleccionar idioma"
+
+[main.output.download.action]
+id = "Unduh log output"
+en = "Download output log"
+ru = "Скачать журнал вывода"
+es = "Descargar el log de salida"
+
+[main.output.download.success]
+id = "Log berhasil diunduh"
+en = "Log downloaded successfully"
+ru = "Журнал успешно скачан"
+es = "Log descargado correctamente"
+
+[main.output.download.failed]
+id = "Gagal mengunduh log"
+en = "Failed to download log"
+ru = "Не удалось скачать журнал"
+es = "No se pudo descargar el log"
+
+[settings.theme]
+id = "Tema"
+en = "Theme"
+ru = "Тема"
+es = "Tema"
+
+[settings.theme.desc]
+id = "Mengatur apakah aplikasi mengikuti tema sistem, selalu terang, atau selalu gelap. Pilihan ini juga menentukan latar editor Xed."
+en = "Controls whether the app follows the system theme, or is pinned to light or dark. This choice also drives the Xed editor background."
+ru = "Определяет, следует ли приложение системной теме или всегда использует светлую либо тёмную. Этот выбор также задаёт фон редактора Xed."
+es = "Controla si la app sigue el tema del sistema o queda fija en claro u oscuro. Esta eleccion tambien define el fondo del editor Xed."
+
+[settings.theme.option.system.label]
+id = "Ikuti Sistem"
+en = "System Default"
+ru = "Как в системе"
+es = "Predeterminado del sistema"
+
+[settings.theme.option.system.desc]
+id = "Ikuti tema terang atau gelap perangkat."
+en = "Follow the device's light or dark theme."
+ru = "Следовать светлой или тёмной теме устройства."
+es = "Sigue el tema claro u oscuro del dispositivo."
+
+[settings.theme.option.light.label]
+id = "Terang"
+en = "Light"
+ru = "Светлая"
+es = "Claro"
+
+[settings.theme.option.light.desc]
+id = "Selalu gunakan tema terang."
+en = "Always use the light theme."
+ru = "Всегда использовать светлую тему."
+es = "Usar siempre el tema claro."
+
+[settings.theme.option.dark.label]
+id = "Gelap"
+en = "Dark"
+ru = "Тёмная"
+es = "Oscuro"
+
+[settings.theme.option.dark.desc]
+id = "Selalu gunakan tema gelap."
+en = "Always use the dark theme."
+ru = "Всегда использовать тёмную тему."
+es = "Usar siempre el tema oscuro."
+
+[settings.theme.selector]
+id = "Pilih Tema"
+en = "Select Theme"
+ru = "Выбор темы"
+es = "Seleccionar tema"
+
+[settings.compiler.options]
+id = "Opsi Compiler"
+en = "Compiler Options"
+ru = "Параметры компилятора"
+es = "Opciones del compilador"
+
+[settings.compiler.options.desc]
+id = "Flag yang diteruskan langsung ke pawncc saat membangun skrip. Perubahan di sini berlaku pada kompilasi berikutnya."
+en = "Flags passed straight through to pawncc when a script is built. Changes here take effect on the next compilation."
+ru = "Флаги, которые напрямую передаются pawncc при сборке скрипта. Изменения здесь вступают в силу при следующей компиляции."
+es = "Flags que se pasan directamente a pawncc al construir un script. Los cambios aqui se aplican en la proxima compilacion."
+
+[settings.option.semicolons]
+id = "Titik Koma Wajib"
+en = "Mandatory Semicolons"
+ru = "Обязательные точки с запятой"
+es = "Punto y coma obligatorio"
+
+[settings.option.semicolons.desc]
+id = "Wajibkan titik koma di akhir setiap pernyataan"
+en = "Require semicolons at the end of statements"
+ru = "Требовать точку с запятой в конце операторов"
+es = "Exigir punto y coma al final de las sentencias"
+
+[settings.option.parentheses]
+id = "Tanda Kurung Wajib"
+en = "Mandatory Parentheses"
+ru = "Обязательные скобки"
+es = "Parentesis obligatorios"
+
+[settings.option.parentheses.desc]
+id = "Wajibkan tanda kurung pada pernyataan kontrol"
+en = "Require parentheses in control statements"
+ru = "Требовать скобки в управляющих операторах"
+es = "Exigir parentesis en las sentencias de control"
+
+[settings.option.debug]
+id = "Tingkat Debug"
+en = "Debug Level"
+ru = "Уровень отладки"
+es = "Nivel de depuracion"
+
+[settings.option.debug.desc]
+id = "Menentukan berapa banyak informasi debug dan pemeriksaan runtime yang dibangkitkan compiler. Level lebih tinggi menambah pemeriksaan tetapi memperlambat dan memperbesar hasil."
+en = "Controls how much debug information and runtime checking the compiler generates. Higher levels add more checks at the cost of build time and a larger output file."
+ru = "Определяет, сколько отладочной информации и проверок во время выполнения генерирует компилятор. Более высокие уровни добавляют проверки ценой времени сборки и размера выходного файла."
+es = "Define cuanta informacion de depuracion y comprobacion en tiempo de ejecucion genera el compilador. Los niveles mas altos agregan comprobaciones a costa de tiempo de compilacion y un archivo de salida mas grande."
+
+[settings.option.debug.level.0.label]
+id = "Nonaktif (-d0)"
+en = "Disabled (-d0)"
+ru = "Отключено (-d0)"
+es = "Desactivado (-d0)"
+
+[settings.option.debug.level.0.desc]
+id = "Tidak menyertakan simbol debug atau validasi runtime."
+en = "No debug symbols or runtime validation."
+ru = "Без символов отладки и проверок во время выполнения."
+es = "Sin simbolos de depuracion ni validacion en tiempo de ejecucion."
+
+[settings.option.debug.level.1.label]
+id = "Validasi Runtime (-d1)"
+en = "Runtime Validation (-d1)"
+ru = "Проверки во время выполнения (-d1)"
+es = "Validacion en tiempo de ejecucion (-d1)"
+
+[settings.option.debug.level.1.desc]
+id = "Memeriksa batas array tanpa menyertakan simbol debug."
+en = "Checks array bounds without including debug symbols."
+ru = "Проверяет границы массивов без включения символов отладки."
+es = "Comprueba los limites de los arrays sin incluir simbolos de depuracion."
+
+[settings.option.debug.level.2.label]
+id = "Debug Lengkap (-d2)"
+en = "Full Debugging (-d2)"
+ru = "Полная отладка (-d2)"
+es = "Depuracion completa (-d2)"
+
+[settings.option.debug.level.2.desc]
+id = "Menyertakan informasi debug lengkap dan pemeriksaan runtime."
+en = "Includes full debug information and runtime checks."
+ru = "Включает полную отладочную информацию и проверки во время выполнения."
+es = "Incluye informacion de depuracion completa y comprobaciones en tiempo de ejecucion."
+
+[settings.option.debug.level.3.label]
+id = "Debug Maksimal (-d3)"
+en = "Maximum Debug (-d3)"
+ru = "Максимальная отладка (-d3)"
+es = "Depuracion maxima (-d3)"
+
+[settings.option.debug.level.3.desc]
+id = "Debug paling terperinci; optimisasi otomatis dinonaktifkan."
+en = "Most detailed debugging; optimization is disabled automatically."
+ru = "Наиболее подробная отладка; оптимизация отключается автоматически."
+es = "Depuracion mas detallada; la optimizacion se desactiva automaticamente."
+
+[settings.option.optimization]
+id = "Tingkat Optimasi"
+en = "Optimization Level"
+ru = "Уровень оптимизации"
+es = "Nivel de optimizacion"
+
+[settings.option.optimization.desc]
+id = "Menentukan seberapa agresif compiler menyederhanakan bytecode. Optimasi lebih tinggi menghasilkan AMX yang lebih kecil dan lebih cepat, tetapi menyulitkan penelusuran debug."
+en = "Determines how aggressively the compiler simplifies the bytecode. Higher levels yield a smaller and faster AMX, but make debugging traces harder to follow."
+ru = "Определяет, насколько агрессивно компилятор упрощает байткод. Более высокие уровни дают меньший и быстрый AMX, но затрудняют разбор отладочных трасс."
+es = "Define que tan agresivamente el compilador simplifica el bytecode. Los niveles mas altos producen un AMX mas chico y mas rapido, pero hacen mas dificil seguir una traza de depuracion."
+
+[settings.option.optimization.level.0.label]
+id = "Nonaktif (-O0)"
+en = "Disabled (-O0)"
+ru = "Отключено (-O0)"
+es = "Desactivado (-O0)"
+
+[settings.option.optimization.level.0.desc]
+id = "Tidak melakukan optimisasi; paling aman tetapi ukuran hasil terbesar."
+en = "No optimization; safest, but produces the largest output."
+ru = "Без оптимизации; самый безопасный вариант, но даёт самый большой выход."
+es = "Sin optimizacion; la opcion mas segura, pero genera la salida mas grande."
+
+[settings.option.optimization.level.1.label]
+id = "Seimbang (-O1)"
+en = "Balanced (-O1)"
+ru = "Сбалансированный (-O1)"
+es = "Equilibrado (-O1)"
+
+[settings.option.optimization.level.1.desc]
+id = "Optimisasi standar yang menjaga stabilitas."
+en = "Default optimization pass for stable builds."
+ru = "Стандартный проход оптимизации для стабильных сборок."
+es = "Pasada de optimizacion estandar para compilaciones estables."
+
+[settings.option.optimization.level.2.label]
+id = "Agresif (-O2)"
+en = "Aggressive (-O2)"
+ru = "Агрессивный (-O2)"
+es = "Agresivo (-O2)"
+
+[settings.option.optimization.level.2.desc]
+id = "Optimisasi maksimum untuk kecepatan dan ukuran."
+en = "Maximum optimization for speed and size."
+ru = "Максимальная оптимизация скорости и размера."
+es = "Optimizacion maxima para velocidad y tamano."
+
+[settings.option.optimization.v3107.notice]
+id = "Optimisasi agresif (-O2) hanya tersedia dengan Pawn 3.10.11."
+en = "Aggressive optimization (-O2) is available with Pawn 3.10.11."
+ru = "Агрессивная оптимизация (-O2) доступна только с Pawn 3.10.11."
+es = "La optimizacion agresiva (-O2) esta disponible con Pawn 3.10.11."
+
+[settings.option.ignorecase]
+id = "Abaikan Huruf Besar/Kecil"
+en = "Filesystem"
+ru = "Файловая система"
+es = "Sistema de archivos"
+
+[settings.option.ignorecase.desc]
+id = "Membuat salinan cadangan folder (\"nama-folder.backup\"), lalu mengubah semua nama file selain file yang dipilih dan seluruh referensi #include menjadi huruf kecil. Dijalankan sekali per folder, karena melewati Android yang peka huruf besar/kecil."
+en = "Backs the folder up as \"folder.backup\", then lowercases every file name except the one you selected and rewrites every #include reference to lowercase. It runs once per folder because Android storage is case sensitive."
+ru = "Создаёт резервную копию папки (\"folder.backup\"), затем переводит имена всех файлов в нижний регистр, кроме выбранного, и переписывает в нижний регистр все ссылки #include. Выполняется один раз для папки, потому что хранилище Android различает регистр символов."
+es = "Crea una copia de seguridad de la carpeta (\"carpeta.backup\"), luego pasa a minusculas todos los nombres de archivo salvo el que seleccionaste y reescribe en minusculas cada referencia #include. Se ejecuta una vez por carpeta porque el almacenamiento de Android distingue mayusculas de minusculas."
+
+[settings.option.explain]
+id = "Jelaskan Output"
+en = "Explain Output"
+ru = "Объяснять вывод"
+es = "Explicar la salida"
+
+[settings.option.explain.desc]
+id = "Tambahkan penjelasan yang mudah dipahami di samping peringatan, pesan error, dan pesan fatal."
+en = "Add human-readable explanations next to warnings, errors, and fatal messages extracted from the compiler log."
+ru = "Добавляет понятные пояснения рядом с предупреждениями, ошибками и фатальными сообщениями, извлечёнными из журнала компилятора."
+es = "Agrega explicaciones legibles junto a las advertencias, errores y mensajes fatales extraidos del log del compilador."
+
+[settings.option.customflags]
+id = "Flag Kustom"
+en = "Custom Flags"
+ru = "Свои флаги"
+es = "Flags personalizados"
+
+[settings.option.customflags.desc]
+id = "Parameter compiler tambahan, dipisahkan spasi"
+en = "Extra compiler parameters, space separated"
+ru = "Дополнительные параметры компилятора, разделённые пробелами"
+es = "Parametros adicionales del compilador, separados por espacios"
+
+[settings.include.paths]
+id = "Path Include"
+en = "Include Paths"
+ru = "Пути include"
+es = "Rutas de include"
+
+[settings.include.paths.desc]
+id = "Daftar folder yang ditelusuri compiler saat menyelesaikan #include. Path yang tidak ada lagi akan dibuang otomatis saat aplikasi dibuka."
+en = "Folders the compiler searches when resolving #include. Paths that no longer exist are pruned automatically on app start."
+ru = "Папки, которые компилятор просматривает при разрешении #include. Несуществующие пути автоматически удаляются при запуске приложения."
+es = "Carpetas que el compilador revisa al resolver los #include. Las rutas que ya no existen se eliminan solas al iniciar la app."
+
+[settings.updates]
+id = "Pembaruan"
+en = "Updates"
+ru = "Обновления"
+es = "Actualizaciones"
+
+[settings.updates.desc]
+id = "Memeriksa rilis baru di GitHub dan mengunduh APK bila tersedia. Pembaruan dipasang lewat dialog sistem Android."
+en = "Checks GitHub for a newer release and downloads the APK when one is attached. Updates are installed through the standard Android system dialog."
+ru = "Проверяет GitHub на наличие более нового выпуска и скачивает APK, если он прикреплён. Обновления устанавливаются через стандартный системный диалог Android."
+es = "Busca una version mas nueva en GitHub y descarga el APK cuando hay uno adjunto. Las actualizaciones se instalan mediante el dialogo estandar de Android."
+
+[settings.about]
+id = "Tentang"
+en = "About"
+ru = "О приложении"
+es = "Acerca de"
+
+[settings.about.desc]
+id = "Informasi versi aplikasi dan tautan ke repositori sumber."
+en = "Application version information and a link to the source repository."
+ru = "Сведения о версии приложения и ссылка на репозиторий исходного кода."
+es = "Informacion de la version de la app y un enlace al repositorio del codigo fuente."
+
+[settings.about.version]
+id = "Versi Aplikasi"
+en = "App Version"
+ru = "Версия приложения"
+es = "Version de la app"
+
+[settings.about.version.desc]
+id = "Versi rilis PawnMC yang sedang terpasang di perangkat ini."
+en = "The PawnMC release currently installed on this device."
+ru = "Выпуск PawnMC, установленный на этом устройстве."
+es = "La version de PawnMC instalada actualmente en este dispositivo."
+
+[settings.about.github]
+id = "Lihat di GitHub"
+en = "View on GitHub"
+ru = "Открыть на GitHub"
+es = "Ver en GitHub"
+
+[settings.about.github.desc]
+id = "Buka repositori sumber resmi untuk melihat riwayat rilis, melaporkan masalah, atau menyalin dan membangun sendiri."
+en = "Opens the official source repository for release history, issue reports, and self-hosting instructions."
+ru = "Открывает официальный репозиторий исходного кода с историей выпусков, отчётами об ошибках и инструкциями по самостоятельной сборке."
+es = "Abre el repositorio oficial del codigo fuente para ver el historial de versiones, reportar problemas o compilarlo por tu cuenta."
+
+[settings.about.restart]
+id = "Mulai Ulang Aplikasi"
+en = "Restart Application"
+ru = "Перезапустить приложение"
+es = "Reiniciar la aplicacion"
+
+[settings.about.restart.desc]
+id = "Menutup lalu membuka kembali PawnMC agar seluruh pengaturan diterapkan dari awal. Proses kompilasi yang sedang berjalan akan dibatalkan."
+en = "Closes and reopens PawnMC so every setting is applied from scratch. A compilation that is currently running is cancelled."
+ru = "Закрывает и снова открывает PawnMC, чтобы все настройки применились с самого начала. Идущая компиляция отменяется."
+es = "Cierra y vuelve a abrir PawnMC para que todos los ajustes se apliquen desde cero. Se cancela la compilacion que este en ejecucion."
+
+[settings.restart.confirm.title]
+id = "Mulai Ulang Aplikasi"
+en = "Restart Application"
+ru = "Перезапустить приложение"
+es = "Reiniciar la aplicacion"
+
+[settings.restart.confirm.text]
+id = "PawnMC akan segera ditutup lalu dibuka kembali. Simpan dulu berkas yang sedang dibuka di Xed Editor, karena proses kompilasi yang sedang berjalan akan dibatalkan. Apakah Anda ingin memulai ulang sekarang?"
+en = "PawnMC will close and reopen immediately. Save any open file in the Xed Editor first, because a compilation that is currently running is cancelled. Would you like to restart now?"
+ru = "PawnMC закроется и сразу откроется снова. Сначала сохраните открытые файлы в Xed Editor, поскольку идущая компиляция будет отменена. Перезапустить сейчас?"
+es = "PawnMC se va a cerrar y abrir de inmediato. Guarda primero cualquier archivo abierto en el Xed Editor, porque se cancela la compilacion que este en ejecucion. Queres reiniciar ahora?"
+
+[settings.restart.confirm.button]
+id = "Mulai Ulang Sekarang"
+en = "Restart Now"
+ru = "Перезапустить сейчас"
+es = "Reiniciar ahora"
+
+[settings.editor]
+id = "Xed Editor"
+en = "Xed Editor"
+ru = "Xed Editor"
+es = "Xed Editor"
+
+[settings.editor.desc]
+id = "Preferensi tampilan untuk editor kode bawaan. Perubahan langsung diterapkan ke editor yang sedang terbuka."
+en = "Appearance preferences for the built-in code editor. Changes apply to the open editor immediately."
+ru = "Параметры внешнего вида встроенного редактора кода. Изменения сразу применяются к открытому редактору."
+es = "Preferencias de apariencia del editor de codigo integrado. Los cambios se aplican de inmediato al editor abierto."
+
+[settings.editor.background]
+id = "Latar Editor"
+en = "Editor Background"
+ru = "Фон редактора"
+es = "Fondo del editor"
+
+[settings.editor.background.desc]
+id = "Pilih warna latar editor. Bawaan mengikuti tema aplikasi, sedangkan warna khusus menggantikannya sepenuhnya."
+en = "Pick the editor canvas colour. The default follows the app theme; a custom pick replaces it completely."
+ru = "Выберите цвет полотна редактора. По умолчанию он следует теме приложения; собственный цвет полностью его заменяет."
+es = "Elegi el color del lienzo del editor. El predeterminado sigue el tema de la app; un color personalizado lo reemplaza por completo."
+
+[settings.editor.background.default]
+id = "Bawaan"
+en = "Default"
+ru = "По умолчанию"
+es = "Predeterminado"
+
+[settings.editor.background.reset]
+id = "Kembalikan ke bawaan"
+en = "Reset to default"
+ru = "Сбросить к значению по умолчанию"
+es = "Restablecer al predeterminado"
+
+[settings.editor.background.presets]
+id = "Varian latar yang tersedia"
+en = "Available background variants"
+ru = "Доступные варианты фона"
+es = "Variantes de fondo disponibles"
+
+[settings.editor.background.hex]
+id = "Kode warna heksadesimal"
+en = "Hex colour code"
+ru = "Hex-код цвета"
+es = "Codigo de color hexadecimal"
+
+[settings.editor.background.invalid]
+id = "Kode warna tidak valid, gunakan format #RRGGBB"
+en = "Invalid colour code, expected the #RRGGBB format"
+ru = "Некорректный код цвета, ожидается формат #RRGGBB"
+es = "Codigo de color invalido, se esperaba el formato #RRGGBB"
+
+[settings.include.pruned]
+id = "Path include yang tidak ada lagi telah dihapus"
+en = "Include paths that no longer exist were removed"
+ru = "Несуществующие пути include были удалены"
+es = "Se eliminaron las rutas de include que ya no existen"
+
+[settings.include.rejected]
+id = "Path sudah terdaftar atau folder tidak ditemukan"
+en = "Path already added or folder not found"
+ru = "Путь уже добавлен или папка не найдена"
+es = "La ruta ya estaba agregada o no se encontro la carpeta"
+
+[settings.include.add]
+id = "Tambah Path Include"
+en = "Add Include Path"
+ru = "Добавить путь include"
+es = "Agregar ruta de include"
+
+[settings.include.empty]
+id = "Belum ada path include yang dikonfigurasi"
+en = "No include paths configured"
+ru = "Пути include не настроены"
+es = "No hay rutas de include configuradas"
+
+[settings.updates.check]
+id = "Periksa Pembaruan"
+en = "Check for updates"
+ru = "Проверить обновления"
+es = "Buscar actualizaciones"
+
+[settings.updates.ready]
+id = "Perbarui PawnMC"
+en = "Update PawnMC"
+ru = "Обновить PawnMC"
+es = "Actualizar PawnMC"
+
+[settings.updates.latest]
+id = "Anda menggunakan versi terbaru"
+en = "You're on the latest version"
+ru = "У вас установлена последняя версия"
+es = "Estas usando la version mas reciente"
+
+[main.busy.notice]
+id = "Pengaturan, Xed Editor, dan Self-Test sementara tidak tersedia sampai proses kompilasi selesai."
+en = "Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete."
+ru = "Настройки, Xed Editor и Self-Test временно недоступны до завершения компиляции."
+es = "Configuracion, Xed Editor y Self-Test no estan disponibles hasta que termine la compilacion."
+
+[main.busy.completed]
+id = "Kompilasi selesai. Pengaturan, Xed Editor, dan Self-Test sudah tersedia kembali."
+en = "Compilation finished. Settings, Xed Editor, and Self-Test are available again."
+ru = "Компиляция завершена. Настройки, Xed Editor и Self-Test снова доступны."
+es = "Compilacion terminada. Configuracion, Xed Editor y Self-Test vuelven a estar disponibles."
+
+[main.busy.dismiss]
+id = "Tutup pemberitahuan kompilasi"
+en = "Dismiss compilation notice"
+ru = "Закрыть уведомление о компиляции"
+es = "Cerrar el aviso de compilacion"
+
+[main.busy.toast]
+id = "Pengaturan, editor, dan self-test tidak tersedia saat proses kompilasi berjalan"
+en = "Settings, editor, and self-test are unavailable while compiling"
+ru = "Настройки, редактор и self-test недоступны во время компиляции"
+es = "Configuracion, editor y self-test no estan disponibles mientras se compila"
+
+[settings.include.paths.notice.title]
+id = "Catatan"
+en = "Note"
+ru = "Примечание"
+es = "Nota"
+
+[settings.include.paths.notice.desc]
+id = "Saat file dipilih, PawnMC memilih satu folder include dengan urutan 'pawno/include', 'qawno/include', lalu 'includes'. Jika semuanya tidak tersedia, 'include/' tetap ditambahkan sebagai fallback. Folder 'gamemodes/' tidak ditambahkan otomatis. Ekstensi .pawn, .pwn, .p, dan .inc dihapus otomatis dari path include."
+en = "When a file is selected, PawnMC chooses one include folder in this order: 'pawno/include', 'qawno/include', then 'includes'. If none exists, 'include/' is still added as a fallback. 'gamemodes/' is not added automatically. The .pawn, .pwn, .p, and .inc extensions are removed automatically from include paths."
+ru = "При выборе файла PawnMC выбирает одну папку include в таком порядке: 'pawno/include', 'qawno/include', затем 'includes'. Если ни одной нет, всё равно добавляется 'include/' как запасной вариант. 'gamemodes/' автоматически не добавляется. Расширения .pawn, .pwn, .p и .inc автоматически удаляются из путей include."
+es = "Cuando se elige un archivo, PawnMC selecciona una carpeta de include en este orden: 'pawno/include', 'qawno/include' y luego 'includes'. Si no existe ninguna, igual se agrega 'include/' como alternativa. 'gamemodes/' no se agrega automaticamente. Las extensiones .pawn, .pwn, .p y .inc se eliminan automaticamente de las rutas de include."
+
+[settings.include.extension.stripped]
+id = "Ekstensi script (.pawn, .pwn, .p, .inc) dihapus otomatis dan path disimpan sebagai:"
+en = "The script extension (.pawn, .pwn, .p, .inc) was removed automatically and the path was saved as:"
+ru = "Расширение скрипта (.pawn, .pwn, .p, .inc) было автоматически удалено, а путь сохранён как:"
+es = "La extension del script (.pawn, .pwn, .p, .inc) se elimino automaticamente y la ruta se guardo como:"
+
+[settings.include.extension.list]
+id = ".pawn, .pwn, .p, .inc"
+en = ".pawn, .pwn, .p, .inc"
+ru = ".pawn, .pwn, .p, .inc"
+es = ".pawn, .pwn, .p, .inc"
+
+[app.name]
+id = "PawnMC"
+en = "PawnMC"
+ru = "PawnMC"
+es = "PawnMC"
+
+[app.tagline]
+id = "Menyusun ide saat bepergian."
+en = "Compiling ideas on the go."
+ru = "Компилируем идеи на ходу."
+es = "Compilando ideas donde estes."
+
+[main.header.expand]
+id = "Tampilkan menu"
+en = "Show menu"
+ru = "Показать меню"
+es = "Mostrar el menu"
+
+[main.header.collapse]
+id = "Sembunyikan menu"
+en = "Hide menu"
+ru = "Скрыть меню"
+es = "Ocultar el menu"
+
+[main.perm.grand.title]
+id = "Izin Grand Permissions Dibutuhkan!"
+en = "Grand Permissions Required!"
+ru = "Требуются Grand Permissions!"
+es = "Se necesitan permisos totales!"
+
+[main.perm.grand.desc]
+id = "Izin Semua Berkas (Grand Permissions) diperlukan PawnMC agar bisa mengompilasi berkas pawn dan menulis hasil amx ke lokasi mana pun."
+en = "PawnMC needs Grand Permissions (All files access) so it can compile pawn files and write the amx output anywhere."
+ru = "PawnMC нужны Grand Permissions (доступ ко всем файлам), чтобы компилировать файлы pawn и записывать вывод amx в любое место."
+es = "PawnMC necesita Permisos Totales (acceso a todos los archivos) para poder compilar archivos pawn y escribir la salida amx donde le indiques."
+
+[main.perm.grand.grant]
+id = "Beri Izin"
+en = "Grant"
+ru = "Предоставить"
+es = "Otorgar"
+
+[main.perm.grand.later]
+id = "Nanti"
+en = "Not now"
+ru = "Не сейчас"
+es = "Ahora no"
+
+[settings.close]
+id = "Tutup"
+en = "Close"
+ru = "Закрыть"
+es = "Cerrar"
+
+[settings.cancel]
+id = "Batal"
+en = "Cancel"
+ru = "Отмена"
+es = "Cancelar"
+
+[settings.save]
+id = "Simpan"
+en = "Save"
+ru = "Сохранить"
+es = "Guardar"
+
+[settings.back]
+id = "Kembali"
+en = "Back"
+ru = "Назад"
+es = "Volver"
+
+[xed.quickkeys.hide]
+id = "Sembunyikan Tombol Cepat"
+en = "Hide Quick Keys"
+ru = "Скрыть быстрые клавиши"
+es = "Ocultar teclas rapidas"
+
+[xed.quickkeys.show]
+id = "Tampilkan Tombol Cepat"
+en = "Show Quick Keys"
+ru = "Показать быстрые клавиши"
+es = "Mostrar teclas rapidas"
+
+[xed.about.menu]
+id = "Tentang Xed Editor"
+en = "About Xed Editor"
+ru = "О Xed Editor"
+es = "Acerca de Xed Editor"
+
+[xed.about.title]
+id = "Tentang Xed Editor"
+en = "About Xed Editor"
+ru = "О Xed Editor"
+es = "Acerca de Xed Editor"
+
+[xed.about.intro]
+id = "Xed adalah editor kode Pawn dengan syntax highlighting, saran kode, alat workspace, dan kompilasi langsung."
+en = "Xed is a Pawn code editor with syntax highlighting, completion, workspace tools, and direct compilation."
+ru = "Xed — редактор кода Pawn с подсветкой синтаксиса, автодополнением, инструментами workspace и прямой компиляцией."
+es = "Xed es un editor de codigo Pawn con resaltado de sintaxis, autocompletado, herramientas de workspace y compilacion directa."
+
+[xed.about.close]
+id = "Tutup"
+en = "Close"
+ru = "Закрыть"
+es = "Cerrar"
+
+[xed.about.back.title]
+id = "Kembali"
+en = "Back"
+ru = "Назад"
+es = "Volver"
+
+[xed.about.back.desc]
+id = "Kembali ke pemilihan berkas dan layar compiler."
+en = "Return to the file selection and compiler screen."
+ru = "Вернуться к выбору файла и экрану компилятора."
+es = "Vuelve a la seleccion de archivos y a la pantalla del compilador."
+
+[xed.about.undo.title]
+id = "Urungkan"
+en = "Undo"
+ru = "Отменить"
+es = "Deshacer"
+
+[xed.about.undo.desc]
+id = "Urungkan perubahan terakhir."
+en = "Undo the most recent edit."
+ru = "Отменить последнее изменение."
+es = "Deshace la ultima edicion."
+
+[xed.about.redo.title]
+id = "Ulangi"
+en = "Redo"
+ru = "Повторить"
+es = "Rehacer"
+
+[xed.about.redo.desc]
+id = "Pulihkan perubahan terakhir yang diurungkan."
+en = "Restore the most recently undone edit."
+ru = "Восстановить последнее отменённое изменение."
+es = "Restaura la ultima edicion deshecha."
+
+[xed.about.options.title]
+id = "Opsi Editor"
+en = "Editor options"
+ru = "Параметры редактора"
+es = "Opciones del editor"
+
+[xed.about.options.desc]
+id = "Buka workspace, alat pencarian dan penggantian, kontrol tampilan, tombol cepat, dan halaman Tentang."
+en = "Open workspace, search and replace tools, view controls, quick keys, and this About page."
+ru = "Открыть workspace, инструменты поиска и замены, настройки вида, быстрые клавиши и эту страницу «О программе»."
+es = "Abre el workspace, las herramientas de buscar y reemplazar, los controles de vista, las teclas rapidas y esta pagina Acerca de."
+
+[xed.about.open_workspace.title]
+id = "Buka Folder Workspace"
+en = "Open Workspace Folder"
+ru = "Открыть папку workspace"
+es = "Abrir carpeta de workspace"
+
+[xed.about.open_workspace.desc]
+id = "Pilih folder lokal dan telusuri berkasnya di panel workspace."
+en = "Choose a local folder and browse its files in the workspace panel."
+ru = "Выберите локальную папку и просматривайте её файлы на панели workspace."
+es = "Elegi una carpeta local y explora sus archivos en el panel del workspace."
+
+[xed.about.close_workspace.title]
+id = "Tutup Workspace"
+en = "Close Workspace"
+ru = "Закрыть workspace"
+es = "Cerrar el workspace"
+
+[xed.about.close_workspace.desc]
+id = "Tutup workspace aktif tanpa menutup workspace lain yang masih terbuka."
+en = "Close the active workspace while keeping other open workspaces available."
+ru = "Закрывает активный workspace, оставляя другие открытые workspace доступными."
+es = "Cierra el workspace activo dejando disponibles los demas workspaces abiertos."
+
+[xed.about.close_all.title]
+id = "Tutup Semua Workspace"
+en = "Close All Workspaces"
+ru = "Закрыть все workspace"
+es = "Cerrar todos los workspaces"
+
+[xed.about.close_all.desc]
+id = "Tutup semua workspace yang sedang terbuka di Xed."
+en = "Close every workspace currently open in Xed."
+ru = "Закрывает все workspace, открытые в Xed."
+es = "Cierra todos los workspaces que estan abiertos en Xed."
+
+[xed.about.search_workspace.title]
+id = "Cari di Workspace"
+en = "Search in Workspace"
+ru = "Поиск в workspace"
+es = "Buscar en el workspace"
+
+[xed.about.search_workspace.desc]
+id = "Cari teks di seluruh berkas dalam workspace aktif."
+en = "Find text across files in the active workspace."
+ru = "Ищет текст по всем файлам активного workspace."
+es = "Busca texto en todos los archivos del workspace activo."
+
+[xed.about.replace_file.title]
+id = "Ganti Kata per Berkas"
+en = "Replace Words per File"
+ru = "Замена слов в файле"
+es = "Reemplazar palabras por archivo"
+
+[xed.about.replace_file.desc]
+id = "Ganti kecocokan di berkas saat ini, satu kemunculan atau semuanya."
+en = "Replace matches in the current file, one occurrence or all at once."
+ru = "Заменяет совпадения в текущем файле: одно или все сразу."
+es = "Reemplaza las coincidencias del archivo actual, una sola o todas."
+
+[xed.about.replace_workspace.title]
+id = "Ganti Kata di Semua Berkas"
+en = "Replace Words All Files"
+ru = "Замена слов во всех файлах"
+es = "Reemplazar palabras en todos los archivos"
+
+[xed.about.replace_workspace.desc]
+id = "Ganti teks yang cocok di seluruh berkas workspace."
+en = "Replace matching text across the workspace files."
+ru = "Заменяет совпадающий текст во всех файлах workspace."
+es = "Reemplaza el texto coincidente en todos los archivos del workspace."
+
+[xed.about.workspace_panel.title]
+id = "Tampilkan atau Sembunyikan Panel Workspace"
+en = "Show or Hide Workspace Panel"
+ru = "Показать или скрыть панель workspace"
+es = "Mostrar u ocultar el panel de workspace"
+
+[xed.about.workspace_panel.desc]
+id = "Tampilkan atau sembunyikan panel berisi berkas terbuka, folder, dan hasil pencarian."
+en = "Toggle the panel containing open files, folders, and search results."
+ru = "Показывает или скрывает панель с открытыми файлами, папками и результатами поиска."
+es = "Muestra u oculta el panel con los archivos abiertos, las carpetas y los resultados de busqueda."
+
+[xed.about.select_all.title]
+id = "Pilih Semua"
+en = "Select All"
+ru = "Выделить всё"
+es = "Seleccionar todo"
+
+[xed.about.select_all.desc]
+id = "Pilih seluruh teks di berkas saat ini."
+en = "Select all text in the current file."
+ru = "Выделяет весь текст в текущем файле."
+es = "Selecciona todo el texto del archivo actual."
+
+[xed.about.jump.title]
+id = "Lompat ke Baris"
+en = "Jump to Line"
+ru = "Перейти к строке"
+es = "Ir a la linea"
+
+[xed.about.jump.desc]
+id = "Pindahkan kursor langsung ke nomor baris tertentu."
+en = "Move the cursor directly to a line number."
+ru = "Перемещает курсор напрямую к номеру строки."
+es = "Mueve el cursor directo a un numero de linea."
+
+[xed.about.wrap.title]
+id = "Bungkus Baris"
+en = "Word Wrap"
+ru = "Перенос слов"
+es = "Ajuste de linea"
+
+[xed.about.wrap.desc]
+id = "Aktifkan atau nonaktifkan pembungkusan baris."
+en = "Turn line wrapping on or off."
+ru = "Включает или отключает перенос строк."
+es = "Activa o desactiva el ajuste de linea."
+
+[xed.about.read_only.title]
+id = "Mode Hanya Baca"
+en = "Read-Only Mode"
+ru = "Режим только для чтения"
+es = "Modo solo lectura"
+
+[xed.about.read_only.desc]
+id = "Cegah pengeditan sampai mode edit diaktifkan kembali."
+en = "Prevent edits until editing is enabled again."
+ru = "Запрещает редактирование, пока режим редактирования не будет включён снова."
+es = "Impide editar hasta que se vuelva a habilitar la edicion."
+
+[xed.about.line_numbers.title]
+id = "Nomor Baris"
+en = "Line Numbers"
+ru = "Номера строк"
+es = "Numeros de linea"
+
+[xed.about.line_numbers.desc]
+id = "Tampilkan atau sembunyikan nomor baris dan kolom saat ini."
+en = "Show or hide line numbers and the current column."
+ru = "Показывает или скрывает номера строк и текущий столбец."
+es = "Muestra u oculta los numeros de linea y la columna actual."
+
+[xed.about.quickkeys_toggle.title]
+id = "Tombol Cepat"
+en = "Quick Keys Toggle"
+ru = "Переключение быстрых клавиш"
+es = "Alternar teclas rapidas"
+
+[xed.about.quickkeys_toggle.desc]
+id = "Tampilkan atau sembunyikan bar bawah berisi TAB, simbol, dan angka."
+en = "Show or hide the bottom row with TAB, symbols, and digits."
+ru = "Показывает или скрывает нижний ряд с TAB, символами и цифрами."
+es = "Muestra u oculta la fila de abajo con TAB, simbolos y numeros."
+
+[xed.about.about.title]
+id = "Tentang Xed Editor"
+en = "About Xed Editor"
+ru = "О Xed Editor"
+es = "Acerca de Xed Editor"
+
+[xed.about.about.desc]
+id = "Buka panduan alat dan kontrol Xed ini."
+en = "Open this guide to Xed's tools and controls."
+ru = "Открыть это руководство по инструментам и элементам управления Xed."
+es = "Abre esta guia de las herramientas y controles de Xed."
+
+[xed.about.search_file.title]
+id = "Cari di Berkas"
+en = "Search in File"
+ru = "Поиск в файле"
+es = "Buscar en el archivo"
+
+[xed.about.search_file.desc]
+id = "Cari teks di berkas saat ini dan berpindah di antara hasilnya."
+en = "Find text in the current file and move between matches."
+ru = "Ищет текст в текущем файле и переходит между совпадениями."
+es = "Busca texto en el archivo actual y se mueve entre las coincidencias."
+
+[xed.about.open_folder.title]
+id = "Buka Folder"
+en = "Open Folder"
+ru = "Открыть папку"
+es = "Abrir carpeta"
+
+[xed.about.open_folder.desc]
+id = "Pilih folder workspace dari toolbar mengambang."
+en = "Choose a workspace folder from the floating toolbar."
+ru = "Выберите папку workspace из всплывающей панели."
+es = "Elegi una carpeta de workspace desde la barra flotante."
+
+[xed.about.save.title]
+id = "Simpan"
+en = "Save"
+ru = "Сохранить"
+es = "Guardar"
+
+[xed.about.save.desc]
+id = "Simpan berkas aktif."
+en = "Save the active file."
+ru = "Сохранить активный файл."
+es = "Guarda el archivo activo."
+
+[xed.about.save_as_all.title]
+id = "Simpan Sebagai atau Simpan Semua"
+en = "Save As or Save All"
+ru = "Сохранить как или сохранить все"
+es = "Guardar como o guardar todo"
+
+[xed.about.save_as_all.desc]
+id = "Simpan berkas saat ini dengan nama baru, atau simpan semua berkas workspace yang berubah."
+en = "Save the current file under a new name, or save all modified workspace files."
+ru = "Сохранить текущий файл под новым именем или сохранить все изменённые файлы workspace."
+es = "Guarda el archivo actual con un nombre nuevo, o guarda todos los archivos modificados del workspace."
+
+[xed.about.compile.title]
+id = "Kompilasi"
+en = "Compile"
+ru = "Компилировать"
+es = "Compilar"
+
+[xed.about.compile.desc]
+id = "Simpan perubahan workspace yang terbuka lalu kompilasi berkas Pawn aktif."
+en = "Save open workspace changes and compile the active Pawn file."
+ru = "Сохранить открытые изменения workspace и скомпилировать активный файл Pawn."
+es = "Guarda los cambios abiertos del workspace y compila el archivo Pawn activo."
+
+[xed.about.explorer.title]
+id = "Tombol Panel Workspace"
+en = "Workspace Panel Button"
+ru = "Кнопка панели workspace"
+es = "Boton del panel de workspace"
+
+[xed.about.explorer.desc]
+id = "Tampilkan atau sembunyikan panel workspace mengambang."
+en = "Show or hide the floating workspace panel."
+ru = "Показывает или скрывает всплывающую панель workspace."
+es = "Muestra u oculta el panel de workspace flotante."
+
+[xed.about.tabs.title]
+id = "Tab Berkas"
+en = "File Tabs"
+ru = "Вкладки файлов"
+es = "Pestanas de archivos"
+
+[xed.about.tabs.desc]
+id = "Beralih antarberkas terbuka atau tutup berkas melalui tab-nya."
+en = "Switch between open files or close a file from its tab."
+ru = "Переключайтесь между открытыми файлами или закрывайте файл по его вкладке."
+es = "Cambia entre archivos abiertos o cierra un archivo desde su pestana."
+
+[xed.about.new_tab.title]
+id = "Tambah atau Buka Berkas"
+en = "Add or Open File"
+ru = "Добавить или открыть файл"
+es = "Agregar o abrir archivo"
+
+[xed.about.new_tab.desc]
+id = "Buka panel workspace atau pilih folder lain."
+en = "Open the workspace panel or choose another folder."
+ru = "Открыть панель workspace или выбрать другую папку."
+es = "Abre el panel del workspace o elegi otra carpeta."
+
+[xed.about.tab_key.title]
+id = "TAB"
+en = "TAB"
+ru = "TAB"
+es = "TAB"
+
+[xed.about.tab_key.desc]
+id = "Masukkan satu tingkat indentasi pada posisi kursor."
+en = "Insert one indentation level at the cursor."
+ru = "Вставляет один уровень отступа в позицию курсора."
+es = "Inserta un nivel de indentacion en la posicion del cursor."
+
+[xed.about.symbol_keys.title]
+id = "Tombol Simbol dan Angka"
+en = "Symbol and Number Keys"
+ru = "Клавиши символов и цифр"
+es = "Teclas de simbolos y numeros"
+
+[xed.about.symbol_keys.desc]
+id = "Masukkan kurung kurawal, tanda kurung, kurung siku, tanda baca, atau angka pada posisi kursor."
+en = "Insert braces, parentheses, brackets, punctuation, or digits at the cursor."
+ru = "Вставляет скобки, кавычки, знаки препинания или цифры в позицию курсора."
+es = "Inserta llaves, parentesis, corchetes, signos de puntuacion o numeros en la posicion del cursor."
+

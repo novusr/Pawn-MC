@@ -31,7 +31,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.data.config.TomlData
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.roundToInt
@@ -150,13 +151,23 @@ internal object XedTerminalCommandParser {
 }
 
 internal object XedSimulationData {
+
+    /**
+     * Terminal strings and the `docs` markdown, in the 2026 TOML format.
+     *
+     * Every table is named after the terminal key (`[terminal.help]`,
+     * `[terminal.docs]`, ...), the languages are the leaves, and the old
+     * `0x01:` / `0x02:` markers are gone.
+     */
+    private const val ASSET_PATH = "_data_2026_term.toml"
+
     @Volatile
     private var cached: Map<String, String>? = null
 
     fun get(context: Context, key: String, language: CompilerConfig.AppLanguage): String {
         val entries = cached ?: synchronized(this) {
             cached ?: runCatching {
-                context.applicationContext.assets.open("_data_mc_26_simulation.dat")
+                context.applicationContext.assets.open(ASSET_PATH)
                     .bufferedReader().use { parse(it.readText()) }
             }.getOrDefault(emptyMap()).also { cached = it }
         }
@@ -165,25 +176,39 @@ internal object XedSimulationData {
             ?: key
     }
 
-    internal fun parse(raw: String): Map<String, String> = buildMap {
-        raw.lineSequence()
-            .map { it.trim() }
-            .filter { it.isNotEmpty() && !it.startsWith("#") }
-            .forEach { line ->
-                if (line.startsWith("0x01:") && ":0x02:" in line) {
-                    val pair = line.removePrefix("0x01:").split(":0x02:", limit = 2)
-                    if (pair.size == 2 && pair[0].isNotBlank()) {
-                        put(pair[0].trim(), pair[1].replace("\\n", "\n"))
-                    }
-                }
+    /**
+     * Flattens the tables into `terminal.<key>.<lang> -> text`.
+     *
+     * The values are stored as single line TOML strings, so the literal `\n`
+     * sequences that carry the console layout are expanded into real line breaks
+     * here, once, before anything renders them.
+     */
+    internal fun parse(raw: String): Map<String, String> {
+        if (raw.isBlank()) return emptyMap()
+
+        val document = TomlData.parse(raw)
+        val result = linkedMapOf<String, String>()
+        document.tablesUnder("").forEach { (table, entries) ->
+            if (table.isBlank()) return@forEach
+            entries.forEach { (language, value) ->
+                result["$table.$language"] = value.replace("\\n", "\n")
             }
+        }
+        return result
     }
 }
 
 private data class XedTerminalEntry(
     val command: String,
     val output: String,
-    val markdown: Boolean = false
+    val markdown: Boolean = false,
+    /**
+     * Whether the `% command` line is echoed above the output.
+     *
+     * The automatic `docs` entry on first open is a welcome document rather than
+     * something the user asked for, so it is shown without a prompt.
+     */
+    val showPrompt: Boolean = true
 )
 
 @Composable
@@ -209,8 +234,14 @@ internal fun XedMCPortal(
 
     fun text(key: String) = XedSimulationData.get(context, key, language)
 
-    fun submit() {
-        val commandLine = input.trim()
+    /**
+     * Runs [commandLine] as if it had been typed in the console.
+     *
+     * Used both by the input field and by the automatic `docs` run on first open,
+     * so the welcome content goes through exactly the same command path as a
+     * manually typed command and can never drift from it.
+     */
+    fun submit(commandLine: String = input.trim(), isAutomatic: Boolean = false) {
         if (commandLine.isEmpty() || isRunning) return
         input = ""
         keyboard?.hide()
@@ -291,11 +322,18 @@ internal fun XedMCPortal(
                 }
             }
             if (recordCommand) {
-                entries += XedTerminalEntry(commandLine, output, markdown)
+                entries += XedTerminalEntry(commandLine, output, markdown, showPrompt = !isAutomatic)
                 while (entries.size > 24) entries.removeAt(0)
             }
             isRunning = false
         }
+    }
+
+    // Opening the portal should never show an empty console, so `docs` runs once
+    // as soon as it appears. The docs entry is marked as pre-recorded, which keeps
+    // the `% docs` prompt out of the transcript while still filling the view.
+    LaunchedEffect(Unit) {
+        if (entries.isEmpty()) submit("docs", isAutomatic = true)
     }
 
     LaunchedEffect(entries.size, isRunning) {
@@ -385,12 +423,14 @@ internal fun XedMCPortal(
                         )
                     }
                     entries.forEach { entry ->
-                        Text(
-                            text = "% ${entry.command}",
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                            modifier = Modifier.padding(top = 6.dp, bottom = 3.dp)
-                        )
+                        if (entry.showPrompt) {
+                            Text(
+                                text = "% ${entry.command}",
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                                modifier = Modifier.padding(top = 6.dp, bottom = 3.dp)
+                            )
+                        }
                         if (entry.markdown) {
                             MarkdownOutput(entry.output)
                         } else {
@@ -439,7 +479,7 @@ internal fun XedMCPortal(
                         keyboardActions = KeyboardActions(onSend = { submit() })
                     )
                     IconButton(onClick = { submit() }, enabled = !isRunning && input.isNotBlank()) {
-                        Icon(Icons.Filled.Send, contentDescription = text("terminal.run"))
+                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = text("terminal.run"))
                     }
                 }
             }

@@ -3,6 +3,9 @@ package com.rvdjv.pawnmc.`interface`.editor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,23 +41,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.rvdjv.pawnmc.`interface`.PawnIcons
+import com.rvdjv.pawnmc.`interface`._Icons
 import java.io.File
 import kotlin.math.roundToInt
-
 /** Minimum height of a touch target in the panel, per the accessibility guidance. */
 private val PanelRowMinHeight = 44.dp
-
-/**
- * How many lines of compiler output the explorer shows.
- *
- * Capping the text instead of scrolling it inside the item keeps one single scroll
- * gesture for the whole panel, which is what made the explorer draggy.
- */
-private const val OUTPUT_MAX_LINES = 8
 
 /**
  * Floating workspace panel: the opened editors, the folder tree of the active
@@ -73,19 +67,10 @@ private const val OUTPUT_MAX_LINES = 8
  *
  * ## Scrolling
  *
- * Three things used to make dragging the explorer stutter, and all three are fixed
- * here:
- *
- * 1. The compiler output was an item with its **own** `verticalScroll`. A nested
- *    scroller inside a [LazyColumn] item steals the drag and forces the parent to
- *    remeasure the whole item on every frame. The output is now clipped with
- *    `maxLines` instead, so the list keeps the single scroll gesture.
- * 2. The [LazyColumn] had no bounded height inside the [Column], so it was measured
- *    against the unbounded remaining space and remeasured on every parent layout. It
- *    now takes the leftover height through `weight(1f)`.
- * 3. Items had no `contentType`, so [LazyColumn] could not reuse a row composable
- *    for a row of another kind and had to rebuild each one while scrolling. Folders,
- *    files, opened editors and search hits now advertise their own content type.
+ * The [LazyColumn] has a bounded height inside the [Column], and each item exposes
+ * its content type so the list can reuse compatible rows. Compiler output has a
+ * bounded, independently touch-scrollable viewport; vertical and horizontal swipes
+ * reveal the complete output without preventing the explorer itself from scrolling.
  */
 @Composable
 fun XedWorkspacePanel(
@@ -110,9 +95,11 @@ fun XedWorkspacePanel(
         if (workspace == null) emptyList() else flattenWorkspaceNodes(workspace)
     }
 
-    // An explicit state so the scroll position survives a panel that is temporarily
-    // hidden or recomposed, and so a fling is not restarted from the top.
+    // Separate scroll states keep the explorer and compiler output independently
+    // touch-scrollable, including logs wider than the floating panel.
     val explorerListState = rememberLazyListState()
+    val outputScrollState = rememberScrollState()
+    val outputHorizontalScrollState = rememberScrollState()
 
     // `documents` is a SnapshotStateList, so `toList()` would hand the list a fresh
     // instance on every recomposition and make it re-diff the rows. Keyed on the
@@ -204,22 +191,22 @@ fun XedWorkspacePanel(
             if (outputText.isNotBlank()) {
                 item(key = "__compiler_output__", contentType = "compiler-output") {
                     SectionLabel("Output")
-                    // Clipped with `maxLines` instead of an inner `verticalScroll`: a
-                    // nested scroller inside a LazyColumn item fights the outer drag
-                    // and remeasures the whole item on every frame, which is what made
-                    // the explorer feel sticky while scrolling.
-                    Text(
-                        text = outputText,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 11.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = OUTPUT_MAX_LINES,
-                        overflow = TextOverflow.Ellipsis,
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 180.dp)
+                            .verticalScroll(outputScrollState)
+                            .horizontalScroll(outputHorizontalScrollState)
                             .padding(horizontal = 12.dp, vertical = 8.dp)
-                    )
+                    ) {
+                        Text(
+                            text = outputText,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            softWrap = false,
+                        )
+                    }
                 }
             }
             if (current3 != null && current3.searchQuery.isNotEmpty()) {
@@ -274,7 +261,7 @@ private fun WorkspaceSwitcherRow(session: XedWorkspaceViewModel) {
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Icon(
-                    imageVector = PawnIcons.FolderRectOpen,
+                    imageVector = _Icons.FolderRectOpen,
                     contentDescription = null,
                     tint = if (isActive) {
                         MaterialTheme.colorScheme.primary
@@ -384,7 +371,7 @@ private fun SectionHeader(
         }
         IconButton(onClick = onOpenFolder, modifier = Modifier.size(32.dp)) {
             Icon(
-                imageVector = PawnIcons.FolderRectOpen,
+                imageVector = _Icons.FolderRectOpen,
                 contentDescription = "Open workspace folder",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(16.dp)
@@ -423,7 +410,7 @@ private fun SectionLabel(text: String) {
 private fun documentIcon(extension: String, modifier: Modifier = Modifier) {
     val isInclude = extension.equals("inc", ignoreCase = true)
     Icon(
-        imageVector = if (isInclude) PawnIcons.IncludeRect else PawnIcons.FileRect,
+        imageVector = if (isInclude) _Icons.IncludeRect else _Icons.FileRect,
         contentDescription = null,
         tint = if (isInclude) {
             MaterialTheme.colorScheme.tertiary
@@ -508,7 +495,7 @@ private fun FolderRow(node: WorkspaceNode, depth: Int, collapsed: Boolean, onTog
         // The chevron rotates instead of swapping glyphs, so whether a directory is
         // open or closed is readable at a glance even at 18dp.
         Icon(
-            imageVector = if (collapsed) Icons.Filled.KeyboardArrowRight else Icons.Filled.ExpandMore,
+            imageVector = if (collapsed) Icons.AutoMirrored.Filled.KeyboardArrowRight else Icons.Filled.ExpandMore,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
@@ -516,7 +503,7 @@ private fun FolderRow(node: WorkspaceNode, depth: Int, collapsed: Boolean, onTog
                 .graphicsLayer { rotationZ = if (collapsed) 0f else 90f }
         )
         Icon(
-            imageVector = if (collapsed) PawnIcons.FolderRect else PawnIcons.FolderRectOpen,
+            imageVector = if (collapsed) _Icons.FolderRect else _Icons.FolderRectOpen,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.secondary,
             modifier = Modifier

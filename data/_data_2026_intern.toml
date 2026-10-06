@@ -1,0 +1,854 @@
+# PawnMC Pawn symbol data - 2026 format
+#
+# Naming: _data_2026_intern.toml  (internal)
+# Keywords, directives, types, constants, callbacks, operators and the
+# natives / forwards of every SA-MP include, all in one table set.
+#
+# Table names use the existing kind and include names, for example
+# [item.KEYWORD] and [native."a_players.inc"]; the symbol itself is the
+# key. Leaves are `en` and `id`.
+
+# --- language items -------------------------------------------------
+
+[item.DIRECTIVE]
+"#include" = { en = "Include an external source or header file", id = "Sertakan file sumber atau header eksternal" }
+"#define" = { en = "Define a preprocessor macro or constant", id = "Tentukan makro preprosesor atau konstanta" }
+"#undef" = { en = "Undefine an existing macro", id = "Hapus definisi makro yang sudah ada" }
+"#if" = { en = "Conditional compilation check", id = "Periksa kondisi kompilasi bersyarat" }
+"#elseif" = { en = "Alternative conditional compilation check", id = "Periksa kondisi alternatif untuk kompilasi bersyarat" }
+"#else" = { en = "Default conditional compilation branch", id = "Cabang bawaan pada kompilasi bersyarat" }
+"#endif" = { en = "End of conditional compilation block", id = "Akhiri blok kompilasi bersyarat" }
+"#endinput" = { en = "Stops reading the current file", id = "Hentikan pembacaan file saat ini" }
+"#tryinclude" = { en = "Include a file only if it has not been included yet", id = "Sertakan file hanya jika belum pernah disertakan" }
+"#endscript" = { en = "Stop reading the current file without an error", id = "Hentikan pembacaan file saat ini tanpa menghasilkan error" }
+"#file" = { en = "Set the file name reported by diagnostics", id = "Tetapkan nama file yang ditampilkan pada diagnostik" }
+"#warning" = { en = "Enable, disable or raise a compiler warning", id = "Aktifkan, nonaktifkan, atau tingkatkan peringatan compiler" }
+"#assert" = { en = "Compile-time assertion check", id = "Periksa assertion saat kompilasi" }
+"#error" = { en = "Emit user-defined compilation error", id = "Tampilkan error kompilasi yang ditentukan pengguna" }
+"#pragma" = { en = "Compiler control directive", id = "Direktif untuk mengatur perilaku compiler" }
+"#emit" = { en = "Emit raw AMX bytecode opcode", id = "Keluarkan opcode bytecode AMX secara langsung" }
+"#line" = { en = "Set line number and optional filename", id = "Tetapkan nomor baris dan nama file opsional" }
+"tabsize" = { en = "Pragma to set tab indent width", id = "Pragma untuk mengatur lebar indentasi tab" }
+"dynamic" = { en = "Pragma to set AMX stack/heap memory size", id = "Pragma untuk mengatur ukuran memori stack/heap AMX" }
+"ctrlchar" = { en = "Pragma to change escape character", id = "Pragma untuk mengubah karakter escape" }
+"deprecated" = { en = "Pragma to mark symbol as deprecated", id = "Pragma untuk menandai simbol sebagai usang" }
+"semicolon" = { en = "Pragma to enforce or relax semicolons", id = "Pragma untuk mewajibkan atau melonggarkan penggunaan titik koma" }
+
+[item.KEYWORD]
+"stock" = { en = "Declares variable or function compiled only if used", id = "Mendeklarasikan variabel atau fungsi yang dikompilasi hanya jika digunakan" }
+"public" = { en = "Declares an exported function callable by AMX", id = "Mendeklarasikan fungsi ekspor yang dapat dipanggil oleh AMX" }
+"forward" = { en = "Forward declaration for public functions", id = "Deklarasi awal untuk fungsi public" }
+"hook" = { en = "Hooks a callback or function so multiple handlers can be chained", id = "Mengaitkan callback atau fungsi agar beberapa handler dapat dirangkai" }
+"native" = { en = "Declares a C/C++ native plugin or host function", id = "Mendeklarasikan fungsi native dari plugin C/C++ atau host" }
+"new" = { en = "Declares a local or global variable", id = "Mendeklarasikan variabel lokal atau global" }
+"static" = { en = "Declares static scoped variable or private function", id = "Mendeklarasikan variabel dengan cakupan statis atau fungsi privat" }
+"const" = { en = "Declares an immutable constant variable", id = "Mendeklarasikan variabel konstanta yang nilainya tidak dapat diubah" }
+"enum" = { en = "Defines an enumerated constant structure", id = "Mendefinisikan struktur konstanta enumerasi" }
+"state" = { en = "State machine transition declaration", id = "Deklarasi transisi mesin status" }
+"goto" = { en = "Jump unconditionally to label", id = "Melompat tanpa syarat ke label" }
+"break" = { en = "Break out of loop or switch block", id = "Keluar dari blok perulangan atau switch" }
+"continue" = { en = "Skip to next iteration of loop", id = "Lewati ke iterasi perulangan berikutnya" }
+"return" = { en = "Return value and exit function", id = "Mengembalikan nilai lalu mengakhiri fungsi" }
+"if" = { en = "Conditional branch statement", id = "Pernyataan percabangan bersyarat" }
+"else" = { en = "Alternative conditional branch", id = "Cabang alternatif pada kondisi" }
+"while" = { en = "Loop while condition is true", id = "Perulangan selama kondisi bernilai benar" }
+"do" = { en = "Loop executing at least once", id = "Perulangan yang dijalankan setidaknya satu kali" }
+"for" = { en = "Standard for-loop statement", id = "Pernyataan perulangan for standar" }
+"switch" = { en = "Multi-branch switch statement", id = "Pernyataan switch dengan beberapa cabang" }
+"case" = { en = "Case label in switch statement", id = "Label case pada pernyataan switch" }
+"default" = { en = "Default branch in switch statement", id = "Cabang default pada pernyataan switch" }
+"sizeof" = { en = "Returns size in cells or array dimensions", id = "Mengembalikan ukuran dalam cell atau dimensi array" }
+"tagof" = { en = "Returns tag integer representing data type", id = "Mengembalikan bilangan tag yang mewakili tipe data" }
+"assert" = { en = "Runtime assertion condition", id = "Memeriksa kondisi assertion saat program berjalan" }
+"sleep" = { en = "Pawn abstract machine sleep call", id = "Memanggil sleep pada mesin abstrak Pawn" }
+"char" = { en = "Sub-cell character packing indexer", id = "Indeks pengemasan karakter sub-cell" }
+"defined" = { en = "Preprocessor check for a defined macro", id = "Memeriksa apakah makro sudah didefinisikan" }
+"emit" = { en = "Inline AMX bytecode opcode", id = "Opcode bytecode AMX inline" }
+"__emit" = { en = "Argument list marker for a raw EMIT", id = "Penanda daftar argumen untuk EMIT langsung" }
+"exit" = { en = "Terminate the script immediately", id = "Mengakhiri skrip seketika" }
+"operator" = { en = "User defined operator overload declaration", id = "Deklarasi overload operator buatan pengguna" }
+"*begin" = { en = "Start of a multi-line block comment", id = "Awal komentar blok multibaris" }
+"*end" = { en = "End of a multi-line block comment", id = "Akhir komentar blok multibaris" }
+"*then" = { en = "Block comment continuation of the previous line", id = "Kelanjutan komentar blok dari baris sebelumnya" }
+
+[item.TYPE]
+"Float:" = { en = "Floating point single-precision tag", id = "Tag bilangan floating-point presisi tunggal" }
+"bool:" = { en = "Boolean true/false data tag", id = "Tag data boolean true/false" }
+"File:" = { en = "File handle tag for file operations", id = "Tag handle file untuk operasi berkas" }
+"Text:" = { en = "Global text draw identifier tag", id = "Tag identitas text draw global" }
+"PlayerText:" = { en = "Player-specific text draw identifier tag", id = "Tag identitas text draw khusus pemain" }
+"Menu:" = { en = "Game menu identifier tag", id = "Tag identitas menu game" }
+"Text3D:" = { en = "Global 3D text label identifier tag", id = "Tag identitas label teks 3D global" }
+"PlayerText3D:" = { en = "Player-specific 3D text label tag", id = "Player-specific 3D text label tag" }
+
+[item.CONSTANT]
+"true" = { en = "Boolean true literal (1)", id = "Literal boolean true (1)" }
+"false" = { en = "Boolean false literal (0)", id = "Literal boolean false (0)" }
+"cellmax" = { en = "Maximum signed 32-bit cell value", id = "Nilai cell signed 32-bit maksimum" }
+"cellmin" = { en = "Minimum signed 32-bit cell value", id = "Nilai cell signed 32-bit minimum" }
+"INVALID_PLAYER_ID" = { en = "Special ID representing no valid player (65535)", id = "ID khusus yang menandakan tidak ada pemain valid (65535)" }
+"INVALID_VEHICLE_ID" = { en = "Special ID representing no valid vehicle (65535)", id = "ID khusus yang menandakan tidak ada kendaraan valid (65535)" }
+"INVALID_OBJECT_ID" = { en = "Special ID representing no valid object (65535)", id = "ID khusus yang menandakan tidak ada objek valid (65535)" }
+"INVALID_TIMER_ID" = { en = "Invalid timer handle representation", id = "Representasi handle timer yang tidak valid" }
+"MAX_PLAYERS" = { en = "Maximum player slots on server (default 50/500/1000)", id = "Batas slot pemain server (bawaan 50/500/1000)" }
+"MAX_VEHICLES" = { en = "Maximum vehicle slots on server (default 2000)", id = "Batas slot kendaraan server (bawaan 2000)" }
+"MAX_OBJECTS" = { en = "Maximum global object limit (1000)", id = "Batas jumlah objek global (1000)" }
+"MAX_ACTORS" = { en = "Maximum static actors on server (1000)", id = "Batas jumlah actor statis server (1000)" }
+"MAX_TEXT_DRAWS" = { en = "Maximum global text draws (2048)", id = "Batas jumlah text draw global (2048)" }
+"MAX_MENUS" = { en = "Maximum menu instances (128)", id = "Batas jumlah instance menu (128)" }
+"MAX_GANG_ZONES" = { en = "Maximum gang zones (1024)", id = "Batas jumlah zona geng (1024)" }
+"SPECIAL_ACTION_NONE" = { en = "Player special action: None", id = "Aksi khusus pemain: Tidak ada" }
+"SPECIAL_ACTION_DUCK" = { en = "Player special action: Ducking", id = "Aksi khusus pemain: Menunduk" }
+"SPECIAL_ACTION_USEJETPACK" = { en = "Player special action: Jetpack", id = "Aksi khusus pemain: Jetpack" }
+"PLAYER_STATE_NONE" = { en = "Player state: None", id = "Status pemain: Tidak ada" }
+"PLAYER_STATE_ONFOOT" = { en = "Player state: On Foot", id = "Status pemain: Berjalan kaki" }
+"PLAYER_STATE_DRIVER" = { en = "Player state: Driver of a vehicle", id = "Status pemain: Mengemudikan kendaraan" }
+"PLAYER_STATE_PASSENGER" = { en = "Player state: Passenger in a vehicle", id = "Status pemain: Menjadi penumpang kendaraan" }
+"PLAYER_STATE_WASTED" = { en = "Player state: Dead/Wasted", id = "Status pemain: Mati" }
+"PLAYER_STATE_SPAWNED" = { en = "Player state: Spawned", id = "Status pemain: Sudah spawn" }
+"PLAYER_STATE_SPECTATING" = { en = "Player state: Spectating", id = "Status pemain: Sedang menonton" }
+
+[item.FUNCTION]
+"print" = { en = "Prints a plain string to server log without formatting: print(const string[])", id = "Prints a plain string to server log without formatting: print(const string[])" }
+"printf" = { en = "Prints formatted string to server log: printf(const format[], {Float,_}:...)", id = "Prints formatted string to server log: printf(const format[], {Float,_}:...)" }
+"format" = { en = "Formats string buffer with specifiers: format(output[], len, const format[], ...)", id = "Formats string buffer with specifiers: format(output[], len, const format[], ...)" }
+"strlen" = { en = "Returns length of string in characters: strlen(const string[])", id = "Returns length of string in characters: strlen(const string[])" }
+"strcat" = { en = "Concatenates two strings together: strcat(dest[], const source[], maxlength)", id = "Concatenates two strings together: strcat(dest[], const source[], maxlength)" }
+"strdel" = { en = "Deletes characters from start to end index: strdel(string[], start, end)", id = "Deletes characters from start to end index: strdel(string[], start, end)" }
+"strins" = { en = "Inserts string at given index: strins(string[], const substr[], pos, maxlength)", id = "Inserts string at given index: strins(string[], const substr[], pos, maxlength)" }
+"strcmp" = { en = "Compares two strings: strcmp(const string1[], const string2[], bool:ignorecase, length)", id = "Compares two strings: strcmp(const string1[], const string2[], bool:ignorecase, length)" }
+"strfind" = { en = "Finds substring in target string: strfind(const string[], const sub[], bool:ignorecase, pos)", id = "Finds substring in target string: strfind(const string[], const sub[], bool:ignorecase, pos)" }
+"strval" = { en = "Converts string characters into an integer: strval(const string[])", id = "Converts string characters into an integer: strval(const string[])" }
+"valstr" = { en = "Converts integer into decimal string: valstr(dest[], value, bool:pack)", id = "Converts integer into decimal string: valstr(dest[], value, bool:pack)" }
+"strmid" = { en = "Extracts substring from source into dest: strmid(dest[], const source[], start, end, maxlength)", id = "Extracts substring from source into dest: strmid(dest[], const source[], start, end, maxlength)" }
+"SetTimer" = { en = "Calls function after interval in ms: SetTimer(funcname[], interval, repeating)", id = "Calls function after interval in ms: SetTimer(funcname[], interval, repeating)" }
+"SetTimerEx" = { en = "Calls function with arguments after interval: SetTimerEx(funcname[], interval, repeating, format[], ...)", id = "Calls function with arguments after interval: SetTimerEx(funcname[], interval, repeating, format[], ...)" }
+"KillTimer" = { en = "Cancels an active timer: KillTimer(timerid)", id = "Cancels an active timer: KillTimer(timerid)" }
+"GetTickCount" = { en = "Returns millisecond count since system start: GetTickCount()", id = "Returns millisecond count since system start: GetTickCount()" }
+"GetMaxPlayers" = { en = "Returns configured player slot limit: GetMaxPlayers()", id = "Returns configured player slot limit: GetMaxPlayers()" }
+"random" = { en = "Returns random integer between 0 and max - 1: random(max)", id = "Returns random integer between 0 and max - 1: random(max)" }
+"min" = { en = "Returns smaller of two integer values: min(value1, value2)", id = "Returns smaller of two integer values: min(value1, value2)" }
+"max" = { en = "Returns larger of two integer values: max(value1, value2)", id = "Returns larger of two integer values: max(value1, value2)" }
+"clamp" = { en = "Constrains value between min and max bounds: clamp(value, min, max)", id = "Constrains value between min and max bounds: clamp(value, min, max)" }
+"SendClientMessage" = { en = "Sends chat message to single player: SendClientMessage(playerid, color, const message[])", id = "Sends chat message to single player: SendClientMessage(playerid, color, const message[])" }
+"SendClientMessageToAll" = { en = "Broadcasts chat message to all players: SendClientMessageToAll(color, const message[])", id = "Broadcasts chat message to all players: SendClientMessageToAll(color, const message[])" }
+"SendPlayerMessageToPlayer" = { en = "Emulates chat from one player to another: SendPlayerMessageToPlayer(playerid, senderid, const message[])", id = "Emulates chat from one player to another: SendPlayerMessageToPlayer(playerid, senderid, const message[])" }
+"SendPlayerMessageToAll" = { en = "Emulates chat from one player to all: SendPlayerMessageToAll(senderid, const message[])", id = "Emulates chat from one player to all: SendPlayerMessageToAll(senderid, const message[])" }
+"SendRconCommand" = { en = "Executes an RCON command line directly: SendRconCommand(command[])", id = "Executes an RCON command line directly: SendRconCommand(command[])" }
+"GameTextForAll" = { en = "Displays arcade style game text on all screens: GameTextForAll(const string[], time, style)", id = "Displays arcade style game text on all screens: GameTextForAll(const string[], time, style)" }
+"GameTextForPlayer" = { en = "Displays arcade style game text to player: GameTextForPlayer(playerid, const string[], time, style)", id = "Displays arcade style game text to player: GameTextForPlayer(playerid, const string[], time, style)" }
+"SetPlayerSpawnInfo" = { en = "Configures default spawn coordinates & gear: SetPlayerSpawnInfo(playerid, team, skin, Float:x, Float:y, Float:z, Float:rotation, ...)", id = "Configures default spawn coordinates & gear: SetPlayerSpawnInfo(playerid, team, skin, Float:x, Float:y, Float:z, Float:rotation, ...)" }
+"SpawnPlayer" = { en = "Forces immediate respawn for player: SpawnPlayer(playerid)", id = "Forces immediate respawn for player: SpawnPlayer(playerid)" }
+"SetPlayerPos" = { en = "Teleports player to 3D world coordinates: SetPlayerPos(playerid, Float:x, Float:y, Float:z)", id = "Teleports player to 3D world coordinates: SetPlayerPos(playerid, Float:x, Float:y, Float:z)" }
+"SetPlayerPosFindZ" = { en = "Teleports player searching for highest ground: SetPlayerPosFindZ(playerid, Float:x, Float:y, Float:z)", id = "Teleports player searching for highest ground: SetPlayerPosFindZ(playerid, Float:x, Float:y, Float:z)" }
+"GetPlayerPos" = { en = "Gets current 3D position of player: GetPlayerPos(playerid, &Float:x, &Float:y, &Float:z)", id = "Gets current 3D position of player: GetPlayerPos(playerid, &Float:x, &Float:y, &Float:z)" }
+"SetPlayerFacingAngle" = { en = "Sets heading compass direction angle: SetPlayerFacingAngle(playerid, Float:ang)", id = "Sets heading compass direction angle: SetPlayerFacingAngle(playerid, Float:ang)" }
+"GetPlayerFacingAngle" = { en = "Gets heading compass direction angle: GetPlayerFacingAngle(playerid, &Float:ang)", id = "Gets heading compass direction angle: GetPlayerFacingAngle(playerid, &Float:ang)" }
+"IsPlayerInRangeOfPoint" = { en = "Tests if player is within sphere radius: IsPlayerInRangeOfPoint(playerid, Float:range, Float:x, Float:y, Float:z)", id = "Tests if player is within sphere radius: IsPlayerInRangeOfPoint(playerid, Float:range, Float:x, Float:y, Float:z)" }
+"IsPlayerConnected" = { en = "Tests if player is connected: IsPlayerConnected(playerid)", id = "Tests if player is connected: IsPlayerConnected(playerid)" }
+"IsPlayerInVehicle" = { en = "Tests if player is in specific vehicle: IsPlayerInVehicle(playerid, vehicleid)", id = "Tests if player is in specific vehicle: IsPlayerInVehicle(playerid, vehicleid)" }
+"IsPlayerInAnyVehicle" = { en = "Tests if player is inside any vehicle: IsPlayerInAnyVehicle(playerid)", id = "Tests if player is inside any vehicle: IsPlayerInAnyVehicle(playerid)" }
+"SetPlayerHealth" = { en = "Sets current health points: SetPlayerHealth(playerid, Float:health)", id = "Sets current health points: SetPlayerHealth(playerid, Float:health)" }
+"GetPlayerHealth" = { en = "Gets current health points: GetPlayerHealth(playerid, &Float:health)", id = "Gets current health points: GetPlayerHealth(playerid, &Float:health)" }
+"SetPlayerArmour" = { en = "Sets current body armour points: SetPlayerArmour(playerid, Float:armour)", id = "Sets current body armour points: SetPlayerArmour(playerid, Float:armour)" }
+"GetPlayerArmour" = { en = "Gets current body armour points: GetPlayerArmour(playerid, &Float:armour)", id = "Gets current body armour points: GetPlayerArmour(playerid, &Float:armour)" }
+"GivePlayerMoney" = { en = "Adds or deducts money from player: GivePlayerMoney(playerid, money)", id = "Adds or deducts money from player: GivePlayerMoney(playerid, money)" }
+"GetPlayerMoney" = { en = "Returns current player money balance: GetPlayerMoney(playerid)", id = "Returns current player money balance: GetPlayerMoney(playerid)" }
+"ResetPlayerMoney" = { en = "Sets player money balance to zero: ResetPlayerMoney(playerid)", id = "Sets player money balance to zero: ResetPlayerMoney(playerid)" }
+"SetPlayerScore" = { en = "Sets player scoreboard score: SetPlayerScore(playerid, score)", id = "Sets player scoreboard score: SetPlayerScore(playerid, score)" }
+"GetPlayerScore" = { en = "Returns player scoreboard score: GetPlayerScore(playerid)", id = "Returns player scoreboard score: GetPlayerScore(playerid)" }
+"SetPlayerSkin" = { en = "Changes character PED skin ID: SetPlayerSkin(playerid, skinid)", id = "Changes character PED skin ID: SetPlayerSkin(playerid, skinid)" }
+"GetPlayerSkin" = { en = "Returns current character PED skin ID: GetPlayerSkin(playerid)", id = "Returns current character PED skin ID: GetPlayerSkin(playerid)" }
+"GivePlayerWeapon" = { en = "Awards weapon and ammo to player: GivePlayerWeapon(playerid, weaponid, ammo)", id = "Awards weapon and ammo to player: GivePlayerWeapon(playerid, weaponid, ammo)" }
+"ResetPlayerWeapons" = { en = "Removes all weapons from player: ResetPlayerWeapons(playerid)", id = "Removes all weapons from player: ResetPlayerWeapons(playerid)" }
+"GetPlayerWeapon" = { en = "Returns currently held weapon ID: GetPlayerWeapon(playerid)", id = "Returns currently held weapon ID: GetPlayerWeapon(playerid)" }
+"SetPlayerName" = { en = "Changes player nickname: SetPlayerName(playerid, const name[])", id = "Changes player nickname: SetPlayerName(playerid, const name[])" }
+"GetPlayerName" = { en = "Retrieves player nickname: GetPlayerName(playerid, const name[], len)", id = "Retrieves player nickname: GetPlayerName(playerid, const name[], len)" }
+"SetPlayerColor" = { en = "Sets player radar blip and name tag color: SetPlayerColor(playerid, color)", id = "Sets player radar blip and name tag color: SetPlayerColor(playerid, color)" }
+"GetPlayerColor" = { en = "Returns player color: GetPlayerColor(playerid)", id = "Returns player color: GetPlayerColor(playerid)" }
+"SetPlayerInterior" = { en = "Changes building interior ID: SetPlayerInterior(playerid, interiorid)", id = "Changes building interior ID: SetPlayerInterior(playerid, interiorid)" }
+"GetPlayerInterior" = { en = "Gets building interior ID: GetPlayerInterior(playerid)", id = "Gets building interior ID: GetPlayerInterior(playerid)" }
+"SetPlayerVirtualWorld" = { en = "Sets virtual world dimension ID: SetPlayerVirtualWorld(playerid, worldid)", id = "Sets virtual world dimension ID: SetPlayerVirtualWorld(playerid, worldid)" }
+"GetPlayerVirtualWorld" = { en = "Gets virtual world dimension ID: GetPlayerVirtualWorld(playerid)", id = "Gets virtual world dimension ID: GetPlayerVirtualWorld(playerid)" }
+"GetPlayerIp" = { en = "Retrieves player IP address: GetPlayerIp(playerid, const name[], len)", id = "Retrieves player IP address: GetPlayerIp(playerid, const name[], len)" }
+"GetPlayerPing" = { en = "Returns player latency in ms: GetPlayerPing(playerid)", id = "Returns player latency in ms: GetPlayerPing(playerid)" }
+"Kick" = { en = "Kicks a player from the server: Kick(playerid)", id = "Kicks a player from the server: Kick(playerid)" }
+"Ban" = { en = "Bans player IP address: Ban(playerid)", id = "Bans player IP address: Ban(playerid)" }
+"BanEx" = { en = "Bans player IP address with custom reason: BanEx(playerid, const reason[])", id = "Bans player IP address with custom reason: BanEx(playerid, const reason[])" }
+"PutPlayerInVehicle" = { en = "Teleports player directly into vehicle: PutPlayerInVehicle(playerid, vehicleid, seatid)", id = "Teleports player directly into vehicle: PutPlayerInVehicle(playerid, vehicleid, seatid)" }
+"RemovePlayerFromVehicle" = { en = "Ejects player from their vehicle: RemovePlayerFromVehicle(playerid)", id = "Ejects player from their vehicle: RemovePlayerFromVehicle(playerid)" }
+"GetPlayerVehicleID" = { en = "Returns vehicle ID player is inside: GetPlayerVehicleID(playerid)", id = "Returns vehicle ID player is inside: GetPlayerVehicleID(playerid)" }
+"GetPlayerVehicleSeat" = { en = "Returns vehicle seat index of player: GetPlayerVehicleSeat(playerid)", id = "Returns vehicle seat index of player: GetPlayerVehicleSeat(playerid)" }
+"CreateVehicle" = { en = "Spawns a new vehicle: CreateVehicle(vehicletype, Float:x, Float:y, Float:z, Float:rotation, color1, color2, respawn_delay, addsiren)", id = "Spawns a new vehicle: CreateVehicle(vehicletype, Float:x, Float:y, Float:z, Float:rotation, color1, color2, respawn_delay, addsiren)" }
+"DestroyVehicle" = { en = "Removes vehicle from the server: DestroyVehicle(vehicleid)", id = "Removes vehicle from the server: DestroyVehicle(vehicleid)" }
+"GetVehiclePos" = { en = "Gets 3D position of vehicle: GetVehiclePos(vehicleid, &Float:x, &Float:y, &Float:z)", id = "Gets 3D position of vehicle: GetVehiclePos(vehicleid, &Float:x, &Float:y, &Float:z)" }
+"SetVehiclePos" = { en = "Teleports vehicle to coordinates: SetVehiclePos(vehicleid, Float:x, Float:y, Float:z)", id = "Teleports vehicle to coordinates: SetVehiclePos(vehicleid, Float:x, Float:y, Float:z)" }
+"RepairVehicle" = { en = "Repairs vehicle engine and body panels: RepairVehicle(vehicleid)", id = "Repairs vehicle engine and body panels: RepairVehicle(vehicleid)" }
+"SetVehicleNumberPlate" = { en = "Sets license plate text: SetVehicleNumberPlate(vehicleid, const numberplate[])", id = "Sets license plate text: SetVehicleNumberPlate(vehicleid, const numberplate[])" }
+"GetVehicleModel" = { en = "Returns vehicle model ID: GetVehicleModel(vehicleid)", id = "Returns vehicle model ID: GetVehicleModel(vehicleid)" }
+"AddVehicleComponent" = { en = "Adds car mod component: AddVehicleComponent(vehicleid, componentid)", id = "Adds car mod component: AddVehicleComponent(vehicleid, componentid)" }
+"RemoveVehicleComponent" = { en = "Removes car mod component: RemoveVehicleComponent(vehicleid, componentid)", id = "Removes car mod component: RemoveVehicleComponent(vehicleid, componentid)" }
+"ChangeVehicleColor" = { en = "Changes body color of vehicle: ChangeVehicleColor(vehicleid, color1, color2)", id = "Changes body color of vehicle: ChangeVehicleColor(vehicleid, color1, color2)" }
+"ChangeVehiclePaintjob" = { en = "Changes paintjob livery of vehicle: ChangeVehiclePaintjob(vehicleid, paintjobid)", id = "Changes paintjob livery of vehicle: ChangeVehiclePaintjob(vehicleid, paintjobid)" }
+"CreateObject" = { en = "Creates global world object: CreateObject(modelid, Float:X, Float:Y, Float:Z, Float:rX, Float:rY, Float:rZ, Float:DrawDistance)", id = "Creates global world object: CreateObject(modelid, Float:X, Float:Y, Float:Z, Float:rX, Float:rY, Float:rZ, Float:DrawDistance)" }
+"DestroyObject" = { en = "Destroys world object: DestroyObject(objectid)", id = "Destroys world object: DestroyObject(objectid)" }
+"MoveObject" = { en = "Smoothly moves object to target position: MoveObject(objectid, Float:X, Float:Y, Float:Z, Float:Speed, Float:RotX, Float:RotY, Float:RotZ)", id = "Smoothly moves object to target position: MoveObject(objectid, Float:X, Float:Y, Float:Z, Float:Speed, Float:RotX, Float:RotY, Float:RotZ)" }
+"StopObject" = { en = "Halts object movement immediately: StopObject(objectid)", id = "Halts object movement immediately: StopObject(objectid)" }
+"CreatePickup" = { en = "Creates world pickup model: CreatePickup(model, type, Float:X, Float:Y, Float:Z, Virtualworld)", id = "Creates world pickup model: CreatePickup(model, type, Float:X, Float:Y, Float:Z, Virtualworld)" }
+"DestroyPickup" = { en = "Removes pickup: DestroyPickup(pickup)", id = "Removes pickup: DestroyPickup(pickup)" }
+"ShowPlayerDialog" = { en = "Displays modal GUI dialog window to player: ShowPlayerDialog(playerid, dialogid, style, caption[], info[], button1[], button2[])", id = "Displays modal GUI dialog window to player: ShowPlayerDialog(playerid, dialogid, style, caption[], info[], button1[], button2[])" }
+"TextDrawCreate" = { en = "Creates global on-screen text draw: TextDrawCreate(Float:x, Float:y, text[])", id = "Creates global on-screen text draw: TextDrawCreate(Float:x, Float:y, text[])" }
+"TextDrawDestroy" = { en = "Destroys global text draw: TextDrawDestroy(Text:text)", id = "Destroys global text draw: TextDrawDestroy(Text:text)" }
+"TextDrawShowForPlayer" = { en = "Displays text draw to player: TextDrawShowForPlayer(playerid, Text:text)", id = "Displays text draw to player: TextDrawShowForPlayer(playerid, Text:text)" }
+"TextDrawHideForPlayer" = { en = "Hides text draw from player: TextDrawHideForPlayer(playerid, Text:text)", id = "Hides text draw from player: TextDrawHideForPlayer(playerid, Text:text)" }
+"TextDrawSetString" = { en = "Updates text draw string: TextDrawSetString(Text:text, string[])", id = "Updates text draw string: TextDrawSetString(Text:text, string[])" }
+"fopen" = { en = "Opens file on disk: fopen(name[], mode)", id = "Opens file on disk: fopen(name[], mode)" }
+"fclose" = { en = "Closes open file handle: fclose(File:handle)", id = "Closes open file handle: fclose(File:handle)" }
+"fwrite" = { en = "Writes text line to file: fwrite(File:handle, string[])", id = "Writes text line to file: fwrite(File:handle, string[])" }
+"fread" = { en = "Reads text line from file: fread(File:handle, string[], size, bool:pack)", id = "Reads text line from file: fread(File:handle, string[], size, bool:pack)" }
+"fexist" = { en = "Checks if file exists on server disk: fexist(name[])", id = "Checks if file exists on server disk: fexist(name[])" }
+"fremove" = { en = "Deletes file from server disk: fremove(name[])", id = "Deletes file from server disk: fremove(name[])" }
+
+[item.CALLBACK]
+"OnGameModeInit" = { en = "Callback triggered when the gamemode loads", id = "Callback yang dipanggil saat gamemode dimuat" }
+"OnGameModeExit" = { en = "Callback triggered when the gamemode shuts down", id = "Callback yang dipanggil saat gamemode dihentikan" }
+"OnFilterScriptInit" = { en = "Callback triggered when a filterscript loads", id = "Callback yang dipanggil saat filterscript dimuat" }
+"OnFilterScriptExit" = { en = "Callback triggered when a filterscript unloads", id = "Callback yang dipanggil saat filterscript dilepas" }
+"OnPlayerConnect" = { en = "Callback triggered when a player joins the server", id = "Callback yang dipanggil saat pemain bergabung ke server" }
+"OnPlayerDisconnect" = { en = "Callback triggered when a player leaves the server", id = "Callback yang dipanggil saat pemain meninggalkan server" }
+"OnPlayerSpawn" = { en = "Callback triggered when a player spawns in the world", id = "Callback yang dipanggil saat pemain spawn di dunia" }
+"OnPlayerDeath" = { en = "Callback triggered when a player dies or is killed", id = "Callback yang dipanggil saat pemain mati atau terbunuh" }
+"OnVehicleSpawn" = { en = "Callback triggered when a vehicle spawns", id = "Callback yang dipanggil saat kendaraan spawn" }
+"OnVehicleDeath" = { en = "Callback triggered when a vehicle is destroyed", id = "Callback yang dipanggil saat kendaraan dihancurkan" }
+"OnPlayerText" = { en = "Callback triggered when a player sends public chat", id = "Callback yang dipanggil saat pemain mengirim chat publik" }
+"OnPlayerCommandText" = { en = "Callback triggered when a player enters a slash command", id = "Callback yang dipanggil saat pemain memasukkan perintah slash" }
+"OnPlayerRequestClass" = { en = "Callback triggered when a player views class selection", id = "Callback yang dipanggil saat pemain melihat pilihan kelas" }
+"OnPlayerEnterVehicle" = { en = "Callback triggered when a player starts entering a vehicle", id = "Callback yang dipanggil saat pemain mulai masuk kendaraan" }
+"OnPlayerExitVehicle" = { en = "Callback triggered when a player starts exiting a vehicle", id = "Callback yang dipanggil saat pemain mulai keluar kendaraan" }
+"OnPlayerStateChange" = { en = "Callback triggered when a player changes state (foot, car, etc.)", id = "Callback yang dipanggil saat status pemain berubah (berjalan, berkendara, dan lainnya)" }
+"OnPlayerEnterCheckpoint" = { en = "Callback triggered when a player enters standard checkpoint", id = "Callback yang dipanggil saat pemain memasuki checkpoint biasa" }
+"OnPlayerLeaveCheckpoint" = { en = "Callback triggered when a player leaves standard checkpoint", id = "Callback yang dipanggil saat pemain meninggalkan checkpoint biasa" }
+"OnPlayerEnterRaceCheckpoint" = { en = "Callback triggered when entering race checkpoint", id = "Callback yang dipanggil saat memasuki checkpoint balapan" }
+"OnPlayerLeaveRaceCheckpoint" = { en = "Callback triggered when leaving race checkpoint", id = "Callback yang dipanggil saat meninggalkan checkpoint balapan" }
+"OnRconCommand" = { en = "Callback triggered on server console RCON command", id = "Callback yang dipanggil saat perintah RCON dijalankan di konsol server" }
+"OnPlayerRequestSpawn" = { en = "Callback triggered when player clicks Spawn button", id = "Callback yang dipanggil saat pemain menekan tombol Spawn" }
+"OnObjectMoved" = { en = "Callback triggered when a moving object finishes its travel", id = "Callback yang dipanggil saat objek selesai bergerak" }
+"OnPlayerObjectMoved" = { en = "Callback triggered when player object finishes moving", id = "Callback yang dipanggil saat objek pemain selesai bergerak" }
+"OnPlayerPickUpPickup" = { en = "Callback triggered when a player walks over a pickup", id = "Callback yang dipanggil saat pemain melewati pickup" }
+"OnVehicleMod" = { en = "Callback triggered when a vehicle modification is installed", id = "Callback yang dipanggil saat modifikasi kendaraan dipasang" }
+"OnVehiclePaintjob" = { en = "Callback triggered when a vehicle paintjob is applied", id = "Callback yang dipanggil saat livery kendaraan diterapkan" }
+"OnVehicleRespray" = { en = "Callback triggered when a vehicle color is changed", id = "Callback yang dipanggil saat warna kendaraan diubah" }
+"OnVehicleDamageStatusUpdate" = { en = "Callback triggered on vehicle damage parts update", id = "Callback yang dipanggil saat kondisi kerusakan kendaraan diperbarui" }
+"OnUnoccupiedVehicleUpdate" = { en = "Callback triggered periodically for unoccupied vehicles", id = "Callback yang dipanggil berkala untuk kendaraan tanpa pengemudi" }
+"OnPlayerSelectedMenuRow" = { en = "Callback triggered when selecting a menu option", id = "Callback yang dipanggil saat memilih opsi menu" }
+"OnPlayerExitedMenu" = { en = "Callback triggered when player cancels out of a menu", id = "Callback yang dipanggil saat pemain membatalkan menu" }
+"OnDialogResponse" = { en = "Callback triggered when user interacts with a GUI dialog", id = "Callback yang dipanggil saat pengguna berinteraksi dengan dialog GUI" }
+"OnPlayerClickPlayerTextDraw" = { en = "Callback triggered on clicking personal text draw", id = "Callback yang dipanggil saat text draw pribadi diklik" }
+"OnPlayerClickTextDraw" = { en = "Callback triggered on clicking global text draw", id = "Callback yang dipanggil saat text draw global diklik" }
+"OnPlayerClickPlayer" = { en = "Callback triggered when clicking player in scoreboard", id = "Callback yang dipanggil saat pemain diklik pada papan skor" }
+"OnIncomingConnection" = { en = "Callback triggered on incoming raw client connection", id = "Callback yang dipanggil saat koneksi client mentah masuk" }
+"OnTrailerUpdate" = { en = "Callback triggered when vehicle trailer sync updates", id = "Callback yang dipanggil saat sinkronisasi trailer kendaraan diperbarui" }
+"OnVehicleSirenStateChange" = { en = "Callback triggered when siren toggles on/off", id = "Callback yang dipanggil saat sirene dinyalakan atau dimatikan" }
+"OnPlayerGiveDamage" = { en = "Callback triggered when a player damages someone", id = "Callback yang dipanggil saat pemain melukai seseorang" }
+"OnPlayerTakeDamage" = { en = "Callback triggered when a player suffers damage", id = "Callback yang dipanggil saat pemain menerima kerusakan" }
+"OnPlayerWeaponShot" = { en = "Callback triggered on bullet fired by weapon", id = "Callback yang dipanggil saat senjata menembakkan peluru" }
+
+[item.OPERATOR]
+">>>=" = { en = "Unsigned right shift assignment", id = "Assignment geser kanan tanpa tanda" }
+"<<=" = { en = "Left shift assignment", id = "Assignment geser kiri" }
+">>=" = { en = "Arithmetic right shift assignment", id = "Assignment geser kanan aritmetis" }
+"*=" = { en = "Multiplication assignment", id = "Assignment perkalian" }
+"/=" = { en = "Division assignment", id = "Assignment pembagian" }
+"%=" = { en = "Modulo assignment", id = "Assignment modulo" }
+"+=" = { en = "Addition assignment", id = "Assignment penjumlahan" }
+"-=" = { en = "Subtraction assignment", id = "Assignment pengurangan" }
+"&=" = { en = "Bitwise AND assignment", id = "Assignment AND bitwise" }
+"^=" = { en = "Bitwise XOR assignment", id = "Assignment XOR bitwise" }
+">>>" = { en = "Unsigned right shift", id = "Pergeseran kanan tanpa tanda" }
+">>" = { en = "Arithmetic right shift", id = "Pergeseran kanan aritmetis" }
+"<<" = { en = "Left shift", id = "Pergeseran kiri" }
+"&&" = { en = "Logical AND", id = "AND logis" }
+"==" = { en = "Equality comparison", id = "Perbandingan kesamaan" }
+"!=" = { en = "Inequality comparison", id = "Perbandingan ketidaksamaan" }
+"<=" = { en = "Less than or equal comparison", id = "Perbandingan kurang dari atau sama dengan" }
+">=" = { en = "Greater than or equal comparison", id = "Perbandingan lebih dari atau sama dengan" }
+"++" = { en = "Pre/post increment", id = "Increment sebelum atau sesudah nilai" }
+"--" = { en = "Pre/post decrement", id = "Decrement sebelum atau sesudah nilai" }
+"..." = { en = "Ellipsis / argument spread", id = "Elipsis atau perluasan argumen" }
+".." = { en = "Argument range marker", id = "Penanda rentang argumen" }
+"::" = { en = "Tag scope separator", id = "Pemisah cakupan tag" }
+"+" = { en = "Addition", id = "Penjumlahan" }
+"-" = { en = "Subtraction or negation", id = "Pengurangan atau negasi" }
+"*" = { en = "Multiplication", id = "Perkalian" }
+"/" = { en = "Division", id = "Pembagian" }
+"%" = { en = "Modulo", id = "Modulo" }
+"=" = { en = "Assignment", id = "Assignment" }
+"!" = { en = "Logical NOT", id = "NOT logis" }
+"<" = { en = "Less than comparison", id = "Perbandingan kurang dari" }
+">" = { en = "Greater than comparison", id = "Perbandingan lebih dari" }
+"&" = { en = "Bitwise AND", id = "AND bitwise" }
+"^" = { en = "Bitwise XOR", id = "XOR bitwise" }
+"~" = { en = "Bitwise NOT", id = "NOT bitwise" }
+"?" = { en = "Ternary conditional marker", id = "Penanda kondisi ternary" }
+":" = { en = "Ternary else marker", id = "Penanda else pada operator ternary" }
+"." = { en = "Array member or argument range separator", id = "Pemisah anggota array atau rentang argumen" }
+"," = { en = "Argument separator", id = "Pemisah argumen" }
+";" = { en = "Statement terminator", id = "Penutup pernyataan" }
+
+# --- natives grouped by include -------------------------------------
+
+[native."a_actor.inc"]
+"ApplyActorAnimation" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ClearActorAnimations" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CreateActor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DestroyActor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetActorFacingAngle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetActorHealth" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetActorPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetActorVirtualWorld" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsActorInvulnerable" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsActorStreamedIn" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsValidActor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetActorFacingAngle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetActorHealth" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetActorInvulnerable" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetActorPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetActorVirtualWorld" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."a_http.inc"]
+"HTTP" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."a_npc.inc"]
+"acos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"asin" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"atan" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"atan2" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"format" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetDistanceFromMeToPoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetMyFacingAngle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetMyPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerArmedWeapon" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerArmour" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerFacingAngle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerHealth" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerKeys" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerName" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerSpecialAction" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerState" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerVehicleID" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetTickCount" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerConnected" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerInRangeOfPoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerStreamedIn" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsVehicleStreamedIn" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"KillTimer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PauseRecordingPlayback" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"print" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"printf" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ResumeRecordingPlayback" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SendChat" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SendCommand" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetMyFacingAngle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetMyPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetTimer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"StartRecordingPlayback" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"StopRecordingPlayback" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."a_objects.inc"]
+"AttachObjectToObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AttachObjectToPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AttachObjectToVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AttachPlayerObjectToPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AttachPlayerObjectToVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CancelEdit" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CreateObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CreatePlayerObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DestroyObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DestroyPlayerObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"EditObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"EditPlayerObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetObjectModel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetObjectPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetObjectRot" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerObjectModel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerObjectPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerObjectRot" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsObjectMoving" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerObjectMoving" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsValidObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsValidPlayerObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"MoveObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"MovePlayerObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SelectObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetObjectMaterial" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetObjectMaterialText" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetObjectNoCameraCol" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetObjectPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetObjectRot" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetObjectsDefaultCameraCol" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerObjectMaterial" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerObjectMaterialText" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerObjectNoCameraCol" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerObjectPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerObjectRot" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"StopObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"StopPlayerObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."a_players.inc"]
+"AllowPlayerTeleport" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ApplyAnimation" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AttachCameraToObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AttachCameraToPlayerObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CancelSelectTextDraw" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ClearAnimations" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CreateExplosionForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CreatePlayerTextDraw" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DeletePVar" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DisablePlayerCheckpoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DisablePlayerRaceCheckpoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DisableRemoteVehicleCollisions" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"EditAttachedObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"EnablePlayerCameraTarget" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"EnableStuntBonusForAll" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"EnableStuntBonusForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ForceClassSelection" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetAnimationName" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerAmmo" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerAnimationIndex" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerArmour" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerCameraAspectRatio" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerCameraFrontVector" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerCameraMode" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerCameraPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerCameraTargetActor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerCameraTargetObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerCameraTargetPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerCameraTargetVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerCameraZoom" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerColor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerDistanceFromPoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerDrunkLevel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerFacingAngle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerFightingStyle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerHealth" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerInterior" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerIp" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerKeys" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerLastShotVectors" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerMoney" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerName" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerPing" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerScore" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerSkin" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerSpecialAction" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerState" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerSurfingObjectID" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerSurfingVehicleID" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerTargetActor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerTargetPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerTeam" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerTime" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerVehicleID" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerVehicleSeat" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerVelocity" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerVirtualWorld" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerWantedLevel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerWeapon" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerWeaponData" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerWeaponState" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPVarFloat" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPVarInt" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPVarNameAtIndex" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPVarString" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPVarsUpperIndex" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPVarType" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GivePlayerMoney" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GivePlayerWeapon" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"InterpolateCameraLookAt" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"InterpolateCameraPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerAttachedObjectSlotUsed" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerConnected" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerInAnyVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerInCheckpoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerInRaceCheckpoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerInRangeOfPoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerInVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerStreamedIn" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayAudioStreamForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayCrimeReportForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerPlaySound" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerSpectatePlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerSpectateVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawAlignment" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawBackgroundColor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawBoxColor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawColor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawDestroy" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawFont" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawHide" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawLetterSize" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawSetOutline" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawSetPreviewModel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawSetPreviewRot" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawSetPreviewVehCol" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawSetProportional" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawSetSelectable" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawSetShadow" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawSetString" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawShow" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawTextSize" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PlayerTextDrawUseBox" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"PutPlayerInVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"RemoveBuildingForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"RemovePlayerAttachedObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"RemovePlayerFromVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"RemovePlayerMapIcon" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ResetPlayerMoney" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ResetPlayerWeapons" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SelectTextDraw" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetCameraBehindPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerAmmo" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerArmedWeapon" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerArmour" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerAttachedObject" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerCameraLookAt" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerCameraPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerChatBubble" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerCheckpoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerColor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerDrunkLevel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerFacingAngle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerFightingStyle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerHealth" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerInterior" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerMapIcon" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerMarkerForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerName" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerPos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerPosFindZ" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerRaceCheckpoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerScore" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerShopName" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerSkillLevel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerSkin" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerSpecialAction" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerTeam" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerTime" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerVelocity" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerVirtualWorld" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerWantedLevel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerWeather" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPlayerWorldBounds" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPVarFloat" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPVarInt" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetPVarString" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetSpawnInfo" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ShowPlayerNameTagForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SpawnPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"StartRecordingPlayerData" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"StopAudioStreamForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"StopRecordingPlayerData" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TogglePlayerClock" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TogglePlayerControllable" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TogglePlayerSpectating" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."a_samp.inc"]
+"acos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AddMenuItem" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AddPlayerClass" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AddPlayerClassEx" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AddStaticPickup" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AddStaticVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AddStaticVehicleEx" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AllowAdminTeleport" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AllowInteriorWeapons" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"asin" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"atan" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"atan2" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"Attach3DTextLabelToPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"Attach3DTextLabelToVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"Ban" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"BanEx" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"BlockIpAddress" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CallLocalFunction" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CallRemoteFunction" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ConnectNPC" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"Create3DTextLabel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CreateExplosion" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CreateMenu" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CreatePickup" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CreatePlayer3DTextLabel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"Delete3DTextLabel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DeletePlayer3DTextLabel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DeleteSVar" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DestroyMenu" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DestroyPickup" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DisableInteriorEnterExits" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DisableMenu" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DisableMenuRow" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DisableNameTagLOS" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"EnableTirePopping" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"EnableVehicleFriendlyFire" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"EnableZoneNames" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"format" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GameModeExit" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GameTextForAll" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GameTextForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GangZoneCreate" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GangZoneDestroy" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GangZoneFlashForAll" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GangZoneFlashForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GangZoneHideForAll" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GangZoneHideForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GangZoneShowForAll" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GangZoneShowForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GangZoneStopFlashForAll" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GangZoneStopFlashForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetActorPoolSize" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetConsoleVarAsBool" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetConsoleVarAsInt" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetConsoleVarAsString" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetMaxPlayers" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetNetworkStats" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerMenu" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerNetworkStats" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerPoolSize" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetPlayerVersion" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetServerTickRate" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetServerVarAsBool" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetServerVarAsInt" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetServerVarAsString" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetSVarFloat" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetSVarInt" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetSVarNameAtIndex" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetSVarString" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetSVarsUpperIndex" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetSVarType" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetTickCount" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehiclePoolSize" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetWeaponName" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"HideMenuForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerAdmin" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsPlayerNPC" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsValidMenu" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"Kick" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"KillTimer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"LimitGlobalChatRadius" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"LimitPlayerMarkerRadius" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"NetStats_BytesReceived" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"NetStats_BytesSent" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"NetStats_ConnectionStatus" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"NetStats_GetConnectedTime" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"NetStats_GetIpPort" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"NetStats_MessagesReceived" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"NetStats_MessagesRecvPerSecond" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"NetStats_MessagesSent" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"NetStats_PacketLossPercent" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"print" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"printf" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SendClientMessage" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SendClientMessageToAll" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SendDeathMessage" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SendDeathMessageToPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SendPlayerMessageToAll" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SendPlayerMessageToPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SendRconCommand" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetDeathDropAmount" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetGameModeText" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetGravity" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetMenuColumnHeader" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetNameTagDrawDistance" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetSVarFloat" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetSVarInt" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetSVarString" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetTeamCount" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetTimer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetTimerEx" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetWeather" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetWorldTime" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SHA256_PassHash" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ShowMenuForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ShowNameTags" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ShowPlayerDialog" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ShowPlayerMarkers" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawAlignment" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawBackgroundColor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawBoxColor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawColor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawCreate" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawDestroy" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawFont" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawHideForAll" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawHideForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawLetterSize" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawSetOutline" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawSetPreviewModel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawSetPreviewRot" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawSetPreviewVehCol" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawSetProportional" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawSetSelectable" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawSetShadow" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawSetString" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawShowForAll" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawShowForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawTextSize" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"TextDrawUseBox" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"UnBlockIpAddress" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"Update3DTextLabelText" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"UpdatePlayer3DTextLabelText" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"UsePlayerPedAnims" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"VectorSize" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."a_sampdb.inc"]
+"db_close" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_debug_openfiles" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_debug_openresults" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_field_name" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_free_result" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_get_field" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_get_field_assoc" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_get_field_assoc_float" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_get_field_assoc_int" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_get_field_float" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_get_field_int" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_get_mem_handle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_get_result_mem_handle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_next_row" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_num_fields" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_num_rows" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_open" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"db_query" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."a_vehicles.inc"]
+"AddVehicleComponent" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"AttachTrailerToVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ChangeVehicleColor" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ChangeVehiclePaintjob" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"CreateVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DestroyVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"DetachTrailerFromVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleComponentInSlot" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleComponentType" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleDamageStatus" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleDistanceFromPoint" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleHealth" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleModel" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleModelInfo" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleParamsCarDoors" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleParamsCarWindows" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleParamsEx" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleParamsSirenState" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehiclePos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleRotationQuat" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleTrailer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleVelocity" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleVirtualWorld" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"GetVehicleZAngle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsTrailerAttachedToVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"IsVehicleStreamedIn" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"LinkVehicleToInterior" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ManualVehicleEngineAndLights" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"RemoveVehicleComponent" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"RepairVehicle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleAngularVelocity" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleHealth" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleNumberPlate" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleParamsCarDoors" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleParamsCarWindows" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleParamsEx" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleParamsForPlayer" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehiclePos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleToRespawn" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleVelocity" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleVirtualWorld" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"SetVehicleZAngle" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"UpdateVehicleDamageStatus" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."core.inc"]
+"clamp" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"deleteproperty" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"existproperty" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"funcidx" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"getarg" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"getproperty" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"heapspace" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"max" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"min" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"numargs" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"random" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"setarg" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"setproperty" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"swapchars" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"tolower" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"toupper" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."datagram.inc"]
+"listenport" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"sendpacket" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"sendstring" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."file.inc"]
+"fblockread" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fblockwrite" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fclose" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fexist" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fgetchar" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"flength" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fmatch" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fopen" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fputchar" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fread" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fremove" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fseek" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"ftemp" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"fwrite" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."float.inc"]
+"float" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatabs" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatadd" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatcmp" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatcos" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatdiv" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatfract" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatlog" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatmul" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatpower" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatround" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatsin" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatsqroot" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatstr" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floatsub" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"floattan" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"operator" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."string.inc"]
+"bool" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"memcpy" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"strcat" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"strcmp" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"strfind" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"strlen" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"strmid" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"strpack" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"strunpack" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"strval" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"uudecode" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"uuencode" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"valstr" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+[native."time.inc"]
+"getdate" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"gettime" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+"tickcount" = { en = "Native provided by the Pawn/SA-MP include set", id = "Fungsi native yang disediakan oleh kumpulan include Pawn/SA-MP" }
+
+# --- forwards grouped by include ------------------------------------
+
+[forward."datagram.inc"]
+"@receivepacket" = { en = "Forward callback provided by the Pawn/SA-MP include set", id = "Forward callback provided by the Pawn/SA-MP include set" }
+"@receivestring" = { en = "Forward callback provided by the Pawn/SA-MP include set", id = "Forward callback provided by the Pawn/SA-MP include set" }
+
+[forward."a_samp.inc"]
+"OnPlayerUpdate" = { en = "Forward callback provided by the Pawn/SA-MP include set", id = "Forward callback provided by the Pawn/SA-MP include set" }

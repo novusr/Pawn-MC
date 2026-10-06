@@ -122,9 +122,12 @@ fun PawnMCTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Match the app bar tone instead of the saturated primary: in the light
-            // scheme primary is a deep purple, so dark status bar icons would be
-            // unreadable on it.
+            // `statusBarColor` is deprecated: on API 35+ the system draws the status bar
+            // edge-to-edge and ignores any colour set here, so the surface tone is applied
+            // through the appearance flag below instead. Suppressed rather than removed
+            // because it is still what tints the bar on the older devices this app
+            // supports, where edge-to-edge is not the default.
+            @Suppress("DEPRECATION")
             window.statusBarColor = colorScheme.surfaceContainer.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }

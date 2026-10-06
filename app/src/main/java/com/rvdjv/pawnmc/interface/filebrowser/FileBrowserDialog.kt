@@ -24,7 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.InsertDriveFile
+import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -209,7 +209,7 @@ fun FileBrowserDialog(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            imageVector = if (hasAnyFilesAtAll) Icons.Filled.InsertDriveFile else Icons.Filled.FolderOpen,
+                            imageVector = if (hasAnyFilesAtAll) Icons.AutoMirrored.Filled.InsertDriveFile else Icons.Filled.FolderOpen,
                             contentDescription = null,
                             modifier = Modifier.size(48.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -267,7 +267,7 @@ private fun FileEntryRow(entry: FileEntry, onClick: () -> Unit) {
         val icon = when {
             entry.isParent -> Icons.Filled.ArrowUpward
             entry.file.isDirectory -> Icons.Filled.FolderOpen
-            else -> Icons.Filled.InsertDriveFile
+            else -> Icons.AutoMirrored.Filled.InsertDriveFile
         }
         val iconTint = if (entry.file.isDirectory && !entry.isParent) {
             MaterialTheme.colorScheme.primary

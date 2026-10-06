@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
  * entry point used to share with unrelated toolbar actions, so the button reads
  * as "edit this text file" instead of "some code feature".
  */
-object PawnIcons {
+object _Icons {
 
     /**
      * Save icon: a storage device with a notched top-right corner, a label slot
@@ -34,7 +34,7 @@ object PawnIcons {
      */
     val Save: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.Save",
+            name = "_Icons.Save",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -82,7 +82,7 @@ object PawnIcons {
      */
     val CodeEdit: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.CodeEdit",
+            name = "_Icons.CodeEdit",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -152,7 +152,7 @@ object PawnIcons {
      */
     val Workspace: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.Workspace",
+            name = "_Icons.Workspace",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -212,7 +212,7 @@ object PawnIcons {
      */
     val Settings: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.Settings",
+            name = "_Icons.Settings",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -274,7 +274,7 @@ object PawnIcons {
      */
     val Flower: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.Flower",
+            name = "_Icons.Flower",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -307,7 +307,7 @@ object PawnIcons {
      */
     val WifiSignal: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.WifiSignal",
+            name = "_Icons.WifiSignal",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -344,7 +344,7 @@ object PawnIcons {
      */
     val FolderRect: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.FolderRect",
+            name = "_Icons.FolderRect",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -376,7 +376,7 @@ object PawnIcons {
      */
     val FolderRectOpen: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.FolderRectOpen",
+            name = "_Icons.FolderRectOpen",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -405,7 +405,7 @@ object PawnIcons {
      */
     val FileRect: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.FileRect",
+            name = "_Icons.FileRect",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -465,7 +465,7 @@ object PawnIcons {
      */
     val IncludeRect: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.IncludeRect",
+            name = "_Icons.IncludeRect",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -509,7 +509,7 @@ object PawnIcons {
      */
     val SaveAll: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.SaveAll",
+            name = "_Icons.SaveAll",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -567,7 +567,7 @@ object PawnIcons {
      */
     val WavingHand: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.WavingHand",
+            name = "_Icons.WavingHand",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,
@@ -625,7 +625,7 @@ object PawnIcons {
      */
     val PanelRect: ImageVector by lazy {
         ImageVector.Builder(
-            name = "PawnIcons.PanelRect",
+            name = "_Icons.PanelRect",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,

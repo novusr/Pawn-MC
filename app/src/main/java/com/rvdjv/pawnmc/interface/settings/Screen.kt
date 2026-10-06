@@ -12,7 +12,6 @@ import com.rvdjv.pawnmc.data.config.AppLocalization
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,9 +70,12 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -118,40 +120,45 @@ private fun ThankYouLine(line: String) {
     val uriHandler = LocalUriHandler.current
     val linkColor = MaterialTheme.colorScheme.primary
 
-    val annotated = remember(line, linkColor) {
+    // `ClickableText` is deprecated: a click on a URL is an interaction with the link
+    // itself, not with a character offset. `LinkAnnotation.Url` carries both the target
+    // and the click handler, so no offset-to-annotation lookup is needed any more.
+    val annotated = remember(line, linkColor, uriHandler) {
         buildAnnotatedString {
             var last = 0
-            URL_REGEX.findAll(line).forEach { m ->
-                append(line.substring(last, m.range.first))
-                withStyle(
-                    SpanStyle(
-                        color = linkColor,
-                        textDecoration = TextDecoration.Underline
-                    )
+            URL_REGEX.findAll(line).forEach { match ->
+                append(line.substring(last, match.range.first))
+                withLink(
+                    LinkAnnotation.Url(
+                        url = match.value,
+                        styles = TextLinkStyles(
+                            style = SpanStyle(
+                                color = linkColor,
+                                textDecoration = TextDecoration.Underline,
+                            ),
+                        ),
+                        linkInteractionListener = { link ->
+                            val url = (link as? LinkAnnotation.Url)?.url
+                            if (url != null) runCatching { uriHandler.openUri(url) }
+                        },
+                    ),
                 ) {
-                    pushStringAnnotation(TAG_URL, m.value)
-                    append(m.value)
-                    pop()
+                    append(match.value)
                 }
-                last = m.range.last + 1
+                last = match.range.last + 1
             }
             if (last < line.length) append(line.substring(last))
         }
     }
 
-    ClickableText(
+    // A plain `Text` renders the annotated string and, because the span carries a
+    // `LinkAnnotation`, taps reach the listener above without any extra plumbing.
+    Text(
         text = annotated,
         style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
         modifier = Modifier.fillMaxWidth(),
-        onClick = { offset ->
-            annotated.getStringAnnotations(TAG_URL, offset, offset).firstOrNull()?.let { anno ->
-                runCatching { uriHandler.openUri(anno.item) }
-            }
-        }
     )
 }
-
-private const val TAG_URL = "url"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -245,7 +252,9 @@ fun SettingsScreen(
         refreshUpdateStatus()
     }
 
-    val localizer = remember(context) { AppLocalization.load(context) }
+    // Shared across screens so the localisation asset is read and parsed only once
+    // per process; the main screen also warms it up in the background.
+    val localizer = remember(context) { AppLocalization.shared(context) }
     val appLanguage = viewModel.n_app_language
     val includeFolderPickerLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -1609,7 +1618,9 @@ private fun EditorBackgroundDialog(
     onDismiss: () -> Unit,
     onApply: (String?) -> Unit
 ) {
-    val localizer = remember(context) { AppLocalization.load(context) }
+    // Shared across screens so the localisation asset is read and parsed only once
+    // per process; the main screen also warms it up in the background.
+    val localizer = remember(context) { AppLocalization.shared(context) }
     val presets = EditorBackgroundPresets
 
     // The typed text is the single source of truth for the dialog: an empty

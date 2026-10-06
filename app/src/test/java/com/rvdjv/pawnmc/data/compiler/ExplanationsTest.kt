@@ -6,25 +6,28 @@ import org.junit.Test
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 
 /**
- * Regression tests for the `data/_data_mc_26_explain.dat` parser.
+ * Regression tests for the `data/_data_2026_exp.toml` parser.
  *
  * The explanations themselves are external data, so only the decoding contract is
- * asserted here: the last entry of a duplicated code wins, comments are ignored and
- * both the `0x01:..:0x02:` and `code=explanation` forms are accepted.
+ * asserted here: every `[explain."<code>"]` table is flattened into
+ * `code.language` entries, an `en` leaf also answers for the bare code, and a
+ * later table for the same code wins.
  */
 class ExplanationsTest {
 
     @Test
-    fun parsesEncodedEntries() {
+    fun parsesTomlTables() {
         val parsed = Explanations.parse(
             """
             # comment line
-            0x01:017:0x02:Undefined symbol.
-            0x01:100:0x02:Cannot read from file.
+            [explain."017"]
+            en = "Undefined symbol."
+
+            [explain."100"]
+            en = "Cannot read from file."
             """.trimIndent()
         )
 
-        assertEquals(2, parsed.size)
         assertEquals("Undefined symbol.", parsed["017"])
         assertEquals("Cannot read from file.", parsed["100"])
     }
@@ -33,8 +36,11 @@ class ExplanationsTest {
     fun lastEntryOfDuplicatedCodeWins() {
         val parsed = Explanations.parse(
             """
-            0x01:217:0x02:First wording.
-            0x01:217:0x02:Second wording.
+            [explain."217"]
+            en = "First wording."
+
+            [explain."217"]
+            en = "Second wording."
             """.trimIndent()
         )
 
@@ -42,20 +48,16 @@ class ExplanationsTest {
     }
 
     @Test
-    fun acceptsPlainAssignmentForm() {
-        val parsed = Explanations.parse("021=Symbol already defined.")
-
-        assertEquals("Symbol already defined.", parsed["021"])
-    }
-
-    @Test
     fun resolvesLocalizedExplanationWithEnglishFallback() {
         val parsed = Explanations.parse(
             """
-            0x01:013.en:0x02:No entry point was found.
-            0x01:013.id:0x02:Titik masuk program tidak ditemukan.
-            0x01:013.es:0x02:No se encontro el punto de entrada.
-            0x01:017:0x02:Undefined symbol.
+            [explain."013"]
+            en = "No entry point was found."
+            id = "Titik masuk program tidak ditemukan."
+            es = "No se encontro el punto de entrada."
+
+            [explain."017"]
+            en = "Undefined symbol."
             """.trimIndent()
         )
 
@@ -88,6 +90,8 @@ class ExplanationsTest {
 
             # only a comment
             no-separator-here
+            [explain."999"]
+            en = "unterminated
             """.trimIndent()
         )
 
