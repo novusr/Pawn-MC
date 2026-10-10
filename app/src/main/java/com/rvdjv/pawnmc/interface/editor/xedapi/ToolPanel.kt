@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.editor
+﻿package com.rvdjv.pawnmc.`interface`.editor.xedapi
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,7 +24,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 /** What the floating top-right tool panel does. */
-enum class XedToolPanelMode {
+enum class ToolPanelMode {
     /** Searches the whole workspace; results land in the explorer panel. */
     SearchWorkspace,
 
@@ -40,8 +40,8 @@ enum class XedToolPanelMode {
  * the find/replace inputs of the workspace tools and an `X` to dismiss it.
  */
 @Composable
-fun XedToolPanel(
-    mode: XedToolPanelMode,
+fun ToolPanel(
+    mode: ToolPanelMode,
     find: String,
     replace: String,
     isBusy: Boolean,
@@ -53,14 +53,14 @@ fun XedToolPanel(
     modifier: Modifier = Modifier
 ) {
     val title = when (mode) {
-        XedToolPanelMode.SearchWorkspace -> "Search in Workspace"
-        XedToolPanelMode.ReplacePerFile -> "Replace Words per File"
-        XedToolPanelMode.ReplaceAllFiles -> "Replace Words All Files"
+        ToolPanelMode.SearchWorkspace -> "Search in Workspace"
+        ToolPanelMode.ReplacePerFile -> "Replace Words per File"
+        ToolPanelMode.ReplaceAllFiles -> "Replace Words All Files"
     }
     val primaryLabel = when (mode) {
-        XedToolPanelMode.SearchWorkspace -> "Search"
-        XedToolPanelMode.ReplacePerFile -> "Replace All in File"
-        XedToolPanelMode.ReplaceAllFiles -> "Replace in All Files"
+        ToolPanelMode.SearchWorkspace -> "Search"
+        ToolPanelMode.ReplacePerFile -> "Replace All in File"
+        ToolPanelMode.ReplaceAllFiles -> "Replace in All Files"
     }
 
     Surface(
@@ -94,7 +94,7 @@ fun XedToolPanel(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (mode != XedToolPanelMode.SearchWorkspace) {
+            if (mode != ToolPanelMode.SearchWorkspace) {
                 OutlinedTextField(
                     value = replace,
                     onValueChange = onReplaceChange,
@@ -133,7 +133,7 @@ fun XedToolPanel(
                 }
             }
 
-            if (mode == XedToolPanelMode.SearchWorkspace) {
+            if (mode == ToolPanelMode.SearchWorkspace) {
                 Text(
                     text = "Results are listed in the workspace panel.",
                     style = MaterialTheme.typography.labelSmall,

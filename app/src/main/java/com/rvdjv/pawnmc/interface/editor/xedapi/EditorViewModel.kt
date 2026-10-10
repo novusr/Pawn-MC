@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.editor
+﻿package com.rvdjv.pawnmc.`interface`.editor.xedapi
 
 import android.content.Context
 import androidx.compose.runtime.getValue
@@ -8,12 +8,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspaceSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-class XedEditorViewModel(
+class EditorViewModel(
     initialFilePath: String,
     context: Context? = null
 ) : ViewModel() {
@@ -40,7 +41,7 @@ class XedEditorViewModel(
      * The context is handed over so the folders picked here survive a restart: the
      * view model writes them to the config and re-opens them on the next launch.
      */
-    val workspace = XedWorkspaceViewModel(context)
+    val workspace = WorkspaceSession(context)
 
     var isLoading by mutableStateOf(true)
         private set
@@ -166,12 +167,12 @@ class XedEditorViewModel(
     }
 }
 
-class XedEditorViewModelFactory(private val filePath: String) : ViewModelProvider.Factory {
+class EditorViewModelFactory(private val filePath: String) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(XedEditorViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(EditorViewModel::class.java)) {
             // `Class.cast` is the checked form of `as T`, so a mismatched model class
             // fails at the factory instead of leaving an unchecked warning behind.
-            return modelClass.cast(XedEditorViewModel(filePath))
+            return modelClass.cast(EditorViewModel(filePath))
                 ?: throw IllegalArgumentException("Unknown ViewModel class")
         }
         throw IllegalArgumentException("Unknown ViewModel class")
@@ -180,24 +181,24 @@ class XedEditorViewModelFactory(private val filePath: String) : ViewModelProvide
 /**
  * Builds the editor view model for the whole activity.
  *
- * The instance is created once and reused, so the workspaces opened in the Xed
+ * The instance is created once and reused, so the workspaces opened in the
  * editor survive the editor being closed (for example after a compile) and are
  * still there the next time it is opened.
  */
-class XedEditorViewModelFactoryForActivity(context: Context) : ViewModelProvider.Factory {
+class EditorViewModelFactoryForActivity(context: Context) : ViewModelProvider.Factory {
 
     /** Kept as a property so the reference is never lost to shadowing. */
     private val appContext: Context = context.applicationContext ?: context
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(XedEditorViewModel::class.java)) {
+        if (modelClass.isAssignableFrom(EditorViewModel::class.java)) {
             val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(appContext)
             val path = config.n_last_selected_file_path.orEmpty()
-            // The context lets the view model persist the Xed workspace folders, so
+            // The context lets the view model persist the workspace folders, so
             // a folder picked in the editor is still open on the next launch.
             // `Class.cast` performs the check generics cannot, so no unchecked warning
             // is needed: a mismatched model class fails here rather than at the caller.
-            return modelClass.cast(XedEditorViewModel(path, appContext))
+            return modelClass.cast(EditorViewModel(path, appContext))
                 ?: throw IllegalArgumentException("Unknown ViewModel class")
         }
         throw IllegalArgumentException("Unknown ViewModel class")

@@ -11,10 +11,23 @@ import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.compiler.Explanations
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.update.UpdateManager
+import com.rvdjv.pawnmc.`interface`.main.SettingsTarget
 import com.rvdjv.pawnmc.`interface`.theme.PawnMCTheme
 import com.rvdjv.pawnmc.`interface`.theme.resolveDarkTheme
 
 class SettingsActivity : ComponentActivity() {
+
+    companion object {
+        /**
+         * Value of [SettingsTarget] the screen should scroll to on open.
+         *
+         * The enum name travels as a string rather than as a serialised enum so the
+         * activity stays constructible from any caller — the settings guide card, an
+         * intent filter, a shell test — without that caller having to import the enum,
+         * and an unknown value is simply ignored instead of crashing the screen.
+         */
+        const val EXTRA_FOCUS_TARGET = "com.rvdjv.pawnmc.extra.SETTINGS_FOCUS"
+    }
 
     override fun attachBaseContext(newBase: Context) {
         val language = CompilerConfig.getInstance(newBase).n_app_language
@@ -38,7 +51,11 @@ class SettingsActivity : ComponentActivity() {
                 SettingsScreen(
                     viewModel = viewModel,
                     onNavigateBack = { finish() },
-                    onRestartRequested = { restartApp() }
+                    onRestartRequested = { restartApp() },
+                    // Only the name travels in the intent; an unknown one resolves to
+                    // `null` and the screen simply opens at the top.
+                    focusTarget = intent.getStringExtra(EXTRA_FOCUS_TARGET)
+                        ?.let { name -> SettingsTarget.entries.firstOrNull { it.name == name } }
                 )
             }
         }

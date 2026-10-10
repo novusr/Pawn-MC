@@ -1,4 +1,4 @@
-# CMakeLists.txt for Pawn Compiler JNI Wrapper
+﻿# CMakeLists.txt for Pawn Compiler JNI Wrapper
 
 cmake_minimum_required(VERSION 3.22.1)
 project("pawnc" C CXX)
@@ -10,24 +10,51 @@ set(PAWNC_31011_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PAWNC_3107_SOURCE_DIR}/compiler/CMakeLists.txt")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PAWNC_31011_SOURCE_DIR}/compiler/CMakeLists.txt")
 
+# ---------------------------------------------------------------------------------
+# Compiler version header
+#
+# The Pawn submodules ship `compiler/version.h.in`, but that template is only present in
+# an initialised submodule, and PawnMC compiles the `compiler/` sources directly rather
+# than through pawn-lang's own packaging helper. `version.h` therefore lives in
+# `app/src/main/cpp` and both libraries include it from `${PAWN_VERSION_HEADER_DIR}`.
+#
+# The per-version numbers are still configured where a submodule is checked out: the
+# `configure_file` calls emit `pawnc3107/version.h` / `pawnc31011/version.h` into the
+# build tree, which sits *before* the source directory on the include path, so a full
+# checkout keeps the submodule's own template while a fresh shallow clone still builds.
+# ---------------------------------------------------------------------------------
+set(PAWN_VERSION_HEADER_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
 # Version 3.10.7
 set(VERSION_MAJOR 3)
 set(VERSION_MINOR 10)
 set(VERSION_BUILD 7)
 set(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BUILD}")
 math(EXPR VERSION_INT "${VERSION_MAJOR} << 8 | ${VERSION_MINOR}")
-configure_file(
-    "${PAWNC_3107_SOURCE_DIR}/compiler/version.h.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/pawnc3107/version.h"
-)
+if(EXISTS "${PAWNC_3107_SOURCE_DIR}/compiler/version.h.in")
+    configure_file(
+        "${PAWNC_3107_SOURCE_DIR}/compiler/version.h.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/pawnc3107/version.h"
+    )
+    set(PAWN_VERSION_HEADER_3107 "${CMAKE_CURRENT_BINARY_DIR}/pawnc3107")
+else()
+    message(STATUS "pawnc-3.10.7 submodule missing version.h.in; using the bundled version.h")
+    set(PAWN_VERSION_HEADER_3107 "${PAWN_VERSION_HEADER_DIR}")
+endif()
 
 # Version 3.10.11
 set(VERSION_BUILD 11)
 set(VERSION_STR "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_BUILD}")
-configure_file(
-    "${PAWNC_31011_SOURCE_DIR}/compiler/version.h.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/pawnc31011/version.h"
-)
+if(EXISTS "${PAWNC_31011_SOURCE_DIR}/compiler/version.h.in")
+    configure_file(
+        "${PAWNC_31011_SOURCE_DIR}/compiler/version.h.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/pawnc31011/version.h"
+    )
+    set(PAWN_VERSION_HEADER_31011 "${CMAKE_CURRENT_BINARY_DIR}/pawnc31011")
+else()
+    message(STATUS "pawnc-3.10.11 submodule missing version.h.in; using the bundled version.h")
+    set(PAWN_VERSION_HEADER_31011 "${PAWN_VERSION_HEADER_DIR}")
+endif()
 
 # Common definition
 set(COMMON_DEFINITIONS
@@ -106,13 +133,31 @@ set(PAWNC_31011_SOURCES
 )
 
 # pawnc 3107
+#
+# The Pawn compiler itself comes from the `pawnc-3.10.7` submodule; everything under
+# `CMAKE_CURRENT_SOURCE_DIR` is the PawnMC bridge, split by responsibility:
+#
+#   Compiler.cpp     JNI entry points, argument marshalling, cache-directory lookup
+#   Diagnostics.cpp  source-argument classification, compile worker thread
+#   Buffer.cpp       pc_printf / pc_error capture, warning and error counters
+#   Source.cpp       pc_opensrc family backed by an in-memory script cache
+#   Files.cpp        pc_openasm / pc_openbin / pc_createtmpsrc back ends
+#   Bridge.h         the shared entry points; Compiler.h holds the shared defines
+set(MC_BRIDGE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/Compiler.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Diagnostics.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Files.cpp
+)
+
 add_library(pawnc3107 SHARED
     ${PAWNC_3107_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Compiler.cpp
+    ${MC_BRIDGE_SOURCES}
 )
 
 target_include_directories(pawnc3107 PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}/pawnc3107
+    ${PAWN_VERSION_HEADER_3107}
     ${PAWNC_3107_SOURCE_DIR}/compiler
     ${PAWNC_3107_SOURCE_DIR}/linux
     ${PAWNC_3107_SOURCE_DIR}/amx
@@ -130,11 +175,11 @@ target_link_libraries(pawnc3107 android log)
 # pawnc 31011
 add_library(pawnc31011 SHARED
     ${PAWNC_31011_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Compiler.cpp
+    ${MC_BRIDGE_SOURCES}
 )
 
 target_include_directories(pawnc31011 PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}/pawnc31011
+    ${PAWN_VERSION_HEADER_31011}
     ${PAWNC_31011_SOURCE_DIR}/compiler
     ${PAWNC_31011_SOURCE_DIR}/linux
     ${PAWNC_31011_SOURCE_DIR}/amx

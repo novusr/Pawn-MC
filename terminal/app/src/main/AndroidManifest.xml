@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+      The terminal reports its live sessions in the notification shade so a shell that
+      outlives the editor stays reachable. The permission is declared here as well as in
+      the app module because this module owns the service that posts the notification;
+      the grant itself is requested once by the host application.
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <application>
         <!--
           Sessions live in a service so a running compile or `apt install` survives the
           editor screen being closed. It is a plain started/bound service, not a
-          foreground one: it shows no notification and Android is free to stop it with
-          the rest of the app.
+          foreground one: it shows no persistent notification requirement and Android is
+          free to stop it with the rest of the app. The session notification it posts is
+          informational - it mirrors the live sessions rather than keeping the process
+          alive.
         -->
         <service
             android:name="com.pawnmc.terminal.shell.TerminalService"

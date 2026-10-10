@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.data.config
+﻿package com.rvdjv.pawnmc.data.config
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -208,6 +208,44 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getBoolean(KEY_FORCED_INCLUDE_PATH_AUTO, false)
         set(value) = prefs.edit { putBoolean(KEY_FORCED_INCLUDE_PATH_AUTO, value) }
 
+    /**
+     * Settles the compiler version for [sourcePath] before a compile.
+     *
+     * This exists because the two compiler modes used to deadlock each other:
+     *
+     *  - The auto-detection path writes `n_compiler_version` whenever it recognises the
+     *    `pawncc` next to the file.
+     *  - Detection is disabled while forced mode is on, and forced mode is what the user
+     *    turns on to stop the app overriding their choice.
+     *
+     * The result was that a project shipping its own `pawno/pawncc.exe` kept compiling
+     * with the bundled library, and the only way out was to switch forced mode off and
+     * hope detection ran before the compile did. Detection now also runs here, on the
+     * path that is guaranteed to happen before the arguments are built, and the two
+     * modes are stated explicitly:
+     *
+     *  - forced on  -> the selected version is kept, detection is not consulted at all;
+     *  - forced off -> a recognised nearby compiler wins, and the bundled default is
+     *    used only when there is nothing to recognise.
+     *
+     * @param sourcePath file that is about to be compiled, or `null` on a bare launch
+     * @param detectedVersion already-resolved detection result, to avoid hashing twice
+     * @return the version the compile should actually use
+     */
+    fun repinCompilerModeFor(
+        sourcePath: String?,
+        detectedVersion: CompilerConfig.CompilerVersion? = null
+    ): CompilerVersion {
+        if (n_forced_compiler_mode) return n_compiler_version
+        if (sourcePath.isNullOrBlank()) return n_compiler_version
+
+        val n_resolved = detectedVersion ?: return n_compiler_version
+        if (n_resolved != n_compiler_version) {
+            n_compiler_version = n_resolved
+        }
+        return n_resolved
+    }
+
     var n_app_theme: AppTheme
         get() = AppTheme.fromValue(prefs.getString(KEY_APP_THEME, AppTheme.SYSTEM.value) ?: AppTheme.SYSTEM.value)
         set(value) {
@@ -223,42 +261,42 @@ class CompilerConfig private constructor(context: Context) {
         }
 
     //
-    // [xed workspace]
+    // [workspace]
     //
 
     /**
-     * Workspace folders the Xed editor keeps open between runs, in the order they
+     * Workspace folders the editor keeps open between runs, in the order they
      * were opened; the first one comes back in front.
      *
      * The main screen cannot pick a folder, only a single file, and a file picked
      * there is treated as temporary. Storing the folders here is what makes a
-     * workspace folder chosen inside the Xed editor itself survive leaving the
+     * workspace folder chosen inside the editor itself survive leaving the
      * editor, restarting the app or a reboot, instead of being thrown away with the
      * temporary single-file selection.
      *
      * Stored as one `;` separated string rather than a string set, because a set has
      * no order and would come back in an arbitrary one.
      */
-    var n_xed_workspace_folders: List<String>
-        get() = (prefs.getString(KEY_XED_WORKSPACE_FOLDERS, "") ?: "")
+    var n_workspace_folders: List<String>
+        get() = (prefs.getString(KEY_WORKSPACE_FOLDERS, "") ?: "")
             .split(';')
             .map { it.trim() }
             .filter { it.isNotEmpty() }
         set(value) = prefs.edit {
-            putString(KEY_XED_WORKSPACE_FOLDERS, value.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(";"))
+            putString(KEY_WORKSPACE_FOLDERS, value.map { it.trim() }.filter { it.isNotEmpty() }.joinToString(";"))
         }
 
-    /** Forgets the remembered workspace folders, e.g. when the user resets Xed. */
-    fun clearXedWorkspaceFolders() {
-        prefs.edit { remove(KEY_XED_WORKSPACE_FOLDERS) }
+    /** Forgets the remembered workspace folders, e.g. when the user closes every workspace. */
+    fun clearWorkspaceFolders() {
+        prefs.edit { remove(KEY_WORKSPACE_FOLDERS) }
     }
 
     //
-    // [xed editor appearance]
+    // [editor appearance]
     //
 
     /**
-     * Custom Xed editor canvas colour as `#RRGGBB`, or `null` when the editor
+     * Custom editor canvas colour as `#RRGGBB`, or `null` when the editor
      * should follow the app theme (the default behaviour).
      *
      * Stored as a string because SharedPreferences has no colour type, and the
@@ -495,14 +533,22 @@ class CompilerConfig private constructor(context: Context) {
         internal const val KEY_CUSTOM_FLAGS     = "custom_flags"
         internal const val KEY_INCLUDE_PATHS    = "include_paths"
         internal const val KEY_COMPILER_VERSION = "compiler_version"
-        private const val KEY_DETECTED_PRODUCT_VERSION = "detected_compiler_product_version"
+        internal const val KEY_DETECTED_PRODUCT_VERSION = "detected_compiler_product_version"
         private const val KEY_DETECTED_SIZE_BYTES = "detected_compiler_size_bytes"
         private const val KEY_DETECTED_MD5 = "detected_compiler_md5"
-        private const val KEY_FORCED_MODE = "forced_compiler_mode"
-        private const val KEY_FORCED_INCLUDE_PATH_AUTO = "forced_include_path_auto"
+
+        /**
+         * Compiler version handling, mirrored like the other preferences.
+         *
+         * `forced` means "use the version picked in Settings and nothing else"; when it
+         * is off the app keeps whichever version the user last picked but re-pins it to
+         * the metadata of the file it is about to compile ([repinCompilerModeFor]).
+         */
+        internal const val KEY_FORCED_MODE = "forced_compiler_mode"
+        internal const val KEY_FORCED_INCLUDE_PATH_AUTO = "forced_include_path_auto"
         internal const val KEY_APP_THEME = "app_theme"
         internal const val KEY_APP_LANGUAGE = "app_language"
-        private const val KEY_XED_WORKSPACE_FOLDERS = "xed_workspace_folders"
+        private const val KEY_WORKSPACE_FOLDERS = "workspace_folders"
         internal const val KEY_EDITOR_BG_COLOR = "editor_background_color"
 
         fun buildOptionsFor(

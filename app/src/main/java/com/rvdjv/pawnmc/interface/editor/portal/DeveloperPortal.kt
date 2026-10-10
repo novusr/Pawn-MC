@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.editor
+﻿package com.rvdjv.pawnmc.`interface`.editor.portal
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
@@ -74,7 +74,7 @@ import kotlin.math.roundToInt
 
 internal data class PawnccInvocation(val source: File, val options: List<String>)
 
-internal object XedTerminalCommandParser {
+internal object PortalCommandParser {
     val commandNames = listOf("help", "docs", "pawncc", "switch", "clear", "celar")
 
     fun tokenize(command: String): List<String>? {
@@ -150,7 +150,7 @@ internal object XedTerminalCommandParser {
     }
 }
 
-internal object XedSimulationData {
+internal object PortalText {
 
     /**
      * Terminal strings and the `docs` markdown, in the 2026 TOML format.
@@ -198,7 +198,7 @@ internal object XedSimulationData {
     }
 }
 
-private data class XedTerminalEntry(
+private data class PortalEntry(
     val command: String,
     val output: String,
     val markdown: Boolean = false,
@@ -212,7 +212,7 @@ private data class XedTerminalEntry(
 )
 
 @Composable
-internal fun XedMCPortal(
+internal fun DeveloperPortal(
     context: Context,
     language: CompilerConfig.AppLanguage,
     activeSource: File?,
@@ -226,13 +226,13 @@ internal fun XedMCPortal(
     val density = LocalDensity.current
     val keyboard = LocalSoftwareKeyboardController.current
     val scrollState = rememberScrollState()
-    val entries = remember { mutableStateListOf<XedTerminalEntry>() }
+    val entries = remember { mutableStateListOf<PortalEntry>() }
     var input by remember { mutableStateOf("") }
     var isRunning by remember { mutableStateOf(false) }
     var dragOffset by remember { mutableStateOf(IntOffset.Zero) }
     val currentDragOffset = rememberUpdatedState(dragOffset)
 
-    fun text(key: String) = XedSimulationData.get(context, key, language)
+    fun text(key: String) = PortalText.get(context, key, language)
 
     /**
      * Runs [commandLine] as if it had been typed in the console.
@@ -247,7 +247,7 @@ internal fun XedMCPortal(
         keyboard?.hide()
         isRunning = true
         scope.launch {
-            val tokens = XedTerminalCommandParser.tokenize(commandLine)
+            val tokens = PortalCommandParser.tokenize(commandLine)
             val output: String
             val markdown: Boolean
             var recordCommand = true
@@ -297,7 +297,7 @@ internal fun XedMCPortal(
                         } else {
                             val root = workspaceRoot ?: activeSource?.parentFile
                             val invocation = root?.let {
-                                XedTerminalCommandParser.pawnccInvocation(tokens.drop(1), it)
+                                PortalCommandParser.pawnccInvocation(tokens.drop(1), it)
                             }
                             if (invocation == null) {
                                 output = text("terminal.error.source")
@@ -322,7 +322,7 @@ internal fun XedMCPortal(
                 }
             }
             if (recordCommand) {
-                entries += XedTerminalEntry(commandLine, output, markdown, showPrompt = !isAutomatic)
+                entries += PortalEntry(commandLine, output, markdown, showPrompt = !isAutomatic)
                 while (entries.size > 24) entries.removeAt(0)
             }
             isRunning = false
@@ -346,7 +346,7 @@ internal fun XedMCPortal(
         modifier = Modifier
             .fillMaxSize()
             .zIndex(20f)
-            .testTag("xed_pawn_terminal")
+            .testTag("developer_portal")
     ) {
         val horizontalLimit = with(density) { (maxWidth / 2f - 36.dp).toPx().coerceAtLeast(0f) }
         val verticalLimit = with(density) { (maxHeight / 2f - 48.dp).toPx().coerceAtLeast(0f) }
@@ -392,7 +392,7 @@ internal fun XedMCPortal(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "MC Developer Portal",
+                        text = "Developer Portal",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.weight(1f)
@@ -413,7 +413,7 @@ internal fun XedMCPortal(
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                         .verticalScroll(scrollState)
-                        .testTag("xed_terminal_output")
+                        .testTag("developer_portal_output")
                 ) {
                     if (entries.isEmpty()) {
                         Text(
@@ -450,7 +450,7 @@ internal fun XedMCPortal(
                     }
                 }
 
-                val suggestions = XedTerminalCommandParser.suggestions(input, activeSource?.name)
+                val suggestions = PortalCommandParser.suggestions(input, activeSource?.name)
                 suggestions.take(3).forEach { suggestion ->
                     Text(
                         text = suggestion,
@@ -471,7 +471,7 @@ internal fun XedMCPortal(
                     OutlinedTextField(
                         value = input,
                         onValueChange = { input = it.take(500) },
-                        modifier = Modifier.weight(1f).testTag("xed_terminal_input"),
+                        modifier = Modifier.weight(1f).testTag("developer_portal_input"),
                         singleLine = true,
                         enabled = !isRunning,
                         placeholder = { Text(text("terminal.input.placeholder"), maxLines = 1, overflow = TextOverflow.Ellipsis) },

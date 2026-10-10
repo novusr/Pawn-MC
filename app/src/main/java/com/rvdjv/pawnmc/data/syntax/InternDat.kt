@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.data.pawn
+﻿package com.rvdjv.pawnmc.data.syntax
 
 import android.content.Context
 import com.rvdjv.pawnmc.data.config.TomlData
@@ -143,4 +143,50 @@ internal object InternDat {
         sequenceOf(File(FALLBACK_PATH), File("../$FALLBACK_PATH"), File(ASSET_PATH))
             .mapNotNull { file -> runCatching { file.takeIf(File::isFile)?.readText() }.getOrNull() }
             .firstOrNull { it.isNotBlank() }
+
+    /**
+     * Symbols mined from the file the user has open, merged after the shipped table.
+     *
+     * A project can declare its own natives and forwards (`native my_ext();`,
+     * `forward OnCustomHook();`); highlighting those as plain identifiers made the
+     * editor look like it did not understand the file it was showing. The scan is a
+     * line-based regex pass, not a parser: it never has to be perfect, it only has to
+     * be cheap enough to run on every load and conservative enough to never invent a
+     * symbol the compiler would not accept.
+     *
+     * @param sourceText the buffer as shown in the editor
+     * @return one symbol per declaration, in file order
+     */
+    internal fun symbolsFromSource(sourceText: String): List<PawnInternalSymbol> {
+        if (sourceText.isBlank()) return emptyList()
+
+        val found = mutableListOf<PawnInternalSymbol>()
+        val seen = mutableSetOf<String>()
+        sourceText.lineSequence().forEach { rawLine ->
+            // A declaration has to start the statement, so a commented-out or indented
+            // mention inside a string is naturally skipped.
+            val line = rawLine.trim()
+            for ((keyword, kind) in SOURCE_DECLARATIONS) {
+                if (!line.startsWith(keyword)) continue
+                val rest = line.removePrefix(keyword).trimStart()
+                val name = rest.takeWhile { it.isLetterOrDigit() || it == '_' }
+                if (name.isEmpty() || name.first().isDigit()) continue
+                if (seen.add(name)) {
+                    found += PawnInternalSymbol(
+                        include = "",
+                        kind = kind,
+                        name = name,
+                        description = line.removeSuffix(";").trim(),
+                    )
+                }
+            }
+        }
+        return found
+    }
+
+    /** Declaration keywords that introduce an externally visible symbol. */
+    private val SOURCE_DECLARATIONS = listOf(
+        "native" to PawnItemKind.FUNCTION,
+        "forward" to PawnItemKind.CALLBACK,
+    )
 }

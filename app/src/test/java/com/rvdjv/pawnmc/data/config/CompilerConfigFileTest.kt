@@ -1,8 +1,7 @@
-package com.rvdjv.pawnmc.data.config
+﻿package com.rvdjv.pawnmc.data.config
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.rvdjv.pawnmc.data.update.UpdateManager
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -99,11 +98,30 @@ class CompilerConfigFileTest {
     }
 
     @Test
-    fun file_livesInTheHiddenDirectoryTheUpdateManagerOwns() {
+    fun file_livesInTheUsersConfigFolderWhenSharedStorageIsAvailable() {
         val filesDir = temporaryFolder.newFolder("files")
-        val context = contextWithFilesDir(filesDir)
+        val external = temporaryFolder.newFolder("external")
+        val context = TestContext(filesDir, external)
 
-        assertEquals(UpdateManager.hiddenBaseDir(context), CompilerConfigFile.file(context).parentFile)
+        // The mirror is now user-visible on purpose: it sits in `PawnMC/config` under the
+        // app's shared directory, so it can be read and edited outside PawnMC.
+        assertEquals(
+            File(File(external, AppStorage.PUBLIC_DIR_NAME), "config"),
+            CompilerConfigFile.file(context).parentFile
+        )
+    }
+
+    @Test
+    fun file_fallsBackToThePrivateRootWhenSharedStorageIsMissing() {
+        val filesDir = temporaryFolder.newFolder("files-private")
+        // No external directory: the app is in a restricted profile or storage is unmounted.
+        val context = TestContext(filesDir, null)
+
+        // The mirror has to keep working, just invisibly, rather than failing to save.
+        assertEquals(
+            File(filesDir, ".pawnmc"),
+            CompilerConfigFile.file(context).parentFile
+        )
     }
 
     @Test
@@ -129,7 +147,14 @@ class CompilerConfigFileTest {
         assertEquals("/a/;/b/", prefs.all["${PREFIX}include_paths"])
     }
 
+    /**
+     * Seeds every mirrored key. The `forced` pair is included because it joined the mirror
+     * with the settings-restore work; a key that is written but never asserted is exactly
+     * the kind of omission this round-trip test exists to catch.
+     */
     private fun seed(prefs: InMemoryPreferences) {
+        prefs.all["${PREFIX}forced_compiler_mode"] = false
+        prefs.all["${PREFIX}forced_include_path_auto"] = false
         prefs.all["${PREFIX}debug_level"] = CompilerConfig.DebugLevel.D2.value
         prefs.all["${PREFIX}optimization_level"] = CompilerConfig.OptimizationLevel.O0.value
         prefs.all["${PREFIX}ignore_case"] = true
@@ -167,6 +192,8 @@ class CompilerConfigFileTest {
             "${PREFIX}app_theme",
             "${PREFIX}app_language",
             "${PREFIX}editor_background_color",
+            "${PREFIX}forced_compiler_mode",
+            "${PREFIX}forced_include_path_auto",
         )
     }
 }
@@ -230,13 +257,44 @@ private class InMemoryPreferences : SharedPreferences {
 }
 
 /**
- * A [Context] whose only meaningful answer is the files directory.
+ * A [Context] whose only meaningful answer is the files directory and the external files
+ * directory.
  *
- * The mirror code reaches the app directory through [UpdateManager.hiddenBaseDir], which
- * touches nothing else on the context, so overriding `getFilesDir` is enough and an
- * entire mock framework is not needed. `AbstractMethodError` from the other overrides
- * never happens because nothing else on the context is called.
+ * The mirror code reaches the app directory through
+ * [com.rvdjv.pawnmc.data.config.AppStorage], which asks for `filesDir` and for
+ * `getExternalFilesDir(null)`; nothing else on the context is touched, so overriding those
+ * two is enough and an entire mock framework is not needed. `bindService` is stubbed
+ * because newer `android.jar` versions declare it abstract and Kotlin requires every
+ * abstract member to be implemented even when the test never calls it.
  */
-private class TestContext(private val directory: File) : Context() {
+private class TestContext(
+    private val directory: File,
+    private val externalDirectory: File? = null
+) : Context() {
     override fun getFilesDir(): File = directory
+
+    override fun getExternalFilesDir(type: String?): File? = externalDirectory
+
+    override fun bindService(
+        service: android.content.Intent,
+        conn: android.content.ServiceConnection,
+        flags: Int
+    ): Boolean = false
+
+    /**
+     * Stubbed for the same reason as [bindService]: abstract platform members the test
+     * never reaches. `PERMISSION_DENIED` is the honest default for a test process -
+     * nothing has been granted, and no assertion depends on it being granted.
+     */
+    override fun checkCallingOrSelfPermission(permission: String): Int =
+        android.content.pm.PackageManager.PERMISSION_DENIED
+
+    override fun checkCallingOrSelfUriPermission(uri: android.net.Uri, modeFlags: Int): Int =
+        android.content.pm.PackageManager.PERMISSION_DENIED
+
+    override fun checkCallingPermission(permission: String): Int =
+        android.content.pm.PackageManager.PERMISSION_DENIED
+
+    override fun checkCallingUriPermission(uri: android.net.Uri, modeFlags: Int): Int =
+        android.content.pm.PackageManager.PERMISSION_DENIED
 }

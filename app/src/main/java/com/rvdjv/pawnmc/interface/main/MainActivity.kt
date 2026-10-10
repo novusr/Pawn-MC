@@ -1,12 +1,16 @@
-package com.rvdjv.pawnmc.`interface`.main
+﻿package com.rvdjv.pawnmc.`interface`.main
 
+import android.Manifest
 import android.content.Intent
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -17,15 +21,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import androidx.core.content.ContextCompat
 import com.rvdjv.pawnmc.data.compiler.Explanations
 import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.config.AppLocalization
-import com.rvdjv.pawnmc.data.pawn.InternDat
+import com.rvdjv.pawnmc.data.syntax.InternDat
 import com.rvdjv.pawnmc.data.update.UpdateManager
-import com.rvdjv.pawnmc.`interface`.editor.XedEditorScreen
-import com.rvdjv.pawnmc.`interface`.editor.XedEditorViewModel
-import com.rvdjv.pawnmc.`interface`.editor.XedEditorViewModelFactoryForActivity
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFolderPickerIntent
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFilePickerIntent
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveDocumentToFile
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveTreeToFile
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspaceSession
+import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorScreen
+import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorViewModel
+import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorViewModelFactoryForActivity
 import com.rvdjv.pawnmc.`interface`.settings.SettingsActivity
 import com.rvdjv.pawnmc.`interface`.theme.PawnMCTheme
 import com.rvdjv.pawnmc.`interface`.theme.resolveDarkTheme
@@ -53,8 +63,8 @@ class MainActivity : ComponentActivity() {
      * Keeping one instance alive means the opened workspaces and their recent
      * files survive leaving the editor, for example after compiling from it.
      */
-    private val editorViewModel: XedEditorViewModel by viewModels {
-        XedEditorViewModelFactoryForActivity(applicationContext)
+    private val editorViewModel: EditorViewModel by viewModels {
+        EditorViewModelFactoryForActivity(applicationContext)
     }
 
     /**
@@ -95,6 +105,9 @@ class MainActivity : ComponentActivity() {
 
         val config = CompilerConfig.getInstance(applicationContext)
         enableEdgeToEdge()
+        // The ongoing session notification is a nicety, not a requirement, so the prompt
+        // is fired once and a refusal only means the shade stays empty.
+        requestNotificationPermissionIfNeeded()
         setContent {
             PawnMCTheme(darkTheme = resolveDarkTheme(viewModel.n_app_theme)) {
                 // Covers SettingsActivity, which is a separate entry point.
@@ -122,11 +135,18 @@ class MainActivity : ComponentActivity() {
                         onSettingsClick = {
                             startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
                         },
+                        onOpenSettingsTarget = { target ->
+                            startActivity(
+                                Intent(this@MainActivity, SettingsActivity::class.java).apply {
+                                    putExtra(SettingsActivity.EXTRA_FOCUS_TARGET, target.name)
+                                }
+                            )
+                        },
                         initialUri = initialUri,
                         workspaceAvailable = editorViewModel.workspace.isWorkspaceOpen,
                     )
                     if (isEditorOpen && (editorViewModel.workspace.isWorkspaceOpen || !currentFilePath.isNullOrBlank())) {
-                        XedEditorScreen(
+                        EditorScreen(
                             viewModel = editorViewModel,
                             onNavigateBack = {
                                 isEditorOpen = false
@@ -162,5 +182,23 @@ class MainActivity : ComponentActivity() {
         viewModel.refreshTheme()
         viewModel.refreshLanguage()
         viewModel.refreshEditorBackgroundColor()
+    }
+
+    /**
+     * Asks for `POST_NOTIFICATIONS` once on API 33+.
+     *
+     * The result is deliberately not observed: [MainNotification] re-checks the grant on
+     * every update, so a later grant (from system settings) starts working without this
+     * activity having to remember anything, and a refusal costs nothing but the shade.
+     */
+    private fun requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        val granted = ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+        if (granted) return
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+            .launch(Manifest.permission.POST_NOTIFICATIONS)
     }
 }

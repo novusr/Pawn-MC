@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.data.pawn
+package com.rvdjv.pawnmc.data.syntax
 
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 

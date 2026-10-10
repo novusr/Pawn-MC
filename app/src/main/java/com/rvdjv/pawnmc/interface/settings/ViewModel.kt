@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.settings
+﻿package com.rvdjv.pawnmc.`interface`.settings
 
 import android.content.Context
 import androidx.compose.runtime.getValue
@@ -136,7 +136,7 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     }
 
     /**
-     * Stores a custom Xed editor background colour, or clears it (pass `null`)
+     * Stores a custom editor canvas colour, or clears it (pass `null`)
      * so the editor falls back to the app theme surface ramp.
      */
     fun updateEditorBackgroundColor(hex: String?) {

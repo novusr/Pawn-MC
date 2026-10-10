@@ -1,9 +1,10 @@
-package com.rvdjv.pawnmc.`interface`
+﻿package com.rvdjv.pawnmc.`interface`
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
@@ -29,7 +30,7 @@ object _Icons {
      * across the top, and a downward save arrow cut into the body.
      *
      * Geometry is centred in the 24x24 viewport and kept within a 3..21 box so
-     * the optical weight matches the Material icons it sits beside in the Xed
+     * the optical weight matches the Material icons it sits beside in the editor
      * top bar.
      */
     val Save: ImageVector by lazy {
@@ -143,12 +144,14 @@ object _Icons {
     }
 
     /**
-     * Workspace icon: three sheets stacked with a small offset, the Visual Studio
-     * style cue for "more than one document".
+     * Workspace icon: an outlined editor frame with an inset sidebar, i.e. the
+     * "project open in a panel" cue.
      *
-     * The back two sheets are plain silhouettes and the front sheet carries the
-     * folded-corner and text-baseline holes, so the glyph stays readable at 24dp
-     * while still reading as several documents rather than a single page.
+     * The explorer glyphs below are deliberately drawn as *outlines* with one accent
+     * block, the way the Visual Studio Code icon set reads at 16dp, instead of as
+     * solid silhouettes. The PawnMC identity is kept in the shape of that block: the
+     * workspace shows a short script line rather than a generic document corner, so
+     * every workspace surface still looks like PawnMC rather than like a stock editor.
      */
     val Workspace: ImageVector by lazy {
         ImageVector.Builder(
@@ -158,53 +161,51 @@ object _Icons {
             viewportWidth = 24f,
             viewportHeight = 24f
         ).apply {
+            // Outer frame, drawn as a stroked rounded rectangle.
             path(
-                fill = SolidColor(Color.Black),
-                pathFillType = PathFillType.EvenOdd
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.7f,
+                strokeLineJoin = StrokeJoin.Round
             ) {
-                // --- Back sheet. ---
-                moveTo(4f, 3f)
-                lineTo(18.6f, 3f)
-                lineTo(18.6f, 15.2f)
-                lineTo(16.8f, 13.4f)
-                lineTo(4f, 13.4f)
+                moveTo(4.0f, 5.6f)
+                lineTo(20.0f, 5.6f)
+                lineTo(20.0f, 18.4f)
+                lineTo(4.0f, 18.4f)
                 close()
-
-                // --- Middle sheet, offset down-right. ---
-                moveTo(6.4f, 7.2f)
-                lineTo(21f, 7.2f)
-                lineTo(21f, 18.2f)
-                lineTo(19.2f, 16.4f)
-                lineTo(6.4f, 16.4f)
+            }
+            // Sidebar split line, the "panel is docked" cue.
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.5f) {
+                moveTo(9.2f, 5.6f)
+                lineTo(9.2f, 18.4f)
+            }
+            // Sidebar content: two stacked file lines.
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round) {
+                moveTo(5.8f, 9.0f)
+                lineTo(7.4f, 9.0f)
+            }
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round) {
+                moveTo(5.8f, 12.0f)
+                lineTo(7.4f, 12.0f)
+            }
+            // Content area: one solid accent block, kept short and left-aligned so the
+            // glyph reads as code rather than as a paragraph of text.
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(11.6f, 9.2f)
+                lineTo(18.0f, 9.2f)
+                lineTo(18.0f, 10.6f)
+                lineTo(11.6f, 10.6f)
                 close()
-
-                // --- Front sheet, offset again, with a folded corner. ---
-                moveTo(3.2f, 11.2f)
-                lineTo(14.2f, 11.2f)
-                lineTo(14.2f, 17.0f)
-                lineTo(20f, 17.0f)
-                lineTo(20f, 21.4f)
-                lineTo(3.2f, 21.4f)
-                close()
-
-                // --- Hole: the fold of the front sheet. ---
-                moveTo(16.2f, 13.0f)
-                lineTo(18.0f, 14.8f)
-                lineTo(16.2f, 14.8f)
-                close()
-
-                // --- Hole: text baseline of the front sheet. ---
-                moveTo(5.8f, 19.2f)
-                lineTo(13.0f, 19.2f)
-                lineTo(13.0f, 20.2f)
-                lineTo(5.8f, 20.2f)
+                moveTo(11.6f, 12.4f)
+                lineTo(16.2f, 12.4f)
+                lineTo(16.2f, 13.8f)
+                lineTo(11.6f, 13.8f)
                 close()
             }
         }.build()
     }
 
     /**
-     * Settings icon: a gear, used for the Xed editor options menu.
+     * Settings icon: a gear, used for the editor options menu.
      *
      * Drawn as an even-odd silhouette so the eight teeth read as part of one
      * shape and the hub is a punched hole. A gear is unmistakably "settings",
@@ -299,7 +300,7 @@ object _Icons {
     }
 
     /**
-     * Wi-Fi signal icon used by the floating compile button of the Xed editor.
+     * Wi-Fi signal icon used by the floating compile button of the editor.
      *
      * Three nested arcs plus the dot at the bottom-left form the familiar signal
      * glyph. Each arc is a stroked ring segment, so the icon stays light in weight
@@ -336,11 +337,15 @@ object _Icons {
     }
 
     /**
-     * Rectangle-style folder icon for the workspace explorer.
+     * Closed-folder glyph for the workspace explorer.
      *
-     * A rounded tab sits on top of a rounded body, so the glyph matches the
-     * rectangular look of the Xed editor surfaces instead of the slanted Material
-     * folder shape.
+     * Redrawn as an outline with a filled tab, which is what makes the Visual Studio
+     * Code explorer read as light and modern: at 18dp a solid silhouette turns into a
+     * lump, while a 1.6dp stroke keeps the tab, the body and the fold separable.
+     *
+     * The PawnMC cue is the tab itself: it is drawn as a short slanted wedge, the same
+     * angle as the fuel of the app's `{}` files, so a folder in this explorer cannot be
+     * mistaken for the generic Material folder.
      */
     val FolderRect: ImageVector by lazy {
         ImageVector.Builder(
@@ -350,29 +355,35 @@ object _Icons {
             viewportWidth = 24f,
             viewportHeight = 24f
         ).apply {
+            // Filled tab, the identity wedge.
             path(fill = SolidColor(Color.Black)) {
-                // Tab of the folder.
-                moveTo(3f, 6.2f)
-                lineTo(9.4f, 6.2f)
-                lineTo(11.2f, 8.4f)
-                lineTo(3f, 8.4f)
+                moveTo(3.4f, 5.6f)
+                lineTo(9.2f, 5.6f)
+                lineTo(10.9f, 7.6f)
+                lineTo(3.4f, 7.6f)
                 close()
-                // Body of the folder.
-                moveTo(3f, 9.6f)
-                lineTo(21f, 9.6f)
-                lineTo(21f, 18.8f)
-                lineTo(3f, 18.8f)
+            }
+            // Outlined body.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.6f,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(3.4f, 7.6f)
+                lineTo(20.6f, 7.6f)
+                lineTo(20.6f, 18.6f)
+                lineTo(3.4f, 18.6f)
                 close()
             }
         }.build()
     }
 
     /**
-     * Rectangle-style folder icon in its open state, used while a directory in the
-     * workspace explorer is expanded.
+     * Open-folder glyph, used while a directory in the workspace explorer is expanded.
      *
-     * The body is skewed to the left so the opening reads clearly even at 18dp,
-     * which is the size the explorer rows render it at.
+     * The front plate is skewed left and the outline is left open at the top of that
+     * plate, so the "flap is lifted" reading survives without any fill: the same trick
+     * the platform folder glyphs use, kept as line art to match [FolderRect].
      */
     val FolderRectOpen: ImageVector by lazy {
         ImageVector.Builder(
@@ -382,26 +393,47 @@ object _Icons {
             viewportWidth = 24f,
             viewportHeight = 24f
         ).apply {
+            // Filled tab of the back plate.
             path(fill = SolidColor(Color.Black)) {
-                // Back plate with the tab.
-                moveTo(3f, 6.2f)
-                lineTo(9.4f, 6.2f)
-                lineTo(11.2f, 8.4f)
-                lineTo(3f, 8.4f)
+                moveTo(3.4f, 5.6f)
+                lineTo(9.2f, 5.6f)
+                lineTo(10.9f, 7.6f)
+                lineTo(3.4f, 7.6f)
                 close()
-                // Front plate, pushed right and down.
-                moveTo(6.4f, 10.4f)
-                lineTo(21f, 10.4f)
-                lineTo(21f, 18.8f)
-                lineTo(3.2f, 18.8f)
+            }
+            // Back plate outline, truncated where the front plate overlaps it.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.6f,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(3.4f, 7.6f)
+                lineTo(20.6f, 7.6f)
+                lineTo(20.6f, 10.2f)
+            }
+            // Front plate, skewed, open at the top-right.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.6f,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(6.6f, 10.2f)
+                lineTo(20.6f, 10.2f)
+                lineTo(20.6f, 18.6f)
+                lineTo(3.4f, 18.6f)
+                lineTo(6.6f, 10.2f)
                 close()
             }
         }.build()
     }
 
     /**
-     * Rectangle-style file icon carrying the `{}` of a source file, used for the
-     * Pawn documents of the workspace explorer and the editor tabs.
+     * Document glyph of a Pawn source file.
+     *
+     * A plain sheet outline with the `{}` pair the editor already uses for Pawn files,
+     * so the explorer, the tab strip and the completion list all speak the same visual
+     * language. The fold is drawn as a filled triangle instead of being punched out,
+     * which is what keeps the shape legible once the outline is only 1.5dp wide.
      */
     val FileRect: ImageVector by lazy {
         ImageVector.Builder(
@@ -412,56 +444,53 @@ object _Icons {
             viewportHeight = 24f
         ).apply {
             path(
-                fill = SolidColor(Color.Black),
-                pathFillType = PathFillType.EvenOdd
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.5f,
+                strokeLineJoin = StrokeJoin.Round
             ) {
-                // Sheet body.
-                moveTo(5f, 3.2f)
-                lineTo(14.4f, 3.2f)
-                lineTo(19f, 7.8f)
-                lineTo(19f, 20.8f)
-                lineTo(5f, 20.8f)
+                moveTo(5.4f, 3.6f)
+                lineTo(14.2f, 3.6f)
+                lineTo(18.6f, 8.0f)
+                lineTo(18.6f, 20.4f)
+                lineTo(5.4f, 20.4f)
                 close()
-                // Folded corner.
-                moveTo(14.4f, 3.2f)
-                lineTo(19f, 7.8f)
-                lineTo(14.4f, 7.8f)
+            }
+            // Solid fold, so the corner is unmistakable at tab-strip size.
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(14.2f, 3.6f)
+                lineTo(18.6f, 8.0f)
+                lineTo(14.2f, 8.0f)
                 close()
-                // Left brace, punched out.
-                moveTo(9.4f, 10.4f)
-                lineTo(10.6f, 11.4f)
-                lineTo(9.9f, 12.9f)
-                lineTo(9.4f, 13.6f)
-                lineTo(9.9f, 14.3f)
-                lineTo(10.6f, 15.8f)
-                lineTo(9.4f, 16.8f)
-                lineTo(8.7f, 15.8f)
-                lineTo(9.2f, 14.3f)
-                lineTo(8.2f, 13.6f)
-                lineTo(9.2f, 12.9f)
-                lineTo(8.7f, 11.4f)
-                close()
-                // Right brace, punched out.
-                moveTo(14.6f, 10.4f)
-                lineTo(15.3f, 11.4f)
-                lineTo(14.8f, 12.9f)
-                lineTo(15.8f, 13.6f)
-                lineTo(14.8f, 14.3f)
-                lineTo(15.3f, 15.8f)
-                lineTo(14.6f, 16.8f)
-                lineTo(13.4f, 15.8f)
-                lineTo(13.9f, 14.3f)
-                lineTo(12.9f, 13.6f)
-                lineTo(13.9f, 12.9f)
-                lineTo(13.4f, 11.4f)
-                close()
+            }
+            // Braces: the Pawn signature.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.4f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(10.2f, 11.2f)
+                lineTo(8.9f, 13.6f)
+                lineTo(10.2f, 16.0f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.4f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(13.8f, 11.2f)
+                lineTo(15.1f, 13.6f)
+                lineTo(13.8f, 16.0f)
             }
         }.build()
     }
 
     /**
-     * Include-file icon: the [FileRect] sheet with a folded `+` punched into it,
-     * so `#include` documents are told apart from source files at a glance.
+     * Include-file glyph: [FileRect] with a `+` in the body instead of the braces.
+     *
+     * `#include` documents are the one file kind the explorer has to tell apart at a
+     * glance, and a single extra stroke does that without reading the name.
      */
     val IncludeRect: ImageVector by lazy {
         ImageVector.Builder(
@@ -472,33 +501,39 @@ object _Icons {
             viewportHeight = 24f
         ).apply {
             path(
-                fill = SolidColor(Color.Black),
-                pathFillType = PathFillType.EvenOdd
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.5f,
+                strokeLineJoin = StrokeJoin.Round
             ) {
-                // Sheet body.
-                moveTo(5f, 3.2f)
-                lineTo(14.4f, 3.2f)
-                lineTo(19f, 7.8f)
-                lineTo(19f, 20.8f)
-                lineTo(5f, 20.8f)
+                moveTo(5.4f, 3.6f)
+                lineTo(14.2f, 3.6f)
+                lineTo(18.6f, 8.0f)
+                lineTo(18.6f, 20.4f)
+                lineTo(5.4f, 20.4f)
                 close()
-                // Folded corner.
-                moveTo(14.4f, 3.2f)
-                lineTo(19f, 7.8f)
-                lineTo(14.4f, 7.8f)
+            }
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(14.2f, 3.6f)
+                lineTo(18.6f, 8.0f)
+                lineTo(14.2f, 8.0f)
                 close()
-                // Vertical bar of the plus.
-                moveTo(11.6f, 10.2f)
-                lineTo(13.0f, 10.2f)
-                lineTo(13.0f, 16.6f)
-                lineTo(11.6f, 16.6f)
-                close()
-                // Horizontal bar of the plus.
-                moveTo(9.4f, 12.6f)
-                lineTo(15.2f, 12.6f)
-                lineTo(15.2f, 14.0f)
-                lineTo(9.4f, 14.0f)
-                close()
+            }
+            // Plus sign.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.5f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(12.0f, 11.6f)
+                lineTo(12.0f, 16.4f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.5f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(9.6f, 14.0f)
+                lineTo(14.4f, 14.0f)
             }
         }.build()
     }
@@ -620,8 +655,12 @@ object _Icons {
     }
 
     /**
-     * Workspace-panel icon: a rectangle with a narrow left sidebar, i.e. the file
-     * explorer layout. Used by the floating workspace panel button.
+     * Workspace-panel icon: an outlined frame with a filled sidebar, matching the
+     * explorer glyphs above.
+     *
+     * Drawn at the same stroke weight as [Workspace] so the floating panel button, the
+     * tab-strip toggle and the menu entry all read as one family instead of mixing a
+     * solid card with line-art folders.
      */
     val PanelRect: ImageVector by lazy {
         ImageVector.Builder(
@@ -632,37 +671,36 @@ object _Icons {
             viewportHeight = 24f
         ).apply {
             path(
-                fill = SolidColor(Color.Black),
-                pathFillType = PathFillType.EvenOdd
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.7f,
+                strokeLineJoin = StrokeJoin.Round
             ) {
-                // Outer frame.
-                moveTo(3f, 4.4f)
-                lineTo(21f, 4.4f)
-                lineTo(21f, 19.6f)
-                lineTo(3f, 19.6f)
+                moveTo(3.6f, 5.0f)
+                lineTo(20.4f, 5.0f)
+                lineTo(20.4f, 19.0f)
+                lineTo(3.6f, 19.0f)
                 close()
-                // Sidebar slot.
-                moveTo(5.4f, 6.8f)
-                lineTo(9.4f, 6.8f)
-                lineTo(9.4f, 17.2f)
-                lineTo(5.4f, 17.2f)
+            }
+            // Filled sidebar, the "panel is open" block.
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(5.8f, 7.2f)
+                lineTo(9.6f, 7.2f)
+                lineTo(9.6f, 16.8f)
+                lineTo(5.8f, 16.8f)
                 close()
-                // Text lines of the content area.
-                moveTo(11.8f, 7.4f)
-                lineTo(18.6f, 7.4f)
-                lineTo(18.6f, 9.0f)
-                lineTo(11.8f, 9.0f)
-                close()
-                moveTo(11.8f, 11.2f)
-                lineTo(18.6f, 11.2f)
-                lineTo(18.6f, 12.8f)
-                lineTo(11.8f, 12.8f)
-                close()
-                moveTo(11.8f, 15.0f)
-                lineTo(16.4f, 15.0f)
-                lineTo(16.4f, 16.6f)
-                lineTo(11.8f, 16.6f)
-                close()
+            }
+            // Three text lines in the content area.
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round) {
+                moveTo(11.6f, 8.4f)
+                lineTo(18.2f, 8.4f)
+            }
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round) {
+                moveTo(11.6f, 12.0f)
+                lineTo(18.2f, 12.0f)
+            }
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.4f, strokeLineCap = StrokeCap.Round) {
+                moveTo(11.6f, 15.6f)
+                lineTo(15.8f, 15.6f)
             }
         }.build()
     }

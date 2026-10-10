@@ -69,6 +69,9 @@ class TerminalService : Service() {
         val created = createSession(id, client)
         sessions[id] = created
         _sessionIds.update { it + id }
+        // One notification for the whole service, naming where the shell is working, so a
+        // session that outlives the editor is still reachable from the shade.
+        TerminalNotification.update(this, requestedWorkingDirectory)
         return created
     }
 
@@ -82,19 +85,31 @@ class TerminalService : Service() {
         if (id == activeSessionId.value) {
             activeSessionId.value = _sessionIds.value.firstOrNull() ?: DEFAULT_SESSION_ID
         }
-        if (sessions.isEmpty()) stopSelf()
+        if (sessions.isEmpty()) {
+            // The indicator follows the sessions exactly: no shell left means nothing to
+            // report, and the user should not have to swipe away a stale notification.
+            TerminalNotification.cancel(this)
+            stopSelf()
+        } else {
+            TerminalNotification.update(this, requestedWorkingDirectory)
+        }
     }
 
     fun terminateAll() {
         sessions.values.forEach { runCatching { it.finishIfRunning() } }
         sessions.clear()
         _sessionIds.value = emptyList()
+        TerminalNotification.cancel(this)
         stopSelf()
     }
 
     override fun onDestroy() {
         sessions.values.forEach { runCatching { it.finishIfRunning() } }
         sessions.clear()
+        // Android stops the service together with the app, and the notification has to go
+        // with it: an indicator claiming a shell is alive while the process is gone would
+        // be a lie the user cannot act on.
+        TerminalNotification.cancel(this)
         super.onDestroy()
     }
 

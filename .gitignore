@@ -23,3 +23,50 @@ TODO.txt
 COMMIT.txt
 .env
 Xed-Editor
+
+# --- Build / debug output that must never be committed -------------------------
+# `/build` above only anchors at the repository root, so the `:terminal:*`
+# modules (which have no .gitignore of their own) used to have their whole
+# `build/` trees tracked. These patterns cover both cases.
+build/
+
+# Gradle / Kotlin / AGP incremental state.
+.gradle/
+.kotlin/
+captures/
+
+# CMake / NDK output: object files, dependency files and the packaged libs.
+.externalNativeBuild/
+.cxx/
+*.o
+*.o.d
+*.d
+*.so
+*.so.d
+
+# Packaged artefacts and native build intermediates.
+*.apk
+*.aab
+*.aar
+*.jar
+*.class
+*.dex
+
+# Compiler output for the Pawn sources the app compiles.
+*.amx
+*.amx.bak
+
+# Logs and captured run output from a local build or test sweep.
+*.log
+*.err
+build-check.log
+build-check.err
+tests.log
+tests.err
+
+# Ignore-case conversion backup folders created next to a working project.
+*.backup/
+
+# Scratch Pawn/terminal files kept at the project root by manual testing.
+/TMP/
+/PawnMC/

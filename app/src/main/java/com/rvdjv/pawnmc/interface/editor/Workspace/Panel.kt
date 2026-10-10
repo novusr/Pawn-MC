@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.editor
+﻿package com.rvdjv.pawnmc.`interface`.editor.Workspace
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,8 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rvdjv.pawnmc.`interface`._Icons
 import java.io.File
-import kotlin.math.roundToInt
-/** Minimum height of a touch target in the panel, per the accessibility guidance. */
+import kotlin.math.roundToInt/** Minimum height of a touch target in the panel, per the accessibility guidance. */
 private val PanelRowMinHeight = 44.dp
 
 /**
@@ -73,8 +72,8 @@ private val PanelRowMinHeight = 44.dp
  * reveal the complete output without preventing the explorer itself from scrolling.
  */
 @Composable
-fun XedWorkspacePanel(
-    session: XedWorkspaceViewModel,
+fun WorkspacePanel(
+    session: WorkspaceSession,
     outputText: String = "",
     onOpenFile: (File) -> Unit,
     onCloseFile: (File) -> Unit,
@@ -233,7 +232,7 @@ fun XedWorkspacePanel(
  * closes that workspace.
  */
 @Composable
-private fun WorkspaceSwitcherRow(session: XedWorkspaceViewModel) {
+private fun WorkspaceSwitcherRow(session: WorkspaceSession) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

@@ -3,7 +3,6 @@ package com.rvdjv.pawnmc.data.config
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.rvdjv.pawnmc.data.update.UpdateManager
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -13,11 +12,13 @@ import java.io.File
  *
  * SharedPreferences alone could not carry settings across a manual reinstall: the keys
  * live inside the APK's private prefs area, which the installer clears. This file lives
- * in `files/.pawnmc/` — the same hidden area the terminal's `TMP/unit.pwn` scratch file
- * and the update manager's version marker use — so a fresh install finds it, reads the
- * user's old choices back and writes them into the prefs again ("restore"). Every write
- * goes to both places at once ("mirror"), which means the JSON is never a hand-made
- * export the user has to remember to run.
+ * in `PawnMC/config/` on the app's shared directory ([AppStorage.dataRoot]) whenever
+ * external storage is available, so the user can read it, back it up, or hand-edit it
+ * between two installs, and the app finds it again on the next launch and writes it back
+ * into the prefs ("restore"). When shared storage is unavailable the same file is kept
+ * in the app-private `files/.pawnmc` root instead, so the feature degrades to invisible
+ * rather than to broken. Every write goes to both places at once ("mirror"), which means
+ * the JSON is never a hand-made export the user has to remember to run.
  *
  * The file is keyed by `CompilerConfig.KEY_*`, i.e. the very names the prefs use. That is
  * deliberate: `restore` is a plain "read these keys out of the file and put them back",
@@ -30,7 +31,7 @@ import java.io.File
  */
 internal object CompilerConfigFile {
 
-    /** File name inside [UpdateManager.hiddenBaseDir]. */
+    /** File name inside [AppStorage.configRoot] (or the private fallback). */
     const val FILE_NAME: String = "compiler_config.json"
 
     /**
@@ -43,7 +44,11 @@ internal object CompilerConfigFile {
 
     private const val SCHEMA_VERSION = 1
 
-    fun file(context: Context): File = File(UpdateManager.hiddenBaseDir(context), FILE_NAME)
+    /**
+     * The mirror on the user-visible app directory, or the private fallback when shared
+     * storage is not mounted.
+     */
+    fun file(context: Context): File = File(AppStorage.configRoot(context), FILE_NAME)
 
     /**
      * Loads the JSON file and writes its values into [prefs].
@@ -82,6 +87,11 @@ internal object CompilerConfigFile {
             root.optStringOrNull(CompilerConfig.KEY_COMPILER_VERSION)?.let { editor.putString(CompilerConfig.KEY_COMPILER_VERSION, it) }
             root.optStringOrNull(CompilerConfig.KEY_APP_THEME)?.let { editor.putString(CompilerConfig.KEY_APP_THEME, it) }
             root.optStringOrNull(CompilerConfig.KEY_APP_LANGUAGE)?.let { editor.putString(CompilerConfig.KEY_APP_LANGUAGE, it) }
+
+            // Compiler version handling is a preference like any other, so it is restored
+            // with the rest instead of resetting to "automatic" on every reinstall.
+            root.optBoolean(CompilerConfig.KEY_FORCED_MODE, null)?.let { editor.putBoolean(CompilerConfig.KEY_FORCED_MODE, it) }
+            root.optBoolean(CompilerConfig.KEY_FORCED_INCLUDE_PATH_AUTO, null)?.let { editor.putBoolean(CompilerConfig.KEY_FORCED_INCLUDE_PATH_AUTO, it) }
 
             // A JSON null means "no custom colour" (i.e. follow the theme), which has to
             // remove the key rather than store the literal string.
@@ -130,6 +140,8 @@ internal object CompilerConfigFile {
         root.put(CompilerConfig.KEY_COMPILER_VERSION, prefs.getString(CompilerConfig.KEY_COMPILER_VERSION, null))
         root.put(CompilerConfig.KEY_APP_THEME, prefs.getString(CompilerConfig.KEY_APP_THEME, null))
         root.put(CompilerConfig.KEY_APP_LANGUAGE, prefs.getString(CompilerConfig.KEY_APP_LANGUAGE, null))
+        root.put(CompilerConfig.KEY_FORCED_MODE, prefs.getBoolean(CompilerConfig.KEY_FORCED_MODE, false))
+        root.put(CompilerConfig.KEY_FORCED_INCLUDE_PATH_AUTO, prefs.getBoolean(CompilerConfig.KEY_FORCED_INCLUDE_PATH_AUTO, false))
 
         val color = prefs.getString(CompilerConfig.KEY_EDITOR_BG_COLOR, null)
         if (color == null) root.put(CompilerConfig.KEY_EDITOR_BG_COLOR, JSONObject.NULL)

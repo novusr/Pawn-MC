@@ -1,9 +1,9 @@
-package com.rvdjv.pawnmc.`interface`.editor.pawn
+﻿package com.rvdjv.pawnmc.`interface`.editor.syntax
 
 import android.os.Bundle
-import com.rvdjv.pawnmc.data.pawn._item
-import com.rvdjv.pawnmc.data.pawn.PawnItemKind
-import com.rvdjv.pawnmc.data.pawn.PawnRegistry
+import com.rvdjv.pawnmc.data.syntax._item
+import com.rvdjv.pawnmc.data.syntax.PawnItemKind
+import com.rvdjv.pawnmc.data.syntax.PawnRegistry
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
@@ -19,7 +19,7 @@ import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.SymbolPairMatch
 
 /**
- * Official Pawn language implementation for the internal Sora/Xed editor engine.
+ * Official Pawn language implementation for the internal Sora-based editor engine.
  *
  * Autocompletion is served from [PawnRegistry], which now also carries the
  * operator table and the include-derived natives and forwards, so the popup

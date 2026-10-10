@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.editor
+﻿package com.rvdjv.pawnmc.`interface`.editor.xedapi
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -121,8 +121,18 @@ import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
-import com.rvdjv.pawnmc.data.pawn.PawnRegistry
-import com.rvdjv.pawnmc.`interface`.editor.pawn.PawnLanguage
+import com.rvdjv.pawnmc.data.syntax.PawnRegistry
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.MAX_OPEN_WORKSPACES
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.OpenDocument
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspaceSession
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspaceSearchHit
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFolderPickerIntent
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFilePickerIntent
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveDocumentToFile
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveTreeToFile
+import com.rvdjv.pawnmc.`interface`.editor.syntax.PawnLanguage
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspacePanel
+import com.rvdjv.pawnmc.`interface`.editor.portal.DeveloperPortal
 import com.pawnmc.terminal.TerminalOverlay
 import com.pawnmc.terminal.TerminalRequest
 import io.github.rosemoe.sora.event.ContentChangeEvent
@@ -140,8 +150,8 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun XedEditorScreen(
-    viewModel: XedEditorViewModel,
+fun EditorScreen(
+    viewModel: EditorViewModel,
     onNavigateBack: () -> Unit,
     editorBackgroundColor: String? = null,
     compileOutput: String = "",
@@ -221,14 +231,14 @@ fun XedEditorScreen(
     var isExplorerVisible by remember { mutableStateOf(false) }
     var explorerOffset by remember { mutableStateOf(IntOffset.Zero) }
     var isPawnTerminalVisible by remember { mutableStateOf(false) }
-    // The Xed editor's sandbox button now opens the real sandbox terminal, so the flag that
+    // The editor sandbox button now opens the real sandbox terminal, so the flag that
     // used to toggle the "coming soon" notice drives the overlay instead.
     var isTerminalVisible by remember { mutableStateOf(false) }
     var pawnConsoleVersion by remember {
         mutableStateOf(CompilerConfig.CompilerVersion.V3107)
     }
     var explorerWidth by remember { mutableFloatStateOf(320f) }
-    var toolPanelMode by remember { mutableStateOf<XedToolPanelMode?>(null) }
+    var toolPanelMode by remember { mutableStateOf<ToolPanelMode?>(null) }
     var toolFind by remember { mutableStateOf("") }
     var toolReplace by remember { mutableStateOf("") }
     var isToolBusy by remember { mutableStateOf(false) }
@@ -267,7 +277,7 @@ fun XedEditorScreen(
             } else {
                 Toast.makeText(
                     context,
-                    "That folder is not on local storage, Xed cannot browse it",
+                    "That folder is not on local storage, the editor cannot browse it",
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -600,7 +610,7 @@ fun XedEditorScreen(
     }
 
     if (showAboutDialog) {
-        XedAboutDialog(
+        EditorAboutDialog(
             localizer = localizer,
             language = appLanguage,
             onDismiss = { showAboutDialog = false }
@@ -674,7 +684,7 @@ fun XedEditorScreen(
                                 modifier = Modifier.weight(1f)
                             )
                             TextButton(
-                                onClick = { hashFilePickerLauncher.launch(buildOpenFileIntent()) }
+                                onClick = { hashFilePickerLauncher.launch(buildFilePickerIntent()) }
                             ) {
                                 Icon(Icons.Filled.FolderOpen, contentDescription = null)
                                 Text("Choose file")
@@ -839,7 +849,7 @@ fun XedEditorScreen(
                                 },
                                 onClick = {
                                     showMenu = false
-                                    folderPickerLauncher.launch(buildOpenFolderIntent())
+                                    folderPickerLauncher.launch(buildFolderPickerIntent())
                                 }
                             )
                             if (workspace.openWorkspaces.isNotEmpty()) {
@@ -884,7 +894,7 @@ fun XedEditorScreen(
                                 },
                                 onClick = {
                                     showMenu = false
-                                    toolPanelMode = XedToolPanelMode.SearchWorkspace
+                                    toolPanelMode = ToolPanelMode.SearchWorkspace
                                 }
                             )
                             DropdownMenuItem(
@@ -894,7 +904,7 @@ fun XedEditorScreen(
                                 },
                                 onClick = {
                                     showMenu = false
-                                    toolPanelMode = XedToolPanelMode.ReplacePerFile
+                                    toolPanelMode = ToolPanelMode.ReplacePerFile
                                 }
                             )
                             DropdownMenuItem(
@@ -904,7 +914,7 @@ fun XedEditorScreen(
                                 },
                                 onClick = {
                                     showMenu = false
-                                    toolPanelMode = XedToolPanelMode.ReplaceAllFiles
+                                    toolPanelMode = ToolPanelMode.ReplaceAllFiles
                                 }
                             )
                             DropdownMenuItem(
@@ -997,7 +1007,7 @@ fun XedEditorScreen(
                                 text = {
                                     Text(
                                         localizer.get(
-                                            if (isQuickSymbolBarVisible) "xed.quickkeys.hide" else "xed.quickkeys.show",
+                                            if (isQuickSymbolBarVisible) "editor.quickkeys.hide" else "editor.quickkeys.show",
                                             appLanguage,
                                             if (isQuickSymbolBarVisible) "Hide Quick Keys" else "Show Quick Keys"
                                         )
@@ -1013,7 +1023,7 @@ fun XedEditorScreen(
                             )
                             DropdownMenuItem(
                                 text = {
-                                    Text(localizer.get("xed.about.menu", appLanguage, "About Xed Editor"))
+                                    Text(localizer.get("editor.about.menu", appLanguage, "About PawnMC Editor"))
                                 },
                                 leadingIcon = { Icon(Icons.Filled.Info, contentDescription = null) },
                                 onClick = {
@@ -1130,14 +1140,14 @@ fun XedEditorScreen(
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                 // Visual Studio Code style tab strip above the code canvas.
-                XedTabStrip(
+                EditorTabStrip(
                     documents = workspace.documents,
                     activePath = workspace.activePath,
                     onSelectTab = { file -> workspace.setActive(file) },
                     onCloseTab = { file -> workspace.closeDocument(file) },
                     onNewTabClick = { isExplorerVisible = !isExplorerVisible },
-                    onOpenFileClick = { folderPickerLauncher.launch(buildOpenFolderIntent()) },
-                    onOpenPawnFileClick = { pawnFilePickerLauncher.launch(buildOpenFileIntent()) },
+                    onOpenFileClick = { folderPickerLauncher.launch(buildFolderPickerIntent()) },
+                    onOpenPawnFileClick = { pawnFilePickerLauncher.launch(buildFilePickerIntent()) },
                     onCreateFileClick = {
                         newFileName = ""
                         showNewFileDialog = true
@@ -1184,17 +1194,17 @@ fun XedEditorScreen(
                         if (workspaceHasNoActiveFile) {
                             EmptyWorkspaceView(
                                 onBrowseExplorer = { isExplorerVisible = !isExplorerVisible },
-                                onOpenFolder = { folderPickerLauncher.launch(buildOpenFolderIntent()) }
+                                onOpenFolder = { folderPickerLauncher.launch(buildFolderPickerIntent()) }
                             )
                         } else {
                         // Explicit type argument: without it Kotlin cannot infer the view type of the
 // factory and the update block is reported as untyped.
-                        AndroidView<XedCodeEditor>(
+                        AndroidView<PawnCodeEditor>(
                             factory = { ctx: Context ->
                                 // The last expression must be the editor itself: an
                                 // `apply` block returns Unit, which would break the
                                 // factory's return type.
-                                val created = XedCodeEditor(ctx)
+                                val created = PawnCodeEditor(ctx)
                                 created.apply {
                                     typefaceText = Typeface.MONOSPACE
                                     isLineNumberEnabled = isLineNumbers
@@ -1238,7 +1248,7 @@ fun XedEditorScreen(
                                 }
                                 created
                             },
-                            update = { editor: XedCodeEditor ->
+                            update = { editor: PawnCodeEditor ->
                                 editorRef = editor
                                 // Re-tint when the app theme (and therefore the surface
                                 // ramp) changes while the editor view is still alive.
@@ -1268,7 +1278,7 @@ fun XedEditorScreen(
                     }
                 }
 
-                // Floating explorer: like every other Xed surface it is a free-floating
+                // Floating explorer: like every other floating surface it is a free-floating
                 // card that the user drags anywhere inside the editor canvas, not a
                 // docked sidebar welded to one edge.
                 if (isExplorerVisible) {
@@ -1304,7 +1314,7 @@ fun XedEditorScreen(
                                 .fillMaxHeight(EXPLORER_HEIGHT_FRACTION)
                                 .zIndex(2f)
                         ) {
-                            XedWorkspacePanel(
+                            WorkspacePanel(
                                 session = workspace,
                                 outputText = compileOutput,
                                 onOpenFile = openWorkspaceFile,
@@ -1319,7 +1329,7 @@ fun XedEditorScreen(
                                     }, 250)
                                 },
                                 onClosePanel = { isExplorerVisible = false },
-                                onOpenFolder = { folderPickerLauncher.launch(buildOpenFolderIntent()) },
+                                onOpenFolder = { folderPickerLauncher.launch(buildFolderPickerIntent()) },
                                 onHeaderDrag = { delta ->
                                     explorerOffset = IntOffset(
                                         (clampedExplorerOffset.x + delta.x).coerceIn(0, maxOffsetX),
@@ -1334,7 +1344,7 @@ fun XedEditorScreen(
                 }
 
                 toolPanelMode?.let { mode ->
-                    XedToolPanel(
+                    ToolPanel(
                         mode = mode,
                         find = toolFind,
                         replace = toolReplace,
@@ -1343,12 +1353,12 @@ fun XedEditorScreen(
                         onReplaceChange = { toolReplace = it },
                         onRun = {
                             when (mode) {
-                                XedToolPanelMode.SearchWorkspace -> runWorkspaceSearch()
-                                XedToolPanelMode.ReplacePerFile -> runReplacePerFile(true)
-                                XedToolPanelMode.ReplaceAllFiles -> runReplaceAllFiles()
+                                ToolPanelMode.SearchWorkspace -> runWorkspaceSearch()
+                                ToolPanelMode.ReplacePerFile -> runReplacePerFile(true)
+                                ToolPanelMode.ReplaceAllFiles -> runReplaceAllFiles()
                             }
                         },
-                        onRunSecondary = if (mode == XedToolPanelMode.ReplacePerFile) {
+                        onRunSecondary = if (mode == ToolPanelMode.ReplacePerFile) {
                             { runReplacePerFile(false) }
                         } else {
                             null
@@ -1425,7 +1435,7 @@ fun XedEditorScreen(
                         showSearchBar = !showSearchBar
                         if (!showSearchBar) editorRef?.searcher?.stopSearch()
                     },
-                    onOpenWorkspaceClick = { folderPickerLauncher.launch(buildOpenFolderIntent()) },
+                    onOpenWorkspaceClick = { folderPickerLauncher.launch(buildFolderPickerIntent()) },
                     onSaveClick = { saveActiveFile() },
                     onSaveAllClick = {
                         if (workspace.isWorkspaceOpen) {
@@ -1479,7 +1489,7 @@ fun XedEditorScreen(
                     } else {
                         viewModel.filePath.takeIf { it.isNotBlank() }?.let { File(it) }
                     }
-                    XedMCPortal(
+                    DeveloperPortal(
                         context = context,
                         language = appLanguage,
                         activeSource = terminalSource,
@@ -1584,52 +1594,52 @@ fun XedEditorScreen(
     }
 }
 
-private data class XedAboutItem(
+private data class EditorAboutItem(
     val key: String,
     val title: String,
     val description: String
 )
 
 @Composable
-private fun XedAboutDialog(
+private fun EditorAboutDialog(
     localizer: AppLocalization,
     language: CompilerConfig.AppLanguage,
     onDismiss: () -> Unit
 ) {
     val items = listOf(
-        XedAboutItem("xed.about.back", "Back", "Return to the file selection and compiler screen."),
-        XedAboutItem("xed.about.undo", "Undo", "Undo the most recent edit."),
-        XedAboutItem("xed.about.redo", "Redo", "Restore the most recently undone edit."),
-        XedAboutItem("xed.about.options", "Editor options", "Open workspace, search and replace tools, view controls, quick keys, and this About page."),
-        XedAboutItem("xed.about.open_workspace", "Open Workspace Folder", "Choose a local folder and browse its files in the workspace panel."),
-        XedAboutItem("xed.about.close_workspace", "Close Workspace", "Close the active workspace while keeping other open workspaces available."),
-        XedAboutItem("xed.about.close_all", "Close All Workspaces", "Close every workspace currently open in Xed."),
-        XedAboutItem("xed.about.search_workspace", "Search in Workspace", "Find text across files in the active workspace."),
-        XedAboutItem("xed.about.replace_file", "Replace Words per File", "Replace matches in the current file, one occurrence or all at once."),
-        XedAboutItem("xed.about.replace_workspace", "Replace Words All Files", "Replace matching text across the workspace files."),
-        XedAboutItem("xed.about.workspace_panel", "Show or Hide Workspace Panel", "Toggle the panel containing open files, folders, and search results."),
-        XedAboutItem("xed.about.select_all", "Select All", "Select all text in the current file."),
-        XedAboutItem("xed.about.jump", "Jump to Line", "Move the cursor directly to a line number."),
-        XedAboutItem("xed.about.wrap", "Word Wrap", "Turn line wrapping on or off."),
-        XedAboutItem("xed.about.read_only", "Read-Only Mode", "Prevent edits until editing is enabled again."),
-        XedAboutItem("xed.about.line_numbers", "Line Numbers", "Show or hide line numbers and the current column."),
-        XedAboutItem("xed.about.quickkeys_toggle", "Quick Keys Toggle", "Show or hide the bottom row with TAB, symbols, and digits."),
-        XedAboutItem("xed.about.about", "About Xed Editor", "Open this guide to Xed's tools and controls."),
-        XedAboutItem("xed.about.search_file", "Search in File", "Find text in the current file and move between matches."),
-        XedAboutItem("xed.about.open_folder", "Open Folder", "Choose a workspace folder from the floating toolbar."),
-        XedAboutItem("xed.about.save", "Save", "Save the active file."),
-        XedAboutItem("xed.about.save_as_all", "Save As or Save All", "Save the current file under a new name, or save all modified workspace files."),
-        XedAboutItem("xed.about.compile", "Compile", "Save open workspace changes and compile the active Pawn file."),
-        XedAboutItem("xed.about.explorer", "Workspace Panel Button", "Show or hide the floating workspace panel."),
-        XedAboutItem("xed.about.tabs", "File Tabs", "Switch between open files or close a file from its tab."),
-        XedAboutItem("xed.about.new_tab", "Add or Open File", "Open the workspace panel or choose another folder."),
-        XedAboutItem("xed.about.tab_key", "TAB", "Insert one indentation level at the cursor."),
-        XedAboutItem("xed.about.symbol_keys", "Symbol and Number Keys", "Insert braces, parentheses, brackets, punctuation, or digits at the cursor.")
+        EditorAboutItem("editor.about.back", "Back", "Return to the file selection and compiler screen."),
+        EditorAboutItem("editor.about.undo", "Undo", "Undo the most recent edit."),
+        EditorAboutItem("editor.about.redo", "Redo", "Restore the most recently undone edit."),
+        EditorAboutItem("editor.about.options", "Editor options", "Open workspace, search and replace tools, view controls, quick keys, and this About page."),
+        EditorAboutItem("editor.about.open_workspace", "Open Workspace Folder", "Choose a local folder and browse its files in the workspace panel."),
+        EditorAboutItem("editor.about.close_workspace", "Close Workspace", "Close the active workspace while keeping other open workspaces available."),
+        EditorAboutItem("editor.about.close_all", "Close All Workspaces", "Close every workspace currently open in the editor."),
+        EditorAboutItem("editor.about.search_workspace", "Search in Workspace", "Find text across files in the active workspace."),
+        EditorAboutItem("editor.about.replace_file", "Replace Words per File", "Replace matches in the current file, one occurrence or all at once."),
+        EditorAboutItem("editor.about.replace_workspace", "Replace Words All Files", "Replace matching text across the workspace files."),
+        EditorAboutItem("editor.about.workspace_panel", "Show or Hide Workspace Panel", "Toggle the panel containing open files, folders, and search results."),
+        EditorAboutItem("editor.about.select_all", "Select All", "Select all text in the current file."),
+        EditorAboutItem("editor.about.jump", "Jump to Line", "Move the cursor directly to a line number."),
+        EditorAboutItem("editor.about.wrap", "Word Wrap", "Turn line wrapping on or off."),
+        EditorAboutItem("editor.about.read_only", "Read-Only Mode", "Prevent edits until editing is enabled again."),
+        EditorAboutItem("editor.about.line_numbers", "Line Numbers", "Show or hide line numbers and the current column."),
+        EditorAboutItem("editor.about.quickkeys_toggle", "Quick Keys Toggle", "Show or hide the bottom row with TAB, symbols, and digits."),
+        EditorAboutItem("editor.about.about", "About PawnMC Editor", "Open this guide to PawnMC's editor controls."),
+        EditorAboutItem("editor.about.search_file", "Search in File", "Find text in the current file and move between matches."),
+        EditorAboutItem("editor.about.open_folder", "Open Folder", "Choose a workspace folder from the floating toolbar."),
+        EditorAboutItem("editor.about.save", "Save", "Save the active file."),
+        EditorAboutItem("editor.about.save_as_all", "Save As or Save All", "Save the current file under a new name, or save all modified workspace files."),
+        EditorAboutItem("editor.about.compile", "Compile", "Save open workspace changes and compile the active Pawn file."),
+        EditorAboutItem("editor.about.explorer", "Workspace Panel Button", "Show or hide the floating workspace panel."),
+        EditorAboutItem("editor.about.tabs", "File Tabs", "Switch between open files or close a file from its tab."),
+        EditorAboutItem("editor.about.new_tab", "Add or Open File", "Open the workspace panel or choose another folder."),
+        EditorAboutItem("editor.about.tab_key", "TAB", "Insert one indentation level at the cursor."),
+        EditorAboutItem("editor.about.symbol_keys", "Symbol and Number Keys", "Insert braces, parentheses, brackets, punctuation, or digits at the cursor.")
     )
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(localizer.get("xed.about.title", language, "About Xed Editor")) },
+        title = { Text(localizer.get("editor.about.title", language, "About PawnMC Editor")) },
         text = {
             Column(
                 modifier = Modifier
@@ -1639,9 +1649,9 @@ private fun XedAboutDialog(
             ) {
                 Text(
                     localizer.get(
-                        "xed.about.intro",
+                        "editor.about.intro",
                         language,
-                        "Xed is a Pawn code editor with syntax highlighting, completion, workspace tools, and direct compilation."
+                        "The PawnMC editor gives you syntax highlighting, completion, workspace tools, and direct compilation."
                     ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -1661,7 +1671,7 @@ private fun XedAboutDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(localizer.get("xed.about.close", language, "Close"))
+                Text(localizer.get("editor.about.close", language, "Close"))
             }
         }
     )
@@ -1760,7 +1770,7 @@ private val TOOLBAR_HEIGHT = 232.dp
  * Controls are centred on the compile button horizontally. [reservedBelow] lets a
  * control stack above another floating control without changing the shared anchor.
  */
-private fun restOffsetAbove(
+internal fun restOffsetAbove(
     controlWidth: Dp,
     controlHeight: Dp,
     maxWidthPx: Float,
@@ -2100,7 +2110,7 @@ private const val MAX_EXPLORER_WIDTH = 640f
  * alone is enough to navigate the workspace.
  */
 @Composable
-private fun XedTabStrip(
+private fun EditorTabStrip(
     documents: List<OpenDocument>,
     activePath: String?,
     onSelectTab: (java.io.File) -> Unit,
@@ -2438,198 +2448,3 @@ private fun QuickSymbolBar(
     }
 }
 
-/** Holds the last color scheme instance pushed into the native [CodeEditor]. */
-private class EditorSchemeHolder {
-    var current: EditorColorScheme? = null
-}
-
-/**
- * Builds the sora-editor scheme for the current theme.
- *
- * Darcula/Eclipse ship with their own hard-coded backgrounds, which used to make the
- * code area look like an unrelated white block inside the light theme. We keep the
- * syntax highlighting of the chosen scheme, but re-tint the surface family (code
- * background, current line, line-number panel, dividers, scrollbars) from the app
- * color scheme so the editor sits on the same elevation step as the surrounding UI.
- *
- * [customBackground] lets the user override the canvas with any `#RRGGBB` colour.
- * When it is set, the whole surface family is re-derived from that single colour so
- * the panel stays internally consistent (gutter, current line and dividers) instead
- * of clashing with a colour picked for the canvas alone.
- *
- * Every decision is driven by the canvas that will actually be painted rather than
- * by the app theme, so a user who pins a dark canvas while the app is in light mode
- * still gets a light-on-dark editor and vice versa.
- */
-private fun buildEditorScheme(
-    colorScheme: ColorScheme,
-    customBackground: String? = null
-): EditorColorScheme {
-    val customArgb = customBackground?.let { parseHexColor(it) }
-
-    // Re-derive the gutter and the accents from whichever canvas is in play, so
-    // a custom colour produces a coherent editor instead of a mismatched one.
-    val background: Int
-    val lineNumberBackground: Int
-    val outline: Int
-    val faint: Int
-    if (customArgb != null) {
-        val onCustom = readableForegroundOn(customArgb)
-        background = customArgb
-        lineNumberBackground = blend(customArgb, onCustom, 0.06f)
-        outline = blend(customArgb, onCustom, 0.22f)
-        faint = blend(customArgb, onCustom, 0.10f)
-    } else {
-        background = colorScheme.surfaceContainerLowest.toArgb()
-        lineNumberBackground = colorScheme.surfaceContainerLow.toArgb()
-        outline = colorScheme.outlineVariant.toArgb()
-        faint = colorScheme.onSurface.copy(alpha = 0.10f).toArgb()
-    }
-
-    // Pick the base scheme from the canvas rather than the app theme, so slots
-    // the palette below does not explicitly set (selection, cursors, search
-    // highlights) also follow the canvas.
-    val darkCanvas = isDarkCanvas(background)
-    val base: EditorColorScheme = if (darkCanvas) SchemeDarcula() else SchemeEclipse()
-
-    applyVividSyntaxPalette(base, darkCanvas)
-
-    base.setColor(EditorColorScheme.WHOLE_BACKGROUND, background)
-    base.setColor(EditorColorScheme.LINE_NUMBER_BACKGROUND, lineNumberBackground)
-    base.setColor(EditorColorScheme.LINE_NUMBER_PANEL, lineNumberBackground)
-    base.setColor(EditorColorScheme.LINE_DIVIDER, outline)
-    base.setColor(EditorColorScheme.BLOCK_LINE, outline)
-    base.setColor(EditorColorScheme.CURRENT_LINE, faint)
-    base.setColor(EditorColorScheme.SCROLL_BAR_TRACK, lineNumberBackground)
-    base.setColor(EditorColorScheme.SCROLL_BAR_THUMB, outline)
-    return base
-}
-
-/**
- * High-contrast, high-chroma syntax palette.
- *
- * Darcula and Eclipse ship muted token colours that are hard to tell apart at
- * a glance: `IDENTIFIER_NAME`, `TYPE` and `OPERATOR` in particular all sit
- * within a couple of shades of the plain text colour, so the editor reads as a
- * wall of grey. This palette replaces every token slot the Pawn analyzer uses
- * with a clearly separated hue, while keeping each hue on the correct side of
- * the background so contrast holds in both light and dark mode.
- *
- * The assignment is stable per token kind, so a given line never changes colour
- * between re-analyses (the analyzer runs asynchronously on every keystroke).
- */
-private fun applyVividSyntaxPalette(scheme: EditorColorScheme, darkCanvas: Boolean) {
-    val p = if (darkCanvas) DarkPalette else LightPalette
-
-    scheme.setColor(EditorColorScheme.KEYWORD, p.keyword)
-    scheme.setColor(EditorColorScheme.IDENTIFIER_NAME, p.type)
-    scheme.setColor(EditorColorScheme.LITERAL, p.literal)
-    scheme.setColor(EditorColorScheme.FUNCTION_NAME, p.function)
-    scheme.setColor(EditorColorScheme.OPERATOR, p.operator)
-    scheme.setColor(EditorColorScheme.ANNOTATION, p.annotation)
-    scheme.setColor(EditorColorScheme.COMMENT, p.comment)
-    scheme.setColor(EditorColorScheme.LINE_NUMBER, p.lineNumber)
-    // Plain identifiers (variables, labels) inherit the scheme's text colour, so
-    // it has to be re-pointed at the canvas as well. Without this a custom dark
-    // canvas under a light app theme would render every variable dark-on-dark.
-    scheme.setColor(
-        EditorColorScheme.TEXT_NORMAL,
-        if (darkCanvas) 0xFFF2F5FA.toInt() else 0xFF111418.toInt()
-    )
-}
-
-/**
- * Token colours for the dark canvas.
- *
- * Hues are chosen so adjacent kinds never share a family: keywords are amber,
- * types are cyan, literals are orange, functions are blue, operators are
- * magenta, annotations are violet and comments are neutral grey.
- */
-private data class SyntaxPalette(
-    val keyword: Int,
-    val type: Int,
-    val literal: Int,
-    val function: Int,
-    val operator: Int,
-    val annotation: Int,
-    val comment: Int,
-    val lineNumber: Int
-)
-
-private val DarkPalette = SyntaxPalette(
-    keyword = 0xFFFFD866.toInt(),
-    type = 0xFF6FE3F5.toInt(),
-    literal = 0xFFFFB07C.toInt(),
-    function = 0xFF8AB4F8.toInt(),
-    operator = 0xFFE6A8FF.toInt(),
-    annotation = 0xFF7EE081.toInt(),
-    comment = 0xFF9CA3AF.toInt(),
-    lineNumber = 0xFF7E8CA3.toInt()
-)
-
-/**
- * Token colours for the light canvas.
- *
- * The same hue assignment as [DarkPalette] but darkened so the contrast ratio
- * against a white canvas stays readable.
- */
-private val LightPalette = SyntaxPalette(
-    keyword = 0xFF9A3412.toInt(),
-    type = 0xFF005E70.toInt(),
-    literal = 0xFFB42318.toInt(),
-    function = 0xFF1D4ED8.toInt(),
-    operator = 0xFF6B21C8.toInt(),
-    annotation = 0xFF16753B.toInt(),
-    comment = 0xFF616161.toInt(),
-    lineNumber = 0xFF64748B.toInt()
-)
-
-/**
- * Parses a `#RRGGBB` string into an ARGB int, returning `null` for anything else.
- *
- * The stored preference is already validated by
- * [com.rvdjv.pawnmc.data.config.CompilerConfig.normalizeEditorBackgroundColor];
- * this is the second gate that keeps a malformed value from reaching the
- * editor scheme, and it never throws.
- */
-private fun parseHexColor(hex: String): Int? {
-    val digits = hex.trim().removePrefix("#")
-    if (digits.length != 6) return null
-    val value = digits.toIntOrNull(16) ?: return null
-    return 0xFF000000.toInt() or value
-}
-
-/**
- * Picks black or white — whichever contrasts more with [background].
- *
- * Uses the ITU-R BT.601 luma approximation, which is the same weighting the
- * Material colour system uses for `onColor` decisions, so a custom background
- * the user picked for a dark project still gets light text.
- */
-private fun readableForegroundOn(background: Int): Int {
-    val r = (background shr 16) and 0xFF
-    val g = (background shr 8) and 0xFF
-    val b = background and 0xFF
-    val luma = (0.299f * r + 0.587f * g + 0.114f * b) / 255f
-    return if (luma > 0.5f) 0xFF000000.toInt() else 0xFFFFFFFF.toInt()
-}
-
-/**
- * True when an opaque ARGB canvas is dark enough to need the light-on-dark
- * token colours.
- *
- * The same BT.601 luma threshold as [readableForegroundOn], so the token
- * palette and the automatically chosen foreground can never disagree.
- */
-private fun isDarkCanvas(argb: Int): Boolean = readableForegroundOn(argb) == 0xFFFFFFFF.toInt()
-
-/** Linearly mixes [amount] of [tint] into [base]; `amount` is clamped to 0..1. */
-private fun blend(base: Int, tint: Int, amount: Float): Int {
-    val t = amount.coerceIn(0f, 1f)
-    fun mix(shift: Int): Int {
-        val b = (base shr shift) and 0xFF
-        val c = (tint shr shift) and 0xFF
-        return (b + (c - b) * t).toInt().coerceIn(0, 255)
-    }
-    return 0xFF000000.toInt() or (mix(16) shl 16) or (mix(8) shl 8) or mix(0)
-}

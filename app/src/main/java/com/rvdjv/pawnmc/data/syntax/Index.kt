@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.data.pawn
+package com.rvdjv.pawnmc.data.syntax
 
 /**
  * Native and forward symbols grouped by the SA-MP include file that declares them.

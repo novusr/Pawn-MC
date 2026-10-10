@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.editor
+﻿package com.rvdjv.pawnmc.`interface`.editor.Workspace
 
 import android.content.ContentResolver
 import android.content.Context
@@ -11,13 +11,18 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * Intent that opens the system folder picker, starting in the Downloads folder.
+ * Intents of the workspace folder picker.
  *
  * [ActivityResultContracts.OpenDocumentTree][androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree]
- * cannot preset the starting location, so the intent is built by hand and
- * [DocumentsContract.EXTRA_INITIAL_URI] is added where the platform supports it.
+ * cannot preset the starting location, so both intents are built by hand and
+ * [DocumentsContract.EXTRA_INITIAL_URI] is added where the platform supports it. The
+ * helpers live in this package because picking a folder is what a workspace is created
+ * from; the settings screen imports the same two functions for include paths, so there is
+ * exactly one description of "where the picker opens".
  */
-fun buildOpenFolderIntent(): Intent {
+
+/** Intent that opens the system folder picker, starting in the Downloads folder. */
+fun buildFolderPickerIntent(): Intent {
     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
         addFlags(
             Intent.FLAG_GRANT_READ_URI_PERMISSION or
@@ -32,7 +37,7 @@ fun buildOpenFolderIntent(): Intent {
 }
 
 /** Intent that opens the system file picker, starting in the Downloads folder. */
-fun buildOpenFileIntent(): Intent {
+fun buildFilePickerIntent(): Intent {
     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
         addCategory(Intent.CATEGORY_OPENABLE)
         type = "*/*"

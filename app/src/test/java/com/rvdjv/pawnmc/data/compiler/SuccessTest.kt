@@ -297,11 +297,32 @@ class SuccessTest {
         try {
             assertTrue(tempFile.exists())
             assertEquals("main.pwn", tempFile.name)
+            // The starter lives in `workspace/` under the app data root rather than in the
+            // old private `TMP/` folder, so it can be opened and edited outside PawnMC.
+            assertEquals(MainViewModel.WORKSPACE_DIR_NAME, tempFile.parentFile?.name)
             val content = tempFile.readText()
             assertTrue(content.contains("native printf"))
             assertTrue(content.contains("printf(\"Hello, World!\");"))
         } finally {
             tempFile.delete()
+            tempDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun `starter workspace is reused instead of an extra nesting level`() {
+        val tempDir = File(System.getProperty("java.io.tmpdir"), "pawnmc-ws-${System.nanoTime()}")
+        val workspaceDir = File(tempDir, MainViewModel.WORKSPACE_DIR_NAME)
+        require(workspaceDir.mkdirs()) { "Unable to create workspace dir for test" }
+
+        val tempFile = MainViewModel.createTemporaryPawnFile(workspaceDir)
+
+        try {
+            // Passing the workspace directory itself must not produce
+            // `workspace/workspace/main.pwn`; that would silently create a second copy
+            // the next time the editor opened.
+            assertEquals(workspaceDir.absolutePath, tempFile.parentFile?.absolutePath)
+        } finally {
             tempDir.deleteRecursively()
         }
     }

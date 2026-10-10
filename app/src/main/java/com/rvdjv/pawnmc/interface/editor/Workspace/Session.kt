@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.editor
+﻿package com.rvdjv.pawnmc.`interface`.editor.Workspace
 
 import android.content.Context
 import android.os.Build
@@ -10,6 +10,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorScreen
+import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -57,7 +59,7 @@ data class WorkspaceNode(
 }
 
 /**
- * A folder opened in Xed Editor.
+ * A folder opened in the PawnMC editor.
  *
  * Every workspace keeps its own tree, its own opened editors and its own search
  * results, so up to [MAX_OPEN_WORKSPACES] folders can stay open side by side and
@@ -192,17 +194,17 @@ data class WorkspaceSearchHit(
 )
 
 /**
- * Holds the workspaces opened in Xed Editor: up to [MAX_OPEN_WORKSPACES] folders
+ * Holds the workspaces opened in the PawnMC editor: up to [MAX_OPEN_WORKSPACES] folders
  * with their trees and opened editors, plus the replace/search operations that
  * span the files of the workspace that is in front.
  *
  * When a [Context] is supplied the open workspace folders are written to
- * [CompilerConfig] and restored on the next launch, so a folder chosen in the Xed
+ * [CompilerConfig] and restored on the next launch, so a folder chosen in the
  * editor is not lost when the app is closed. The main screen only ever picks a
  * single file and treats it as temporary; a workspace folder is a deliberate
  * choice, so it is remembered on its own.
  */
-class XedWorkspaceViewModel(context: Context? = null) : ViewModel() {
+class WorkspaceSession(context: Context? = null) : ViewModel() {
 
     private val config: CompilerConfig? =
         context?.let { CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(it) }
@@ -254,7 +256,7 @@ class XedWorkspaceViewModel(context: Context? = null) : ViewModel() {
      */
     private fun restoreRememberedWorkspaces() {
         val store = config ?: return
-        val stored = store.n_xed_workspace_folders
+        val stored = store.n_workspace_folders
         if (stored.isEmpty()) return
 
         // Duplicates are dropped but the order is kept: the first folder has to come
@@ -262,7 +264,7 @@ class XedWorkspaceViewModel(context: Context? = null) : ViewModel() {
         val requested = stored.distinct()
         val surviving = requested.filter { File(it).isDirectory }
         if (surviving.size != requested.size) {
-            store.n_xed_workspace_folders = surviving
+            store.n_workspace_folders = surviving
         }
         if (surviving.isEmpty()) return
 
@@ -318,7 +320,7 @@ class XedWorkspaceViewModel(context: Context? = null) : ViewModel() {
     }
 
     /**
-     * Registers a file the user opened outside the Xed workspace panel, i.e. from the
+     * Registers a file the user opened outside the workspace panel, i.e. from the
      * main screen or the file browser.
      *
      * The folder of the file becomes a workspace (so the tab strip, the explorer and
@@ -359,7 +361,7 @@ class XedWorkspaceViewModel(context: Context? = null) : ViewModel() {
         // The list order mirrors the open order so the front workspace is restored
         // in front, and duplicates are collapsed so closing and reopening a folder
         // cannot leave the same path stored twice.
-        config?.n_xed_workspace_folders = workspaces.map { it.root.absolutePath }.distinct()
+        config?.n_workspace_folders = workspaces.map { it.root.absolutePath }.distinct()
     }
 
     /**
@@ -384,7 +386,7 @@ class XedWorkspaceViewModel(context: Context? = null) : ViewModel() {
         activeWorkspace = null
         // The store is cleared too, otherwise the next launch would silently bring
         // every folder back and make this menu item look like it did nothing.
-        config?.clearXedWorkspaceFolders()
+        config?.clearWorkspaceFolders()
     }
 
     /** Re-scans a workspace folder; called after files are replaced on disk. */

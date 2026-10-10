@@ -1,4 +1,4 @@
-# PawnMC localization data - 2026 format
+﻿# PawnMC localization data - 2026 format
 #
 # Naming: _data_2026_ect.toml  (extract)
 # Every table name is an existing setting name, so a lookup uses the same
@@ -159,10 +159,10 @@ ru = "Тема"
 es = "Tema"
 
 [settings.theme.desc]
-id = "Mengatur apakah aplikasi mengikuti tema sistem, selalu terang, atau selalu gelap. Pilihan ini juga menentukan latar editor Xed."
-en = "Controls whether the app follows the system theme, or is pinned to light or dark. This choice also drives the Xed editor background."
-ru = "Определяет, следует ли приложение системной теме или всегда использует светлую либо тёмную. Этот выбор также задаёт фон редактора Xed."
-es = "Controla si la app sigue el tema del sistema o queda fija en claro u oscuro. Esta eleccion tambien define el fondo del editor Xed."
+id = "Mengatur apakah aplikasi mengikuti tema sistem, selalu terang, atau selalu gelap. Pilihan ini juga menentukan latar editor PawnMC."
+en = "Controls whether the app follows the system theme, or is pinned to light or dark. This choice also drives the editor background."
+ru = "Определяет, следует ли приложение системной теме или всегда использует светлую либо тёмную. Этот выбор также задаёт фон редактора PawnMC."
+es = "Controla si la app sigue el tema del sistema o queda fija en claro u oscuro. Esta eleccion tambien define el fondo del editor PawnMC."
 
 [settings.theme.option.system.label]
 id = "Ikuti Sistem"
@@ -471,10 +471,10 @@ ru = "Перезапустить приложение"
 es = "Reiniciar la aplicacion"
 
 [settings.restart.confirm.text]
-id = "PawnMC akan segera ditutup lalu dibuka kembali. Simpan dulu berkas yang sedang dibuka di Xed Editor, karena proses kompilasi yang sedang berjalan akan dibatalkan. Apakah Anda ingin memulai ulang sekarang?"
-en = "PawnMC will close and reopen immediately. Save any open file in the Xed Editor first, because a compilation that is currently running is cancelled. Would you like to restart now?"
-ru = "PawnMC закроется и сразу откроется снова. Сначала сохраните открытые файлы в Xed Editor, поскольку идущая компиляция будет отменена. Перезапустить сейчас?"
-es = "PawnMC se va a cerrar y abrir de inmediato. Guarda primero cualquier archivo abierto en el Xed Editor, porque se cancela la compilacion que este en ejecucion. Queres reiniciar ahora?"
+id = "PawnMC akan segera ditutup lalu dibuka kembali. Simpan dulu berkas yang sedang dibuka di PawnMC Editor, karena proses kompilasi yang sedang berjalan akan dibatalkan. Apakah Anda ingin memulai ulang sekarang?"
+en = "PawnMC will close and reopen immediately. Save any open file in the PawnMC Editor first, because a compilation that is currently running is cancelled. Would you like to restart now?"
+ru = "PawnMC закроется и сразу откроется снова. Сначала сохраните открытые файлы в PawnMC Editor, поскольку идущая компиляция будет отменена. Перезапустить сейчас?"
+es = "PawnMC se va a cerrar y abrir de inmediato. Guarda primero cualquier archivo abierto en el PawnMC Editor, porque se cancela la compilacion que este en ejecucion. Queres reiniciar ahora?"
 
 [settings.restart.confirm.button]
 id = "Mulai Ulang Sekarang"
@@ -483,10 +483,10 @@ ru = "Перезапустить сейчас"
 es = "Reiniciar ahora"
 
 [settings.editor]
-id = "Xed Editor"
-en = "Xed Editor"
-ru = "Xed Editor"
-es = "Xed Editor"
+id = "PawnMC Editor"
+en = "PawnMC Editor"
+ru = "PawnMC Editor"
+es = "PawnMC Editor"
 
 [settings.editor.desc]
 id = "Preferensi tampilan untuk editor kode bawaan. Perubahan langsung diterapkan ke editor yang sedang terbuka."
@@ -579,16 +579,16 @@ ru = "У вас установлена последняя версия"
 es = "Estas usando la version mas reciente"
 
 [main.busy.notice]
-id = "Pengaturan, Xed Editor, dan Self-Test sementara tidak tersedia sampai proses kompilasi selesai."
-en = "Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete."
-ru = "Настройки, Xed Editor и Self-Test временно недоступны до завершения компиляции."
-es = "Configuracion, Xed Editor y Self-Test no estan disponibles hasta que termine la compilacion."
+id = "Pengaturan, PawnMC Editor, dan Self-Test sementara tidak tersedia sampai proses kompilasi selesai."
+en = "Settings, PawnMC Editor, and Self-Test are temporarily unavailable until compilation is complete."
+ru = "Настройки, PawnMC Editor и Self-Test временно недоступны до завершения компиляции."
+es = "Configuracion, PawnMC Editor y Self-Test no estan disponibles hasta que termine la compilacion."
 
 [main.busy.completed]
-id = "Kompilasi selesai. Pengaturan, Xed Editor, dan Self-Test sudah tersedia kembali."
-en = "Compilation finished. Settings, Xed Editor, and Self-Test are available again."
-ru = "Компиляция завершена. Настройки, Xed Editor и Self-Test снова доступны."
-es = "Compilacion terminada. Configuracion, Xed Editor y Self-Test vuelven a estar disponibles."
+id = "Kompilasi selesai. Pengaturan, PawnMC Editor, dan Self-Test sudah tersedia kembali."
+en = "Compilation finished. Settings, PawnMC Editor, and Self-Test are available again."
+ru = "Компиляция завершена. Настройки, PawnMC Editor и Self-Test снова доступны."
+es = "Compilacion terminada. Configuracion, PawnMC Editor y Self-Test vuelven a estar disponibles."
 
 [main.busy.dismiss]
 id = "Tutup pemberitahuan kompilasi"
@@ -698,373 +698,373 @@ en = "Back"
 ru = "Назад"
 es = "Volver"
 
-[xed.quickkeys.hide]
+[editor.quickkeys.hide]
 id = "Sembunyikan Tombol Cepat"
 en = "Hide Quick Keys"
 ru = "Скрыть быстрые клавиши"
 es = "Ocultar teclas rapidas"
 
-[xed.quickkeys.show]
+[editor.quickkeys.show]
 id = "Tampilkan Tombol Cepat"
 en = "Show Quick Keys"
 ru = "Показать быстрые клавиши"
 es = "Mostrar teclas rapidas"
 
-[xed.about.menu]
-id = "Tentang Xed Editor"
-en = "About Xed Editor"
-ru = "О Xed Editor"
-es = "Acerca de Xed Editor"
+[editor.about.menu]
+id = "Tentang PawnMC Editor"
+en = "About PawnMC Editor"
+ru = "О PawnMC Editor"
+es = "Acerca de PawnMC Editor"
 
-[xed.about.title]
-id = "Tentang Xed Editor"
-en = "About Xed Editor"
-ru = "О Xed Editor"
-es = "Acerca de Xed Editor"
+[editor.about.title]
+id = "Tentang PawnMC Editor"
+en = "About PawnMC Editor"
+ru = "О PawnMC Editor"
+es = "Acerca de PawnMC Editor"
 
-[xed.about.intro]
-id = "Xed adalah editor kode Pawn dengan syntax highlighting, saran kode, alat workspace, dan kompilasi langsung."
-en = "Xed is a Pawn code editor with syntax highlighting, completion, workspace tools, and direct compilation."
-ru = "Xed — редактор кода Pawn с подсветкой синтаксиса, автодополнением, инструментами workspace и прямой компиляцией."
-es = "Xed es un editor de codigo Pawn con resaltado de sintaxis, autocompletado, herramientas de workspace y compilacion directa."
+[editor.about.intro]
+id = "PawnMC adalah editor kode Pawn dengan syntax highlighting, saran kode, alat workspace, dan kompilasi langsung."
+en = "PawnMC is a Pawn code editor with syntax highlighting, completion, workspace tools, and direct compilation."
+ru = "PawnMC — редактор кода Pawn с подсветкой синтаксиса, автодополнением, инструментами workspace и прямой компиляцией."
+es = "PawnMC es un editor de codigo Pawn con resaltado de sintaxis, autocompletado, herramientas de workspace y compilacion directa."
 
-[xed.about.close]
+[editor.about.close]
 id = "Tutup"
 en = "Close"
 ru = "Закрыть"
 es = "Cerrar"
 
-[xed.about.back.title]
+[editor.about.back.title]
 id = "Kembali"
 en = "Back"
 ru = "Назад"
 es = "Volver"
 
-[xed.about.back.desc]
+[editor.about.back.desc]
 id = "Kembali ke pemilihan berkas dan layar compiler."
 en = "Return to the file selection and compiler screen."
 ru = "Вернуться к выбору файла и экрану компилятора."
 es = "Vuelve a la seleccion de archivos y a la pantalla del compilador."
 
-[xed.about.undo.title]
+[editor.about.undo.title]
 id = "Urungkan"
 en = "Undo"
 ru = "Отменить"
 es = "Deshacer"
 
-[xed.about.undo.desc]
+[editor.about.undo.desc]
 id = "Urungkan perubahan terakhir."
 en = "Undo the most recent edit."
 ru = "Отменить последнее изменение."
 es = "Deshace la ultima edicion."
 
-[xed.about.redo.title]
+[editor.about.redo.title]
 id = "Ulangi"
 en = "Redo"
 ru = "Повторить"
 es = "Rehacer"
 
-[xed.about.redo.desc]
+[editor.about.redo.desc]
 id = "Pulihkan perubahan terakhir yang diurungkan."
 en = "Restore the most recently undone edit."
 ru = "Восстановить последнее отменённое изменение."
 es = "Restaura la ultima edicion deshecha."
 
-[xed.about.options.title]
+[editor.about.options.title]
 id = "Opsi Editor"
 en = "Editor options"
 ru = "Параметры редактора"
 es = "Opciones del editor"
 
-[xed.about.options.desc]
+[editor.about.options.desc]
 id = "Buka workspace, alat pencarian dan penggantian, kontrol tampilan, tombol cepat, dan halaman Tentang."
 en = "Open workspace, search and replace tools, view controls, quick keys, and this About page."
 ru = "Открыть workspace, инструменты поиска и замены, настройки вида, быстрые клавиши и эту страницу «О программе»."
 es = "Abre el workspace, las herramientas de buscar y reemplazar, los controles de vista, las teclas rapidas y esta pagina Acerca de."
 
-[xed.about.open_workspace.title]
+[editor.about.open_workspace.title]
 id = "Buka Folder Workspace"
 en = "Open Workspace Folder"
 ru = "Открыть папку workspace"
 es = "Abrir carpeta de workspace"
 
-[xed.about.open_workspace.desc]
+[editor.about.open_workspace.desc]
 id = "Pilih folder lokal dan telusuri berkasnya di panel workspace."
 en = "Choose a local folder and browse its files in the workspace panel."
 ru = "Выберите локальную папку и просматривайте её файлы на панели workspace."
 es = "Elegi una carpeta local y explora sus archivos en el panel del workspace."
 
-[xed.about.close_workspace.title]
+[editor.about.close_workspace.title]
 id = "Tutup Workspace"
 en = "Close Workspace"
 ru = "Закрыть workspace"
 es = "Cerrar el workspace"
 
-[xed.about.close_workspace.desc]
+[editor.about.close_workspace.desc]
 id = "Tutup workspace aktif tanpa menutup workspace lain yang masih terbuka."
 en = "Close the active workspace while keeping other open workspaces available."
 ru = "Закрывает активный workspace, оставляя другие открытые workspace доступными."
 es = "Cierra el workspace activo dejando disponibles los demas workspaces abiertos."
 
-[xed.about.close_all.title]
+[editor.about.close_all.title]
 id = "Tutup Semua Workspace"
 en = "Close All Workspaces"
 ru = "Закрыть все workspace"
 es = "Cerrar todos los workspaces"
 
-[xed.about.close_all.desc]
-id = "Tutup semua workspace yang sedang terbuka di Xed."
-en = "Close every workspace currently open in Xed."
-ru = "Закрывает все workspace, открытые в Xed."
-es = "Cierra todos los workspaces que estan abiertos en Xed."
+[editor.about.close_all.desc]
+id = "Tutup semua workspace yang sedang terbuka di editor."
+en = "Close every workspace currently open in the editor."
+ru = "Закрывает все workspace, открытые в редакторе."
+es = "Cierra todos los workspaces que estan abiertos en el editor."
 
-[xed.about.search_workspace.title]
+[editor.about.search_workspace.title]
 id = "Cari di Workspace"
 en = "Search in Workspace"
 ru = "Поиск в workspace"
 es = "Buscar en el workspace"
 
-[xed.about.search_workspace.desc]
+[editor.about.search_workspace.desc]
 id = "Cari teks di seluruh berkas dalam workspace aktif."
 en = "Find text across files in the active workspace."
 ru = "Ищет текст по всем файлам активного workspace."
 es = "Busca texto en todos los archivos del workspace activo."
 
-[xed.about.replace_file.title]
+[editor.about.replace_file.title]
 id = "Ganti Kata per Berkas"
 en = "Replace Words per File"
 ru = "Замена слов в файле"
 es = "Reemplazar palabras por archivo"
 
-[xed.about.replace_file.desc]
+[editor.about.replace_file.desc]
 id = "Ganti kecocokan di berkas saat ini, satu kemunculan atau semuanya."
 en = "Replace matches in the current file, one occurrence or all at once."
 ru = "Заменяет совпадения в текущем файле: одно или все сразу."
 es = "Reemplaza las coincidencias del archivo actual, una sola o todas."
 
-[xed.about.replace_workspace.title]
+[editor.about.replace_workspace.title]
 id = "Ganti Kata di Semua Berkas"
 en = "Replace Words All Files"
 ru = "Замена слов во всех файлах"
 es = "Reemplazar palabras en todos los archivos"
 
-[xed.about.replace_workspace.desc]
+[editor.about.replace_workspace.desc]
 id = "Ganti teks yang cocok di seluruh berkas workspace."
 en = "Replace matching text across the workspace files."
 ru = "Заменяет совпадающий текст во всех файлах workspace."
 es = "Reemplaza el texto coincidente en todos los archivos del workspace."
 
-[xed.about.workspace_panel.title]
+[editor.about.workspace_panel.title]
 id = "Tampilkan atau Sembunyikan Panel Workspace"
 en = "Show or Hide Workspace Panel"
 ru = "Показать или скрыть панель workspace"
 es = "Mostrar u ocultar el panel de workspace"
 
-[xed.about.workspace_panel.desc]
+[editor.about.workspace_panel.desc]
 id = "Tampilkan atau sembunyikan panel berisi berkas terbuka, folder, dan hasil pencarian."
 en = "Toggle the panel containing open files, folders, and search results."
 ru = "Показывает или скрывает панель с открытыми файлами, папками и результатами поиска."
 es = "Muestra u oculta el panel con los archivos abiertos, las carpetas y los resultados de busqueda."
 
-[xed.about.select_all.title]
+[editor.about.select_all.title]
 id = "Pilih Semua"
 en = "Select All"
 ru = "Выделить всё"
 es = "Seleccionar todo"
 
-[xed.about.select_all.desc]
+[editor.about.select_all.desc]
 id = "Pilih seluruh teks di berkas saat ini."
 en = "Select all text in the current file."
 ru = "Выделяет весь текст в текущем файле."
 es = "Selecciona todo el texto del archivo actual."
 
-[xed.about.jump.title]
+[editor.about.jump.title]
 id = "Lompat ke Baris"
 en = "Jump to Line"
 ru = "Перейти к строке"
 es = "Ir a la linea"
 
-[xed.about.jump.desc]
+[editor.about.jump.desc]
 id = "Pindahkan kursor langsung ke nomor baris tertentu."
 en = "Move the cursor directly to a line number."
 ru = "Перемещает курсор напрямую к номеру строки."
 es = "Mueve el cursor directo a un numero de linea."
 
-[xed.about.wrap.title]
+[editor.about.wrap.title]
 id = "Bungkus Baris"
 en = "Word Wrap"
 ru = "Перенос слов"
 es = "Ajuste de linea"
 
-[xed.about.wrap.desc]
+[editor.about.wrap.desc]
 id = "Aktifkan atau nonaktifkan pembungkusan baris."
 en = "Turn line wrapping on or off."
 ru = "Включает или отключает перенос строк."
 es = "Activa o desactiva el ajuste de linea."
 
-[xed.about.read_only.title]
+[editor.about.read_only.title]
 id = "Mode Hanya Baca"
 en = "Read-Only Mode"
 ru = "Режим только для чтения"
 es = "Modo solo lectura"
 
-[xed.about.read_only.desc]
+[editor.about.read_only.desc]
 id = "Cegah pengeditan sampai mode edit diaktifkan kembali."
 en = "Prevent edits until editing is enabled again."
 ru = "Запрещает редактирование, пока режим редактирования не будет включён снова."
 es = "Impide editar hasta que se vuelva a habilitar la edicion."
 
-[xed.about.line_numbers.title]
+[editor.about.line_numbers.title]
 id = "Nomor Baris"
 en = "Line Numbers"
 ru = "Номера строк"
 es = "Numeros de linea"
 
-[xed.about.line_numbers.desc]
+[editor.about.line_numbers.desc]
 id = "Tampilkan atau sembunyikan nomor baris dan kolom saat ini."
 en = "Show or hide line numbers and the current column."
 ru = "Показывает или скрывает номера строк и текущий столбец."
 es = "Muestra u oculta los numeros de linea y la columna actual."
 
-[xed.about.quickkeys_toggle.title]
+[editor.about.quickkeys_toggle.title]
 id = "Tombol Cepat"
 en = "Quick Keys Toggle"
 ru = "Переключение быстрых клавиш"
 es = "Alternar teclas rapidas"
 
-[xed.about.quickkeys_toggle.desc]
+[editor.about.quickkeys_toggle.desc]
 id = "Tampilkan atau sembunyikan bar bawah berisi TAB, simbol, dan angka."
 en = "Show or hide the bottom row with TAB, symbols, and digits."
 ru = "Показывает или скрывает нижний ряд с TAB, символами и цифрами."
 es = "Muestra u oculta la fila de abajo con TAB, simbolos y numeros."
 
-[xed.about.about.title]
-id = "Tentang Xed Editor"
-en = "About Xed Editor"
-ru = "О Xed Editor"
-es = "Acerca de Xed Editor"
+[editor.about.about.title]
+id = "Tentang PawnMC Editor"
+en = "About PawnMC Editor"
+ru = "О PawnMC Editor"
+es = "Acerca de PawnMC Editor"
 
-[xed.about.about.desc]
-id = "Buka panduan alat dan kontrol Xed ini."
-en = "Open this guide to Xed's tools and controls."
-ru = "Открыть это руководство по инструментам и элементам управления Xed."
-es = "Abre esta guia de las herramientas y controles de Xed."
+[editor.about.about.desc]
+id = "Buka panduan alat dan kontrol editor PawnMC ini."
+en = "Open this guide to the PawnMC editor tools and controls."
+ru = "Открыть это руководство по инструментам и элементам управления редактора PawnMC."
+es = "Abre esta guia de las herramientas y controles del editor PawnMC."
 
-[xed.about.search_file.title]
+[editor.about.search_file.title]
 id = "Cari di Berkas"
 en = "Search in File"
 ru = "Поиск в файле"
 es = "Buscar en el archivo"
 
-[xed.about.search_file.desc]
+[editor.about.search_file.desc]
 id = "Cari teks di berkas saat ini dan berpindah di antara hasilnya."
 en = "Find text in the current file and move between matches."
 ru = "Ищет текст в текущем файле и переходит между совпадениями."
 es = "Busca texto en el archivo actual y se mueve entre las coincidencias."
 
-[xed.about.open_folder.title]
+[editor.about.open_folder.title]
 id = "Buka Folder"
 en = "Open Folder"
 ru = "Открыть папку"
 es = "Abrir carpeta"
 
-[xed.about.open_folder.desc]
+[editor.about.open_folder.desc]
 id = "Pilih folder workspace dari toolbar mengambang."
 en = "Choose a workspace folder from the floating toolbar."
 ru = "Выберите папку workspace из всплывающей панели."
 es = "Elegi una carpeta de workspace desde la barra flotante."
 
-[xed.about.save.title]
+[editor.about.save.title]
 id = "Simpan"
 en = "Save"
 ru = "Сохранить"
 es = "Guardar"
 
-[xed.about.save.desc]
+[editor.about.save.desc]
 id = "Simpan berkas aktif."
 en = "Save the active file."
 ru = "Сохранить активный файл."
 es = "Guarda el archivo activo."
 
-[xed.about.save_as_all.title]
+[editor.about.save_as_all.title]
 id = "Simpan Sebagai atau Simpan Semua"
 en = "Save As or Save All"
 ru = "Сохранить как или сохранить все"
 es = "Guardar como o guardar todo"
 
-[xed.about.save_as_all.desc]
+[editor.about.save_as_all.desc]
 id = "Simpan berkas saat ini dengan nama baru, atau simpan semua berkas workspace yang berubah."
 en = "Save the current file under a new name, or save all modified workspace files."
 ru = "Сохранить текущий файл под новым именем или сохранить все изменённые файлы workspace."
 es = "Guarda el archivo actual con un nombre nuevo, o guarda todos los archivos modificados del workspace."
 
-[xed.about.compile.title]
+[editor.about.compile.title]
 id = "Kompilasi"
 en = "Compile"
 ru = "Компилировать"
 es = "Compilar"
 
-[xed.about.compile.desc]
+[editor.about.compile.desc]
 id = "Simpan perubahan workspace yang terbuka lalu kompilasi berkas Pawn aktif."
 en = "Save open workspace changes and compile the active Pawn file."
 ru = "Сохранить открытые изменения workspace и скомпилировать активный файл Pawn."
 es = "Guarda los cambios abiertos del workspace y compila el archivo Pawn activo."
 
-[xed.about.explorer.title]
+[editor.about.explorer.title]
 id = "Tombol Panel Workspace"
 en = "Workspace Panel Button"
 ru = "Кнопка панели workspace"
 es = "Boton del panel de workspace"
 
-[xed.about.explorer.desc]
+[editor.about.explorer.desc]
 id = "Tampilkan atau sembunyikan panel workspace mengambang."
 en = "Show or hide the floating workspace panel."
 ru = "Показывает или скрывает всплывающую панель workspace."
 es = "Muestra u oculta el panel de workspace flotante."
 
-[xed.about.tabs.title]
+[editor.about.tabs.title]
 id = "Tab Berkas"
 en = "File Tabs"
 ru = "Вкладки файлов"
 es = "Pestanas de archivos"
 
-[xed.about.tabs.desc]
+[editor.about.tabs.desc]
 id = "Beralih antarberkas terbuka atau tutup berkas melalui tab-nya."
 en = "Switch between open files or close a file from its tab."
 ru = "Переключайтесь между открытыми файлами или закрывайте файл по его вкладке."
 es = "Cambia entre archivos abiertos o cierra un archivo desde su pestana."
 
-[xed.about.new_tab.title]
+[editor.about.new_tab.title]
 id = "Tambah atau Buka Berkas"
 en = "Add or Open File"
 ru = "Добавить или открыть файл"
 es = "Agregar o abrir archivo"
 
-[xed.about.new_tab.desc]
+[editor.about.new_tab.desc]
 id = "Buka panel workspace atau pilih folder lain."
 en = "Open the workspace panel or choose another folder."
 ru = "Открыть панель workspace или выбрать другую папку."
 es = "Abre el panel del workspace o elegi otra carpeta."
 
-[xed.about.tab_key.title]
+[editor.about.tab_key.title]
 id = "TAB"
 en = "TAB"
 ru = "TAB"
 es = "TAB"
 
-[xed.about.tab_key.desc]
+[editor.about.tab_key.desc]
 id = "Masukkan satu tingkat indentasi pada posisi kursor."
 en = "Insert one indentation level at the cursor."
 ru = "Вставляет один уровень отступа в позицию курсора."
 es = "Inserta un nivel de indentacion en la posicion del cursor."
 
-[xed.about.symbol_keys.title]
+[editor.about.symbol_keys.title]
 id = "Tombol Simbol dan Angka"
 en = "Symbol and Number Keys"
 ru = "Клавиши символов и цифр"
 es = "Teclas de simbolos y numeros"
 
-[xed.about.symbol_keys.desc]
+[editor.about.symbol_keys.desc]
 id = "Masukkan kurung kurawal, tanda kurung, kurung siku, tanda baca, atau angka pada posisi kursor."
 en = "Insert braces, parentheses, brackets, punctuation, or digits at the cursor."
 ru = "Вставляет скобки, кавычки, знаки препинания или цифры в позицию курсора."

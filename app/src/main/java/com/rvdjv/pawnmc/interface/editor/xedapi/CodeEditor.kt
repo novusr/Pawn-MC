@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.editor
+﻿package com.rvdjv.pawnmc.`interface`.editor.xedapi
 
 import android.content.Context
 import android.graphics.Canvas
@@ -18,7 +18,7 @@ internal const val LINE_COLUMN_SEPARATOR = "-"
  * Editor that installs a renderer able to draw extra information in the
  * line-number area. See [ColumnLineNumberRenderer].
  */
-class XedCodeEditor(context: Context) : CodeEditor(context) {
+class PawnCodeEditor(context: Context) : CodeEditor(context) {
 
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
         val connection = super.onCreateInputConnection(outAttrs) ?: return null
@@ -164,7 +164,7 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
         width: Float,
         color: Int
     ) {
-        val owner = host as? XedCodeEditor
+        val owner = host as? PawnCodeEditor
         val suffixWidth = owner?.getColumnSuffixWidth() ?: 0f
         val column = if (suffixWidth > 0f) columnLabelFor(line, row) else null
         if (owner == null || column == null) {

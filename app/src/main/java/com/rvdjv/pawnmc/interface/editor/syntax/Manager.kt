@@ -1,6 +1,6 @@
-package com.rvdjv.pawnmc.`interface`.editor.pawn
+package com.rvdjv.pawnmc.`interface`.editor.syntax
 
-import com.rvdjv.pawnmc.data.pawn.PawnRegistry
+import com.rvdjv.pawnmc.data.syntax.PawnRegistry
 import io.github.rosemoe.sora.lang.analysis.SimpleAnalyzeManager
 import io.github.rosemoe.sora.lang.styling.CodeBlock
 import io.github.rosemoe.sora.lang.styling.MappedSpans

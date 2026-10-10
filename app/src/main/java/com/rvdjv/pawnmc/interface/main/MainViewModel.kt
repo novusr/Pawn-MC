@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.main
+﻿package com.rvdjv.pawnmc.`interface`.main
 
 import android.content.Context
 import android.net.Uri
@@ -68,8 +68,21 @@ class MainViewModel(
 
         """.trimIndent()
 
+        /**
+         * Creates the starter script in the user-visible app workspace.
+         *
+         * The file used to be written to `files/TMP/unit.pwn`, i.e. inside the app's
+         * private data: invisible to a file manager, deleted by an uninstall, and
+         * impossible to edit with anything but PawnMC. It now lives in
+         * [com.rvdjv.pawnmc.data.config.AppStorage.workspaceRoot] — the `PawnMC/workspace`
+         * folder on the app's shared directory — so the example project is a real,
+         * editable, copyable workspace the user owns.
+         *
+         * [baseDir] is kept as the parameter name so existing callers (including the unit
+         * tests) can pass any root; production callers pass the app data root.
+         */
         fun createTemporaryPawnFile(baseDir: File): File {
-            val directory = File(baseDir, "TMP")
+            val directory = if (baseDir.name == WORKSPACE_DIR_NAME) baseDir else File(baseDir, WORKSPACE_DIR_NAME)
             if (!directory.exists()) {
                 directory.mkdirs()
             }
@@ -80,6 +93,18 @@ class MainViewModel(
             }
             return tempFile
         }
+
+        /** Folder the starter script is written to, under the app data root. */
+        const val WORKSPACE_DIR_NAME = "workspace"
+
+        /**
+         * Where the starter script used to live, `files/TMP`.
+         *
+         * Only read from: a stored "last file" pointing at it has to be recognised as
+         * the starter (and therefore not restored) so the upgrade does not resurrect a
+         * dead path for a user who never left the temporary file.
+         */
+        const val LEGACY_TEMP_DIR_NAME = "TMP"
     }
 
     var n_app_theme by mutableStateOf(config.n_app_theme)
@@ -97,7 +122,7 @@ class MainViewModel(
     var selectionError by mutableStateOf<String?>(null)
         private set
 
-    /** Compile request queued by Xed and handled by the mounted main screen. */
+    /** Compile request queued by the editor and handled by the mounted main screen. */
     var pendingCompilePath by mutableStateOf<String?>(null)
         private set
 
@@ -149,7 +174,7 @@ class MainViewModel(
     }
 
     /**
-     * Re-reads the Xed editor background preference.
+     * Re-reads the editor background preference.
      *
      * Settings lives in its own activity, so the editor has to pick the value up
      * when the main activity resumes after the user changes it.
@@ -161,7 +186,8 @@ class MainViewModel(
     fun loadLastSelectedFile() {
         val lastPath = config.n_last_selected_file_path
         val isTemporaryStarter = lastPath?.let(::File)?.let { file ->
-            file.name == TEMPORARY_FILE_NAME && file.parentFile?.name == "TMP"
+            file.name == TEMPORARY_FILE_NAME &&
+                (file.parentFile?.name == WORKSPACE_DIR_NAME || file.parentFile?.name == LEGACY_TEMP_DIR_NAME)
         } == true
         if (!isTemporaryStarter && lastPath != null && File(lastPath).exists()) {
             selectFile(lastPath, isStartupLoad = true)
@@ -409,12 +435,11 @@ class MainViewModel(
         }
 
         val forcedCompilerMode = config.n_forced_compiler_mode
-        val detectedVersion = Compiler.detectCompilerVersionForFile(sourcePath)
-        val version = Compiler.compilerVersionForMode(
-            forcedMode = forcedCompilerMode,
-            selectedVersion = config.n_compiler_version,
-            detectedVersion = detectedVersion
-        )
+        // Detection is only consulted when forced mode is off, and it hashes the binary,
+        // so it runs once here and the result is handed to the config rather than being
+        // recomputed on the side.
+        val detectedVersion = if (forcedCompilerMode) null else Compiler.detectCompilerVersionForFile(sourcePath)
+        val version = config.repinCompilerModeFor(sourcePath, detectedVersion)
         if (!forcedCompilerMode) config.n_compiler_version = version
 
         // The conversion already happened when the file was browsed, so compiling
@@ -511,7 +536,11 @@ class MainViewModelFactory(private val context: Context) : ViewModelProvider.Fac
             val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context)
             // `Class.cast` is the checked form of `as T`: it throws here instead of
             // leaving an unchecked warning and a potential caller-side ClassCastException.
-            return modelClass.cast(MainViewModel(config, context.filesDir, context))
+            // The starter workspace is rooted on the app's shared data directory so the
+            // example script stays editable outside PawnMC; when shared storage is not
+            // mounted AppStorage falls back to the private root on its own.
+            val workspaceRoot = com.rvdjv.pawnmc.data.config.AppStorage.workspaceRoot(context)
+            return modelClass.cast(MainViewModel(config, workspaceRoot, context))
                 ?: throw IllegalArgumentException("Unknown ViewModel class")
         }
         throw IllegalArgumentException("Unknown ViewModel class")

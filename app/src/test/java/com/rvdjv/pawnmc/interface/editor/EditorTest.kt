@@ -1,8 +1,18 @@
-package com.rvdjv.pawnmc.`interface`.editor
+﻿package com.rvdjv.pawnmc.`interface`.editor
 
-import com.rvdjv.pawnmc.data.pawn.PawnRegistry
-import com.rvdjv.pawnmc.data.pawn.InternDat
-import com.rvdjv.pawnmc.`interface`.editor.pawn.PawnSourceSymbols
+import com.rvdjv.pawnmc.data.syntax.PawnRegistry
+import com.rvdjv.pawnmc.data.syntax.InternDat
+import com.rvdjv.pawnmc.`interface`.editor.syntax.PawnSourceSymbols
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.MAX_OPEN_WORKSPACES
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.OpenDocument
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.Workspace
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspaceNode
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspaceSession
+import com.rvdjv.pawnmc.`interface`.editor.Workspace.normalizeNewPawnFileName
+import com.rvdjv.pawnmc.`interface`.editor.portal.PortalCommandParser
+import com.rvdjv.pawnmc.`interface`.editor.portal.PortalText
+import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorViewModel
+import com.rvdjv.pawnmc.`interface`.editor.xedapi.LINE_COLUMN_SEPARATOR
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.`interface`.main.shouldRestoreLastSelectedFile
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +31,7 @@ import org.junit.rules.TemporaryFolder
 import java.io.File
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class XedEditorTest {
+class EditorTest {
 
     @get:Rule
     val tempFolder = TemporaryFolder()
@@ -205,11 +215,11 @@ class XedEditorTest {
     }
 
     @Test
-    fun `verifies file reading and direct save in XedEditorViewModel`() {
+    fun `verifies file reading and direct save in EditorViewModel`() {
         val testFile = tempFolder.newFile("main.pwn")
         testFile.writeText("#include <a_samp>\n\nmain() {\n    print(\"Hello World\");\n}\n")
 
-        val viewModel = XedEditorViewModel(testFile.absolutePath)
+        val viewModel = EditorViewModel(testFile.absolutePath)
         assertEquals("main.pwn", viewModel.fileName)
         assertFalse(viewModel.hasUnsavedChanges)
 
@@ -248,7 +258,7 @@ class XedEditorTest {
 
     @Test
     fun `editor view model builds without a context so tests need no Android runtime`() {
-        val viewModel = XedEditorViewModel("")
+        val viewModel = EditorViewModel("")
         assertFalse(viewModel.workspace.isWorkspaceOpen)
     }
 
@@ -261,7 +271,7 @@ class XedEditorTest {
         }
         assertTrue(staleStarter.isFile)
 
-        val session = XedWorkspaceViewModel()
+        val session = WorkspaceSession()
         session.openWorkspace(root)
         val workspace = session.activeWorkspace
         assertTrue(session.isWorkspaceOpen)
@@ -272,7 +282,7 @@ class XedEditorTest {
 
     @Test
     fun `workspace folders stay open for the life of the session and respect the limit`() {
-        val session = XedWorkspaceViewModel()
+        val session = WorkspaceSession()
         assertFalse(session.isWorkspaceOpen)
 
         val first = tempFolder.newFolder("gamemodes")
@@ -306,7 +316,7 @@ class XedEditorTest {
 
     @Test
     fun `workspace folder must be a folder and missing folders are pruned`() {
-        val session = XedWorkspaceViewModel()
+        val session = WorkspaceSession()
         val notAFolder = tempFolder.newFile("main.pwn")
 
         session.openWorkspace(notAFolder)
@@ -325,7 +335,7 @@ class XedEditorTest {
 
     @Test
     fun `closing every workspace leaves an empty session`() {
-        val session = XedWorkspaceViewModel()
+        val session = WorkspaceSession()
         session.openWorkspace(tempFolder.newFolder("gamemodes"))
         session.openWorkspace(tempFolder.newFolder("scriptfiles"))
         assertEquals(2, session.openWorkspaces.size)
@@ -345,7 +355,7 @@ class XedEditorTest {
         File(root, "sub/inner.pwn").writeText("inner")
         File(root, "notes.txt").writeText("plain notes")
 
-        val session = XedWorkspaceViewModel()
+        val session = WorkspaceSession()
         session.openWorkspace(root)
 
         // The scan runs on Dispatchers.IO, so wait for it rather than racing it.
@@ -368,7 +378,7 @@ class XedEditorTest {
 
     /** Polls until the background scan of [workspace] has landed. */
     private fun waitForTree(
-        session: XedWorkspaceViewModel,
+        session: WorkspaceSession,
         workspace: Workspace
     ): List<WorkspaceNode> {
         repeat(200) {
@@ -396,16 +406,16 @@ class XedEditorTest {
     fun `terminal tokenizer supports quoted paths without shell expansion`() {
         assertEquals(
             listOf("pawncc", "gamemodes/test mode.pwn", "-d=3"),
-            XedTerminalCommandParser.tokenize("pawncc \"gamemodes/test mode.pwn\" -d=3")
+            PortalCommandParser.tokenize("pawncc \"gamemodes/test mode.pwn\" -d=3")
         )
-        assertEquals(null, XedTerminalCommandParser.tokenize("pawncc \"unfinished path.pwn"))
-        assertEquals(listOf("help"), XedTerminalCommandParser.suggestions("h", "mode.pwn"))
-        assertEquals(listOf("pawncc \"mode.pwn\""), XedTerminalCommandParser.suggestions("pawncc ", "mode.pwn"))
-        assertEquals(listOf("clear"), XedTerminalCommandParser.suggestions("cle", "mode.pwn"))
-        assertEquals(listOf("celar"), XedTerminalCommandParser.suggestions("cel", "mode.pwn"))
+        assertEquals(null, PortalCommandParser.tokenize("pawncc \"unfinished path.pwn"))
+        assertEquals(listOf("help"), PortalCommandParser.suggestions("h", "mode.pwn"))
+        assertEquals(listOf("pawncc \"mode.pwn\""), PortalCommandParser.suggestions("pawncc ", "mode.pwn"))
+        assertEquals(listOf("clear"), PortalCommandParser.suggestions("cle", "mode.pwn"))
+        assertEquals(listOf("celar"), PortalCommandParser.suggestions("cel", "mode.pwn"))
         assertEquals(
             listOf("switch 3.10.7", "switch 3.10.11"),
-            XedTerminalCommandParser.suggestions("switch 3", "mode.pwn")
+            PortalCommandParser.suggestions("switch 3", "mode.pwn")
         )
     }
 
@@ -417,26 +427,26 @@ class XedEditorTest {
 
         assertEquals(
             source.canonicalFile,
-            XedTerminalCommandParser.pawnccInvocation(listOf("mode.pwn", "-d=3"), workspace)?.source
+            PortalCommandParser.pawnccInvocation(listOf("mode.pwn", "-d=3"), workspace)?.source
         )
-        assertEquals(null, XedTerminalCommandParser.pawnccInvocation(emptyList(), workspace))
-        assertEquals(null, XedTerminalCommandParser.pawnccInvocation(listOf("-d=3"), workspace))
-        assertEquals(null, XedTerminalCommandParser.pawnccInvocation(listOf("../${outside.name}"), workspace))
-        assertEquals(null, XedTerminalCommandParser.pawnccInvocation(listOf("notes.txt"), workspace))
+        assertEquals(null, PortalCommandParser.pawnccInvocation(emptyList(), workspace))
+        assertEquals(null, PortalCommandParser.pawnccInvocation(listOf("-d=3"), workspace))
+        assertEquals(null, PortalCommandParser.pawnccInvocation(listOf("../${outside.name}"), workspace))
+        assertEquals(null, PortalCommandParser.pawnccInvocation(listOf("notes.txt"), workspace))
     }
 
     @Test
     fun `simulation data preserves localized Markdown docs`() {
-        val entries = XedSimulationData.parse(
+        val entries = PortalText.parse(
             """
             [terminal.docs]
-            id = "# MC Developer Portal\nDokumentasi"
-            en = "# MC Developer Portal\nDocumentation"
+            id = "# Developer Portal\nDokumentasi"
+            en = "# Developer Portal\nDocumentation"
             """.trimIndent()
         )
 
-        assertEquals("# MC Developer Portal\nDokumentasi", entries["terminal.docs.id"])
-        assertEquals("# MC Developer Portal\nDocumentation", entries["terminal.docs.en"])
+        assertEquals("# Developer Portal\nDokumentasi", entries["terminal.docs.id"])
+        assertEquals("# Developer Portal\nDocumentation", entries["terminal.docs.en"])
     }
 
     @Test

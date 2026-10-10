@@ -1,11 +1,11 @@
-package com.rvdjv.pawnmc.`interface`.editor
+﻿package com.rvdjv.pawnmc.`interface`.editor.Workspace
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
-class XedWorkspacePanelSourceTest {
+class WorkspacePanelSourceTest {
     @Test
     fun compilerOutputRemainsScrollableAcrossBothAxesWithoutLineTruncation() {
-        val source = File("src/main/java/com/rvdjv/pawnmc/interface/editor/XedWorkspacePanel.kt").readText()
+        val source = File("src/main/java/com/rvdjv/pawnmc/interface/editor/Workspace/Panel.kt").readText()
 
         assertTrue(source.contains(".verticalScroll(outputScrollState)"))
         assertTrue(source.contains(".horizontalScroll(outputHorizontalScrollState)"))
