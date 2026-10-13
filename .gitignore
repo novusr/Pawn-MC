@@ -69,4 +69,4 @@ tests.err
 
 # Scratch Pawn/terminal files kept at the project root by manual testing.
 /TMP/
-/PawnMC/
+/PawnMC/!thirdparty/PocketSAMP/app/libs/*.jar
