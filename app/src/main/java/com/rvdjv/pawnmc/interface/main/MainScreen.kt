@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.main
+package com.rvdjv.pawnmc.`interface`.main
 
 import android.Manifest
 import android.content.ClipData
@@ -89,6 +89,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.pocketsamp.server.PocketSamp
 import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserMode
@@ -291,8 +292,13 @@ fun MainScreen(
         )
     }
 
-    var showSelfTestDialog by remember { mutableStateOf(false) }
-    var selfTestResults by remember { mutableStateOf<List<AppSelfTestResult>>(emptyList()) }
+    // The former self-test button now opens PocketSAMP, the embedded SA-MP server
+    // runtime adopted from thirdparty/PocketSAMP. It runs as a separate activity on
+    // top of this screen and returns here through its back handling, the same way
+    // the Sora-based editor screen is hosted.
+    fun openPocketSamp() {
+        PocketSamp.launch(context)
+    }
     var showCompilingNotice by remember { mutableStateOf(false) }
 
     LaunchedEffect(viewModel.isCompiling) {
@@ -307,192 +313,6 @@ fun MainScreen(
         ).show()
     }
 
-    if (showSelfTestDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                showSelfTestDialog = false
-            },
-            title = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Filled.Description,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(localizer.get("main.selftest.title", appLanguage, "Self Test Diagnostics"))
-                    }
-                }
-            },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 500.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text(
-                        text = localizer.get("main.selftest.desc", appLanguage, "Run application diagnostics to verify internal compilers, auto-detection, and include directories. Scroll up/down to view all test modules."),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(SpaceM))
-
-                    // Horizontally scrollable action row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                selfTestResults = AppSelfTestCatalog.runAll()
-                                Toast.makeText(context, localizer.get("main.selftest.completed", appLanguage, "All tests completed"), Toast.LENGTH_SHORT).show()
-                            }
-                        ) {
-                            Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(localizer.get("main.selftest.run_all", appLanguage, "Run All"))
-                        }
-
-                        if (selfTestResults.isNotEmpty()) {
-                            TextButton(
-                                onClick = {
-                                    selfTestResults = emptyList()
-                                }
-                            ) {
-                                Text(localizer.get("main.selftest.clear", appLanguage, "Clear"))
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(SpaceM))
-
-                    if (selfTestResults.isNotEmpty()) {
-                        val passedCount = selfTestResults.count { it.passed }
-                        val totalCount = selfTestResults.size
-                        val passedWord = localizer.get("main.selftest.passed", appLanguage, "Passed")
-                        val resultsTitle = localizer.get("main.selftest.results", appLanguage, "Test Results")
-                        Text(
-                            text = "$resultsTitle ($passedCount/$totalCount $passedWord):",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(SpaceXS))
-                        selfTestResults.forEach { result ->
-                            Card(
-                                shape = RoundedCornerShape(10.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (result.passed)
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                                    else
-                                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
-                                ),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 3.dp)
-                            ) {
-                                Column(modifier = Modifier.padding(SpaceS)) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            text = result.name,
-                                            fontWeight = FontWeight.SemiBold,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        Text(
-                                            text = if (result.passed) "PASS" else "FAIL",
-                                            color = if (result.passed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = result.message,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(SpaceM))
-                    }
-
-                    Text(
-                        text = localizer.get("main.selftest.catalog", appLanguage, "Test Module Catalog (scroll down):"),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(SpaceXS))
-
-                    AppSelfTestCatalog.list().forEach { test ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(SpaceS),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = test.title,
-                                        fontWeight = FontWeight.SemiBold,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Text(
-                                        text = test.description,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                FilledTonalButton(
-                                    onClick = {
-                                        val singleRes = AppSelfTestCatalog.run(test.id)
-                                        selfTestResults = (selfTestResults.filterNot { it.name == singleRes.name } + singleRes)
-                                        val statusLabel = if (singleRes.passed) localizer.get("main.selftest.passed", appLanguage, "PASSED") else "FAILED"
-                                        Toast.makeText(context, "${test.title}: $statusLabel", Toast.LENGTH_SHORT).show()
-                                    },
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                                ) {
-                                    Text(localizer.get("main.selftest.run", appLanguage, "Run"))
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showSelfTestDialog = false
-                    }
-                ) {
-                    Text(localizer.get("main.selftest.close", appLanguage, "Close"))
-                }
-            }
-        )
-    }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background
@@ -552,7 +372,7 @@ fun MainScreen(
                     if (viewModel.isCompiling) {
                         showCompilingBlockedToast()
                     } else {
-                        showSelfTestDialog = true
+                        openPocketSamp()
                     }
                 },
                 localizer = localizer,
@@ -571,62 +391,6 @@ fun MainScreen(
                 }
             }
 
-            if (selfTestResults.isNotEmpty()) {
-                item {
-                    Spacer(modifier = Modifier.height(SpaceS))
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-                        )
-                    ) {
-                    Column(modifier = Modifier.padding(SpaceS)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            val cardTitle = localizer.get("main.selftest.card_title", appLanguage, "Self-Test Results")
-                            val passedWord = localizer.get("main.selftest.passed", appLanguage, "Passed")
-                            Text(
-                                text = "$cardTitle (${selfTestResults.count { it.passed }}/${selfTestResults.size} $passedWord)",
-                                style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Row {
-                                TextButton(onClick = { showSelfTestDialog = true }) {
-                                    Text(localizer.get("main.selftest.open", appLanguage, "Open Tests"))
-                                }
-                                TextButton(onClick = { selfTestResults = emptyList() }) {
-                                    Text(localizer.get("main.selftest.dismiss", appLanguage, "Dismiss"))
-                                }
-                            }
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            selfTestResults.forEach { res ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = if (res.passed) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer
-                                ) {
-                                    Text(
-                                        text = "${res.name.removePrefix("Self test: ")}: ${if (res.passed) "PASS" else "FAIL"}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        color = if (res.passed) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
-                                    )
-                                }
-                            }
-                        }
-                    }
-                    }
-                }
-            }
 
             item { Spacer(modifier = Modifier.height(SpaceL)) }
 
@@ -857,9 +621,11 @@ internal fun ScreenHeader(
                         enabled = !isCompiling,
                         testTag = "self_test_button",
                         icon = {
+                            // PocketSAMP runtime: the SA-MP server console adopted from
+                            // thirdparty/PocketSAMP now lives behind this button.
                             Icon(
-                                imageVector = Icons.Filled.Description,
-                                contentDescription = localizer?.get("main.header.selftest", appLanguage, "Self tests") ?: "Self tests",
+                                imageVector = Icons.Filled.PlayArrow,
+                                contentDescription = localizer?.get("main.header.pocketsamp", appLanguage, "PocketSAMP server") ?: "PocketSAMP server",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }

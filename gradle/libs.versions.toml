@@ -48,6 +48,9 @@ androidx-annotation = { group = "androidx.annotation", name = "annotation", vers
 sora-editor = { group = "io.github.Rosemoe.sora-editor", name = "editor", version.ref = "soraEditor" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
 json = { group = "org.json", name = "json", version.ref = "json" }
+# PocketSAMP runtime dependencies, under the upstream names.
+commons-compress = { group = "org.apache.commons", name = "commons-compress", version = "1.26.1" }
+mariadb-java-client = { group = "org.mariadb.jdbc", name = "mariadb-java-client", version = "3.3.3" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

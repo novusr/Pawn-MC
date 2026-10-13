@@ -110,6 +110,10 @@ class MainActivity : ComponentActivity() {
 
         val config = CompilerConfig.getInstance(applicationContext)
         enableEdgeToEdge()
+        // PocketSAMP is embedded in this process; its global crash handler has to be
+        // installed before the runtime UI can be opened. Idempotent, so calling it on
+        // every launch is safe.
+        com.pocketsamp.server.PocketSamp.install(applicationContext)
         // The ongoing session notification is a nicety, not a requirement, so the prompt
         // is fired once and a refusal only means the shade stays empty.
         requestNotificationPermissionIfNeeded()

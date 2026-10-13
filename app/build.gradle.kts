@@ -52,7 +52,9 @@ android {
 
     defaultConfig {
         applicationId = "com.rvdjv.pawnmc"
-        minSdk = 24
+        // Aligned with the embedded PocketSAMP runtime (its QEMU/MariaDB engine was
+        // written for API 26+). SDK-int checks cover the older paths for everything else.
+        minSdk = 26
         targetSdk = 36
         versionCode = 6
         versionName = "1.5.1"
@@ -157,6 +159,10 @@ dependencies {
     // The in-editor terminal: proot sandbox + Termux VT emulator, opened from the
     // floating Xed editor button.
     implementation(project(":terminal:app"))
+
+    // PocketSAMP runtime, adopted from thirdparty/PocketSAMP: the SA-MP server +
+    // MariaDB console opened from the header button that used to run self-tests.
+    implementation(project(":pocketsamp"))
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

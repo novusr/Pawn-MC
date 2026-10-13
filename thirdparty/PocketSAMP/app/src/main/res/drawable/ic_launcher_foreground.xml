@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Server Stack Icon (Accent Cyan and Orange) -->
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M34,36 L74,36 L74,44 L34,44 Z" />
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M34,50 L74,50 L74,58 L34,58 Z" />
+    <path
+        android:fillColor="#00E5FF"
+        android:pathData="M34,64 L74,64 L74,72 L34,72 Z" />
+    <!-- Indicator Dots -->
+    <path
+        android:fillColor="#00E676"
+        android:pathData="M28,40 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+    <path
+        android:fillColor="#00E676"
+        android:pathData="M28,54 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+    <path
+        android:fillColor="#00E676"
+        android:pathData="M28,68 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+</vector>

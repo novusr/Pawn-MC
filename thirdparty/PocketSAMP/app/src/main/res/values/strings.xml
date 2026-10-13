@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">PocketSAMP</string>
+    <string name="server_title">SA-MP Local Server</string>
+    <string name="status_stopped">Stopped</string>
+    <string name="status_running">Running</string>
+    <string name="status_starting">Starting...</string>
+    <string name="action_start">Start Server</string>
+    <string name="action_stop">Stop Server</string>
+    <string name="action_restart">Restart</string>
+    
+    <!-- Tabs -->
+    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_console">Console</string>
+    <string name="tab_database">Database</string>
+    <string name="tab_config">Config</string>
+    
+    <!-- Notification -->
+    <string name="notification_channel_name">PocketSAMP Server</string>
+    <string name="notification_running">SA-MP &amp; MariaDB are active in background</string>
+</resources>

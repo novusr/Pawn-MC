@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" />
+        <exclude domain="file" path="rootfs_i386" />
+        <exclude domain="file" path="mariadb" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" />
+        <exclude domain="file" path="rootfs_i386" />
+        <exclude domain="file" path="mariadb" />
+    </device-transfer>
+</data-extraction-rules>
