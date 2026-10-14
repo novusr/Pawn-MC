@@ -59,9 +59,9 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.kotlinx.coroutines.android)
-    // The MariaDB JDBC driver ships as a vendored jar in this module (same file the
-    // upstream build referenced); keep both paths pointing at it.
-    implementation(files("libs/mariadb-java-client-3.3.3.jar"))
+    // The MariaDB JDBC driver: the Maven artifact is the single source (the vendored
+    // upstream jar is kept only as a fallback reference and is not on any classpath,
+    // so the two can never collide).
     implementation(libs.mariadb.java.client)
     implementation(libs.commons.compress)
 }
