@@ -622,9 +622,10 @@ internal fun ScreenHeader(
                         testTag = "self_test_button",
                         icon = {
                             // PocketSAMP runtime: the SA-MP server console adopted from
-                            // thirdparty/PocketSAMP now lives behind this button.
+                            // thirdparty/PocketSAMP now lives behind this button, keeping
+                            // the document icon the self-test slot has always used.
                             Icon(
-                                imageVector = Icons.Filled.PlayArrow,
+                                imageVector = Icons.Filled.Description,
                                 contentDescription = localizer?.get("main.header.pocketsamp", appLanguage, "PocketSAMP server") ?: "PocketSAMP server",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )

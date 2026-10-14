@@ -165,7 +165,51 @@ LD_PRELOAD="$(realpath "$SHIM")" /system/bin/tar -xzf "$ROOTFS_ARCHIVE" --no-sam
 ret=$?
 set -e
 if [ "$ret" -ne 0 ]; then
-    printf 'tar extraction failed (exit %s). Check archive validity, app storage space, and shim compatibility.\n' "$ret" >&2
+    # The shim is the usual suspect: it intercepts open()/link() to emulate
+    # hardlinks, and on some devices (seen on API 28/x86_64 with entries such as
+    # usr/bin/su and etc/pam.d/su) its redirected lookups miss the marker file it
+    # staged earlier, so tar fails with ENOENT on entries it extracted fine on
+    # every other filesystem. A plain Android tar creates the same hardlinks as
+    # independent copies instead, which proot treats identically at runtime.
+    warn "tar extraction with link2symlink failed (exit $ret); retrying without the shim…"
+    rm -rf "$SANDBOX_DIR"
+    mkdir -p "$SANDBOX_DIR"
+    : > "$TEMP_LOG"
+    set +e
+    /system/bin/tar -xzf "$ROOTFS_ARCHIVE" --no-same-owner -C "$SANDBOX_DIR" >"$TEMP_LOG" 2>&1
+    ret=$?
+    set -e
+fi
+if [ "$ret" -ne 0 ]; then
+    # Last resort: extract through PRoot like the original setup did. PRoot fakes
+    # a root environment so link() and chown() succeed regardless of filesystem
+    # semantics, and it covers the remaining device-specific tar quirks. Only
+    # reached after both direct strategies failed, so the SIGILL-prone path never
+    # blocks devices where the direct extraction works.
+    warn "tar extraction without the shim failed (exit $ret); retrying through PRoot…"
+    rm -rf "$SANDBOX_DIR"
+    mkdir -p "$SANDBOX_DIR"
+    unset LD_PRELOAD
+    if [ -x "$PROOT" ] && [ -n "${LINKER:-}" ]; then
+        ARGS="-r $SANDBOX_DIR"
+        ARGS="$ARGS -0"
+        ARGS="$ARGS --link2symlink"
+        ARGS="$ARGS --kill-on-exit"
+        PROOT_CMD="$PROOT"
+        if [ -x "$LINKER" ]; then
+            PROOT_CMD="$LINKER $PROOT"
+        fi
+        : > "$TEMP_LOG"
+        set +e
+        $PROOT_CMD $ARGS /system/bin/sh -c "(cd $SANDBOX_DIR && /system/bin/tar -xzf $ROOTFS_ARCHIVE --no-same-owner)" >"$TEMP_LOG" 2>&1
+        ret=$?
+        set -e
+    else
+        printf 'PRoot binary not available for the fallback extraction (PROOT=%s).\n' "${PROOT:-unset}" >&2
+    fi
+fi
+if [ "$ret" -ne 0 ]; then
+    printf 'tar extraction failed (exit %s) with and without the link2symlink shim and through PRoot. Check archive validity, app storage space, and shim compatibility.\n' "$ret" >&2
     tail -n 50 "$TEMP_LOG" >&2 || true
     exit "$ret"
 fi
