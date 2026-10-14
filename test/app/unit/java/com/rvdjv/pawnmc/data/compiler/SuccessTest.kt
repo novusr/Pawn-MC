@@ -296,13 +296,15 @@ class SuccessTest {
 
         try {
             assertTrue(tempFile.exists())
-            assertEquals("main.pwn", tempFile.name)
+            assertEquals(MainViewModel.TEMPORARY_FILE_NAME, tempFile.name)
             // The starter lives in `workspace/` under the app data root rather than in the
             // old private `TMP/` folder, so it can be opened and edited outside PawnMC.
             assertEquals(MainViewModel.WORKSPACE_DIR_NAME, tempFile.parentFile?.name)
             val content = tempFile.readText()
-            assertTrue(content.contains("native printf"))
-            assertTrue(content.contains("printf(\"Hello, World!\");"))
+            // The starter template uses `print` from the console library, and this
+            // assertion pins both the native declaration and its first call.
+            assertTrue(content.contains("native print(const string[])"))
+            assertTrue(content.contains("print(\"Hello, World!\");"))
         } finally {
             tempFile.delete()
             tempDir.deleteRecursively()

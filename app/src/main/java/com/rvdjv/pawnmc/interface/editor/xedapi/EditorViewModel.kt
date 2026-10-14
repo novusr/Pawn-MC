@@ -94,23 +94,31 @@ class EditorViewModel(
         loadedFilePath = n_path
         isLoading = true
         loadError = null
+        // Snapshot of what the editor held when the load began. If the user (or a
+        // test driving the view model synchronously) edits while the async read is
+        // in flight, those edits are newer than the file and must never be
+        // clobbered by the read completing later — applying it blindly used to
+        // discard unsaved changes.
+        val contentAtLoadStart = latestEditorContent
         viewModelScope.launch {
             try {
                 if (!file.exists()) {
                     loadError = "File not found: $n_path"
-                    isLoading = false
                     return@launch
                 }
                 val content = withContext(Dispatchers.IO) {
                     file.readText()
                 }
-                fileContent = content
-                lastSavedContent = content
-                latestEditorContent = content
-                hasUnsavedChanges = false
-                isLoading = false
+                val editedDuringLoad = latestEditorContent != null && latestEditorContent != contentAtLoadStart
+                if (!editedDuringLoad) {
+                    fileContent = content
+                    lastSavedContent = content
+                    latestEditorContent = content
+                    hasUnsavedChanges = false
+                }
             } catch (e: Exception) {
                 loadError = "Failed to open file: ${e.localizedMessage ?: "Unknown error"}"
+            } finally {
                 isLoading = false
             }
         }

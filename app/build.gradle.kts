@@ -105,7 +105,13 @@ android {
     // module only: the `:terminal:*` libraries must not set it, because a library that
     // requests legacy packaging changes how its own libraries are packaged and Gradle
     // then reports a conflict between modules.
-    packaging { jniLibs { useLegacyPackaging = true }     }
+    packaging {
+        jniLibs { useLegacyPackaging = true }
+        // JNA ships its licence files (AL2.0, LGPL2.1) in both jna and jna-platform,
+        // and AGP refuses to merge two copies of the same resource path. The
+        // duplicate is exactly the same licence text, so picking the first input is
+        // the correct merge — the licence still ships once inside the APK.
+        resources.excludes += setOf("META-INF/AL2.0", "META-INF/LGPL2.1")
     }
 
     val appApkNamePrefix = "pawnmc"
@@ -135,6 +141,7 @@ android {
                     }
                 }
         }
+    }
     }
 }
 
