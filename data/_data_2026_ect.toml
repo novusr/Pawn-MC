@@ -680,6 +680,12 @@ en = "Here Compiler Output:"
 ru = "Вот результат компиляции:"
 es = "Aqui el resultado de compilacion:"
 
+[main.fab.portal]
+id = "Buka panduan setelan"
+en = "Open the settings guide"
+ru = "Открыть гид по настройкам"
+es = "Abrir la guía de ajustes"
+
 [main.header.collapse]
 id = "Sembunyikan menu"
 en = "Hide menu"

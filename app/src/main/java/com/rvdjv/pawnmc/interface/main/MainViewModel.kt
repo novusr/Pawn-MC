@@ -191,6 +191,11 @@ class MainViewModel(
         } == true
         if (!isTemporaryStarter && lastPath != null && File(lastPath).exists()) {
             selectFile(lastPath, isStartupLoad = true)
+        } else if (isTemporaryStarter && File(lastPath!!).exists()) {
+            // The starter the editor created is a real, compilable Pawn file: coming
+            // back from the editor must keep it selected so Compile stays usable on
+            // the main interface, instead of silently dropping the selection.
+            selectFile(lastPath, isStartupLoad = true)
         } else {
             selectedFilePath = null
             config.n_last_selected_file_path = null

@@ -95,19 +95,24 @@ internal object AppStorage {
         File(context.filesDir, ".pawnmc").ensureDir()
 
     /**
-     * The app directory the user can browse: `<external-files>/PawnMC`.
+     * The app directory the user can browse: `Documents/PawnMC`.
      *
-     * Falls back to [privateRoot] when external storage is not mounted (or the device
-     * has none), so a caller never has to handle a null root.
+     * Everything user-owned moved here: `Android/data/<pkg>/` is wiped by an
+     * uninstall, while the public Documents tree is user data the system keeps, and
+     * it is reachable from any file manager and a PC over USB. Requires the
+     * all-files permission the app already asks for on the main screen; when it is
+     * unavailable, callers fall back to the app-scoped external dir and then to
+     * [privateRoot], so a restricted profile degrades to less-visible storage
+     * rather than to a crash.
      */
     fun dataRoot(context: Context): File {
+        documentsRoot(context)?.let { return it }
         val external = runCatching { context.getExternalFilesDir(null) }.getOrNull()
         return if (external != null) File(external, PUBLIC_DIR_NAME).ensureDir() else privateRoot(context)
     }
 
-    /** True when [dataRoot] really points at shared storage and not at the private fallback. */
-    fun isDataRootPublic(context: Context): Boolean =
-        runCatching { context.getExternalFilesDir(null) }.getOrNull() != null
+    /** True when [dataRoot] points at the public Documents tree. */
+    fun isDataRootPublic(context: Context): Boolean = documentsRoot(context) != null
 
     /**
      * Default folder for the bundled starter workspace, `PawnMC/workspace`.
@@ -117,6 +122,38 @@ internal object AppStorage {
      * user action instead of a side effect of clearing app data.
      */
     fun workspaceRoot(context: Context): File = File(dataRoot(context), "workspace").ensureDir()
+
+    /**
+     * One-time migration of the user tree from the old app-scoped location.
+     *
+     * `Android/data/<pkg>/files/PawnMC` is wiped on uninstall, so a user who upgrades
+     * to the Documents-based layout loses nothing only if the old tree is copied over
+     * before anything else writes to the new one. Runs once per process launch from
+     * `MainActivity`; an existing migration marker makes it a no-op, and any copy
+     * error is swallowed so a broken card slot never blocks the app.
+     */
+    fun migrateLegacyDataRoot(context: Context) {
+        val external = runCatching { context.getExternalFilesDir(null) }.getOrNull() ?: return
+        val legacy = File(external, PUBLIC_DIR_NAME)
+        if (!legacy.isDirectory) return
+        val target = dataRoot(context)
+        if (target == legacy || !target.isDirectory) return
+        val marker = File(target, ".migrated-from-android-data")
+        if (marker.isFile) return
+
+        runCatching {
+            legacy.walkTopDown()
+                .filter { it.isFile }
+                .forEach { source ->
+                    val destination = File(target, source.relativeTo(legacy).path)
+                    if (!destination.isFile || destination.length() < source.length()) {
+                        destination.parentFile?.mkdirs()
+                        source.copyTo(destination, overwrite = true)
+                    }
+                }
+            marker.writeText("migrated ${System.currentTimeMillis()}")
+        }
+    }
 
     /**
      * Folder holding the user-visible settings mirror.

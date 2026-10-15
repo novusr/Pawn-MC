@@ -55,6 +55,8 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PanTool
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.TimerOff
 import androidx.compose.material.icons.filled.PrecisionManufacturing
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.TouchApp
@@ -1939,7 +1941,9 @@ private fun FloatingRectToolbar(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 ToolBarEntry(
-                    icon = _Icons.Save,
+                    // Stopwatch-style save: the running save differs from the
+                    // save-as/save-all entry below so the two never read as twins.
+                    icon = Icons.Filled.Timer,
                     contentDescription = "Save file",
                     testTag = "editor_floating_save",
                     isActive = hasUnsavedChanges,
@@ -1948,7 +1952,7 @@ private fun FloatingRectToolbar(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                 ToolBarEntry(
-                    icon = if (workspaceOpen) _Icons.SaveAll else _Icons.Save,
+                    icon = Icons.Filled.TimerOff,
                     contentDescription = if (workspaceOpen) "Save All" else "Save As",
                     testTag = "editor_floating_save_all",
                     onClick = onSaveAllClick

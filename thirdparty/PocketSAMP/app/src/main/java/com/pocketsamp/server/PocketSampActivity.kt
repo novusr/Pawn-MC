@@ -97,6 +97,10 @@ class PocketSampActivity : ComponentActivity() {
     @Composable
     private fun MainAppLayout() {
         var currentTab by remember { mutableStateOf(AppTab.DASHBOARD) }
+        // The whole embedded UI follows the language configured in the PawnMC main
+        // interface (Settings → Language); the host set it before launching.
+        val lang = PocketSampLocales.current
+        fun t(key: String): String = PocketSampLocales.text(lang, key)
 
         val serverStatus by ServerForegroundService.serverStatus.collectAsState()
         val isDbRunning by ServerForegroundService.isDbRunning.collectAsState()
@@ -116,7 +120,7 @@ class PocketSampActivity : ComponentActivity() {
                             selected = selected,
                             onClick = { currentTab = tab },
                             icon = { Icon(imageVector = tab.icon, contentDescription = tab.label) },
-                            label = { Text(text = tab.label) },
+                            label = { Text(text = t("tab.${tab.name.lowercase()}")) },
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = AccentCyan,
                                 selectedTextColor = AccentCyan,
@@ -142,6 +146,7 @@ class PocketSampActivity : ComponentActivity() {
                         lanIp = lanIp,
                         onStartServer = { startServerService() },
                         onStopServer = { stopServerService() },
+                        lang = lang,
                         onNavigateBack = {
                             val callback = onNavigateBack
                             if (callback != null) callback() else finish()
@@ -166,7 +171,10 @@ class PocketSampActivity : ComponentActivity() {
         if (!com.pocketsamp.server.config.ServerDirectoryManager.hasStoragePermission(this)) {
             android.widget.Toast.makeText(
                 this,
-                "Beri izin Akses Semua File terlebih dahulu agar server dapat membaca gamemode Anda",
+                PocketSampLocales.text(
+                    PocketSampLocales.current,
+                    "perm.file.grant"
+                ),
                 android.widget.Toast.LENGTH_LONG
             ).show()
             try {

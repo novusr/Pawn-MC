@@ -26,6 +26,7 @@ import com.rvdjv.pawnmc.data.compiler.Explanations
 import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.config.AppLocalization
+import com.rvdjv.pawnmc.data.config.AppStorage
 import com.rvdjv.pawnmc.data.syntax.InternDat
 import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFolderPickerIntent
@@ -105,6 +106,10 @@ class MainActivity : ComponentActivity() {
             // warming them here is what keeps the first screen from paying for them.
             AppLocalization.load(applicationContext)
             InternDat.load(applicationContext)
+            // Everything user-owned now lives in Documents/PawnMC; copy the old
+            // Android/data tree over once so an upgrade never strands the user's
+            // scripts, logs or settings in the location an uninstall wipes.
+            AppStorage.migrateLegacyDataRoot(applicationContext)
             UpdateManager(applicationContext).ensureVersionFileWritten()
         }
 

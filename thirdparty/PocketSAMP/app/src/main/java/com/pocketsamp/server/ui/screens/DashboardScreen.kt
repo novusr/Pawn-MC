@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.pocketsamp.server.PocketSampLocales
 import com.pocketsamp.server.config.ServerDirectoryManager
 import com.pocketsamp.server.service.ServerStatus
 import com.pocketsamp.server.ui.theme.*
@@ -53,8 +54,10 @@ fun DashboardScreen(
     lanIp: String,
     onStartServer: () -> Unit,
     onStopServer: () -> Unit,
+    lang: PocketSampLocales.Lang = PocketSampLocales.Lang.EN,
     onNavigateBack: () -> Unit = {}
 ) {
+    fun t(key: String): String = PocketSampLocales.text(lang, key)
     val context = LocalContext.current
     val lifecycleOwner = context as? androidx.lifecycle.LifecycleOwner
     var currentServerDir by remember { mutableStateOf(ServerDirectoryManager.getServerDirectory(context)) }
@@ -128,7 +131,7 @@ fun DashboardScreen(
                 IconButton(onClick = onNavigateBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back to PawnMC",
+                        contentDescription = t("back.to.pawnmc"),
                         tint = TextPrimary
                     )
                 }
@@ -140,7 +143,7 @@ fun DashboardScreen(
                         color = TextPrimary
                     )
                     Text(
-                        text = "Local SA-MP & MySQL Portable Runtime",
+                        text = t("tagline"),
                         fontSize = 12.sp,
                         color = TextSecondary
                     )
@@ -149,10 +152,10 @@ fun DashboardScreen(
 
             // Status Indicator Pill
             val (statusText, statusColor) = when (status) {
-                ServerStatus.RUNNING -> "ONLINE" to StatusGreen
-                ServerStatus.STARTING, ServerStatus.INITIALIZING -> "STARTING" to AccentOrange
-                ServerStatus.STOPPING -> "STOPPING" to AccentOrange
-                ServerStatus.STOPPED -> "OFFLINE" to StatusRed
+                ServerStatus.RUNNING -> t("status.online") to StatusGreen
+                ServerStatus.STARTING, ServerStatus.INITIALIZING -> t("status.starting") to AccentOrange
+                ServerStatus.STOPPING -> t("status.stopping") to AccentOrange
+                ServerStatus.STOPPED -> t("status.offline") to StatusRed
             }
 
             Row(
@@ -354,7 +357,7 @@ fun DashboardScreen(
                     }
                 }
 
-                val dbStatusText = if (isDbRunning) "RUNNING" else "OFFLINE"
+                val dbStatusText = if (isDbRunning) t("db.running") else t("status.offline")
                 val dbColor = if (isDbRunning) StatusGreen else StatusRed
 
                 Text(
@@ -408,7 +411,7 @@ fun DashboardScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "Izin Akses File Diperlukan",
+                            text = t("perm.file.title"),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = AccentOrange
@@ -464,7 +467,7 @@ fun DashboardScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "Stabilkan Proses Latar Belakang",
+                            text = t("perm.battery.title"),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = AccentCyan
@@ -538,7 +541,7 @@ fun DashboardScreen(
 
                     TextButton(onClick = { showAntiDcGuide = !showAntiDcGuide }) {
                         Text(
-                            text = if (showAntiDcGuide) "Tutup" else "Solusi HP",
+                            text = if (showAntiDcGuide) t("perm.close") else t("perm.guide"),
                             color = AccentCyan,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
@@ -623,12 +626,12 @@ fun DashboardScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.FolderOpen,
-                            contentDescription = "Folder Gamemode",
+                            contentDescription = t("folder.gamemode"),
                             tint = AccentCyan,
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "Folder Gamemode SA-MP",
+                            text = t("folder.gamemode") + " SA-MP",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = TextSecondary
@@ -693,19 +696,19 @@ fun DashboardScreen(
                     ) {
                         Icon(imageVector = Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = "Pilih Folder", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(text = t("folder.pick"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
                     OutlinedButton(
                         onClick = {
                             currentServerDir = ServerDirectoryManager.resetToDefaultDirectory(context)
-                            Toast.makeText(context, "Direset ke default PocketSAMP", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, t("folder.reset.done"), Toast.LENGTH_SHORT).show()
                         },
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.height(38.dp)
                     ) {
-                        Text(text = "Reset Default", fontSize = 12.sp)
+                        Text(text = t("folder.reset"), fontSize = 12.sp)
                     }
                 }
 
@@ -755,7 +758,7 @@ fun DashboardScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (isRunning) "STOP SERVER" else "START SERVER",
+                    text = if (isRunning) t("action.stop") else t("action.start"),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )

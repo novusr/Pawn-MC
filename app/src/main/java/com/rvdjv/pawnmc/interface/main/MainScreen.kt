@@ -52,8 +52,10 @@ import androidx.compose.material.icons.filled.Pinch
 import androidx.compose.material.icons.filled.SatelliteAlt
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -93,6 +95,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.pocketsamp.server.PocketSamp
+import com.pocketsamp.server.PocketSampLocales
 import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserMode
@@ -102,6 +105,9 @@ import com.rvdjv.pawnmc.`interface`.theme.status_error_container
 import com.rvdjv.pawnmc.`interface`.theme.status_idle
 import com.rvdjv.pawnmc.`interface`.theme.status_success
 import com.rvdjv.pawnmc.`interface`.theme.status_success_container
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import java.io.File
 import kotlinx.coroutines.delay
 import java.text.DecimalFormat
@@ -326,6 +332,15 @@ fun MainScreen(
     // top of this screen and returns here through its back handling, the same way
     // the Sora-based editor screen is hosted.
     fun openPocketSamp() {
+        // The embedded runtime speaks the language the PawnMC settings hold.
+        PocketSampLocales.setLanguage(
+            when (appLanguage) {
+                CompilerConfig.AppLanguage.ID -> PocketSampLocales.Lang.ID
+                CompilerConfig.AppLanguage.ES -> PocketSampLocales.Lang.ES
+                CompilerConfig.AppLanguage.RU -> PocketSampLocales.Lang.RU
+                else -> PocketSampLocales.Lang.EN
+            }
+        )
         PocketSamp.launch(context)
     }
     var showCompilingNotice by remember { mutableStateOf(false) }
@@ -343,10 +358,31 @@ fun MainScreen(
     }
 
 
+    val listState = rememberLazyListState()
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
+        floatingActionButton = {
+            // The cursor: the portal-style affordance the editor has, now on the main
+            // interface too. It scrolls the settings guide (the portal promo card) into
+            // view, which is the closest main-screen equivalent of opening the portal.
+            val fabScope = rememberCoroutineScope()
+            SmallFloatingActionButton(
+                onClick = {
+                    // The promo card is the last item; scroll to the bottom quickly.
+                    fabScope.launch { listState.animateScrollToItem(Int.MAX_VALUE) }
+                },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Webhook,
+                    contentDescription = localizer?.get("main.fab.portal", appLanguage, "Open the settings guide") ?: "Open the settings guide"
+                )
+            }
+        }
     ) { innerPadding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
