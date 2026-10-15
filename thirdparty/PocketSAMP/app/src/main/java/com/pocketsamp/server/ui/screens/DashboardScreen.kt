@@ -18,6 +18,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BatteryAlert
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ContentCopy
@@ -51,7 +52,8 @@ fun DashboardScreen(
     isDbRunning: Boolean,
     lanIp: String,
     onStartServer: () -> Unit,
-    onStopServer: () -> Unit
+    onStopServer: () -> Unit,
+    onNavigateBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycleOwner = context as? androidx.lifecycle.LifecycleOwner
@@ -114,24 +116,35 @@ fun DashboardScreen(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // App Header
+        // App Header. The back arrow mirrors the Xed editor's navigation icon: one
+        // tap lands back on the PawnMC main interface, because expecting the system
+        // back gesture to close a foreground server service is not discoverable.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = "PocketSAMP",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Text(
-                    text = "Local SA-MP & MySQL Portable Runtime",
-                    fontSize = 12.sp,
-                    color = TextSecondary
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onNavigateBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back to PawnMC",
+                        tint = TextPrimary
+                    )
+                }
+                Column {
+                    Text(
+                        text = "PocketSAMP",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = "Local SA-MP & MySQL Portable Runtime",
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
+                }
             }
 
             // Status Indicator Pill

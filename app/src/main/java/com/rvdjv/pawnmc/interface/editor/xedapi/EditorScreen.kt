@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.editor.xedapi
+package com.rvdjv.pawnmc.`interface`.editor.xedapi
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -44,12 +44,16 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.PrecisionManufacturing
 import androidx.compose.material.icons.filled.Search
@@ -493,7 +497,7 @@ fun EditorScreen(
             title = { Text(when (appLanguage) {
                 CompilerConfig.AppLanguage.ID -> "Informasi"
                 CompilerConfig.AppLanguage.ES -> "Informacion"
-                CompilerConfig.AppLanguage.RU -> "Уведомление"
+                CompilerConfig.AppLanguage.RU -> "???????????"
                 CompilerConfig.AppLanguage.EN -> "Notice"
             }) },
             text = { Text(message) },
@@ -502,7 +506,7 @@ fun EditorScreen(
                     Text(when (appLanguage) {
                         CompilerConfig.AppLanguage.ID -> "Tutup"
                         CompilerConfig.AppLanguage.ES -> "Cerrar"
-                        CompilerConfig.AppLanguage.RU -> "Закрыть"
+                        CompilerConfig.AppLanguage.RU -> "???????"
                         CompilerConfig.AppLanguage.EN -> "Dismiss"
                     })
                 }
@@ -854,7 +858,7 @@ fun EditorScreen(
                     // bar only keeps history and the overflow menu.
                     Box {
                         IconButton(onClick = { showMenu = true }) {
-                            Icon(_Icons.Settings, contentDescription = "Editor options")
+                            Icon(Icons.Filled.HourglassEmpty, contentDescription = "Editor options")
                         }
                         DropdownMenu(
                             expanded = showMenu,
@@ -953,7 +957,7 @@ fun EditorScreen(
                                 text = { Text(if (isExplorerVisible) "Hide Workspace Panel" else "Show Workspace Panel") },
                                 leadingIcon = {
                                     Icon(
-                                        imageVector = if (isExplorerVisible) Icons.Filled.ChevronRight else _Icons.PanelRect,
+                                        imageVector = if (isExplorerVisible) Icons.Filled.ChevronRight else Icons.Filled.Palette,
                                         contentDescription = null
                                     )
                                 },
@@ -1736,7 +1740,7 @@ private fun EmptyWorkspaceView(
             modifier = Modifier.padding(24.dp)
         ) {
             Icon(
-                imageVector = _Icons.PanelRect,
+                imageVector = Icons.Filled.Palette,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(40.dp)
@@ -1756,7 +1760,7 @@ private fun EmptyWorkspaceView(
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 FilledTonalButton(onClick = onBrowseExplorer) {
-                    Icon(_Icons.PanelRect, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Filled.Palette, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Explorer")
                 }
@@ -2239,7 +2243,7 @@ private fun EditorTabStrip(
                         )
                         if (document.isDirty) {
                             Text(
-                                text = "●",
+                                text = "?",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(start = 4.dp)
@@ -2267,7 +2271,7 @@ private fun EditorTabStrip(
                     .testTag("editor_tab_explorer_toggle")
             ) {
                 Icon(
-                    imageVector = _Icons.PanelRect,
+                    imageVector = Icons.Filled.Palette,
                     contentDescription = "Toggle workspace panel",
                     modifier = Modifier.size(18.dp)
                 )

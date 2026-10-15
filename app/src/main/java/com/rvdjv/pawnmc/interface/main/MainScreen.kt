@@ -41,13 +41,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Pinch
+import androidx.compose.material.icons.filled.SatelliteAlt
+import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -127,6 +130,32 @@ internal fun deriveStatus(isCompiling: Boolean, lastExitCode: Int?): CompileStat
     lastExitCode == null -> CompileStatus.IDLE
     lastExitCode == 0 -> CompileStatus.SUCCESS
     else -> CompileStatus.ERROR
+}
+
+/** Localisation keys of the rotating taglines, in the order the table lists them. */
+internal val TAGLINE_KEYS = listOf(
+    "app.tagline",
+    "app.tagline.2",
+    "app.tagline.3",
+    "app.tagline.4",
+)
+
+/**
+ * Picks one tagline for this app run.
+ *
+ * `remember { }` in the caller makes this once per process, not once per recomposition:
+ * the phrase stays on screen all session and only changes on the next launch. The seed is
+ * wall-clock milliseconds so launches differ, while a fixed tagline table keeps the
+ * phrasing predictable for localisation.
+ */
+internal fun randomTagline(
+    localizer: AppLocalization?,
+    appLanguage: CompilerConfig.AppLanguage,
+    seed: Long = System.currentTimeMillis(),
+): String {
+    if (localizer == null) return "Compiling ideas on the go."
+    val index = (seed % TAGLINE_KEYS.size.toLong()).toInt()
+    return localizer.get(TAGLINE_KEYS[index], appLanguage, "Compiling ideas on the go.")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -594,8 +623,10 @@ internal fun ScreenHeader(
             )
 
             Text(
-                text = localizer?.get("app.tagline", appLanguage, "Compiling ideas on the go.")
-                    ?: "Compiling ideas on the go.",
+                // Picked once per process launch with a stable seed, not on every
+                // recomposition: the tagline stays the same all session and changes
+                // only on the next app start.
+                text = remember { randomTagline(localizer, appLanguage) },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
@@ -622,10 +653,10 @@ internal fun ScreenHeader(
                         testTag = "self_test_button",
                         icon = {
                             // PocketSAMP runtime: the SA-MP server console adopted from
-                            // thirdparty/PocketSAMP now lives behind this button, keeping
-                            // the document icon the self-test slot has always used.
+                            // thirdparty/PocketSAMP now lives behind this button. The
+                            // satellite reads as "launch a server".
                             Icon(
-                                imageVector = Icons.Filled.Description,
+                                imageVector = Icons.Filled.SatelliteAlt,
                                 contentDescription = localizer?.get("main.header.pocketsamp", appLanguage, "PocketSAMP server") ?: "PocketSAMP server",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -638,7 +669,7 @@ internal fun ScreenHeader(
                         testTag = "xed_button",
                         icon = {
                             Icon(
-                                imageVector = _Icons.CodeEdit,
+                                imageVector = Icons.Filled.ContentCut,
                                 contentDescription = localizer?.get("main.header.editor", appLanguage, "Editor") ?: "Editor",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -651,7 +682,7 @@ internal fun ScreenHeader(
                         testTag = "settings_button",
                         icon = {
                             Icon(
-                                imageVector = Icons.Filled.Settings,
+                                imageVector = Icons.Filled.HourglassTop,
                                 contentDescription = localizer?.get("main.header.settings", appLanguage, "Settings") ?: "Settings",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -808,9 +839,9 @@ internal fun CompileActionCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp)) {
-            if (selectedFileName != null) {
+            selectedFileName?.let { name ->
                 Text(
-                    text = selectedFileName,
+                    text = name,
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.SemiBold
@@ -822,17 +853,6 @@ internal fun CompileActionCard(
                 Text(
                     text = selectedFileSize ?: "Unknown size",
                     style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            } else {
-                Text(
-                    text = "No file selected",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.SemiBold
-                    ),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -853,12 +873,12 @@ internal fun CompileActionCard(
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Description,
+                    imageVector = Icons.Filled.Pinch,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(SpaceS))
-                Text("Browse File")
+                Text(localizer?.get("main.file.browse", appLanguage, "Browse File") ?: "Browse File")
             }
 
             Spacer(modifier = Modifier.height(SpaceS))
@@ -885,7 +905,7 @@ internal fun CompileActionCard(
                             )
                         } else {
                             Icon(
-                                imageVector = Icons.Filled.PlayArrow,
+                                imageVector = Icons.Filled.Bolt,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -928,7 +948,7 @@ internal fun CompilerLogsSection(
                 )
                 Spacer(modifier = Modifier.width(SpaceXS + 2.dp))
                 Text(
-                    text = "Compiler Output",
+                    text = localizer?.get("main.output.title", appLanguage, "Here Compiler Output:") ?: "Here Compiler Output:",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -124,11 +124,14 @@ fun WorkspacePanel(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(
+                color = MaterialTheme.colorScheme.surfaceContainerLow,
+                shape = RoundedCornerShape(18.dp),
+            )
     ) {
         if (session.openWorkspaces.isNotEmpty()) {
             WorkspaceSwitcherRow(session = session)
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
         }
 
         SectionHeader(

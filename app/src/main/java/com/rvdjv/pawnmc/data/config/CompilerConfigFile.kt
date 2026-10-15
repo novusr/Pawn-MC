@@ -44,20 +44,60 @@ internal object CompilerConfigFile {
 
     internal const val SCHEMA_VERSION = 2
     /**
-     * True when the JSON mirror file already exists (in either location).
+     * True when the JSON mirror file already exists in any of the locations this
+     * build can read.
      *
      * Used by [com.rvdjv.pawnmc.data.config.CompilerConfig] to decide whether a
      * first launch has to seed the file with the defaults: without this check a
      * user who never opens Settings would reinstall into a device that has never
      * written anything down.
      */
-    fun exists(context: Context): Boolean = file(context).isFile
+    fun exists(context: Context): Boolean = candidateFiles(context).any { it.isFile }
 
     /**
-     * The mirror on the user-visible app directory, or the private fallback when shared
-     * storage is not mounted.
+     * The mirror the app reads and writes, in order of preference:
+     *
+     * 1. `Documents/PawnMC/config/compiler_config.json` — the only location that
+     *    survives an uninstall, so this is where a fresh install looks first;
+     * 2. `Android/data/<pkg>/files/PawnMC/config/…` — what older builds wrote;
+     *    reading it is what carries an existing user's settings into the new
+     *    location on the next launch without them doing anything;
+     * 3. `files/.pawnmc/config/…` — private fallback when shared storage is
+     *    unavailable.
+     *
+     * [restore] reads the first file that parses, and [mirror] rewrites the
+     * primary; after that first successful write the app-scoped copy is stale but
+     * harmless, and it stops being consulted once the primary exists.
      */
-    fun file(context: Context): File = File(AppStorage.configRoot(context), FILE_NAME)
+    fun candidateFiles(context: Context): List<File> {
+        val locations = mutableListOf<File>()
+        AppStorage.documentsRoot(context)?.let { locations += File(File(it, "config"), FILE_NAME) }
+        runCatching { context.getExternalFilesDir(null) }.getOrNull()
+            ?.let { locations += File(File(File(it, AppStorage.PUBLIC_DIR_NAME), "config"), FILE_NAME) }
+        locations += File(File(AppStorage.privateRoot(context), "config"), FILE_NAME)
+        return locations
+    }
+
+    /**
+     * The primary mirror location — the one this build writes to.
+     *
+     * Kept for callers that must know the concrete path (tests, diagnostics);
+     * reading code goes through [candidateFiles] so a pre-migration file is found.
+     */
+    fun file(context: Context): File = candidateFiles(context).first()
+
+    /**
+     * The primary mirror path with its parent directories created.
+     *
+     * `Documents/PawnMC/config` exists only conceptually until the first write, so
+     * every writer (and every test that seeds a file) goes through this instead of
+     * calling `file(...).writeText(...)` into a directory nobody has made yet.
+     */
+    fun materializeFile(context: Context): File {
+        val target = file(context)
+        target.parentFile?.let { parent -> if (!parent.isDirectory) runCatching { parent.mkdirs() } }
+        return target
+    }
 
     /**
      * Loads the JSON file and writes its values into [prefs].
@@ -69,8 +109,7 @@ internal object CompilerConfigFile {
      * @return true when the file existed and parsed, i.e. something may have been restored
      */
     fun restore(context: Context, prefs: SharedPreferences): Boolean {
-        val source = file(context)
-        if (!source.isFile) return false
+        val source = candidateFiles(context).firstOrNull { it.isFile } ?: return false
 
         val root = runCatching { JSONObject(source.readText()) }.getOrNull() ?: return false
 
@@ -213,7 +252,8 @@ internal object CompilerConfigFile {
             .forEach { includePaths.put(it) }
         root.put(CompilerConfig.KEY_INCLUDE_PATHS, includePaths)
 
-        file(context).writeText(root.toString(2))
+        val target = materializeFile(context)
+        target.writeText(root.toString(2))
     }
 
     /**
@@ -225,8 +265,7 @@ internal object CompilerConfigFile {
      * already restored.
      */
     fun restoreIncludePaths(context: Context, prefs: SharedPreferences): Int {
-        val source = file(context)
-        if (!source.isFile) return 0
+        val source = candidateFiles(context).firstOrNull { it.isFile } ?: return 0
 
         val root = runCatching { JSONObject(source.readText()) }.getOrNull() ?: return 0
         val paths = root.optJSONArray(CompilerConfig.KEY_INCLUDE_PATHS)?.toStringList() ?: return 0

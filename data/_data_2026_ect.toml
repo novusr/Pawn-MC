@@ -638,11 +638,47 @@ en = "Compiling ideas on the go."
 ru = "Компилируем идеи на ходу."
 es = "Compilando ideas donde estes."
 
+[app.tagline.2]
+id = "Kode kecilmu, dunia besarmu."
+en = "Small scripts, big worlds."
+ru = "Маленькие скрипты — большие миры."
+es = "Scripts pequenos, mundos grandes."
+
+[app.tagline.3]
+id = "Tulis, kompilasi, jalankan."
+en = "Write it, compile it, run it."
+ru = "Напиши, скомпилируй, запусти."
+es = "Escribelo, compila, ejecuta."
+
+[app.tagline.4]
+id = "Pawn di genggamanmu."
+en = "Pawn, right in your pocket."
+ru = "Pawn прямо в кармане."
+es = "Pawn, directo en tu bolsillo."
+
 [main.header.expand]
 id = "Tampilkan menu"
 en = "Show menu"
 ru = "Показать меню"
 es = "Mostrar el menu"
+
+[main.header.pocketsamp]
+id = "Server PocketSAMP"
+en = "PocketSAMP server"
+ru = "Сервер PocketSAMP"
+es = "Servidor PocketSAMP"
+
+[main.file.browse]
+id = "Pilih Berkas"
+en = "Browse File"
+ru = "Выбрать файл"
+es = "Elegir archivo"
+
+[main.output.title]
+id = "Ini Hasil Kompilasi:"
+en = "Here Compiler Output:"
+ru = "Вот результат компиляции:"
+es = "Aqui el resultado de compilacion:"
 
 [main.header.collapse]
 id = "Sembunyikan menu"

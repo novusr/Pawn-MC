@@ -141,7 +141,11 @@ class PocketSampActivity : ComponentActivity() {
                         isDbRunning = isDbRunning,
                         lanIp = lanIp,
                         onStartServer = { startServerService() },
-                        onStopServer = { stopServerService() }
+                        onStopServer = { stopServerService() },
+                        onNavigateBack = {
+                            val callback = onNavigateBack
+                            if (callback != null) callback() else finish()
+                        }
                     )
                     AppTab.CONSOLE -> ConsoleScreen(
                         logs = logs,

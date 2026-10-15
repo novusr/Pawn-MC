@@ -363,10 +363,10 @@ internal fun DeveloperPortal(
         )
 
         Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.surfaceContainer,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-            shadowElevation = 12.dp,
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
+            shadowElevation = 14.dp,
             modifier = Modifier
                 .align(Alignment.Center)
                 .offset { limitedDragOffset }

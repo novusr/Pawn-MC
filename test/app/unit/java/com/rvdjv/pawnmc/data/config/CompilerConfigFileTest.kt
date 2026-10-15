@@ -3,9 +3,11 @@ import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
 import org.json.JSONObject
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -19,6 +21,21 @@ import java.io.File
  */
 class CompilerConfigFileTest {
     @get:Rule val temporaryFolder = TemporaryFolder()
+
+    /**
+     * JVM tests must never reach the real `Environment` statics (they throw "not
+     * mocked"), so the public-write probe is stubbed to `false` for every test by
+     * default and the Documents-aware tests opt back in.
+     */
+    @Before fun stubPublicAccessProbe() {
+        AppStorage.publicWriteAccessOverride = { false }
+        AppStorage.documentsRootOverride = null
+    }
+
+    @After fun clearPublicAccessProbe() {
+        AppStorage.publicWriteAccessOverride = null
+        AppStorage.documentsRootOverride = null
+    }
     @Test fun mirrorThenRestore_roundTripsEverySetting() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         val written = InMemoryPreferences().apply(::seed)
@@ -58,7 +75,7 @@ class CompilerConfigFileTest {
     }
     @Test fun mirror_survivesAbsentEnumSettingsWithoutThrowing() {
         // Regression: getString returning null used to hit the throwing
-        // JSONObject.put(String, Object) overload, which aborted the whole write —
+        // JSONObject.put(String, Object) overload, which aborted the whole write ï¿½
         // the file was never created and every reinstall restarted from defaults.
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         val prefs = InMemoryPreferences()
@@ -75,7 +92,7 @@ class CompilerConfigFileTest {
         // language with the device locale in the same session.
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         val json = "{\"schema\":2,\"app_language\":\"ru\",\"app_language_set\":true}"
-        CompilerConfigFile.file(context).writeText(json)
+        CompilerConfigFile.materializeFile(context).writeText(json)
         val restored = InMemoryPreferences()
         assertTrue(CompilerConfigFile.restore(context, restored))
         assertEquals("ru", restored.all[CompilerConfig.KEY_APP_LANGUAGE])
@@ -84,7 +101,7 @@ class CompilerConfigFileTest {
     @Test fun restore_leavesUntouchedKeysAloneWhenFileIsPartial() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         val json = "{\"schema\":1,\"app_language\":\"ru\"}"
-        CompilerConfigFile.file(context).writeText(json)
+        CompilerConfigFile.materializeFile(context).writeText(json)
         val restored = InMemoryPreferences().apply { all[CompilerConfig.KEY_SEMICOLONS] = true }
         assertTrue(CompilerConfigFile.restore(context, restored))
         assertEquals("ru", restored.all[CompilerConfig.KEY_APP_LANGUAGE])
@@ -92,7 +109,7 @@ class CompilerConfigFileTest {
     }
     @Test fun restore_ignoresCorruptFileAndKeepsExistingValues() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
-        CompilerConfigFile.file(context).writeText("{ this is not json")
+        CompilerConfigFile.materializeFile(context).writeText("{ this is not json")
         val restored = InMemoryPreferences().apply { all[CompilerConfig.KEY_APP_LANGUAGE] = "en" }
         assertFalse(CompilerConfigFile.restore(context, restored))
         assertEquals("en", restored.all[CompilerConfig.KEY_APP_LANGUAGE])
@@ -100,12 +117,25 @@ class CompilerConfigFileTest {
     @Test fun restore_distinguishesStoredFalseFromMissingKey() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         val json = "{\"schema\":1,\"ignore_case\":false}"
-        CompilerConfigFile.file(context).writeText(json)
+        CompilerConfigFile.materializeFile(context).writeText(json)
         val restored = InMemoryPreferences().apply { all[CompilerConfig.KEY_IGNORE_CASE] = true }
         assertTrue(CompilerConfigFile.restore(context, restored))
         assertEquals(false, restored.all[CompilerConfig.KEY_IGNORE_CASE])
     }
-    @Test fun file_usesUsersConfigFolderWhenSharedStorageIsAvailable() {
+    @Test fun file_prefersThePublicDocumentsRootWhenAllFilesAccessIsGranted() {
+        // Documents/PawnMC/config is the primary mirror location: it is the only one
+        // that survives an uninstall, so when the all-files permission is granted the
+        // file() path must land there, not under the app-scoped external dir.
+        try {
+            val documents = temporaryFolder.newFolder("documents")
+            val context = TestContextWithPublicDocs(temporaryFolder.newFolder("files"), documents)
+            val expected = File(File(File(documents, AppStorage.PUBLIC_DIR_NAME), "config"), CompilerConfigFile.FILE_NAME)
+            assertEquals(expected, CompilerConfigFile.file(context))
+        } finally {
+            resetDocumentsOverride()
+        }
+    }
+    @Test fun file_fallsBackToAppExternalDirWithoutAllFilesAccess() {
         val external = temporaryFolder.newFolder("external")
         val context = TestContext(temporaryFolder.newFolder("files"), external)
         val expected = File(File(File(external, AppStorage.PUBLIC_DIR_NAME), "config"), CompilerConfigFile.FILE_NAME)
@@ -117,6 +147,32 @@ class CompilerConfigFileTest {
         val expected = File(File(File(filesDir, ".pawnmc"), "config"), CompilerConfigFile.FILE_NAME)
         assertEquals(expected, CompilerConfigFile.file(context))
     }
+    @Test fun restore_picksUpAnAppScopedMirrorAndWritesTheNextMirrorToDocuments() {
+        // Migration: a mirror written by an older build lives in Android/data; a
+        // restore must find it there, and the mirror that follows the restore must
+        // land in Documents/PawnMC/config so the next reinstall sees it.
+        try {
+            val documents = temporaryFolder.newFolder("documents")
+            val external = temporaryFolder.newFolder("external")
+            val context = TestContextWithPublicDocs(temporaryFolder.newFolder("files"), documents, external)
+            val legacy = File(File(File(external, AppStorage.PUBLIC_DIR_NAME), "config"), CompilerConfigFile.FILE_NAME)
+            legacy.parentFile?.mkdirs()
+            legacy.writeText("{\"schema\":2,\"app_theme\":\"dark\"}")
+
+            val restored = InMemoryPreferences()
+            assertTrue(CompilerConfigFile.restore(context, restored))
+            assertEquals("dark", restored.all[CompilerConfig.KEY_APP_THEME])
+
+            // mirror() writes through the primary (Documents) location.
+            restored.all[CompilerConfig.KEY_APP_THEME] = "dark"
+            CompilerConfigFile.mirror(context, restored)
+            val primary = File(File(File(documents, AppStorage.PUBLIC_DIR_NAME), "config"), CompilerConfigFile.FILE_NAME)
+            assertTrue(primary.isFile)
+            assertEquals("dark", JSONObject(primary.readText()).getString(CompilerConfig.KEY_APP_THEME))
+        } finally {
+            resetDocumentsOverride()
+        }
+    }
     @Test fun exists_isFalseBeforeTheFirstMirror() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         assertFalse(CompilerConfigFile.exists(context))
@@ -126,7 +182,7 @@ class CompilerConfigFileTest {
     @Test fun restoreIncludePaths_survivesAnEmptyArray() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         val json = "{\"schema\":1,\"include_paths\":[]}"
-        CompilerConfigFile.file(context).writeText(json)
+        CompilerConfigFile.materializeFile(context).writeText(json)
         val prefs = InMemoryPreferences().apply { all[CompilerConfig.KEY_INCLUDE_PATHS] = "/keep/" }
         assertEquals(0, CompilerConfigFile.restoreIncludePaths(context, prefs))
         assertEquals("/keep/", prefs.all[CompilerConfig.KEY_INCLUDE_PATHS])
@@ -134,7 +190,7 @@ class CompilerConfigFileTest {
     @Test fun restoreIncludePaths_rewritesStoredList() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         val json = "{\"schema\":1,\"include_paths\":[\"/a/\",\"/b/\"]}"
-        CompilerConfigFile.file(context).writeText(json)
+        CompilerConfigFile.materializeFile(context).writeText(json)
         val prefs = InMemoryPreferences().apply { all[CompilerConfig.KEY_INCLUDE_PATHS] = "/stale/" }
         assertEquals(2, CompilerConfigFile.restoreIncludePaths(context, prefs))
         assertEquals("/a/;/b/", prefs.all[CompilerConfig.KEY_INCLUDE_PATHS])
@@ -202,4 +258,34 @@ private class InMemoryPreferences : SharedPreferences {
 private class TestContext(private val directory: File, private val externalDirectory: File? = null) : ContextWrapper(null) {
     override fun getFilesDir(): File = directory
     override fun getExternalFilesDir(type: String?): File? = externalDirectory
+}
+
+/**
+ * A test context whose public Documents root points at a test folder.
+ *
+ * `Environment.getExternalStoragePublicDirectory` cannot be redirected from a JVM
+ * test, so `AppStorage.documentsRootOverride` is pointed at the injected folder for
+ * the duration of the test; the production resolution path stays untouched.
+ */
+private class TestContextWithPublicDocs(
+    directory: File,
+    documents: File,
+    externalDirectory: File? = null,
+) : ContextWrapper(null) {
+    init {
+        // Mirror the production contract: the override answers with the raw public
+        // Documents directory and AppStorage appends `PawnMC` itself, exactly like
+        // `Environment.getExternalStoragePublicDirectory(DIRECTORY_DOCUMENTS)`.
+        AppStorage.documentsRootOverride = { documents }
+        AppStorage.publicWriteAccessOverride = { true }
+    }
+
+    override fun getFilesDir(): File = directory
+    override fun getExternalFilesDir(type: String?): File? = externalDirectory
+}
+
+/** Clears the Documents override so later tests see the production behaviour. */
+private fun resetDocumentsOverride() {
+    AppStorage.documentsRootOverride = null
+    AppStorage.publicWriteAccessOverride = null
 }

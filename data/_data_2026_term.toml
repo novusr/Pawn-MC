@@ -75,9 +75,9 @@ en = "Running pawncc..."
 es = "Ejecutando pawncc..."
 
 [terminal.input.placeholder]
-id = "Ketik perintah..."
-en = "Enter a command..."
-es = "Escribi un comando..."
+id = "Mungkin mau ngetik?..."
+en = "Maybe... want to type?..."
+es = "Tal vez... escribir algo?..."
 
 [terminal.run]
 id = "Jalankan perintah"

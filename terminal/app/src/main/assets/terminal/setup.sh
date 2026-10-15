@@ -114,8 +114,42 @@ fi
 # resolve through those stale links, so every attempt starts from an empty tree.
 # The setup marker is only written on success, so wiping here can never destroy
 # a completed install: this code only runs when isInstalled() is false.
-rm -rf "$SANDBOX_DIR"
-mkdir -p "$SANDBOX_DIR"
+WIPE_LOG="$TMP_DIR/sandbox-wipe.log"
+WIPE_DONE=""
+wipe_sandbox() {
+    # rm -rf can legitimately fail on Android (toybox refuses entries it cannot
+    # unlink mid-recursion). Capture the failure instead of letting set -e abort,
+    # and surface exactly which paths survived so the extraction log explains the
+    # "can't open" errors that would otherwise look like an archive problem.
+    WIPE_DONE=""
+    : > "$WIPE_LOG"
+    set +e
+    rm -rf "$SANDBOX_DIR" >"$WIPE_LOG" 2>&1
+    wipe_ret=$?
+    set -e
+    if [ "$wipe_ret" -ne 0 ] && [ -d "$SANDBOX_DIR" ]; then
+        # Second pass: force again (toybox sometimes succeeds on the second run once
+        # the first has already unlinked the leaf files), then give up gracefully.
+        set +e
+        rm -rf "$SANDBOX_DIR" >>"$WIPE_LOG" 2>&1
+        wipe_ret=$?
+        set -e
+    fi
+    if [ "$wipe_ret" -ne 0 ]; then
+        WIPE_DONE="no"
+        if [ -d "$SANDBOX_DIR" ]; then
+            printf 'rm -rf left these top-level entries behind (exit %s):\n' "$wipe_ret" >&2
+            ls "$SANDBOX_DIR" >&2 || true
+        fi
+        cat "$WIPE_LOG" >&2 || true
+    else
+        WIPE_DONE="yes"
+    fi
+    mkdir -p "$SANDBOX_DIR"
+    return "$wipe_ret"
+}
+wipe_sandbox || true
+WIPE_STATE_1="${WIPE_DONE:-?}"
 archive_size=$(wc -c < "$ROOTFS_ARCHIVE" | tr -d '[:space:]')
 if [ -z "$archive_size" ]; then
     printf 'Could not determine the rootfs archive size: %s\n' "$ROOTFS_ARCHIVE" >&2
@@ -150,20 +184,61 @@ if [ -n "$free_kb" ] && [ "$free_kb" -lt $((archive_kb * 3)) ]; then
 fi
 info "Extracting the Ubuntu container…"
 
-# Extraction itself does not need a container or ptrace. Running Android's tar through
-# liblink2symlink preserves absolute symlinks in the Ubuntu archive and avoids PRoot here.
-# `--no-same-owner` is required, not cosmetic: the archive stores
-# root-owned files (dpkg triggers, logs, systemd units), and a non-root tar tries to
-# chown() every one of them, fails with "Operation not permitted" and exits 1 — even
-# though the files themselves extracted fine. The app UID keeps the files, which is
-# exactly what PRoot expects when it maps the sandbox user to root.
-STEP="extracting rootfs with Android tar + link2symlink"
-TEMP_LOG="$TMP_DIR/extraction.log"
+# Extraction follows the proven Xed-Editor order: PRoot with the full bind set
+# first (it fakes a root environment so link()/chown()/device nodes always succeed,
+# and it is the path the upstream terminal runs on this very device), then the
+# direct Android tar with the link2symlink shim, then without the shim. Each
+# strategy writes its own log so the final diagnostics tail the right output.
+#
+# PRoot args mirror the Xed setup.sh: every Android mount that exists gets bound
+# into the container so /system/bin/sh and the archive path stay reachable.
+build_proot_args() {
+    PROOT_ARGS="--kill-on-exit -w /"
+    for system_mnt in /apex /odm /product /system /system_ext /vendor \
+        /linkerconfig/ld.config.txt \
+        /linkerconfig/com.android.art/ld.config.txt \
+        /plat_property_contexts /property_contexts; do
+        if [ -e "$system_mnt" ]; then
+            system_mnt=$(realpath "$system_mnt")
+            PROOT_ARGS="$PROOT_ARGS -b ${system_mnt}"
+        fi
+    done
+    PROOT_ARGS="$PROOT_ARGS -b /sdcard -b /storage -b /dev -b /data -b /dev/urandom:/dev/random -b /proc -b /sys"
+    PROOT_ARGS="$PROOT_ARGS -b $PRIVATE_DIR"
+    if [ -e /proc/self/fd ]; then
+        PROOT_ARGS="$PROOT_ARGS -b /proc/self/fd:/dev/fd"
+        [ -e /proc/self/fd/0 ] && PROOT_ARGS="$PROOT_ARGS -b /proc/self/fd/0:/dev/stdin"
+        [ -e /proc/self/fd/1 ] && PROOT_ARGS="$PROOT_ARGS -b /proc/self/fd/1:/dev/stdout"
+        [ -e /proc/self/fd/2 ] && PROOT_ARGS="$PROOT_ARGS -b /proc/self/fd/2:/dev/stderr"
+    fi
+    PROOT_ARGS="$PROOT_ARGS -r / -0 --link2symlink --sysvipc"
+}
+
+STEP="extracting rootfs through PRoot (Xed order)"
+TEMP_LOG="$TMP_DIR/extraction-proot.log"
 : > "$TEMP_LOG"
-set +e
-LD_PRELOAD="$(realpath "$SHIM")" /system/bin/tar -xzf "$ROOTFS_ARCHIVE" --no-same-owner -C "$SANDBOX_DIR" >"$TEMP_LOG" 2>&1
-ret=$?
-set -e
+if [ -x "${PROOT:-}" ] && [ -n "${LINKER:-}" ]; then
+    build_proot_args
+    PROOT_CMD="$PROOT"
+    if [ -x "$LINKER" ]; then
+        PROOT_CMD="$LINKER $PROOT"
+    fi
+    set +e
+    $PROOT_CMD $PROOT_ARGS /system/bin/sh -c "(cd $SANDBOX_DIR && tar -xf $ROOTFS_ARCHIVE)" >"$TEMP_LOG" 2>&1
+    ret=$?
+    set -e
+    if [ "$ret" -ne 0 ]; then
+        # Samsung devices do not like system binaries under proot; this matches the
+        # same retry the Xed script performs with the linker on the command line.
+        set +e
+        $PROOT $PROOT_ARGS /system/bin/sh -c "(cd $SANDBOX_DIR && tar -xf $ROOTFS_ARCHIVE)" >"$TEMP_LOG" 2>&1
+        ret=$?
+        set -e
+    fi
+else
+    printf 'PRoot binary not available for the primary extraction (PROOT=%s).\n' "${PROOT:-unset}" >&2
+    ret=1
+fi
 if [ "$ret" -ne 0 ]; then
     # The shim is the usual suspect: it intercepts open()/link() to emulate
     # hardlinks, and on some devices (seen on API 28/x86_64 with entries such as
@@ -171,12 +246,15 @@ if [ "$ret" -ne 0 ]; then
     # staged earlier, so tar fails with ENOENT on entries it extracted fine on
     # every other filesystem. A plain Android tar creates the same hardlinks as
     # independent copies instead, which proot treats identically at runtime.
-    warn "tar extraction with link2symlink failed (exit $ret); retrying without the shim…"
-    rm -rf "$SANDBOX_DIR"
-    mkdir -p "$SANDBOX_DIR"
+    warn "PRoot extraction failed (exit $ret); retrying with Android tar + link2symlink…"
+    STEP="wiping sandbox between extraction attempts"
+    wipe_sandbox || true
+    WIPE_STATE_2="${WIPE_DONE:-?}"
+    STEP="extracting rootfs with Android tar + link2symlink"
+    TEMP_LOG="$TMP_DIR/extraction-shim.log"
     : > "$TEMP_LOG"
     set +e
-    /system/bin/tar -xzf "$ROOTFS_ARCHIVE" --no-same-owner -C "$SANDBOX_DIR" >"$TEMP_LOG" 2>&1
+    LD_PRELOAD="$(realpath "$SHIM")" /system/bin/tar -xzf "$ROOTFS_ARCHIVE" --no-same-owner -C "$SANDBOX_DIR" >"$TEMP_LOG" 2>&1
     ret=$?
     set -e
 fi
@@ -186,31 +264,29 @@ if [ "$ret" -ne 0 ]; then
     # semantics, and it covers the remaining device-specific tar quirks. Only
     # reached after both direct strategies failed, so the SIGILL-prone path never
     # blocks devices where the direct extraction works.
-    warn "tar extraction without the shim failed (exit $ret); retrying through PRoot…"
-    rm -rf "$SANDBOX_DIR"
-    mkdir -p "$SANDBOX_DIR"
+    warn "tar extraction with the shim failed (exit $ret); retrying without the shim…"
+    STEP="wiping sandbox before plain-tar extraction"
+    wipe_sandbox || true
+    WIPE_STATE_3="${WIPE_DONE:-?}"
+    STEP="extracting rootfs with plain Android tar (no shim)"
     unset LD_PRELOAD
-    if [ -x "$PROOT" ] && [ -n "${LINKER:-}" ]; then
-        ARGS="-r $SANDBOX_DIR"
-        ARGS="$ARGS -0"
-        ARGS="$ARGS --link2symlink"
-        ARGS="$ARGS --kill-on-exit"
-        PROOT_CMD="$PROOT"
-        if [ -x "$LINKER" ]; then
-            PROOT_CMD="$LINKER $PROOT"
-        fi
-        : > "$TEMP_LOG"
-        set +e
-        $PROOT_CMD $ARGS /system/bin/sh -c "(cd $SANDBOX_DIR && /system/bin/tar -xzf $ROOTFS_ARCHIVE --no-same-owner)" >"$TEMP_LOG" 2>&1
-        ret=$?
-        set -e
-    else
-        printf 'PRoot binary not available for the fallback extraction (PROOT=%s).\n' "${PROOT:-unset}" >&2
-    fi
+    TEMP_LOG="$TMP_DIR/extraction-noshim.log"
+    : > "$TEMP_LOG"
+    set +e
+    /system/bin/tar -xzf "$ROOTFS_ARCHIVE" --no-same-owner -C "$SANDBOX_DIR" >"$TEMP_LOG" 2>&1
+    ret=$?
+    set -e
 fi
 if [ "$ret" -ne 0 ]; then
-    printf 'tar extraction failed (exit %s) with and without the link2symlink shim and through PRoot. Check archive validity, app storage space, and shim compatibility.\n' "$ret" >&2
-    tail -n 50 "$TEMP_LOG" >&2 || true
+    printf 'tar extraction failed (exit %s) through PRoot, with the link2symlink shim, and without it. Check archive validity, app storage space, and shim compatibility.\n' "$ret" >&2
+    printf '  Wipe before attempts: proot=%s shim=%s noshim=%s (yes=clean wipe, no=leftovers survived)\n' \
+        "${WIPE_STATE_1:-n/a}" "${WIPE_STATE_2:-n/a}" "${WIPE_STATE_3:-n/a}" >&2
+    for log in "$TMP_DIR/extraction-proot.log" "$TMP_DIR/extraction-shim.log" "$TMP_DIR/extraction-noshim.log"; do
+        if [ -s "$log" ]; then
+            printf '  --- %s ---\n' "${log##*/}" >&2
+            tail -n 20 "$log" >&2 || true
+        fi
+    done
     exit "$ret"
 fi
 if [ ! -x "$SANDBOX_DIR/bin/sh" ] && [ ! -x "$SANDBOX_DIR/bin/dash" ]; then
