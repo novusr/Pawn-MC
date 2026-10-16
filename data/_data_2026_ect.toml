@@ -675,10 +675,10 @@ ru = "Выбрать файл"
 es = "Elegir archivo"
 
 [main.output.title]
-id = "Ini Hasil Kompilasi:"
-en = "Here Compiler Output:"
+id = "Berikut adalah hasil kompilasi:"
+en = "Here is the compiler output:"
 ru = "Вот результат компиляции:"
-es = "Aqui el resultado de compilacion:"
+es = "Aquí está la salida del compilador:"
 
 [main.fab.portal]
 id = "Buka panduan setelan"

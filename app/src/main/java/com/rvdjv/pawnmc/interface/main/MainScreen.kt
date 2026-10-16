@@ -988,7 +988,7 @@ internal fun CompilerLogsSection(
                 )
                 Spacer(modifier = Modifier.width(SpaceXS + 2.dp))
                 Text(
-                    text = localizer?.get("main.output.title", appLanguage, "Here Compiler Output:") ?: "Here Compiler Output:",
+                    text = localizer?.get("main.output.title", appLanguage, "Here is the compiler output:") ?: "Here is the compiler output:",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
