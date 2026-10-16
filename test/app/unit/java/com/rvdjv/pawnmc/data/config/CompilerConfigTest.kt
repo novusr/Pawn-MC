@@ -60,6 +60,19 @@ class CompilerConfigTest {
     }
 
     @Test
+    fun pruneMissingIncludePaths_removesDuplicatesInStoredList() {
+        val root = temporaryFolder.newFolder("pawnmc_prune_dupe")
+        val alive = File(root, "include").apply { mkdirs() }
+        val path = CompilerConfig.normalPath(alive.absolutePath)
+
+        val survivors = CompilerConfig.pruneMissingIncludePaths(
+            listOf(path, CompilerConfig.normalPath(alive.absolutePath).uppercase())
+        )
+
+        assertEquals(listOf(path), survivors)
+    }
+
+    @Test
     fun pruneMissingIncludePaths_dropsDeletedFoldersAndKeepsExistingOnes() {
         val root = temporaryFolder.newFolder("pawnmc_prune")
         val alive = File(root, "include").apply { mkdirs() }
@@ -95,15 +108,30 @@ class CompilerConfigTest {
     }
 
     @Test
-    fun pruneMissingIncludePaths_removesDuplicatesInStoredList() {
-        val root = temporaryFolder.newFolder("pawnmc_prune_dupe")
-        val alive = File(root, "include").apply { mkdirs() }
-        val path = CompilerConfig.normalPath(alive.absolutePath)
+    fun isCompactEncodingFlag_matchesEverySpellingOfTheToggle() {
+        assertTrue(CompilerConfig.isCompactEncodingFlag("-C+"))
+        assertTrue(CompilerConfig.isCompactEncodingFlag("-C-"))
+        assertFalse(CompilerConfig.isCompactEncodingFlag("-C"))
+        assertFalse(CompilerConfig.isCompactEncodingFlag("-C++"))
+    }
 
-        val survivors = CompilerConfig.pruneMissingIncludePaths(
-            listOf(path, CompilerConfig.normalPath(alive.absolutePath).uppercase())
-        )
+    @Test
+    fun isVerbosityFlag_matchesBothSpellingsOfTheLevel() {
+        assertTrue(CompilerConfig.isVerbosityFlag("-v0"))
+        assertTrue(CompilerConfig.isVerbosityFlag("-v=0"))
+        assertTrue(CompilerConfig.isVerbosityFlag("-v2"))
+        assertTrue(CompilerConfig.isVerbosityFlag("-v=2"))
+        assertFalse(CompilerConfig.isVerbosityFlag("-v"))
+        assertFalse(CompilerConfig.isVerbosityFlag("-verbosity"))
+    }
 
-        assertEquals(listOf(path), survivors)
+    @Test
+    fun isWarning217Flag_matchesOnlyTheLooseIndentationSilencer() {
+        assertTrue(CompilerConfig.isWarning217Flag("-w217"))
+        assertTrue(CompilerConfig.isWarning217Flag("-w=217"))
+        assertFalse(CompilerConfig.isWarning217Flag("-w218"))
+        assertFalse(CompilerConfig.isWarning217Flag("-w219"))
+        assertFalse(CompilerConfig.isWarning217Flag("-w17"))
+        assertFalse(CompilerConfig.isWarning217Flag("-w"))
     }
 }

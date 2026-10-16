@@ -93,14 +93,14 @@ class CompilerConfig private constructor(context: Context) {
     // [debug]
     //
     var n_debug_level: DebugLevel
-        get() = DebugLevel.fromValue(prefs.getInt(KEY_DEBUG, DebugLevel.D3.value))
+        get() = DebugLevel.fromValue(prefs.getInt(KEY_DEBUG, DebugLevel.D0.value))
         set(value) {
             prefs.edit { putInt(KEY_DEBUG, value.value) }
             mirrorToFile()
         }
 
     var n_optimization_level: OptimizationLevel
-        get() = OptimizationLevel.fromValue(prefs.getInt(KEY_OPTIMIZATION, OptimizationLevel.O1.value))
+        get() = OptimizationLevel.fromValue(prefs.getInt(KEY_OPTIMIZATION, OptimizationLevel.O0.value))
         set(value) {
             prefs.edit { putInt(KEY_OPTIMIZATION, value.value) }
             mirrorToFile()
@@ -454,23 +454,23 @@ class CompilerConfig private constructor(context: Context) {
     }
 
     enum class DebugLevel(val value: Int, val label: String, val description: String) {
-        D0(0, "Disabled (-d0)", "No debug symbols and no runtime validation."),
-        D1(1, "Runtime Validation (-d1)", "Enables array bounds checking without debug symbols. (Default)"),
+        D0(0, "Disabled (-d0)", "No debug symbols and no runtime validation. (Default)"),
+        D1(1, "Runtime Validation (-d1)", "Enables array bounds checking without debug symbols."),
         D2(2, "Full Debugging (-d2)", "Complete debug information and runtime checks."),
         D3(3, "Maximum Debug (-d3)", "Most detailed debug data, disables optimization.");
 
         companion object {
-            fun fromValue(value: Int) = entries.find { it.value == value } ?: D1
+            fun fromValue(value: Int) = entries.find { it.value == value } ?: D0
         }
     }
 
     enum class OptimizationLevel(val value: Int, val label: String, val description: String) {
-        O0(0, "Disabled (-O0)", "No optimization; safest but largest output."),
-        O1(1, "Balanced (-O1)", "Default optimization pass for stable behavior. (Default)"),
+        O0(0, "Disabled (-O0)", "No optimization; safest but largest output. (Default)"),
+        O1(1, "Balanced (-O1)", "Default optimization pass for stable behavior."),
         O2(2, "Aggressive (-O2)", "Maximum optimization for speed and size.");
 
         companion object {
-            fun fromValue(value: Int) = entries.find { it.value == value } ?: O1
+            fun fromValue(value: Int) = entries.find { it.value == value } ?: O0
         }
     }
 
@@ -649,8 +649,8 @@ class CompilerConfig private constructor(context: Context) {
         internal const val KEY_EDITOR_BG_COLOR = "editor_background_color"
 
         fun buildOptionsFor(
-            debugLevel: DebugLevel = DebugLevel.D3,
-            optimizationLevel: OptimizationLevel = OptimizationLevel.O1,
+            debugLevel: DebugLevel = DebugLevel.D0,
+            optimizationLevel: OptimizationLevel = OptimizationLevel.O0,
             mandatorySemicolons: Boolean = true,
             mandatoryParentheses: Boolean = true,
             includePaths: List<String> = emptyList(),
@@ -670,9 +670,21 @@ class CompilerConfig private constructor(context: Context) {
                 if (normalized.isNotBlank()) { options.add("-i=$normalized") }
             }
 
+            // Behind the scenes the compiled options are written to the native layer
+            // with `-C+` (compact bytecode encoding) and `-v0` (quiet verbosity) and
+            // warning 217 (loose indentation) silenced. A user-supplied custom flag
+            // that explicitly names the same option wins: the behind-the-scenes
+            // default is dropped and the user's spelling is kept verbatim.
             val custom = customFlags.trim()
-            if (custom.isNotEmpty()) {
-                val customOptions = custom.split("\\s+".toRegex()).filter { it.isNotBlank() }
+            val customOptions = if (custom.isNotEmpty()) {
+                custom.split("\\s+".toRegex()).filter { it.isNotBlank() }
+            } else {
+                emptyList()
+            }
+            if (customOptions.none { isCompactEncodingFlag(it) }) { options.add("-C+") }
+            if (customOptions.none { isVerbosityFlag(it) }) { options.add("-v0") }
+            if (customOptions.none { isWarning217Flag(it) }) { options.add("-w217") }
+            if (customOptions.isNotEmpty()) {
                 options.addAll(
                     if (compilerVersion == CompilerVersion.V3107) {
                         customOptions.filterNot { isO2OptimizationFlag(it) }
@@ -683,6 +695,22 @@ class CompilerConfig private constructor(context: Context) {
             }
             return options
         }
+
+        /** Matches `-C+` / `-C-` (compact encoding toggle) in any spelling. */
+        internal fun isCompactEncodingFlag(option: String): Boolean =
+            option.matches(Regex("(?i)^-C[+-]$"))
+
+        /** Matches `-v0`, `-v=0`, `-v 0`-style verbosity flags with any level. */
+        internal fun isVerbosityFlag(option: String): Boolean =
+            option.matches(Regex("(?i)^-v(=\\d+|\\d+)$"))
+
+        /**
+         * Matches the loose-indentation warning silencer in all its variants
+         * (`-w217` / `-w=217`) and every other `-w<num>` warning switch, so a
+         * user warning list is never double-declared by the built-in `-w217`.
+         */
+        internal fun isWarning217Flag(option: String): Boolean =
+            option.matches(Regex("(?i)^-w=?217$"))
 
         fun optimizationLevelsFor(compilerVersion: CompilerVersion): List<OptimizationLevel> =
             if (compilerVersion == CompilerVersion.V3107) {

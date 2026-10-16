@@ -239,13 +239,18 @@ object Runner {
             val canonicalOption = if (option == "-D$SSCANF_NO_NICE_FEATURES_FLAG") {
                 SSCANF_NO_NICE_FEATURES_FLAG
             } else option
-
             if (canonicalOption == SSCANF_NO_NICE_FEATURES_FLAG) {
                 if (!hasSscanfFlag) normalized += canonicalOption
                 hasSscanfFlag = true
             } else {
                 normalized += canonicalOption
             }
+        }
+        // Quiet run: unless the arguments already name a verbosity level, the native
+        // run is silenced behind the scenes with `-v0` (the mirror of the default in
+        // `buildOptionsFor` for console-style invocations that skip the GUI options).
+        if (normalized.none { CompilerConfig.isVerbosityFlag(it) }) {
+            normalized += "-v0"
         }
         if (version != CompilerConfig.CompilerVersion.V3107) return normalized
         return normalized.filterNot { it == SSCANF_NO_NICE_FEATURES_FLAG } + SSCANF_NO_NICE_FEATURES_FLAG

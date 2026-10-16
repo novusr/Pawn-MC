@@ -99,7 +99,7 @@ class SuccessTest {
             compilerVersion = CompilerConfig.CompilerVersion.V31011
         )
 
-        assertTrue(options.contains("-O=2"))
+        assertTrue(options.contains("-O=0"))
         assertTrue(options.contains("-v=0"))
         assertTrue(options.contains("-;+"))
     }
@@ -184,6 +184,24 @@ class SuccessTest {
             listOf("pawncc", "/workspace/mode.pwn") + options,
             Compiler.compilerArgumentsForManual("/workspace/mode.pwn", options)
         )
+    }
+
+    @Test
+    fun `console-style options get the quiet verbosity behind the scenes`() {
+        val options = Compiler.compilerOptionsForVersion(
+            listOf("-d=3"),
+            CompilerConfig.CompilerVersion.V31011
+        )
+
+        assertTrue(options.contains("-v0"))
+
+        val overridden = Compiler.compilerOptionsForVersion(
+            listOf("-d=3", "-v1"),
+            CompilerConfig.CompilerVersion.V31011
+        )
+
+        assertTrue(overridden.contains("-v1"))
+        assertFalse(overridden.contains("-v0"))
     }
 
     @Test

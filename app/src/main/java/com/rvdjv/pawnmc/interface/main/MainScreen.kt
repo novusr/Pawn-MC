@@ -82,12 +82,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -1104,7 +1108,7 @@ internal fun OutputPanel(
             }
 
             Text(
-                text = outputText,
+                text = explainHighlightedText(outputText),
                 fontFamily = FontFamily.Monospace,
                 fontStyle = if (outputText == OUTPUT_PLACEHOLDER) FontStyle.Italic else FontStyle.Normal,
                 style = MaterialTheme.typography.bodySmall,
@@ -1118,3 +1122,59 @@ internal fun OutputPanel(
     }
 }
 
+
+/**
+ * Colour of the `[explain]` marker inside compiler output.
+ *
+ * The `0xFFF070` value comes straight from the palette the workspace panel and the
+ * main-screen output panel both reference, so the two interfaces agree on the exact
+ * shade; the alpha is applied by the caller through [explainHighlightedText] instead
+ * of baking it in here.
+ */
+val ExplainMarkerColor = Color(0xFFF070)
+
+private val EXPLAIN_MARKER_REGEX = Regex("(?i)\\[explain\\]")
+
+/**
+ * Splits [outputText] into plain runs and `[explain]` markers.
+ *
+ * Returned pairs carry the text and whether that text is a marker; interfaces render
+ * the marker runs in [ExplainMarkerColor] (bright and important), and everything else
+ * in the panel's normal colour. A blank input collapses to one non-marker run so a
+ * caller never has to special-case the placeholder.
+ */
+internal fun splitExplainMarkers(outputText: String): List<Pair<String, Boolean>> {
+    if (outputText.isBlank()) return listOf(outputText to false)
+    val matches = EXPLAIN_MARKER_REGEX.findAll(outputText).toList()
+    if (matches.isEmpty()) return listOf(outputText to false)
+    val runs = mutableListOf<Pair<String, Boolean>>()
+    var cursor = 0
+    for (match in matches) {
+        if (match.range.first > cursor) {
+            runs += outputText.substring(cursor, match.range.first) to false
+        }
+        runs += outputText.substring(match.range) to true
+        cursor = match.range.last + 1
+    }
+    if (cursor < outputText.length) {
+        runs += outputText.substring(cursor) to false
+    }
+    return runs
+}
+
+/**
+ * Builds an [AnnotatedString] of [outputText] with every `[explain]` marker painted
+ * in [ExplainMarkerColor] and bold, so the hint stands out from the raw compiler
+ * log around it while the rest of the text keeps the panel's normal styling.
+ */
+internal fun explainHighlightedText(outputText: String): AnnotatedString = buildAnnotatedString {
+    for ((text, isMarker) in splitExplainMarkers(outputText)) {
+        if (isMarker) {
+            pushStyle(SpanStyle(color = ExplainMarkerColor, fontWeight = FontWeight.Bold))
+            append(text)
+            pop()
+        } else {
+            append(text)
+        }
+    }
+}

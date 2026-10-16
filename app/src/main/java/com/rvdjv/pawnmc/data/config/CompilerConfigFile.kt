@@ -199,10 +199,10 @@ internal object CompilerConfigFile {
         val root = JSONObject()
 
         root.put(SCHEMA_KEY, SCHEMA_VERSION)
-        root.put(CompilerConfig.KEY_DEBUG, prefs.getInt(CompilerConfig.KEY_DEBUG, CompilerConfig.DebugLevel.D3.value))
+        root.put(CompilerConfig.KEY_DEBUG, prefs.getInt(CompilerConfig.KEY_DEBUG, CompilerConfig.DebugLevel.D0.value))
         root.put(
             CompilerConfig.KEY_OPTIMIZATION,
-            prefs.getInt(CompilerConfig.KEY_OPTIMIZATION, CompilerConfig.OptimizationLevel.O1.value),
+            prefs.getInt(CompilerConfig.KEY_OPTIMIZATION, CompilerConfig.OptimizationLevel.O0.value),
         )
         root.put(CompilerConfig.KEY_IGNORE_CASE, prefs.getBoolean(CompilerConfig.KEY_IGNORE_CASE, false))
         root.put(CompilerConfig.KEY_EXPLAIN_OUTPUT, prefs.getBoolean(CompilerConfig.KEY_EXPLAIN_OUTPUT, false))

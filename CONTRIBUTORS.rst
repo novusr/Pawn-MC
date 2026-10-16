@@ -73,6 +73,22 @@ Reported bugs, tested pre-release builds, and shaped the compiler defaults:
   rendered from the notes in ``README.rst`` and shown inside Settings.
 * Everyone who filed issues or helped in the official community Discord:
   https://discord.gg/2YqkmDvTch
+
+Compiler defaults review (October 2026)
+---------------------------------------
+
+The compile defaults that ship in this release were reworked after feedback from the
+community: debug level now starts at ``-d0`` (was ``-d3``), optimization at ``-O0``
+(was ``-O1``), and the behind-the-scenes invocation runs with ``-C+``, ``-v0``, and
+``-w217`` unless the user's own custom flags name the same option, in which case the
+user's spelling always wins. The ``[explain]`` hint marker in the compiler output is
+now highlighted in a bright ``0xFFF070`` yellow in both the main output panel and the
+workspace panel so explained messages stand out at a glance.
+
+Community discussion that drove the change happened in the Discord server above; the
+implementation was carried out by ``novusr`` and reviewed against the existing test
+suite in ``test/app/unit``.
+
 Third-party work PawnMC builds on
 ---------------------------------
 

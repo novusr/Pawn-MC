@@ -38,6 +38,9 @@ object Explainer {
                     val explanation = Explanations.explanationFor(code, language)
                         ?: Explanations.explanationFor(match.groupValues[2], language)
                         ?: NO_LOCAL_EXPLANATION
+                    // Marker with explicit padding so interfaces that colourise the
+                    // token by substring keep matching it even when the hint text is
+                    // long enough to wrap.
                     builder.appendLine("    [explain] $explanation")
                 }
             }
