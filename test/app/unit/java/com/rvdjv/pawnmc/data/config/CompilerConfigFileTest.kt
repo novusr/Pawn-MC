@@ -268,9 +268,9 @@ private class TestContext(private val directory: File, private val externalDirec
  * the duration of the test; the production resolution path stays untouched.
  */
 private class TestContextWithPublicDocs(
-    directory: File,
+    private val directory: File,
     documents: File,
-    externalDirectory: File? = null,
+    private val externalDirectory: File? = null,
 ) : ContextWrapper(null) {
     init {
         // Mirror the production contract: the override answers with the raw public
