@@ -403,7 +403,7 @@ class EditorTest {
     }
 
     @Test
-    fun `terminal tokenizer supports quoted paths without shell expansion`() {
+    fun `portal tokenizer supports quoted paths without shell expansion`() {
         assertEquals(
             listOf("pawncc", "gamemodes/test mode.pwn", "-d=3"),
             PortalCommandParser.tokenize("pawncc \"gamemodes/test mode.pwn\" -d=3")

@@ -23,7 +23,7 @@ From a review of the repository, the current project focuses on:
    * - Compiler configuration
      - Control version, flags, debug modes, and include paths
    * - Editor (PawnMC)
-     - Built-in Sora-based editor with tabs, workspace explorer, floating toolbars, Save / Save As / Save All modes, and an in-editor terminal portal
+     - Built-in Sora-based editor with tabs, workspace explorer, floating toolbars, Save / Save As / Save All modes, and an in-editor Developer Portal
    * - Output feedback
      - Display compiler errors and build results clearly, annotated with local explanations
    * - Developer Portal
@@ -94,8 +94,8 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
      - Up to 3 open folders, each with its own tree, opened editors, and search hits
    * - Workspace-wide tools
      - Find/replace across every file of a workspace, plus search-in-workspace
-   * - Editor terminal portal
-     - In-editor command line (``help``, ``docs``, ``pawncc``, ``switch``, ``clear``) with sandboxed source resolution inside the workspace root
+   * - Editor command portal
+     - In-editor Developer Portal (``help``, ``docs``, ``pawncc``, ``switch``, ``clear``) with source resolution inside the workspace root
    * - Localization
      - Indonesian, English, Spanish (Argentina), and Russian strings served from ``data/_data_2026_ect.toml``
    * - Pawn symbol data
@@ -225,7 +225,7 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
    * - data/_data_2026_intern.toml
      - Pawn symbol data: item descriptions plus natives/forwards grouped by include
    * - data/_data_2026_term.toml
-     - Localised strings for the editor terminal portal (``key.id`` / ``key.en`` / ``key.es`` / ``key.ru``)
+     - Localised strings for the editor Developer Portal (``key.id`` / ``key.en`` / ``key.es`` / ``key.ru``)
 
 
 
@@ -303,9 +303,9 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
    * - interface/filebrowser/FileBrowserDialog.kt
      - File/folder browser for selecting Pawn files or include directories
    * - interface/editor/xedapi/EditorScreen.kt
-     - Editor canvas, tab strip, floating compile/panel/toolbar, status bar, syntax palette, terminal portal host
+     - Editor canvas, tab strip, floating compile/panel/toolbar, status bar, syntax palette, Developer Portal host
    * - interface/editor/xedapi/EditorViewModel.kt
-     - Active file state, standalone single-file save flow, owns the workspace session; main-screen Browse File selection is attached to this model when Xed opens
+     - Active file state, standalone single-file save flow, owns the workspace session; main-screen Browse File selection is attached to this model when the editor opens
    * - interface/editor/Workspace/Session.kt
      - Up to 3 explicitly opened folder workspaces with trees, open documents, search and replace; workspace folders persist in ``CompilerConfig`` and are restored on launch
    * - interface/editor/Workspace/Panel.kt
@@ -313,7 +313,7 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
    * - interface/editor/Workspace/FolderPicker.kt
      - Builds ``ACTION_OPEN_DOCUMENT_TREE`` intents (Downloads start location) and resolves a tree URI to a real ``File``
    * - interface/editor/portal/DeveloperPortal.kt
-     - Editor terminal: command tokenizer, ``pawncc`` invocation sandboxing, ``switch`` suggestions, ``_data_2026_term.toml`` lookup, and the floating portal UI; runs ``docs`` automatically on first open so the console is never empty
+     - Editor Developer Portal: command tokenizer, ``pawncc`` invocation confinement, ``switch`` suggestions, ``_data_2026_term.toml`` lookup, and the floating portal UI; runs ``docs`` automatically on first open so the console is never empty
    * - interface/editor/xedapi/ToolPanel.kt
      - Search / replace panel for workspace-wide operations
    * - interface/editor/xedapi/CodeEditor.kt
@@ -389,9 +389,9 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
    * - Editor UI
      - interface/editor/xedapi/EditorScreen.kt
      - Code canvas, tab strip, floating controls
-   * - Editor terminal
+   * - Editor Developer Portal
      - interface/editor/portal/DeveloperPortal.kt
-     - Command line, ``pawncc`` sandboxed invocation, version switch
+     - Command line, ``pawncc`` workspace-confined invocation, version switch
    * - Workspace model
      - interface/editor/Workspace/Session.kt
      - Folder trees, open documents, search/replace
@@ -478,7 +478,7 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
    * - Step
      - Action
    * - 1
-     - ``MainViewModel.compileFile()`` runs (or ``pawncc <file> [opts]`` in the terminal portal)
+     - ``MainViewModel.compileFile()`` runs (or ``pawncc <file> [opts]`` in the Developer Portal)
    * - 2
      - File validation and access are checked
    * - 3
@@ -516,7 +516,7 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
      - The starter exists only to give a new user a compilable example; it is not promoted to an editor workspace tab by opening the editor.
 
 
-The mode is determined by ``WorkspaceSession.isWorkspaceOpen`` (there is an explicitly open/restored folder), not merely by whether a source file is selected. Opening a source via Browse File on the main screen updates ``selectedFilePath``; ``MainActivity`` attaches that path to the activity-scoped ``EditorViewModel``, and Xed loads that source when entered. If a folder workspace is already open, a real selected source may become a workspace tab; the temporary starter is excluded. The main screen continues to compile the same selected source independently of entering Xed.
+The mode is determined by ``WorkspaceSession.isWorkspaceOpen`` (there is an explicitly open/restored folder), not merely by whether a source file is selected. Opening a source via Browse File on the main screen updates ``selectedFilePath``; ``MainActivity`` attaches that path to the activity-scoped ``EditorViewModel``, and the editor loads that source when entered. If a folder workspace is already open, a real selected source may become a workspace tab; the temporary starter is excluded. The main screen continues to compile the same selected source independently of entering the editor.
 
 7.5 Settings flow
 -----------------
@@ -601,7 +601,7 @@ The mode is determined by ``WorkspaceSession.isWorkspaceOpen`` (there is an expl
      - ``data/_data_2026_exp.toml`` is the only place compiler message hints live; ``Explanations`` parses it once per process
    * - Single symbol source
      - Pawn keywords/natives/forwards come from ``data/_data_2026_intern.toml`` via ``InternDat``/``PawnIndex``; ``Registry`` only curates and merges
-   * - Terminal portal data
+   * - Developer Portal data
      - Portal text comes from ``data/_data_2026_term.toml`` with per-language ``key.id`` / ``key.en`` / ``key.es`` / ``key.ru`` lookup and English fallback
    * - Assets packaging
      - ``assets.srcDir(rootProject.file("data"))`` ships the whole folder, so all four ``_data_2026_*.toml`` files reach the app; JVM tests fall back to reading ``data/...`` from the filesystem
@@ -686,7 +686,7 @@ The mode is determined by ``WorkspaceSession.isWorkspaceOpen`` (there is an expl
    * - High
      - Keep SAF/tree-URI handling correct across Android versions, since folder access is permission-sensitive
    * - Medium
-     - Extend the terminal portal (``docs`` content source, richer ``switch`` handling, output history)
+     - Extend the Developer Portal (``docs`` content source, richer ``switch`` handling, output history)
    * - Medium
      - Improve log export and compile result history
    * - Medium
@@ -751,13 +751,13 @@ The most relevant files to understand the project are:
    * - app/src/main/cpp/Compiler.cpp
      - Native bridge implementation
    * - data/_data_2026_ect.toml
-     - Localisation data for Indonesian, English, Spanish (Argentina), and Russian
-   * - data/_data_2026_exp.toml
-     - Local explanations of Pawn compiler messages
-   * - data/_data_2026_intern.toml
-     - Pawn natives/forwards/descriptions
-   * - data/_data_2026_term.toml
-     - Terminal portal strings
+       - Localisation data for Indonesian, English, Spanish (Argentina), and Russian
+     * - data/_data_2026_exp.toml
+       - Local explanations of Pawn compiler messages
+     * - data/_data_2026_intern.toml
+       - Pawn natives/forwards/descriptions
+     * - data/_data_2026_term.toml
+       - Developer Portal strings
 
 
 

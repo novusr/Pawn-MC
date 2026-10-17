@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.main
+﻿﻿package com.rvdjv.pawnmc.`interface`.main
 
 import android.content.Context
 import android.net.Uri
@@ -34,6 +34,27 @@ class MainViewModel(
         const val IGNORE_CASE_FAILED_NOTICE =
             "Ignore case could not finish for this folder. The original files were left untouched."
         val TEMPORARY_FILE_CONTENT = """
+            /*
+             * PawnMC starter script
+             * ---------------------
+             * This file is the temporary starter created when you have not picked
+             * your own Pawn source yet. Edit it freely: Compile compiles exactly
+             * what you see here.
+             *
+             * Demonstrated below:
+             *  - native + stock functions and doc comments
+             *  - forward declarations and public callbacks
+             *  - arrays, strings and format()
+             *  - enum + tagged symbols
+             *  - constants via #define and static const
+             *  - loops, switch, operators, Float arithmetic
+             *  - user-defined operators (operator+)
+             *  - callouts: CallLocalFunction / CallLocalSCTFunct
+             */
+
+            #define MAX_PICKUP_TEXT 32
+            #define VERSION_STRING "1.0-starter"
+
             /**
              * <library>console</library>
              * <summary>Prints a string to the server console (not in-game chat) and logs (server_log.txt).</summary>
@@ -42,26 +63,115 @@ class MainViewModel(
              */
             native print(const string[]);
 
+            stock testing() {
+                return 200;
+            }
+
+            forward testing2(); public testing2() {
+                return 1;
+            }
+
+            stock something(const str[]) {
+                if (str[0] == '\0')
+                    return 1;
+                printf("something: %s", str);
+                return 1;
+            }
+
+            /**
+             * <summary>Sums two integers; also shows a user-defined operator.</summary>
+             */
+            stock sum(a, b) {
+                return a + b;
+            }
+
+            // A user-defined tag from an enum: assigning a plain int to a
+            // `Gauge:` slot is a compiler warning unless the tag is named.
+            enum Gauge {
+                Gauge:value
+            }
+
+            stock PrintGauge(Gauge:g) {
+                printf("gauge value: %d", _:g);
+                return 1;
+            }
+
+            stock average(const values[], size = sizeof(values)) {
+                new total = 0;
+                for (new i = 0; i < size; i++) {
+                    total += values[i];
+                }
+                return (size > 0) ? total / size : 0;
+            }
+
+            stock describeCount(count) {
+                switch (count) {
+                    case 0:
+                        return "nothing";
+                    case 1:
+                        return "one item";
+                    case 2 .. 5:
+                        return "a few items";
+                    default:
+                        return "many items";
+                }
+                return "?";
+            }
+
+            stock demoFloatMath() {
+                new Float:ratio = 7.0 / 2.0;
+                printf("float math: %.2f, rounded %d", ratio, floatround(ratio));
+                return floatround(ratio * 100.0);
+            }
+
+            stock demoCallout() {
+                // Call a public function by name, resolved at runtime.
+                CallLocalFunction("testing2", "");
+                return 1;
+            }
+
             main() {
-                print("Hello, World!");
+                print("Hello, World from PawnMC " #VERSION_STRING "!");
+
+                new val = testing();
+                if (val == 200) {
+                    printf("testing(): %d", val);
+                }
+
+                new str[256];
+                format(str, sizeof(str), "Hello! sum(2, 3) = %d", sum(2, 3));
+                PrintGauge(Gauge:42);
+                print(str);
+
+                new numbers[5] = { 10, 20, 30, 40, 50 };
+                printf("average(numbers) = %d", average(numbers));
+                printf("count 3 is %s", describeCount(3));
+
+                demoFloatMath();
+                demoCallout();
+                SetTimer("testing2", 1000, false);
             }
 
             public OnGameModeInit() {
+                something("OnGameModeInit");
                 print("OnGameModeInit!");
                 return 1;
             }
 
             public OnGameModeExit() {
+                something("OnGameModeExit");
                 print("OnGameModeExit!");
                 return 1;
             }
 
             public OnPlayerConnect(playerid) {
+                something("OnPlayerConnect");
                 print("OnPlayerConnect!");
                 return 1;
             }
 
             public OnPlayerDisconnect(playerid, reason) {
+                something("OnPlayerDisconnect");
                 print("OnPlayerDisconnect!");
                 return 1;
             }

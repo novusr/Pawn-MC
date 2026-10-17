@@ -16,9 +16,6 @@ lifecycleViewmodelCompose = "2.8.7"
 soraEditor = "0.23.4"
 coroutinesTest = "1.7.3"
 json = "20240303"
-# The terminal feature (proot sandbox + Termux emulator) is built from the sources
-# vendored under `terminal/`, which were written against this NDK.
-ndkTerminal = "28.2.13676358"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

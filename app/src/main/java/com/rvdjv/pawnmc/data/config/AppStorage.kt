@@ -8,7 +8,7 @@ import java.io.File
  *
  * The app used to hide all of its state inside `filesDir`, which Android deletes on
  * uninstall and which no file manager can reach. That is fine for machine state (the
- * extracted Ubuntu rootfs, the native scratch files) but wrong for anything the user is
+ * native scratch files, caches) but wrong for anything the user is
  * meant to own: the starter workspace, the settings mirror, generated artefacts.
  *
  * Storage is therefore split in two:

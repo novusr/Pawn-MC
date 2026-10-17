@@ -1399,7 +1399,7 @@ fun EditorScreen(
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
                     icon = Icons.Filled.TouchApp,
-                    contentDescription = "Open Pawn terminal",
+                    contentDescription = "Open the Developer Portal",
                     testTag = "editor_terminal_toggle",
                     isActive = isPawnTerminalVisible,
                     reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP,

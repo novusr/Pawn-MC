@@ -987,10 +987,21 @@ internal fun CompilerLogsSection(
     appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
 ) {
     Column {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        // The header is overflow-safe on high-DPI screens: the title is capped at two
+        // lines with ellipsis, so when the localized label grows too long (e.g. the
+        // Russian "Вот результат компиляции:" at font scale 1.3+) it wraps or clips
+        // instead of pushing the actions row and the status chip off screen.
+        //
+        // A second guard for the same DPI problem: the actions (download/copy chip) are
+        // pinned to the end of the row with weight(1f, fill = false) on the title, which
+        // means the title collapses BEFORE the actions do. Without that weight the long
+        // label at font scale 1.3+ would measure its intrinsic width first and force the
+        // actions off the right edge; with it the label always loses width first. The
+        // `fill = false` variant keeps the label at its natural width while there is
+        // room, so short strings like "Output:" stay one line wide instead of grabbing
+        // the full row.
+        Column(
+            modifier = Modifier.fillMaxWidth()
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
@@ -1003,11 +1014,12 @@ internal fun CompilerLogsSection(
                 Text(
                     text = localizer?.get("main.output.title", appLanguage, "Here is the compiler output:") ?: "Here is the compiler output:",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
-            }
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
+                Spacer(modifier = Modifier.width(SpaceXS))
                 IconButton(
                     onClick = onDownloadClick,
                     enabled = canDownload,
@@ -1078,7 +1090,15 @@ internal fun StatusChip(status: CompileStatus) {
         enabled = false,
         label = {
             AnimatedContent(targetState = status.label, label = "status_label") { label ->
-                Text(text = label, style = MaterialTheme.typography.labelSmall)
+                // Font-scale guard for the DPI problem: without a maxLines cap a
+                // 1.3x font-scale user gets a two-line chip that pushes the header
+                // row taller and squeezes the output panel below it.
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         },
         leadingIcon = {

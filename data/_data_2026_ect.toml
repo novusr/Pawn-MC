@@ -680,6 +680,12 @@ en = "Here is the compiler output:"
 ru = "Вот результат компиляции:"
 es = "Aquí está la salida del compilador:"
 
+[main.output.actions]
+id = "Aksi"
+en = "Actions"
+ru = "Действия"
+es = "Acciones"
+
 [main.fab.portal]
 id = "Buka panduan setelan"
 en = "Open the settings guide"
