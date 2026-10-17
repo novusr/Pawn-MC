@@ -22,16 +22,6 @@ dependencyResolutionManagement {
 rootProject.name = "PawnMC"
 include(":app")
 
-
-// Terminal feature, ported from the Xed editor: the proot sandbox plus the Termux
-// terminal emulator/view. They live outside `app` because the native code needs a
-// different NDK (28.2, 16 KB page aligned) than the compiler module uses.
-include(":terminal:emulator")
-include(":terminal:view")
-include(":terminal:proot")
-include(":terminal:link2symlink")
-include(":terminal:app")
-
 // PocketSAMP, vendored under `thirdparty/PocketSAMP` and adopted as an embedded runtime
 // module of PawnMC (opened from the main interface like the editor, not a separate app).
 // The upstream package/namespace `com.pocketsamp.server` is deliberately kept: honouring

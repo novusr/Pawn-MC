@@ -97,16 +97,7 @@ android {
     }
     ndkVersion = "29.0.14206865"
 
-    // The sandbox runs `libproot.so`, `libloader.so` and `libtermux.so` straight out of
-    // `nativeLibraryDir`, which Android requires them to live in to be execable.
-    // Without legacy packaging AGP leaves the libraries compressed inside the APK and
-    // maps them from there, so that directory stays empty and every exec fails with
-    // "inaccessible or not found". This is deliberately declared on the application
-    // module only: the `:terminal:*` libraries must not set it, because a library that
-    // requests legacy packaging changes how its own libraries are packaged and Gradle
-    // then reports a conflict between modules.
     packaging {
-        jniLibs { useLegacyPackaging = true }
         // JNA ships its licence files (AL2.0, LGPL2.1) in both jna and jna-platform,
         // and AGP refuses to merge two copies of the same resource path. The
         // duplicate is exactly the same licence text, so picking the first input is
@@ -162,10 +153,6 @@ dependencies {
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.sora.editor)
-
-    // The in-editor terminal: proot sandbox + Termux VT emulator, opened from the
-    // floating Xed editor button.
-    implementation(project(":terminal:app"))
 
     // PocketSAMP runtime, adopted from thirdparty/PocketSAMP: the SA-MP server +
     // MariaDB console opened from the header button that used to run self-tests.

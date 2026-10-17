@@ -22,7 +22,6 @@ RELEASE_NOTES_DRAFT.md
 TODO.txt
 COMMIT.txt
 .env
-Xed-Editor
 
 # --- Build / debug output that must never be committed -------------------------
 # `/build` above only anchors at the repository root, so the `:terminal:*`

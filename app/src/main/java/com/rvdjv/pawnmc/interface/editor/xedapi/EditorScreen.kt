@@ -141,8 +141,6 @@ import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveTreeToFile
 import com.rvdjv.pawnmc.`interface`.editor.syntax.PawnLanguage
 import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspacePanel
 import com.rvdjv.pawnmc.`interface`.editor.portal.DeveloperPortal
-import com.pawnmc.terminal.TerminalOverlay
-import com.pawnmc.terminal.TerminalRequest
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
@@ -240,9 +238,6 @@ fun EditorScreen(
     var isExplorerVisible by remember { mutableStateOf(false) }
     var explorerOffset by remember { mutableStateOf(IntOffset.Zero) }
     var isPawnTerminalVisible by remember { mutableStateOf(false) }
-    // The editor sandbox button now opens the real sandbox terminal, so the flag that
-    // used to toggle the "coming soon" notice drives the overlay instead.
-    var isTerminalVisible by remember { mutableStateOf(false) }
     // Landscape toggle: `true` forces landscape, `false` releases the lock back to
     // whatever orientation the activity reports by default (portrait).
     var isLandscapeForced by remember { mutableStateOf(false) }
@@ -1394,20 +1389,6 @@ fun EditorScreen(
                             .padding(12.dp)
                     )
                 }
-
-                // sandbox button, kept in place above the Pawn terminal button. It opens the
-                // sandboxed Ubuntu terminal: proot plus a PTY backed shell rooted at the
-                // workspace, with the selected compiler exposed as `pawncc`.
-                FloatingRoundAction(
-                    size = PANEL_BUTTON_SIZE,
-                    icon = _Icons.WavingHand,
-                    contentDescription = "Open AI assistant",
-                    testTag = "editor_web_preview_toggle",
-                    isActive = isTerminalVisible,
-                    reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP,
-                    onClick = { isTerminalVisible = !isTerminalVisible }
-                )
-
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
                     icon = Icons.Filled.TouchApp,
@@ -1439,27 +1420,6 @@ fun EditorScreen(
                         }
                     }
                 )
-
-                if (isTerminalVisible) {
-                    // The shell starts in the open workspace, or next to the file when the
-                    // editor is in single-file mode, and `pawncc` mirrors the version the
-                    // editor is currently set to compile with. `pawnConsoleVersion` tracks
-                    // the compiler the portal's `switch` command selected.
-                    val terminalSource = if (workspace.isWorkspaceOpen) {
-                        activeDocument?.file
-                    } else {
-                        viewModel.filePath.takeIf { it.isNotBlank() }?.let { File(it) }
-                    }
-                    TerminalOverlay(
-                        request = TerminalRequest(
-                            workingDirectory = (workspace.activeWorkspace?.root
-                                ?: terminalSource?.parentFile)?.absolutePath,
-                            compilerLibraryName =
-                                "lib${pawnConsoleVersion.libraryName}.so"
-                        ),
-                        onClose = { isTerminalVisible = false }
-                    )
-                }
 
                 // Keep the workspace toggle above the toolbar so it remains reachable
                 // while the explorer panel is open.
