@@ -154,7 +154,7 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
      */
     private val host = host
 
-    private val suffixPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val chipPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
     override fun drawLineNumber(
         canvas: Canvas,
@@ -172,19 +172,46 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
             return
         }
 
-        // Shrink the area handed to the stock drawing so the label lands between
-        // the number and the divider instead of overflowing the panel.
-        val numberWidth = width - suffixWidth
-        super.drawLineNumber(canvas, line, row, offsetX, numberWidth, color)
-
+        // Boxed tile: instead of the flat number flowing down the panel edge, every
+        // line the selection touches gets a rounded chip holding `line-column`, so the
+        // information reads as a stack of little boxes (`[1-4] [2] [3] [4]`) rather
+        // than a loose column of digits.
         val metrics = host.lineNumberMetrics
-        val y = (host.getRowBottom(row) + host.getRowTop(row)) / 2f -
-            (metrics.descent - metrics.ascent) / 2f - metrics.ascent - host.offsetY
-        suffixPaint.typeface = host.typefaceLineNumber
-        suffixPaint.textSize = host.textSizePx
-        suffixPaint.color = color
-        suffixPaint.textAlign = Paint.Align.LEFT
-        canvas.drawText(LINE_COLUMN_SEPARATOR + column, offsetX + numberWidth, y, suffixPaint)
+        val top = host.getRowTop(row) - host.offsetY
+        val bottom = host.getRowBottom(row) - host.offsetY
+        val textHeight = metrics.descent - metrics.ascent
+        val y = (top + bottom) / 2f - textHeight / 2f - metrics.ascent
+
+        val label = "$line$LINE_COLUMN_SEPARATOR$column"
+        chipPaint.textSize = host.textSizePx * 0.82f
+        chipPaint.typeface = host.typefaceLineNumber
+        val textWidth = chipPaint.measureText(label)
+        val padH = chipPaint.textSize * 0.5f
+        val padV = chipPaint.textSize * 0.32f
+        val chipHeight = textHeight + padV * 2
+        val chipTop = (top + bottom) / 2f - chipHeight / 2f
+        val chipRight = offsetX + width - padH * 0.4f
+        val chipLeft = chipRight - textWidth - padH * 2
+
+        chipPaint.style = Paint.Style.FILL
+        chipPaint.color = CHIP_BACKGROUND
+        canvas.drawRoundRect(
+            chipLeft, chipTop, chipRight, chipTop + chipHeight,
+            chipHeight / 2f, chipHeight / 2f, chipPaint
+        )
+
+        chipPaint.style = Paint.Style.STROKE
+        chipPaint.strokeWidth = 1f
+        chipPaint.color = CHIP_BORDER
+        canvas.drawRoundRect(
+            chipLeft, chipTop, chipRight, chipTop + chipHeight,
+            chipHeight / 2f, chipHeight / 2f, chipPaint
+        )
+
+        chipPaint.style = Paint.Style.FILL
+        chipPaint.color = CHIP_TEXT
+        chipPaint.textAlign = Paint.Align.CENTER
+        canvas.drawText(label, (chipLeft + chipRight) / 2f, y, chipPaint)
     }
 
     /**
@@ -207,5 +234,14 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
             line in leftLine until rightLine -> 1
             else -> null
         }
+    }
+
+    private companion object {
+        // Rounded chip colours, tuned for the violet dark theme and readable on the
+        // light theme alike: a translucent violet fill over which the bright label
+        // stays legible in both modes.
+        const val CHIP_BACKGROUND = 0x407B5CC7
+        const val CHIP_BORDER = 0x60B7A6F5
+        const val CHIP_TEXT = 0xFFE4DDF7.toInt()
     }
 }

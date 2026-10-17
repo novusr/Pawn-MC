@@ -30,9 +30,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
@@ -47,6 +49,7 @@ import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Slider
 import kotlin.math.roundToInt
@@ -358,6 +361,36 @@ fun SettingsScreen(
     // scaffold
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        floatingActionButton = {
+            // Same cursor the main interface has: one tap at the top of a settings list
+            // several pages long carries the reader to the bottom, and once the bottom
+            // is reached it turns around and carries them back to the top.
+            val fabScope = rememberCoroutineScope()
+            val atBottom = settingsScrollState.isScrollInProgress.not() &&
+                settingsScrollState.canScrollForward.not()
+            SmallFloatingActionButton(
+                onClick = {
+                    fabScope.launch {
+                        if (atBottom) {
+                            settingsScrollState.animateScrollTo(0)
+                        } else {
+                            settingsScrollState.animateScrollTo(settingsScrollState.maxValue)
+                        }
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Icon(
+                    imageVector = if (atBottom) Icons.Filled.ArrowUpward else Icons.Filled.Webhook,
+                    contentDescription = if (atBottom) {
+                        localizer.get("main.fab.top", appLanguage, "Back to the top")
+                    } else {
+                        localizer.get("main.fab.bottom", appLanguage, "Go to the bottom")
+                    }
+                )
+            }
+        },
         topBar = {
             MediumTopAppBar(
                 title = { Text(localizer.get("settings.title", appLanguage, "Settings")) },
@@ -467,6 +500,47 @@ fun SettingsScreen(
                             "Controls whether the app follows the system theme, or is pinned to light or dark. This choice also drives the Xed editor background."
                         ),
                         onClick = { showThemeDialog = true }
+                    )
+                }
+            }
+
+            CategoryHeader(
+                text = localizer.get("settings.editor", appLanguage, "PawnMC Editor"),
+                modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.EditorAppearance)
+            )
+            SectionIntro(
+                text = localizer.get(
+                    "settings.editor.desc",
+                    appLanguage,
+                    "Appearance preferences for the built-in code editor. Changes apply to the open editor immediately."
+                )
+            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column {
+                    NavigationRow(
+                        title = localizer.get("settings.editor.background", appLanguage, "Editor Background"),
+                        subtitle = viewModel.n_editor_background_color
+                            ?: localizer.get("settings.editor.background.default", appLanguage, "Default"),
+                        description = localizer.get(
+                            "settings.editor.background.desc",
+                            appLanguage,
+                            "Pick the editor canvas colour. The default follows the app theme, while a custom pick replaces it completely."
+                        ),
+                        onClick = { showEditorBackgroundDialog = true }
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    ActionRow(
+                        text = localizer.get("settings.editor.background.reset", appLanguage, "Reset to default"),
+                        icon = Icons.Default.Refresh,
+                        onClick = { viewModel.updateEditorBackgroundColor(null) }
                     )
                 }
             }
@@ -880,47 +954,6 @@ fun SettingsScreen(
                         text = localizer.get("settings.include.add", appLanguage, "Add Include Path"),
                         icon = Icons.Default.Add,
                         onClick = { openIncludeFolderPicker() }
-                    )
-                }
-            }
-
-            CategoryHeader(
-                text = localizer.get("settings.editor", appLanguage, "Editor"),
-                modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.EditorAppearance)
-            )
-            SectionIntro(
-                text = localizer.get(
-                    "settings.editor.desc",
-                    appLanguage,
-                    "Appearance preferences for the built-in code editor. Changes apply to the open editor immediately."
-                )
-            )
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column {
-                    NavigationRow(
-                        title = localizer.get("settings.editor.background", appLanguage, "Editor Background"),
-                        subtitle = viewModel.n_editor_background_color
-                            ?: localizer.get("settings.editor.background.default", appLanguage, "Default"),
-                        description = localizer.get(
-                            "settings.editor.background.desc",
-                            appLanguage,
-                            "Pick the editor canvas colour. The default follows the app theme, while a custom pick replaces it completely."
-                        ),
-                        onClick = { showEditorBackgroundDialog = true }
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        thickness = 1.2.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                    ActionRow(
-                        text = localizer.get("settings.editor.background.reset", appLanguage, "Reset to default"),
-                        icon = Icons.Default.Refresh,
-                        onClick = { viewModel.updateEditorBackgroundColor(null) }
                     )
                 }
             }

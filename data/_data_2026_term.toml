@@ -88,4 +88,12 @@ es = "Ejecutar comando"
 id = "Tutup Developer Portal"
 en = "Close Developer Portal"
 es = "Cerrar Developer Portal"
+ru = "Закрыть Developer Portal"
+
+[terminal.input.toggle]
+id = "Munculkan atau sembunyikan input"
+en = "Show or hide the input"
+es = "Mostrar u ocultar la entrada"
+ru = "Показать или скрыть ввод"
+es = "Cerrar Developer Portal"
 

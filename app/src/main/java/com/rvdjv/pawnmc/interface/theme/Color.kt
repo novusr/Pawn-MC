@@ -3,12 +3,10 @@ package com.rvdjv.pawnmc.`interface`.theme
 import androidx.compose.ui.graphics.Color
 
 // Dark 
-// The dark scheme used to sit around #13111C / #1C1829, which reads as a washed
-// out semi-dark grey instead of a real dark theme. The ramp below starts from
-// true near-black (#050409) and only steps up a few percent per elevation role,
-// so the surface hierarchy stays visible while the whole scheme is genuinely
-// dark. Accents keep their hue but are slightly deepened so they do not glow
-// against the darker background.
+// The ramp keeps a violet-blue cast on every surface: the old values drifted to a
+// flat near-black grey, so the scheme now reads as a purple-blue night while the
+// elevation steps stay visible. Accents keep their hue but are slightly deepened so
+// they do not glow against the tinted background.
 val md_theme_dark_primary = Color(0xFFC3ADFF)
 val md_theme_dark_onPrimary = Color(0xFF150F22)
 val md_theme_dark_primaryContainer = Color(0xFF3A2C68)
@@ -25,23 +23,23 @@ val md_theme_dark_error = Color(0xFFFFB4AB)
 val md_theme_dark_onError = Color(0xFF690005)
 val md_theme_dark_errorContainer = Color(0xFF93000A)
 val md_theme_dark_onErrorContainer = Color(0xFFFFDAD6)
-val md_theme_dark_background = Color(0xFF050409)
+val md_theme_dark_background = Color(0xFF110D1C)
 val md_theme_dark_onBackground = Color(0xFFE4DDF7)
-val md_theme_dark_surface = Color(0xFF08070E)
+val md_theme_dark_surface = Color(0xFF151021)
 val md_theme_dark_onSurface = Color(0xFFE4DDF7)
-val md_theme_dark_surfaceVariant = Color(0xFF12101B)
-val md_theme_dark_onSurfaceVariant = Color(0xFF928CA5)
+val md_theme_dark_surfaceVariant = Color(0xFF1C1630)
+val md_theme_dark_onSurfaceVariant = Color(0xFF9E95BB)
 val md_theme_dark_outline = Color(0xFF6E6880)
-val md_theme_dark_outlineVariant = Color(0xFF1F1B2C)
+val md_theme_dark_outlineVariant = Color(0xFF292143)
 // Explicit surface elevation roles so every area keeps a visible depth step,
 // mirroring the tonal ramp used by the light scheme.
-val md_theme_dark_surfaceDim = Color(0xFF050409)
-val md_theme_dark_surfaceBright = Color(0xFF22202F)
-val md_theme_dark_surfaceContainerLowest = Color(0xFF020205)
-val md_theme_dark_surfaceContainerLow = Color(0xFF08070E)
-val md_theme_dark_surfaceContainer = Color(0xFF0D0B15)
-val md_theme_dark_surfaceContainerHigh = Color(0xFF14111E)
-val md_theme_dark_surfaceContainerHighest = Color(0xFF1B1727)
+val md_theme_dark_surfaceDim = Color(0xFF110D1C)
+val md_theme_dark_surfaceBright = Color(0xFF272038)
+val md_theme_dark_surfaceContainerLowest = Color(0xFF0C0915)
+val md_theme_dark_surfaceContainerLow = Color(0xFF151021)
+val md_theme_dark_surfaceContainer = Color(0xFF1A142B)
+val md_theme_dark_surfaceContainerHigh = Color(0xFF211A35)
+val md_theme_dark_surfaceContainerHighest = Color(0xFF28203F)
 val md_theme_dark_surfaceTint = Color(0xFFC3ADFF)
 val md_theme_dark_scrim = Color(0xFF000000)
 val md_theme_dark_inverseSurface = Color(0xFFE4DDF7)

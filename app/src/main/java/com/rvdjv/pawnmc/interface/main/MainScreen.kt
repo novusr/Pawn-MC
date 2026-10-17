@@ -44,6 +44,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Info
@@ -366,21 +368,32 @@ fun MainScreen(
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
-            // The cursor: the portal-style affordance the editor has, now on the main
-            // interface too. It scrolls the settings guide (the portal promo card) into
-            // view, which is the closest main-screen equivalent of opening the portal.
+            // The cursor: a two-way jump affordance. At the top it sends the reader to
+            // the settings guide at the bottom; once the bottom is reached it turns
+            // around and carries them back to the top, exactly like the settings screen.
             val fabScope = rememberCoroutineScope()
+            val atBottom = listState.isScrollInProgress.not() &&
+                listState.canScrollForward.not()
             SmallFloatingActionButton(
                 onClick = {
-                    // The promo card is the last item; scroll to the bottom quickly.
-                    fabScope.launch { listState.animateScrollToItem(Int.MAX_VALUE) }
+                    fabScope.launch {
+                        if (atBottom) {
+                            listState.animateScrollToItem(0)
+                        } else {
+                            listState.animateScrollToItem(Int.MAX_VALUE)
+                        }
+                    }
                 },
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Webhook,
-                    contentDescription = localizer?.get("main.fab.portal", appLanguage, "Open the settings guide") ?: "Open the settings guide"
+                    imageVector = if (atBottom) Icons.Filled.ArrowUpward else Icons.Filled.Webhook,
+                    contentDescription = if (atBottom) {
+                        localizer?.get("main.fab.top", appLanguage, "Back to the top") ?: "Back to the top"
+                    } else {
+                        localizer?.get("main.fab.portal", appLanguage, "Open the settings guide") ?: "Open the settings guide"
+                    }
                 )
             }
         }
@@ -1126,12 +1139,12 @@ internal fun OutputPanel(
 /**
  * Colour of the `[explain]` marker inside compiler output.
  *
- * The `0xFFF070` value comes straight from the palette the workspace panel and the
+ * The `0xFFF0F070` value comes straight from the palette the workspace panel and the
  * main-screen output panel both reference, so the two interfaces agree on the exact
- * shade; the alpha is applied by the caller through [explainHighlightedText] instead
- * of baking it in here.
+ * shade. The leading `FF` is required: Compose packs colours as ARGB, and an
+ * `0xFFF070` literal carries a zero alpha, which rendered the marker invisible.
  */
-val ExplainMarkerColor = Color(0xFFF070)
+val ExplainMarkerColor = Color(0xFFF0F070)
 
 private val EXPLAIN_MARKER_REGEX = Regex("(?i)\\[explain\\]")
 

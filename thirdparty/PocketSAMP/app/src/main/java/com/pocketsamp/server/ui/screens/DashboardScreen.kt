@@ -97,15 +97,15 @@ fun DashboardScreen(
     val folderPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
-        if (uri != null) {
-            val dir = ServerDirectoryManager.parseTreeUriToFile(uri)
-            if (dir != null && dir.exists() && dir.isDirectory) {
-                ServerDirectoryManager.setServerDirectory(context, dir)
-                currentServerDir = dir
-                Toast.makeText(context, "Folder gamemode diubah ke: ${dir.name}", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "Gagal mendapatkan path folder yang dipilih.", Toast.LENGTH_LONG).show()
-            }
+            if (uri != null) {
+        val dir = ServerDirectoryManager.parseTreeUriToFile(uri)
+        if (dir != null && dir.exists() && dir.isDirectory) {
+            ServerDirectoryManager.setServerDirectory(context, dir)
+            currentServerDir = dir
+            Toast.makeText(context, t("folder.changed") + ": ${dir.name}", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, t("folder.pick.failed"), Toast.LENGTH_LONG).show()
+        }
         }
     }
 
@@ -215,7 +215,7 @@ fun DashboardScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Text(
-                                text = "Main di HP Ini (Satu HP)",
+                                text = t("dash.local.title"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = AccentCyan
@@ -227,7 +227,7 @@ fun DashboardScreen(
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 val clip = ClipData.newPlainText("SA-MP Server IP", "127.0.0.1:7777")
                                 clipboard.setPrimaryClip(clip)
-                                Toast.makeText(context, "Disalin: 127.0.0.1:7777", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "${t("copy.done")} 127.0.0.1:7777", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(28.dp)
                         ) {
@@ -249,7 +249,7 @@ fun DashboardScreen(
                     )
 
                     Text(
-                        text = "⭐ Sangat Disarankan: Koneksi internal langsung (0ms ping), tidak bergantung sinyal Wi-Fi, dan anti-putus saat beralih/membuka game.",
+                        text = t("dash.local.note"),
                         fontSize = 11.sp,
                         color = TextSecondary
                     )
@@ -276,7 +276,7 @@ fun DashboardScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "Main Bareng Teman (Satu Wi-Fi)",
+                                text = t("dash.lan.title"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = TextSecondary
@@ -288,7 +288,7 @@ fun DashboardScreen(
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 val clip = ClipData.newPlainText("SA-MP Server IP", "$lanIp:7777")
                                 clipboard.setPrimaryClip(clip)
-                                Toast.makeText(context, "Disalin: $lanIp:7777", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "${t("copy.done")} $lanIp:7777", Toast.LENGTH_SHORT).show()
                             },
                             modifier = Modifier.size(28.dp)
                         ) {
@@ -310,7 +310,7 @@ fun DashboardScreen(
                     )
 
                     Text(
-                        text = "Bagikan alamat ini jika teman Anda ingin bergabung dari HP lain via Wi-Fi/Hotspot yang sama.",
+                        text = t("dash.lan.note"),
                         fontSize = 11.sp,
                         color = TextMuted
                     )
@@ -419,7 +419,7 @@ fun DashboardScreen(
                     }
 
                     Text(
-                        text = "Android memerlukan izin 'Akses Semua File' agar server dapat membaca folder gamemode Anda secara langsung.",
+                        text = t("perm.file.desc"),
                         fontSize = 11.sp,
                         color = TextPrimary
                     )
@@ -429,7 +429,7 @@ fun DashboardScreen(
                             try {
                                 context.startActivity(ServerDirectoryManager.getManageStorageIntent(context))
                             } catch (e: Exception) {
-                                Toast.makeText(context, "Buka Pengaturan -> Aplikasi -> PocketSAMP -> Izin", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, t("perm.file.settings"), Toast.LENGTH_LONG).show()
                             }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = AccentOrange, contentColor = Color.Black),
@@ -438,7 +438,7 @@ fun DashboardScreen(
                             .fillMaxWidth()
                             .height(36.dp)
                     ) {
-                        Text(text = "Beri Izin Akses File", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(text = t("perm.file.button"), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
             }
@@ -475,7 +475,7 @@ fun DashboardScreen(
                     }
 
                     Text(
-                        text = "Nonaktifkan optimasi baterai agar Android tidak membatasi/menjeda server saat Anda membuka game/launcher SA-MP.",
+                        text = t("perm.battery.desc"),
                         fontSize = 11.sp,
                         color = TextPrimary
                     )
@@ -498,7 +498,7 @@ fun DashboardScreen(
                             .fillMaxWidth()
                             .height(36.dp)
                     ) {
-                        Text(text = "Nonaktifkan Optimasi Baterai", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(text = t("perm.battery.button"), fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
             }
@@ -532,7 +532,7 @@ fun DashboardScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "Panduan Anti-Disconnect (HyperOS / Android 14)",
+                            text = t("guide.antidc.title"),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
@@ -558,44 +558,44 @@ fun DashboardScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Text(
-                            text = "1. Gembok Aplikasi di Recent Apps (Penting di Xiaomi/HyperOS):",
+                            text = t("guide.antidc.step1"),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = AccentCyan
                         )
                         Text(
-                            text = "Buka menu Recent Apps (Multitask HP) -> Tekan & tahan jendela PocketSAMP -> Ketuk ikon Gembok (Lock). Ini mencegah OS membekukan server saat Anda membuka game full screen.",
+                            text = t("guide.antidc.step1.desc"),
                             fontSize = 11.sp,
                             color = TextSecondary
                         )
 
                         Text(
-                            text = "2. Gunakan IP 127.0.0.1:7777:",
+                            text = t("guide.antidc.step2"),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = AccentCyan
                         )
                         Text(
-                            text = "Jika bermain di HP ini, masukkan 127.0.0.1:7777 di launcher SA-MP Anda. Jalur loopback internal ini tidak pernah diputus oleh Wi-Fi sleep Android.",
+                            text = t("guide.antidc.step2.desc"),
                             fontSize = 11.sp,
                             color = TextSecondary
                         )
 
                         Text(
-                            text = "3. Matikan Pembatasan Proses Turunan (Android 12+):",
+                            text = t("guide.antidc.step3"),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = AccentCyan
                         )
                         Text(
-                            text = "Buka Pengaturan HP > Opsi Pengembang (Developer Options) > Aktifkan 'Nonaktifkan pembatasan proses turunan' (Disable child process restrictions) agar proses server QEMU tidak dibunuh sistem (Exit 137).",
+                            text = t("guide.antidc.step3.desc"),
                             fontSize = 11.sp,
                             color = TextSecondary
                         )
                     }
                 } else {
                     Text(
-                        text = "Jika sering muncul 'Lost Connection' saat beralih ke game full screen, ketuk 'Solusi HP' untuk langkah penstabilan.",
+                        text = t("guide.antidc.short"),
                         fontSize = 11.sp,
                         color = TextMuted
                     )
@@ -669,7 +669,7 @@ fun DashboardScreen(
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clip = ClipData.newPlainText("Server Path", currentServerDir.absolutePath)
                             clipboard.setPrimaryClip(clip)
-                            Toast.makeText(context, "Path disalin ke clipboard!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, t("copy.path.done"), Toast.LENGTH_SHORT).show()
                         },
                         modifier = Modifier.size(28.dp)
                     ) {
@@ -713,11 +713,7 @@ fun DashboardScreen(
                 }
 
                 Text(
-                    text = if (hasCfg) {
-                        "Server akan membaca server.cfg & gamemode Anda langsung dari folder ini."
-                    } else {
-                        "server.cfg belum ditemukan di folder ini. Letakkan gamemode Anda di sini atau simpan setting di tab Config."
-                    },
+                    text = if (hasCfg) t("folder.has.cfg") else t("folder.no.cfg"),
                     fontSize = 11.sp,
                     color = if (hasCfg) TextMuted else AccentOrange
                 )

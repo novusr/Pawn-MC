@@ -11,6 +11,9 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -101,7 +104,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
@@ -151,6 +157,7 @@ import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -1396,6 +1403,7 @@ fun EditorScreen(
                     testTag = "editor_terminal_toggle",
                     isActive = isPawnTerminalVisible,
                     reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP,
+                    bubbleIndex = 0,
                     onClick = { isPawnTerminalVisible = !isPawnTerminalVisible }
                 )
 
@@ -1410,6 +1418,7 @@ fun EditorScreen(
                     testTag = "editor_orientation_toggle",
                     isActive = isLandscapeForced,
                     alignRight = false,
+                    bubbleIndex = 1,
                     onClick = {
                         val next = !isLandscapeForced
                         isLandscapeForced = next
@@ -1430,6 +1439,7 @@ fun EditorScreen(
                     testTag = "editor_explorer_toggle",
                     isActive = isExplorerVisible,
                     reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP,
+                    bubbleIndex = 2,
                     onClick = { isExplorerVisible = !isExplorerVisible }
                 )
 
@@ -1964,6 +1974,7 @@ private fun FloatingRoundAction(
     isActive: Boolean = false,
     reservedBelow: Dp = 0.dp,
     alignRight: Boolean = true,
+    bubbleIndex: Int = 0,
     onClick: () -> Unit
 ) {
     val density = LocalDensity.current
@@ -1989,6 +2000,22 @@ private fun FloatingRoundAction(
         var draggedOffset by remember { mutableStateOf<IntOffset?>(null) }
         val offset = draggedOffset ?: restOffset
 
+        // First-entrance bubble: each floating button rises into place one after
+        // another, scaled like a bubble surfacing, instead of the whole stack
+        // popping in at once. One-shot: once it has played, it never plays again.
+        var bubbleShown by rememberSaveable { mutableStateOf(false) }
+        val bubbleProgress = remember { Animatable(if (bubbleShown) 1f else 0f) }
+        LaunchedEffect(Unit) {
+            if (!bubbleShown) {
+                delay(bubbleIndex * 90L)
+                bubbleProgress.animateTo(
+                    1f,
+                    spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
+                )
+                bubbleShown = true
+            }
+        }
+
         Surface(
             onClick = onClick,
             shape = RoundedCornerShape(14.dp),
@@ -2000,7 +2027,16 @@ private fun FloatingRoundAction(
             shadowElevation = 6.dp,
             border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
             modifier = Modifier
-                .offset { offset }
+                .alpha(bubbleProgress.value.coerceIn(0f, 1f))
+                .offset {
+                    IntOffset(
+                        offset.x,
+                        offset.y + ((1f - bubbleProgress.value) * 40.dp.toPx()).roundToInt()
+                    )
+                }
+                .scale(
+                    0.6f + 0.4f * bubbleProgress.value.coerceIn(0f, 1f)
+                )
                 .size(size)
                 .pointerInput(Unit) {
                     detectDragGestures(

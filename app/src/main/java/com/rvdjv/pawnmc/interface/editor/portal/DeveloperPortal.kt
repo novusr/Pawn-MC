@@ -25,13 +25,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -229,6 +236,10 @@ internal fun DeveloperPortal(
     val entries = remember { mutableStateListOf<PortalEntry>() }
     var input by remember { mutableStateOf("") }
     var isRunning by remember { mutableStateOf(false) }
+    // Whether the dots button has unfolded the floating input. Defaulting to visible
+    // keeps the field discoverable; the dots collapse it for an immersive read-only
+    // transcript and bring it back with one tap.
+    var inputImmersive by remember { mutableStateOf(true) }
     var dragOffset by remember { mutableStateOf(IntOffset.Zero) }
     val currentDragOffset = rememberUpdatedState(dragOffset)
 
@@ -402,6 +413,23 @@ internal fun DeveloperPortal(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    // The dots: the immersive affordance. Tapping it drops the console
+                    // down and floats the input over the centre, so the text field is
+                    // within thumb reach and the terminal behind keeps scrolling.
+                    IconButton(
+                        onClick = { inputImmersive = !inputImmersive },
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            Icons.Filled.MoreHoriz,
+                            contentDescription = text("terminal.input.toggle"),
+                            tint = if (inputImmersive) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
                     IconButton(onClick = onClose, modifier = Modifier.size(40.dp)) {
                         Icon(Icons.Filled.Close, contentDescription = text("terminal.close"))
                     }
@@ -450,36 +478,48 @@ internal fun DeveloperPortal(
                     }
                 }
 
+                // Input on top: the field now sits directly under the title bar, so it
+                // is the first thing the eye meets and suggestions unfold below it
+                // instead of being pushed off-screen by a growing transcript.
                 val suggestions = PortalCommandParser.suggestions(input, activeSource?.name)
-                suggestions.take(3).forEach { suggestion ->
-                    Text(
-                        text = suggestion,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { input = suggestion },
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace)
-                    )
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "%",
-                        color = MaterialTheme.colorScheme.primary,
-                        style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Monospace),
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                    OutlinedTextField(
-                        value = input,
-                        onValueChange = { input = it.take(500) },
-                        modifier = Modifier.weight(1f).testTag("developer_portal_input"),
-                        singleLine = true,
-                        enabled = !isRunning,
-                        placeholder = { Text(text("terminal.input.placeholder"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                        keyboardActions = KeyboardActions(onSend = { submit() })
-                    )
-                    IconButton(onClick = { submit() }, enabled = !isRunning && input.isNotBlank()) {
-                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = text("terminal.run"))
+                AnimatedVisibility(
+                    visible = inputImmersive || input.isNotBlank() || suggestions.isNotEmpty(),
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
+                    Column {
+                        suggestions.take(3).forEach { suggestion ->
+                            Text(
+                                text = suggestion,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { input = suggestion },
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace)
+                            )
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "%",
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.titleMedium.copy(fontFamily = FontFamily.Monospace),
+                                modifier = Modifier.padding(end = 8.dp)
+                            )
+                            OutlinedTextField(
+                                value = input,
+                                onValueChange = { input = it.take(500) },
+                                modifier = Modifier.weight(1f).testTag("developer_portal_input"),
+                                singleLine = true,
+                                enabled = !isRunning,
+                                shape = CircleShape,
+                                placeholder = { Text(text("terminal.input.placeholder"), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                                keyboardActions = KeyboardActions(onSend = { submit() })
+                            )
+                            IconButton(onClick = { submit() }, enabled = !isRunning && input.isNotBlank()) {
+                                Icon(Icons.AutoMirrored.Filled.Send, contentDescription = text("terminal.run"))
+                            }
+                        }
                     }
                 }
             }
