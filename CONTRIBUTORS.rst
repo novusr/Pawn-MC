@@ -18,7 +18,7 @@ Maintainers
      - Contact
    * - `novusr <https://github.com/novusr>`_
      - Project owner. Architecture, native compiler bridge, Xed editor, compiler
-       configuration, sandbox terminal integration, releases.
+       configuration, releases.
      - radjaxyz09@gmail.com
    * - `machijine <https://github.com/machijine>`_
      - Interface design and implementation, localisation data, in-app documentation and
@@ -107,12 +107,8 @@ repository; they are the upstream work it depends on.
        git submodules.
    * - `Rosemoe/sora-editor <https://github.com/Rosemoe/sora-editor>`_
      - The code editor widget the PawnMC editor is built on.
-   * - `termux/termux-app <https://github.com/termux/termux-app>`_
-     - The terminal emulator and ``TerminalView`` behind the sandbox terminal.
-   * - `proot-me/proot <https://github.com/proot-me/proot>`_
-     - PRoot, which provides the Ubuntu userspace the sandbox shell runs in.
-   * - `Ubuntu Base <https://cdimage.ubuntu.com/ubuntu-base/>`_
-     - The root filesystem downloaded on first use of the sandbox terminal.
+   * - `pocketsamp <https://github.com/novusr/PocketSAMP>`_
+     - The embedded SA-MP server runtime adopted into ``thirdparty/PocketSAMP``.
 
 Adding yourself
 ---------------

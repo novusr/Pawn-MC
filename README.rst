@@ -124,7 +124,7 @@ Where PawnMC keeps your files
        chosen a file yet. It is a normal editable file: any tool on the device can open,
        copy or replace it.
    * - ``Android/data/com.rvdjv.pawnmc/files/.pawnmc``
-     - App-private state (the extracted Ubuntu rootfs marker, the update version marker).
+     - App-private state (the update version marker).
        Not user editable, and removed when the app is uninstalled.
 
 Android deletes the whole ``Android/data/com.rvdjv.pawnmc`` tree when the app is
@@ -138,8 +138,6 @@ Test sources are kept outside the Android modules under ``test/``. Gradle source
 there so the existing tasks still work:
 
 * ``test/app/unit`` and ``test/app/instrumented``
-* ``test/terminal-app/unit``
-* ``test/terminal-emulator/unit``
 
 Building
 --------

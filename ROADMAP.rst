@@ -28,8 +28,6 @@ From a review of the repository, the current project focuses on:
      - Display compiler errors and build results clearly, annotated with local explanations
    * - Developer Portal
      - ``DeveloperPortal`` command line for docs, ``pawncc``, and compiler version switching
-   * - Sandbox terminal
-     - Full Ubuntu shell in the editor via PRoot, opened from the editor's sandbox button
    * - Release maintenance
      - Check GitHub releases and prepare update/install flow
 
@@ -98,8 +96,6 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
      - Find/replace across every file of a workspace, plus search-in-workspace
    * - Editor terminal portal
      - In-editor command line (``help``, ``docs``, ``pawncc``, ``switch``, ``clear``) with sandboxed source resolution inside the workspace root
-   * - Sandbox terminal
-     - Real Ubuntu shell (PRoot + Termux VT emulator) opened from the editor's sandbox button; rootfs downloaded once, then fully offline
    * - Localization
      - Indonesian, English, Spanish (Argentina), and Russian strings served from ``data/_data_2026_ect.toml``
    * - Pawn symbol data
@@ -174,8 +170,8 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
      - Documentation and project configuration guidance
    * - compilers/
      - Pawn compiler sources as git submodules (3.10.11, 3.10.7)
-   * - terminal/
-     - Terminal feature ported from the Xed editor: ``emulator/``, ``view/``, ``proot/``, ``link2symlink/``, ``app/``
+   * - thirdparty/PocketSAMP/
+     - Embedded SA-MP server runtime, included as the ``:pocketsamp`` module
    * - data/
      - All shipped data assets (see 4.3)
 
@@ -229,7 +225,7 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
    * - data/_data_2026_intern.toml
      - Pawn symbol data: item descriptions plus natives/forwards grouped by include
    * - data/_data_2026_term.toml
-     - Localised strings for the editor terminal portal (``key.id`` / ``key.en``)
+     - Localised strings for the editor terminal portal (``key.id`` / ``key.en`` / ``key.es`` / ``key.ru``)
 
 
 
@@ -352,61 +348,8 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
      - App JVM unit tests (configuration, compiler, editor, update and localization)
    * - ``test/app/instrumented/java/com/rvdjv/pawnmc/``
      - App Android instrumented tests
-   * - ``test/terminal-app/unit/java/com/pawnmc/terminal/``
-     - Terminal app service, shell script, and sandbox setup unit tests
-   * - ``test/terminal-emulator/unit/java/com/termux/terminal/``
-     - Terminal emulator unit tests
    * - ``app/src/main/java/com/rvdjv/pawnmc/interface/main/MainSelfTest.kt``
      - In-app diagnostics that run against user files and settings; this remains production app code, not a Gradle test source
-
-
-
-
-5.4 Terminal Module (`terminal/`, ported from the Xed editor)
--------------------------------------------------------------
-
-
-.. list-table::
-   :header-rows: 1
-   :widths: 42 46
-
-   * - File / Path
-     - Purpose
-   * - terminal/app/…/TerminalOverlay.kt
-     - Compose entry point: binds ``TerminalService``, runs setup, shows install or terminal UI
-   * - terminal/app/…/core/TerminalPaths.kt
-     - Every private path (rootfs, bin, home, tmp) and the installed/empty checks
-   * - terminal/app/…/core/RootfsSources.kt
-     - Per-ABI Ubuntu base image URLs
-   * - terminal/app/…/core/RootfsDownloader.kt
-     - Streaming download with progress, atomic rename
-   * - terminal/app/…/core/SandboxSetup.kt
-     - One-time rootfs extraction by Android ``/system/bin/sh`` and ``tar``, using ``liblink2symlink.so``; setup state model and diagnostics
-   * - terminal/app/…/core/SandboxEnvironment.kt
-     - The environment array handed to the sandbox shell (PROOT, LOCAL, HOME, PAWNCC, …)
-   * - terminal/app/…/core/ShellScripts.kt
-     - Installs ``sandbox``/``setup``/``init``/``utils`` from assets and restores the exec bit
-   * - terminal/app/…/shell/TerminalService.kt
-     - Owns every PTY session so shells outlive the editor screen
-   * - terminal/app/…/shell/TerminalBackend.kt
-     - ``TerminalViewClient``/``TerminalSessionClient`` implementation
-   * - terminal/app/…/ui/TerminalScreen.kt
-     - PTY surface, extra key row, ANSI palette
-   * - terminal/app/…/ui/TerminalSetupScreen.kt
-     - Download/extract progress and failure screen
-   * - terminal/app/…/ui/TerminalSurface.kt
-     - Weak bridge from the backend to the live widget
-   * - terminal/app/src/main/assets/terminal/*.sh
-     - ``sandbox.sh`` (proot bind list), ``setup.sh`` (extraction), ``init.sh``, ``utils.sh``
-   * - terminal/emulator/
-     - Termux VT emulator; ``libtermux.so`` built with NDK 28.2 for 16 KB page alignment
-   * - terminal/view/
-     - ``TerminalView``, the Android View that renders a session
-   * - terminal/proot/
-     - PRoot sources; outputs ``libproot.so`` + ``libloader.so`` so Android may exec them
-   * - terminal/link2symlink/
-     - ``liblink2symlink.so``, the LD_PRELOAD fallback for kernels that refuse extraction under ptrace
-
 
 
 
@@ -449,12 +392,6 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
    * - Editor terminal
      - interface/editor/portal/DeveloperPortal.kt
      - Command line, ``pawncc`` sandboxed invocation, version switch
-   * - Sandbox terminal
-     - terminal/app/…/TerminalOverlay.kt, shell/TerminalService.kt, core/*
-     - PRoot sandbox bootstrap, PTY shell sessions, terminal UI opened from the sandbox button
-   * - Terminal runtime
-     - terminal/emulator, terminal/view, terminal/proot, terminal/link2symlink
-     - Vendored Termux VT emulator plus the proot/loader native binaries
    * - Workspace model
      - interface/editor/Workspace/Session.kt
      - Folder trees, open documents, search/replace
@@ -628,91 +565,9 @@ The mode is determined by ``WorkspaceSession.isWorkspaceOpen`` (there is an expl
 
 
 
-8. Sandbox Terminal: Runtime, Boundaries, and Development Guide
----------------------------------------------------------------
-The editor sandbox button opens the ``:terminal:app`` Compose overlay. This terminal is a separate real Ubuntu userspace from ``DeveloperPortal``: the portal is an in-app command interface with its own command parser and Pawn compile validation; the sandbox is an interactive POSIX shell running under PRoot with a Termux VT/PTY front end. Both may expose Pawn compiler functionality, but they have different execution paths and trust boundaries.
-
-8.1 What runs where
--------------------
-
-.. list-table::
-   :header-rows: 1
-   :widths: 19 46
-
-   * - Layer
-     - Implementation and responsibility
-   * - Editor UI
-     - ``EditorScreen`` builds ``TerminalRequest`` from the active workspace root (or current file's parent) and selected Pawn compiler library, then overlays ``TerminalOverlay``. Back closes the overlay.
-   * - Overlay/bootstrap
-     - ``TerminalOverlay`` binds ``TerminalService``, checks ``TerminalPaths.isInstalled``, and invokes ``SandboxSetup.ensureReady`` when necessary. Setup state/progress/failure details are presented by ``TerminalSetupScreen``.
-   * - Session owner
-     - ``TerminalService`` owns ``TerminalSession`` instances independently of the composable. Sessions survive editor recomposition/navigation while the app process remains alive; the service is not foreground and Android may stop it with the app. A session is created lazily and reused by ID.
-   * - Terminal I/O
-     - ``terminal:view`` supplies the Android terminal view; ``terminal:emulator`` provides the Termux VT emulator/PTY machinery; ``TerminalBackend`` connects session callbacks, input, clipboard and rendering. The UI supports new sessions, clear, copy/download transcript and extra keys.
-   * - Linux compatibility
-     - ``terminal:proot`` packages ``libproot.so`` and ``libloader.so``; ``terminal:link2symlink`` provides the preload shim needed to preserve absolute symlinks while extracting Ubuntu. ``terminal/emulator`` builds ``libtermux.so``. These native libraries must be packaged uncompressed/executable from the app ``nativeLibraryDir`` (the app module uses legacy JNI packaging).
-   * - Guest userspace
-     - Ubuntu Base 24.04.3 is downloaded for the device ABI from ``RootfsSources``, then extracted into the app-private ``files/local/sandbox`` directory. It includes ``apt``, ``dpkg``, and ``dash``; it is not a VM or a separate Android process/container namespace.
 
 
-8.2 First-open installation and later opens
--------------------------------------------
-#. `TerminalPaths` defines all terminal data under app-private storage: `files/local` (also `$LOCAL`), `files/local/bin` (managed shell scripts and compiler link), `files/local/sandbox` (rootfs), `files/local/home` (host home bind source), and `files/tmp` (download/staging and PRoot temporary files). Native libraries live in Android's `applicationInfo.nativeLibraryDir`.
-#. `SandboxSetup.ensureReady()` first trusts an installation only when the marker `.terminal_setup_ok_DO_NOT_REMOVE` exists and the rootfs has non-helper top-level directories. Otherwise `RootfsDownloader` chooses the matching supported ABI (`arm64-v8a`, `armeabi-v7a`, `x86_64`), streams the HTTPS archive into a `.part` file, checks HTTP status, non-empty/declared byte length, and atomically stages it as `files/tmp/sandbox.tar.gz`. Failed partial downloads are removed; unsupported ABIs fail clearly.
-#. `ShellScripts` copies the packaged `setup.sh`, `sandbox.sh`, `init.sh`, and `utils.sh` assets into `files/local/bin` when content changes and restores executable mode. `setup.sh` is run by Android `/system/bin/sh` with the generated environment. Extraction is deliberately host-side, not through PRoot: Android `/system/bin/tar` plus `LD_PRELOAD=liblink2symlink.so` handles absolute symlinks. The script validates archive/tool/destination/free space, extracts the rootfs, verifies `/bin/sh` or `/bin/dash` and `/usr/bin/dpkg`, configures basic Ubuntu host/network/group files, then writes the marker and deletes the staged archive only after success. Failures retain diagnostic output and the staged archive for investigation/retry. Setup sets `PAWNMC_SETUP_ONLY=1` so the script returns after extraction instead of starting an interactive PRoot shell from the host-side bootstrap. Interactive launch and host-side extraction are now explicit modes: the setup process sets `PAWNMC_SETUP_ONLY=1`, while normal invocation launches the interactive sandbox. Keep this hand-off contract aligned if either bootstrap changes.
-#. Later opens skip download/extraction when marker plus rootfs checks pass. Shell script assets are still refreshed by `ShellScripts.install`, so an app update can update managed scripts without re-downloading the rootfs. The Ubuntu rootfs is otherwise persistent and package changes made by the user remain in app-private data until app data is cleared/uninstalled.
-
-8.3 Interactive shell startup and environment
----------------------------------------------
-``TerminalService.createSession()`` installs/refreshes scripts, resolves the selected versioned ``libpawnc*.so`` from ``nativeLibraryDir``, maps the requested device working directory into a container path, builds environment variables, and starts a Termux ``TerminalSession`` with ``/system/bin/sh`` and the ``sandbox`` script. ``sandbox.sh`` is the single owner of the PRoot command and bind list. It invokes the PRoot shared library through the platform dynamic linker (``/system/bin/linker64`` when present, otherwise ``/system/bin/linker``), supplies ``libloader.so``, and starts the guest ``/bin/sh`` interactively. PRoot presents UID 0 inside the guest (``-0``); this is emulated identity, not Android root.
-
-Important environment contracts from ``SandboxEnvironment.build()``:
-
-
-.. list-table::
-   :header-rows: 1
-   :widths: 46 46
-
-   * - Variable
-     - Purpose
-   * - ``PROOT``, ``PROOT_LOADER``, ``PROOT_TMP_DIR``, ``LINKER``
-     - Native PRoot/loader/temp paths and platform linker used to launch a ``.so`` executable on Android.
-   * - ``LOCAL``, ``PRIVATE_DIR``, ``NATIVE_LIB_DIR``, ``TMP_DIR``, ``TMPDIR``, ``EXT_HOME``, ``PUBLIC_HOME``
-     - App-private script/rootfs/home/temp paths, native library location, and external-files path consumed by scripts.
-   * - ``PRIMARY_ABI``, ``ANDROID_API_LEVEL``
-     - Device metadata used for setup diagnostics.
-   * - ``WKDIR``
-     - Container-side initial directory selected by the editor. ``/sdcard/...`` and ``/storage/...`` paths are preserved; private/non-shared paths fall back to ``/home``; no selection defaults to ``/home``.
-   * - ``HOME=/home``, ``TERM=xterm-256color``, ``COLORTERM=truecolor``, ``LANG=C.UTF-8``, ``TZ=UTC``
-     - Guest shell identity, terminal capabilities and locale/time settings.
-   * - ``PAWNCC``
-     - Optional absolute path to the selected compiler library; ``init.sh`` links it as ``$LOCAL/bin/pawncc`` and adds that directory to ``PATH``. A missing library means no compiler link is exposed.
-   * - Android runtime variables
-     - ``ANDROID_DATA``, ``ANDROID_ROOT``, ART roots and boot classpaths are forwarded for Android-side binary compatibility.
-
-
-On each interactive shell start, ``init.sh`` sets a POSIX-compatible PATH and ``/bin/sh``, sources the managed POSIX ``utils``, warns if setup marked the rootfs degraded, sets timezone links, links the selected compiler, ensures the common ``/sdcard`` to ``/storage/emulated/0`` mapping where possible, prints a PawnMC banner, changes to ``$WKDIR`` (fallback ``/home``, then ``/``), and finally sources ``/etc/pawnmc/initrc`` if the user created one. It does not silently install extra runtimes/packages. ``sandbox.sh`` binds Android ``/sdcard``, ``/storage``, ``/dev``, ``/data``, ``/proc``, ``/sys`` and available system/apex paths; maps app home to guest ``/home`` and ``/root``; binds app-private storage; overlays selected proc/fd entries; and binds rootfs ``tmp`` as ``/dev/shm`` with mode 1777. PRoot uses ``--link2symlink``, ``--sysvipc``, and ``-L`` for the guest layout.
-
-8.4 Storage access and security caveats
----------------------------------------
-This is a userspace compatibility environment, not a security sandbox that isolates commands from Android resources. PRoot does not grant real root, bypass Android's Linux UID/SELinux rules, or create VM/kernel namespaces. Commands can access only what the app process can access, but the scripts intentionally bind broad Android paths (notably ``/sdcard``, ``/storage``, ``/data``, and app-private storage). A process in the guest may modify/delete files visible through those binds subject to the app's Android permissions and filesystem rules. Treat commands, downloaded scripts, and ``apt`` packages as code executing with the app's available access. Do not describe this terminal as safe for untrusted code without stronger OS-level isolation and a narrower mount policy.
-
-The editor passes a filesystem path, not a persisted SAF capability. ``SandboxEnvironment.containerWorkingDirectory()`` can only start in paths the guest can resolve through its mounts; SAF-only documents or paths outside ``/sdcard``/``/storage`` may not be usable as the shell's cwd. Main compile permission handling and Xed's SAF folder picker do not themselves give arbitrary shell access. Keep this distinction explicit when extending storage integration.
-
-8.5 Extension checklist / current follow-up work
-------------------------------------------------
-- Add device/emulator tests for each packaged ABI, PRoot launch through the correct linker, real session startup, working-directory mapping, and selected compiler visibility. Unit tests alone cannot validate Android `exec`/SELinux/native linker behavior.
-- Review and, where product requirements allow, narrow the PRoot bind list. Any change to `/sdcard`, `/storage`, `/data`, `$PRIVATE_DIR`, proc/dev/sys, shared memory, or home binds changes user-visible reach and must be documented and tested.
-- Improve path/SAF handling deliberately: either document that shell access targets ordinary shared-storage paths, or implement a controlled bridge. Do not imply that a SAF tree grant is automatically mounted into Ubuntu.
-- Test download interruption, corrupt/truncated archive, low storage, marker-with-missing-rootfs, unsupported ABI, missing native library, 32-bit linker fallback, and setup retry. Preserve actionable output and never create the success marker before rootfs validation.
-- Decide whether package/rootfs upgrades are supported. Today the rootfs is persistent and setup is one-time; versioning/migrations need an explicit marker/upgrade strategy that does not redownload or destroy user packages unexpectedly.
-- Revisit service/background policy if long-running shell processes must survive backgrounding or process pressure. The service currently is not foreground and the app process can be stopped by Android.
-- Keep `sandbox.sh`, `setup.sh`, `init.sh`, `utils.sh`, `SandboxEnvironment`, `TerminalPaths`, and this section in sync. A shell environment variable or mount can appear correct in Kotlin while being absent from the script contract.
-
-
-
-
-9. Manual Analysis and Engineering Notes
+8. Manual Analysis and Engineering Notes
 ----------------------------------------
 
 
@@ -747,7 +602,7 @@ The editor passes a filesystem path, not a persisted SAF capability. ``SandboxEn
    * - Single symbol source
      - Pawn keywords/natives/forwards come from ``data/_data_2026_intern.toml`` via ``InternDat``/``PawnIndex``; ``Registry`` only curates and merges
    * - Terminal portal data
-     - Portal text comes from ``data/_data_2026_term.toml`` with per-language ``key.id`` / ``key.en`` / ``key.es`` lookup and English fallback
+     - Portal text comes from ``data/_data_2026_term.toml`` with per-language ``key.id`` / ``key.en`` / ``key.es`` / ``key.ru`` lookup and English fallback
    * - Assets packaging
      - ``assets.srcDir(rootProject.file("data"))`` ships the whole folder, so all four ``_data_2026_*.toml`` files reach the app; JVM tests fall back to reading ``data/...`` from the filesystem
    * - Compiler layer split
@@ -760,8 +615,8 @@ The editor passes a filesystem path, not a persisted SAF capability. ``SandboxEn
      - Native ``compile``/``getOutput``/``getErrors`` live in ``Runner``, so JNI names are ``..._data_compiler_Runner_*`` and ProGuard keeps that class
    * - Editor host
      - The editor is a composable inside ``MainActivity``, not a separate activity, so editor and main state share one lifecycle
-   * - Terminal portal sandboxing
-     - ``PortalCommandParser.pawnccInvocation`` canonicalises the source and rejects anything outside the workspace root or with a non-script extension; this is portal command validation, distinct from the PRoot Ubuntu shell and not an OS security boundary
+   * - Editor command validation
+     - ``PortalCommandParser.pawnccInvocation`` canonicalises the source and rejects anything outside the workspace root or with a non-script extension; this is portal command validation, not an OS security boundary
    * - Build/CI contract
      - CI builds with JDK 17, ``platforms;android-36``, NDK 29.0.14206865, CMake 3.22.1 and recursive submodules; release builds are minified and shrink resources
    * - Release signing
@@ -771,8 +626,8 @@ The editor passes a filesystem path, not a persisted SAF capability. ``SandboxEn
 
 
 
-10. Notable Implementation Details
-----------------------------------
+9. Notable Implementation Details
+---------------------------------
 
 
 .. list-table::
@@ -812,7 +667,7 @@ The editor passes a filesystem path, not a persisted SAF capability. ``SandboxEn
 
 
 
-11. Recommended Development Priorities
+10. Recommended Development Priorities
 --------------------------------------
 
 
@@ -829,13 +684,9 @@ The editor passes a filesystem path, not a persisted SAF capability. ``SandboxEn
    * - High
      - Improve network failure handling and APK validation
    * - High
-     - Verify sandbox startup and mount behavior on physical devices for each supported ABI; review broad bind mounts before presenting the terminal as a security boundary
-   * - High
      - Keep SAF/tree-URI handling correct across Android versions, since folder access is permission-sensitive
    * - Medium
-     - Extend the terminal portal (``docs`` content source, richer ``switch`` handling, output history); keep portal command validation distinct from the PRoot shell
-   * - Medium
-     - Add terminal integration tests for rootfs setup failure/retry, working-directory mapping, compiler exposure, and PTY/service lifecycle
+     - Extend the terminal portal (``docs`` content source, richer ``switch`` handling, output history)
    * - Medium
      - Improve log export and compile result history
    * - Medium
@@ -853,10 +704,10 @@ The editor passes a filesystem path, not a persisted SAF capability. ``SandboxEn
 
 
 
-12. Conclusion
+11. Conclusion
 --------------
 
-PawnMC is a mobile-first Android compiler tool for Pawn source files. The codebase is structured around a clear separation of concerns: Compose UI for interaction, ``data/`` for config, compiler, symbols and updates, and a C++ layer for actual compile execution. Xed supports a standalone file flow as well as explicit folder workspaces: the main-screen Browse File selection is the file Xed opens, standalone mode provides Save As, and workspace mode provides Save All across modified workspace documents. The editor also hosts a separate Ubuntu userspace shell under PRoot; its bootstrap, mounts, compiler hand-off, PTY lifecycle, storage boundaries, known setup-script hand-off check, and current follow-up work are documented below.
+PawnMC is a mobile-first Android compiler tool for Pawn source files. The codebase is structured around a clear separation of concerns: Compose UI for interaction, ``data/`` for config, compiler, symbols and updates, and a C++ layer for actual compile execution. PawnMC supports a standalone file flow as well as explicit folder workspaces: the main-screen Browse File selection is the file the editor opens, standalone mode provides Save As, and workspace mode provides Save All across modified workspace documents.
 
 The most relevant files to understand the project are:
 
@@ -893,16 +744,6 @@ The most relevant files to understand the project are:
      - Workspace trees, open documents, search/replace
    * - app/src/main/java/com/rvdjv/pawnmc/interface/editor/portal/DeveloperPortal.kt
      - Editor command portal, tokenization and workspace-confined ``pawncc`` command validation
-   * - terminal/app/src/main/java/com/pawnmc/terminal/TerminalOverlay.kt
-     - The editor's interactive Ubuntu/PRoot terminal overlay and setup-to-session handoff
-   * - terminal/app/src/main/java/com/pawnmc/terminal/shell/TerminalService.kt
-     - PTY-backed shell session ownership, PRoot launch and selected compiler resolution
-   * - terminal/app/src/main/assets/terminal/sandbox.sh
-     - PRoot rootfs configuration, Android bind mounts and guest shell launch
-   * - terminal/app/src/main/assets/terminal/setup.sh
-     - Rootfs validation/extraction, Ubuntu setup and installation marker lifecycle
-   * - terminal/app/src/main/java/com/pawnmc/terminal/core/SandboxEnvironment.kt
-     - Host-to-guest environment and initial working-directory contract
    * - app/src/main/java/com/rvdjv/pawnmc/interface/settings/Screen.kt
      - Settings and update actions
    * - app/src/main/java/com/rvdjv/pawnmc/data/update/UpdateManager.kt
@@ -921,4 +762,4 @@ The most relevant files to understand the project are:
 
 
 
-This roadmap reflects the repository and implementation reviewed for the current development update. Treat source files and tests as authoritative when implementation changes; keep the sandbox workflow and boundary documentation in sync whenever its bootstrap, mount list, rootfs, ABI support, shell startup, or service lifecycle changes.
+This roadmap reflects the repository and implementation reviewed for the current development update. Treat source files and tests as authoritative when implementation changes; keep this document in sync whenever modules, features, or file layout change.
