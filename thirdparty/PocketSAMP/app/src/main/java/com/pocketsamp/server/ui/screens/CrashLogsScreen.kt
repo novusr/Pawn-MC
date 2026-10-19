@@ -369,6 +369,7 @@ private fun CrashHistoryList(
                             maxLines = 2
                         )
                     }
+                }
             }
         }
     }
