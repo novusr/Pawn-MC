@@ -69,27 +69,31 @@ val md_theme_light_error = Color(0xFFBA1A1A)
 val md_theme_light_onError = Color(0xFFFFFFFF)
 val md_theme_light_errorContainer = Color(0xFFFFDAD6)
 val md_theme_light_onErrorContainer = Color(0xFF410002)
-// The light scheme used to be flat (background == surface, almost-white surfaceVariant),
-// which made cards, toolbars, tonal buttons and the editor blend into one bright mass.
-// It now follows a real elevation ramp: the page is slightly tinted, surfaces are
-// brighter, and containers step down in tone from Lowest to Highest.
-val md_theme_light_background = Color(0xFFF3EDF7)
-val md_theme_light_onBackground = Color(0xFF1C1829)
-val md_theme_light_surface = Color(0xFFFBF8FF)
-val md_theme_light_onSurface = Color(0xFF1C1829)
-val md_theme_light_surfaceVariant = Color(0xFFE4DDEA)
-val md_theme_light_onSurfaceVariant = Color(0xFF575163)
+// The light scheme was originally flat (background == surface, almost-white
+// surfaceVariant). It then became a normal light elevation ramp; as of the current
+// design it follows the dark scheme instead: the page background and every
+// container/box surface (compiler output box, file-picker box, editor, and
+// everything else the app configures) use the same dark semi-violet tonal ramp as
+// the dark theme. Light mode is now effectively the dark semi-violet palette while
+// remaining a distinct selectable theme, so choosing light vs. dark no longer
+// changes the look of boxes — both themes render them in dark semi-violet.
+val md_theme_light_background = Color(0xFF110D1C)
+val md_theme_light_onBackground = Color(0xFFE4DDF7)
+val md_theme_light_surface = Color(0xFF151021)
+val md_theme_light_onSurface = Color(0xFFE4DDF7)
+val md_theme_light_surfaceVariant = Color(0xFF1C1630)
+val md_theme_light_onSurfaceVariant = Color(0xFF9E95BB)
 val md_theme_light_outline = Color(0xFF7A7488)
-val md_theme_light_outlineVariant = Color(0xFFCDC6D6)
-val md_theme_light_surfaceDim = Color(0xFFDCD5E1)
-val md_theme_light_surfaceBright = Color(0xFFFBF8FF)
-val md_theme_light_surfaceContainerLowest = Color(0xFFFFFFFF)
-val md_theme_light_surfaceContainerLow = Color(0xFFFBF8FF)
-val md_theme_light_surfaceContainer = Color(0xFFF6F1F9)
-val md_theme_light_surfaceContainerHigh = Color(0xFFF1EBF4)
-val md_theme_light_surfaceContainerHighest = Color(0xFFEAE3EF)
-val md_theme_light_surfaceTint = Color(0xFF6D4DB8)
+val md_theme_light_outlineVariant = Color(0xFF292143)
+val md_theme_light_surfaceDim = Color(0xFF110D1C)
+val md_theme_light_surfaceBright = Color(0xFF272038)
+val md_theme_light_surfaceContainerLowest = Color(0xFF0C0915)
+val md_theme_light_surfaceContainerLow = Color(0xFF151021)
+val md_theme_light_surfaceContainer = Color(0xFF1A142B)
+val md_theme_light_surfaceContainerHigh = Color(0xFF211A35)
+val md_theme_light_surfaceContainerHighest = Color(0xFF28203F)
+val md_theme_light_surfaceTint = Color(0xFFC3ADFF)
 val md_theme_light_scrim = Color(0xFF000000)
-val md_theme_light_inverseSurface = Color(0xFF322C3F)
-val md_theme_light_inverseOnSurface = Color(0xFFF5EFF8)
-val md_theme_light_inversePrimary = Color(0xFFCFBCFF)
+val md_theme_light_inverseSurface = Color(0xFFE4DDF7)
+val md_theme_light_inverseOnSurface = Color(0xFF211C30)
+val md_theme_light_inversePrimary = Color(0xFF5B3FA8)

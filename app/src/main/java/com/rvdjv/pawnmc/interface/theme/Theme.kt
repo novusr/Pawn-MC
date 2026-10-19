@@ -129,7 +129,13 @@ fun PawnMCTheme(
             // supports, where edge-to-edge is not the default.
             @Suppress("DEPRECATION")
             window.statusBarColor = colorScheme.surfaceContainer.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            // Both schemes now render containers in the same dark semi-violet
+            // palette, so the bar background is dark in either theme and the
+            // bar icons must stay light. Derive the flag from the actual bar
+            // colour's luminance instead of the light/dark theme flag.
+            val barColor = colorScheme.surfaceContainer
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars =
+                (0.299 * barColor.red + 0.587 * barColor.green + 0.114 * barColor.blue) > 0.5f
         }
     }
 

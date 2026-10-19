@@ -91,6 +91,7 @@ object Runner {
             Log.i("Compiler", "Auto-assist: enabling Explain output after $CONSECUTIVE_FAILURES consecutive failures")
             n_config.n_explain_output = true
             n_config.n_explain_auto = true
+            n_config.n_explain_auto_oneshot = true
         }
 
         if (!n_config.n_ignore_case && CANNOT_READ_FROM_FILE_REGEX.containsMatchIn(output)) {
@@ -298,7 +299,7 @@ object Runner {
         // annotation runs and the switch is dropped again afterwards — the
         // mirrored `n_explain_output` keeps whatever the user set in Settings.
         val n_config = CompilerConfig.getInstanceOrNull()
-        if (n_config?.n_explain_auto == true) {
+        if (n_config?.n_explain_auto == true && !n_config.n_explain_output) {
             Log.i("Compiler", "Auto-assist: dropping the temporary Explain output instruction")
             n_config.n_explain_output = false
             n_config.n_explain_auto = false
