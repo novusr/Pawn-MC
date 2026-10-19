@@ -19,15 +19,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.BatteryAlert
-import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -114,7 +108,7 @@ fun DashboardScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgDark)
+            .background(SampThemeColors.bg)
             .padding(16.dp)
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -132,7 +126,7 @@ fun DashboardScreen(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = t("back.to.pawnmc"),
-                        tint = TextPrimary
+                        tint = SampThemeColors.textPrimary
                     )
                 }
                 Column {
@@ -140,22 +134,22 @@ fun DashboardScreen(
                         text = "PocketSAMP",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = SampThemeColors.textPrimary
                     )
                     Text(
                         text = t("tagline"),
                         fontSize = 12.sp,
-                        color = TextSecondary
+                        color = SampThemeColors.textSecondary
                     )
                 }
             }
 
             // Status Indicator Pill
             val (statusText, statusColor) = when (status) {
-                ServerStatus.RUNNING -> t("status.online") to StatusGreen
-                ServerStatus.STARTING, ServerStatus.INITIALIZING -> t("status.starting") to AccentOrange
-                ServerStatus.STOPPING -> t("status.stopping") to AccentOrange
-                ServerStatus.STOPPED -> t("status.offline") to StatusRed
+                ServerStatus.RUNNING -> t("status.online") to SampThemeColors.success
+                ServerStatus.STARTING, ServerStatus.INITIALIZING -> t("status.starting") to SampThemeColors.warn
+                ServerStatus.STOPPING -> t("status.stopping") to SampThemeColors.warn
+                ServerStatus.STOPPED -> t("status.offline") to SampThemeColors.danger
             }
 
             Row(
@@ -184,7 +178,7 @@ fun DashboardScreen(
         // Server Address Card (Dual Localhost & LAN Wi-Fi)
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+            colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
@@ -195,7 +189,7 @@ fun DashboardScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(AccentCyan.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
+                        .background(SampThemeColors.accent.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
                         .padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
@@ -208,17 +202,11 @@ fun DashboardScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Bolt,
-                                contentDescription = null,
-                                tint = AccentCyan,
-                                modifier = Modifier.size(18.dp)
-                            )
                             Text(
                                 text = t("dash.local.title"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = AccentCyan
+                                color = SampThemeColors.accent
                             )
                         }
 
@@ -234,7 +222,7 @@ fun DashboardScreen(
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
                                 contentDescription = "Copy Localhost IP",
-                                tint = AccentCyan,
+                                tint = SampThemeColors.accent,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -245,13 +233,13 @@ fun DashboardScreen(
                         fontSize = 20.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = SampThemeColors.textPrimary
                     )
 
                     Text(
                         text = t("dash.local.note"),
                         fontSize = 11.sp,
-                        color = TextSecondary
+                        color = SampThemeColors.textSecondary
                     )
                 }
 
@@ -269,17 +257,11 @@ fun DashboardScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Wifi,
-                                contentDescription = null,
-                                tint = TextSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
                             Text(
                                 text = t("dash.lan.title"),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextSecondary
+                                color = SampThemeColors.textSecondary
                             )
                         }
 
@@ -295,7 +277,7 @@ fun DashboardScreen(
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
                                 contentDescription = "Copy LAN IP",
-                                tint = TextSecondary,
+                                tint = SampThemeColors.textSecondary,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -306,13 +288,13 @@ fun DashboardScreen(
                         fontSize = 16.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
+                        color = SampThemeColors.textPrimary
                     )
 
                     Text(
                         text = t("dash.lan.note"),
                         fontSize = 11.sp,
-                        color = TextMuted
+                        color = SampThemeColors.textMuted
                     )
                 }
             }
@@ -321,7 +303,7 @@ fun DashboardScreen(
         // Database Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+            colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
             shape = RoundedCornerShape(16.dp)
         ) {
             Row(
@@ -335,30 +317,24 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Storage,
-                        contentDescription = "MySQL",
-                        tint = AccentOrange,
-                        modifier = Modifier.size(24.dp)
-                    )
                     Column {
                         Text(
                             text = "MariaDB (MySQL 5.7/8.0 Wire)",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = TextPrimary
+                            color = SampThemeColors.textPrimary
                         )
                         Text(
                             text = if (isDbRunning) "127.0.0.1:3306 (Active)" else "Stopped",
                             fontSize = 12.sp,
                             fontFamily = FontFamily.Monospace,
-                            color = if (isDbRunning) StatusGreen else TextMuted
+                            color = if (isDbRunning) SampThemeColors.success else SampThemeColors.textMuted
                         )
                     }
                 }
 
                 val dbStatusText = if (isDbRunning) t("db.running") else t("status.offline")
-                val dbColor = if (isDbRunning) StatusGreen else StatusRed
+                val dbColor = if (isDbRunning) SampThemeColors.success else SampThemeColors.danger
 
                 Text(
                     text = dbStatusText,
@@ -392,9 +368,9 @@ fun DashboardScreen(
         if (!hasStoragePermission) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = AccentOrange.copy(alpha = 0.12f)),
+                colors = CardDefaults.cardColors(containerColor = SampThemeColors.warn.copy(alpha = 0.12f)),
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, AccentOrange)
+                border = BorderStroke(1.dp, SampThemeColors.warn)
             ) {
                 Column(
                     modifier = Modifier.padding(14.dp),
@@ -404,24 +380,18 @@ fun DashboardScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Security,
-                            contentDescription = null,
-                            tint = AccentOrange,
-                            modifier = Modifier.size(20.dp)
-                        )
                         Text(
                             text = t("perm.file.title"),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = AccentOrange
+                            color = SampThemeColors.warn
                         )
                     }
 
                     Text(
                         text = t("perm.file.desc"),
                         fontSize = 11.sp,
-                        color = TextPrimary
+                        color = SampThemeColors.textPrimary
                     )
 
                     Button(
@@ -432,7 +402,7 @@ fun DashboardScreen(
                                 Toast.makeText(context, t("perm.file.settings"), Toast.LENGTH_LONG).show()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentOrange, contentColor = Color.Black),
+                        colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.warn, contentColor = SampThemeColors.bg),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -448,9 +418,9 @@ fun DashboardScreen(
         if (!isBatteryOptIgnored) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = AccentCyan.copy(alpha = 0.12f)),
+                colors = CardDefaults.cardColors(containerColor = SampThemeColors.accent.copy(alpha = 0.12f)),
                 shape = RoundedCornerShape(16.dp),
-                border = BorderStroke(1.dp, AccentCyan)
+                border = BorderStroke(1.dp, SampThemeColors.accent)
             ) {
                 Column(
                     modifier = Modifier.padding(14.dp),
@@ -460,24 +430,18 @@ fun DashboardScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Bolt,
-                            contentDescription = null,
-                            tint = AccentCyan,
-                            modifier = Modifier.size(20.dp)
-                        )
                         Text(
                             text = t("perm.battery.title"),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = AccentCyan
+                            color = SampThemeColors.accent
                         )
                     }
 
                     Text(
                         text = t("perm.battery.desc"),
                         fontSize = 11.sp,
-                        color = TextPrimary
+                        color = SampThemeColors.textPrimary
                     )
 
                     Button(
@@ -492,7 +456,7 @@ fun DashboardScreen(
                                 context.startActivity(intent)
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan, contentColor = BgDark),
+                        colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -508,9 +472,9 @@ fun DashboardScreen(
         var showAntiDcGuide by remember { mutableStateOf(false) }
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+            colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
             shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(1.dp, if (showAntiDcGuide) AccentCyan else SurfaceCardBorder)
+            border = BorderStroke(1.dp, if (showAntiDcGuide) SampThemeColors.accent else SampThemeColors.cardBorder)
         ) {
             Column(
                 modifier = Modifier.padding(14.dp),
@@ -525,24 +489,18 @@ fun DashboardScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Security,
-                            contentDescription = null,
-                            tint = AccentCyan,
-                            modifier = Modifier.size(20.dp)
-                        )
                         Text(
                             text = t("guide.antidc.title"),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = SampThemeColors.textPrimary
                         )
                     }
 
                     TextButton(onClick = { showAntiDcGuide = !showAntiDcGuide }) {
                         Text(
                             text = if (showAntiDcGuide) t("perm.close") else t("perm.guide"),
-                            color = AccentCyan,
+                            color = SampThemeColors.accent,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -553,7 +511,7 @@ fun DashboardScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(BgDark.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                            .background(SampThemeColors.bg.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
                             .padding(10.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
@@ -561,43 +519,43 @@ fun DashboardScreen(
                             text = t("guide.antidc.step1"),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = AccentCyan
+                            color = SampThemeColors.accent
                         )
                         Text(
                             text = t("guide.antidc.step1.desc"),
                             fontSize = 11.sp,
-                            color = TextSecondary
+                            color = SampThemeColors.textSecondary
                         )
 
                         Text(
                             text = t("guide.antidc.step2"),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = AccentCyan
+                            color = SampThemeColors.accent
                         )
                         Text(
                             text = t("guide.antidc.step2.desc"),
                             fontSize = 11.sp,
-                            color = TextSecondary
+                            color = SampThemeColors.textSecondary
                         )
 
                         Text(
                             text = t("guide.antidc.step3"),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = AccentCyan
+                            color = SampThemeColors.accent
                         )
                         Text(
                             text = t("guide.antidc.step3.desc"),
                             fontSize = 11.sp,
-                            color = TextSecondary
+                            color = SampThemeColors.textSecondary
                         )
                     }
                 } else {
                     Text(
                         text = t("guide.antidc.short"),
                         fontSize = 11.sp,
-                        color = TextMuted
+                        color = SampThemeColors.textMuted
                     )
                 }
             }
@@ -608,7 +566,7 @@ fun DashboardScreen(
 
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+            colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
@@ -624,22 +582,16 @@ fun DashboardScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.FolderOpen,
-                            contentDescription = t("folder.gamemode"),
-                            tint = AccentCyan,
-                            modifier = Modifier.size(20.dp)
-                        )
                         Text(
                             text = t("folder.gamemode") + " SA-MP",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = TextSecondary
+                            color = SampThemeColors.textSecondary
                         )
                     }
 
-                    val badgeColor = if (hasCfg) StatusGreen else AccentOrange
-                    val badgeText = if (hasCfg) "server.cfg OK" else "server.cfg ?"
+                    val badgeColor = if (hasCfg) SampThemeColors.success else SampThemeColors.warn
+                    val badgeText = if (hasCfg) "server.cfg OK" else "server.cfg"
                     Text(
                         text = badgeText,
                         fontSize = 10.sp,
@@ -661,7 +613,7 @@ fun DashboardScreen(
                         text = currentServerDir.absolutePath,
                         fontSize = 12.sp,
                         fontFamily = FontFamily.Monospace,
-                        color = TextPrimary,
+                        color = SampThemeColors.textPrimary,
                         modifier = Modifier.weight(1f)
                     )
                     IconButton(
@@ -676,7 +628,7 @@ fun DashboardScreen(
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
                             contentDescription = "Copy Path",
-                            tint = AccentCyan,
+                            tint = SampThemeColors.accent,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -688,14 +640,12 @@ fun DashboardScreen(
                 ) {
                     Button(
                         onClick = { folderPickerLauncher.launch(null) },
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan, contentColor = BgDark),
+                        colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier
                             .weight(1f)
                             .height(38.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
                         Text(text = t("folder.pick"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
@@ -704,7 +654,7 @@ fun DashboardScreen(
                             currentServerDir = ServerDirectoryManager.resetToDefaultDirectory(context)
                             Toast.makeText(context, t("folder.reset.done"), Toast.LENGTH_SHORT).show()
                         },
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = SampThemeColors.textSecondary),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.height(38.dp)
                     ) {
@@ -715,7 +665,7 @@ fun DashboardScreen(
                 Text(
                     text = if (hasCfg) t("folder.has.cfg") else t("folder.no.cfg"),
                     fontSize = 11.sp,
-                    color = if (hasCfg) TextMuted else AccentOrange
+                    color = if (hasCfg) SampThemeColors.textMuted else SampThemeColors.warn
                 )
             }
         }
@@ -736,14 +686,14 @@ fun DashboardScreen(
                 .height(56.dp),
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isRunning) StatusRed else AccentCyan,
-                contentColor = if (isRunning) Color.White else BgDark
+                containerColor = if (isRunning) SampThemeColors.danger else SampThemeColors.accent,
+                contentColor = if (isRunning) Color.White else SampThemeColors.bg
             )
         ) {
             if (isBusy) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
-                    color = TextPrimary,
+                    color = SampThemeColors.textPrimary,
                     strokeWidth = 2.dp
                 )
             } else {
@@ -772,7 +722,7 @@ private fun SpecCard(
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+        colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
         shape = RoundedCornerShape(14.dp)
     ) {
         Column(
@@ -783,18 +733,18 @@ private fun SpecCard(
                 text = title,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextSecondary
+                color = SampThemeColors.textSecondary
             )
             Text(
                 text = value,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = AccentCyan
+                color = SampThemeColors.accent
             )
             Text(
                 text = subtext,
                 fontSize = 11.sp,
-                color = TextMuted
+                color = SampThemeColors.textMuted
             )
         }
     }

@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -25,8 +27,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.pocketsamp.server.db.DatabaseManager
 import com.pocketsamp.server.db.QueryResult
 import com.pocketsamp.server.ui.theme.*
@@ -48,6 +52,10 @@ fun DatabaseScreen(
     var queryResult by remember { mutableStateOf<QueryResult?>(null) }
     var isExecuting by remember { mutableStateOf(false) }
 
+    var showCreateDialog by remember { mutableStateOf(false) }
+    var newDbName by remember { mutableStateOf(TextFieldValue("")) }
+    var isCreating by remember { mutableStateOf(false) }
+
     fun refreshDbs() {
         if (!isDbRunning) return
         scope.launch {
@@ -67,7 +75,8 @@ fun DatabaseScreen(
         }
     }
 
-    // SQL File Import Launcher
+    // SQL File Import Launcher (exposed for the Database tab's import flow;
+    // invoked by the query toolbar's import action when a database is selected)
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -94,7 +103,7 @@ fun DatabaseScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgDark)
+            .background(SampThemeColors.bg)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
@@ -109,33 +118,35 @@ fun DatabaseScreen(
                     text = "Database Manager",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = SampThemeColors.textPrimary
                 )
                 Text(
                     text = if (isDbRunning) "Connected: 127.0.0.1:3306 (root)" else "Database server is offline",
                     fontSize = 12.sp,
-                    color = if (isDbRunning) StatusGreen else StatusRed
+                    color = if (isDbRunning) SampThemeColors.success else SampThemeColors.danger
                 )
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Import .sql Button
+                // Import SQL file: opens the system document picker so the chosen
+                // .sql script is imported into the selected database. It was a
+                // dead button before; the launcher above is only wired through
+                // here, which is what made it feel unresponsive.
                 IconButton(
-                    onClick = { importLauncher.launch(arrayOf("application/sql", "text/plain", "*/*")) },
+                    onClick = { importLauncher.launch(arrayOf("text/plain", "application/sql", "text/x-sql", "application/octet-stream")) },
                     enabled = isDbRunning,
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(SurfaceCard)
+                        .background(SampThemeColors.card)
                 ) {
                     Icon(
                         imageVector = Icons.Default.FileOpen,
-                        contentDescription = "Import .sql",
-                        tint = AccentOrange,
+                        contentDescription = "Import SQL file",
+                        tint = SampThemeColors.accent,
                         modifier = Modifier.size(18.dp)
                     )
                 }
-
                 // Refresh Button
                 IconButton(
                     onClick = { refreshDbs() },
@@ -143,12 +154,12 @@ fun DatabaseScreen(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(SurfaceCard)
+                        .background(SampThemeColors.card)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Refresh",
-                        tint = AccentCyan,
+                        tint = SampThemeColors.accent,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -160,14 +171,14 @@ fun DatabaseScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(SurfaceCard)
+                    .background(SampThemeColors.card)
                     .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Start the server on Dashboard to connect to MySQL database.",
                     fontSize = 13.sp,
-                    color = TextMuted
+                    color = SampThemeColors.textMuted
                 )
             }
         } else {
@@ -186,10 +197,39 @@ fun DatabaseScreen(
                         },
                         label = { Text(db, fontSize = 12.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = AccentCyan,
-                            selectedLabelColor = BgDark,
-                            containerColor = SurfaceCard,
-                            labelColor = TextPrimary
+                            selectedContainerColor = SampThemeColors.accent,
+                            selectedLabelColor = SampThemeColors.bg,
+                            containerColor = SampThemeColors.card,
+                            labelColor = SampThemeColors.textPrimary
+                        )
+                    )
+                }
+                // Create database: sits in the empty lane after the last chip so
+                // the empty area itself becomes the affordance, like the "add"
+                // entry at the end of the workspace chip row.
+                item {
+                    FilterChip(
+                        selected = false,
+                        onClick = { showCreateDialog = true },
+                        label = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = SampThemeColors.success,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = "New",
+                                    fontSize = 12.sp,
+                                    color = SampThemeColors.textPrimary,
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
+                            }
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = SampThemeColors.card,
+                            labelColor = SampThemeColors.textPrimary
                         )
                     )
                 }
@@ -204,7 +244,7 @@ fun DatabaseScreen(
                 textStyle = LocalTextStyle.current.copy(
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
-                    color = TextPrimary
+                    color = SampThemeColors.textPrimary
                 ),
                 maxLines = 3,
                 trailingIcon = {
@@ -224,16 +264,16 @@ fun DatabaseScreen(
                             Icon(
                                 imageVector = Icons.Default.PlayArrow,
                                 contentDescription = "Run",
-                                tint = AccentCyan
+                                tint = SampThemeColors.accent
                             )
                         }
                     }
                 },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = AccentCyan,
-                    unfocusedBorderColor = SurfaceCardBorder,
-                    focusedContainerColor = SurfaceCard,
-                    unfocusedContainerColor = SurfaceCard
+                    focusedBorderColor = SampThemeColors.accent,
+                    unfocusedBorderColor = SampThemeColors.cardBorder,
+                    focusedContainerColor = SampThemeColors.card,
+                    unfocusedContainerColor = SampThemeColors.card
                 ),
                 shape = RoundedCornerShape(12.dp)
             )
@@ -243,14 +283,14 @@ fun DatabaseScreen(
                 if (result.error != null) {
                     Text(
                         text = "Error: ${result.error}",
-                        color = StatusRed,
+                        color = SampThemeColors.danger,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp
                     )
                 } else if (!result.isSelect) {
                     Text(
                         text = "Query OK, ${result.affectedRows} rows affected.",
-                        color = StatusGreen,
+                        color = SampThemeColors.success,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp
                     )
@@ -260,7 +300,7 @@ fun DatabaseScreen(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF07080B))
+                            .background(SampThemeColors.terminal)
                             .horizontalScroll(rememberScrollState())
                             .padding(8.dp)
                     ) {
@@ -274,12 +314,12 @@ fun DatabaseScreen(
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 11.sp,
                                             fontFamily = FontFamily.Monospace,
-                                            color = AccentCyan,
+                                            color = SampThemeColors.accent,
                                             modifier = Modifier.widthIn(min = 80.dp)
                                         )
                                     }
                                 }
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = SurfaceCardBorder)
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = SampThemeColors.cardBorder)
                             }
 
                             // Rows
@@ -290,7 +330,7 @@ fun DatabaseScreen(
                                             text = cell,
                                             fontSize = 11.sp,
                                             fontFamily = FontFamily.Monospace,
-                                            color = TextSecondary,
+                                            color = SampThemeColors.textSecondary,
                                             modifier = Modifier.widthIn(min = 80.dp)
                                         )
                                     }
@@ -301,5 +341,76 @@ fun DatabaseScreen(
                 }
             }
         }
+    }
+
+    // Create Database dialog: the "+ New" chip opens it; the name goes straight
+    // to MariaDB's CREATE DATABASE so the new database appears in the chip row
+    // and can be selected immediately.
+    if (showCreateDialog) {
+        AlertDialog(
+            onDismissRequest = { showCreateDialog = false },
+            containerColor = SampThemeColors.card,
+            titleContentColor = SampThemeColors.textPrimary,
+            textContentColor = SampThemeColors.textSecondary,
+            title = { Text("New Database", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(
+                        text = "The database is created on the running MariaDB server (letters, digits and underscores only).",
+                        fontSize = 12.sp,
+                        color = SampThemeColors.textSecondary
+                    )
+                    OutlinedTextField(
+                        value = newDbName,
+                        onValueChange = { newDbName = it },
+                        singleLine = true,
+                        label = { Text("Database name", fontSize = 12.sp) },
+                        textStyle = LocalTextStyle.current.copy(
+                            fontSize = 13.sp,
+                            color = SampThemeColors.textPrimary
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = SampThemeColors.accent,
+                            unfocusedBorderColor = SampThemeColors.cardBorder,
+                            focusedContainerColor = SampThemeColors.bg,
+                            unfocusedContainerColor = SampThemeColors.bg
+                        ),
+                        shape = RoundedCornerShape(10.dp)
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val name = newDbName.text.trim()
+                        if (name.isEmpty() || isCreating) return@TextButton
+                        scope.launch {
+                            isCreating = true
+                            val (success, msg) = dbManager.createDatabase(name)
+                            isCreating = false
+                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                            if (success) {
+                                selectedDb = name
+                                refreshDbs()
+                                showCreateDialog = false
+                                newDbName = TextFieldValue("")
+                            }
+                        }
+                    },
+                    enabled = newDbName.text.isNotBlank() && !isCreating
+                ) {
+                    if (isCreating) {
+                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                    } else {
+                        Text("Create", color = SampThemeColors.accent, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCreateDialog = false }) {
+                    Text("Cancel", color = SampThemeColors.textSecondary)
+                }
+            }
+        )
     }
 }

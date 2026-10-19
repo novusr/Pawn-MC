@@ -299,11 +299,11 @@ object _Icons {
     }
 
     /**
-     * Wi-Fi signal icon used by the floating compile button of the editor.
+     * Hotspot icon used by the floating compile button of the editor.
      *
-     * Three nested arcs plus the dot at the bottom-left form the familiar signal
-     * glyph. Each arc is a stroked ring segment, so the icon stays light in weight
-     * next to the filled Material glyphs it replaces.
+     * A solid dot in the middle with two concentric stroked arcs wrapping around
+     * it — the tethering / hotspot glyph. Each arc is a stroked ring segment, so
+     * the icon stays light in weight next to the filled Material glyphs.
      */
     val WifiSignal: ImageVector by lazy {
         ImageVector.Builder(
@@ -313,24 +313,22 @@ object _Icons {
             viewportWidth = 24f,
             viewportHeight = 24f
         ).apply {
-            // Stroked arcs, drawn from the left to the right so the fan opens towards
-            // the top-right, exactly like the platform Wi-Fi glyph. Cubic curves are
-            // used because PathBuilder has no quadratic helper.
+            // Stroked arcs, drawn as full horizontal curves wrapping the centre dot
+            // like a hotspot beacon. Cubic curves are used because PathBuilder has
+            // no quadratic helper.
             path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.9f, strokeLineCap = StrokeCap.Round) {
-                moveTo(8.6f, 12.4f)
-                curveTo(10.1f, 10.9f, 13.9f, 10.9f, 15.4f, 12.4f)
+                moveTo(7.2f, 13.2f)
+                curveTo(7.2f, 10.9f, 9.4f, 9.1f, 12f, 9.1f)
+                curveTo(14.6f, 9.1f, 16.8f, 10.9f, 16.8f, 13.2f)
             }
             path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.9f, strokeLineCap = StrokeCap.Round) {
-                moveTo(5.9f, 9.5f)
-                curveTo(8.6f, 6.8f, 15.4f, 6.8f, 18.1f, 9.5f)
+                moveTo(3.4f, 13.2f)
+                curveTo(3.4f, 8.8f, 7.2f, 5.2f, 12f, 5.2f)
+                curveTo(16.8f, 5.2f, 20.6f, 8.8f, 20.6f, 13.2f)
             }
-            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.9f, strokeLineCap = StrokeCap.Round) {
-                moveTo(3.2f, 6.6f)
-                curveTo(7.4f, 2.4f, 16.6f, 2.4f, 20.8f, 6.6f)
-            }
-            // Solid dot: the emitter of the signal.
+            // Solid dot: the hotspot emitter in the middle.
             path(fill = SolidColor(Color.Black)) {
-                circle(cx = 8.7f, cy = 16.4f, r = 2.0f)
+                circle(cx = 12f, cy = 13.2f, r = 2.2f)
             }
         }.build()
     }

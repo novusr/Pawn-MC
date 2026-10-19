@@ -10,8 +10,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.pocketsamp.server.PocketSampActivity
 import com.pocketsamp.server.ui.screens.CrashLogsScreen
-import com.pocketsamp.server.ui.theme.BgDark
 import com.pocketsamp.server.ui.theme.PocketSAMPTheme
+import com.pocketsamp.server.ui.theme.SampThemeColors
 
 class CrashActivity : ComponentActivity() {
 
@@ -24,7 +24,7 @@ class CrashActivity : ComponentActivity() {
             PocketSAMPTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = BgDark
+                    color = SampThemeColors.bg
                 ) {
                     CrashLogsScreen(
                         initialCrashId = crashId,

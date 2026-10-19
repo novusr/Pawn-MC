@@ -10,18 +10,31 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.pocketsamp.server.db.DatabaseManager
 import com.pocketsamp.server.service.ServerForegroundService
@@ -38,7 +51,7 @@ enum class AppTab(val label: String, val icon: ImageVector) {
     CONSOLE("Console", Icons.Default.Terminal),
     DATABASE("Database", Icons.Default.Storage),
     CRASHES("Crash Logs", Icons.Default.BugReport),
-    CONFIG("Config", Icons.Default.Settings)
+    CONFIG("Config", Icons.Default.Timer)
 }
 
 class PocketSampActivity : ComponentActivity() {
@@ -108,60 +121,84 @@ class PocketSampActivity : ComponentActivity() {
         val lanIp by ServerForegroundService.lanIp.collectAsState()
 
         Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            bottomBar = {
-                NavigationBar(
-                    containerColor = SurfaceDark,
-                    contentColor = TextPrimary
-                ) {
-                    AppTab.values().forEach { tab ->
-                        val selected = tab == currentTab
-                        NavigationBarItem(
-                            selected = selected,
-                            onClick = { currentTab = tab },
-                            icon = { Icon(imageVector = tab.icon, contentDescription = tab.label) },
-                            label = { Text(text = t("tab.${tab.name.lowercase()}")) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = AccentCyan,
-                                selectedTextColor = AccentCyan,
-                                unselectedIconColor = TextMuted,
-                                unselectedTextColor = TextMuted,
-                                indicatorColor = SurfaceCard
-                            )
-                        )
-                    }
-                }
-            }
+            modifier = Modifier.fillMaxSize()
         ) { paddingValues ->
-            Surface(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .background(BgDark)
+                    .background(SampThemeColors.bg)
             ) {
-                when (currentTab) {
-                    AppTab.DASHBOARD -> DashboardScreen(
-                        status = serverStatus,
-                        isDbRunning = isDbRunning,
-                        lanIp = lanIp,
-                        onStartServer = { startServerService() },
-                        onStopServer = { stopServerService() },
-                        lang = lang,
-                        onNavigateBack = {
-                            val callback = onNavigateBack
-                            if (callback != null) callback() else finish()
+                Surface(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    when (currentTab) {
+                        AppTab.DASHBOARD -> DashboardScreen(
+                            status = serverStatus,
+                            isDbRunning = isDbRunning,
+                            lanIp = lanIp,
+                            onStartServer = { startServerService() },
+                            onStopServer = { stopServerService() },
+                            lang = lang,
+                            onNavigateBack = {
+                                val callback = onNavigateBack
+                                if (callback != null) callback() else finish()
+                            }
+                        )
+                        AppTab.CONSOLE -> ConsoleScreen(
+                            logs = logs,
+                            onClearLogs = { ServerForegroundService.clearLogs() }
+                        )
+                        AppTab.DATABASE -> DatabaseScreen(
+                            dbManager = dbManager,
+                            isDbRunning = isDbRunning
+                        )
+                        AppTab.CRASHES -> CrashLogsScreen()
+                        AppTab.CONFIG -> ConfigScreen()
+                    }
+                }
+
+                // Floating tab rail, like the floating toolbar in the Xed editor:
+                // a rounded card pinned to the trailing edge above the bottom
+                // margin instead of a full-width bar eating the bottom of the
+                // screen. Labels appear only on the active tab.
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = 12.dp, bottom = 16.dp)
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(SampThemeColors.surface)
+                        .border(1.dp, SampThemeColors.card, RoundedCornerShape(20.dp))
+                        .padding(vertical = 6.dp, horizontal = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    AppTab.values().forEach { tab ->
+                        val selected = tab == currentTab
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (selected) SampThemeColors.card else Color.Transparent)
+                                .clickable { currentTab = tab }
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = tab.icon,
+                                contentDescription = tab.label,
+                                tint = if (selected) SampThemeColors.accent else SampThemeColors.textMuted
+                            )
+                            if (selected) {
+                                Text(
+                                    text = t("tab.${tab.name.lowercase()}"),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = SampThemeColors.accent
+                                )
+                            }
                         }
-                    )
-                    AppTab.CONSOLE -> ConsoleScreen(
-                        logs = logs,
-                        onClearLogs = { ServerForegroundService.clearLogs() }
-                    )
-                    AppTab.DATABASE -> DatabaseScreen(
-                        dbManager = dbManager,
-                        isDbRunning = isDbRunning
-                    )
-                    AppTab.CRASHES -> CrashLogsScreen()
-                    AppTab.CONFIG -> ConfigScreen()
+                    }
                 }
             }
         }

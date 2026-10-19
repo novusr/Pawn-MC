@@ -19,9 +19,25 @@ object PocketSampLocales {
     var current: Lang = Lang.EN
         private set
 
+    /**
+     * Theme mode of the running UI; the host (PawnMC) sets it at launch so the
+     * embedded interface follows the main app (LIGHT / DARK / SYSTEM).
+     * The dark look is the semi-violet ramp, exactly like PawnMC's dark theme.
+     */
+    enum class Theme { LIGHT, DARK, SYSTEM }
+
+    @Volatile
+    var theme: Theme = Theme.SYSTEM
+        private set
+
     /** Called by the host before [PocketSamp.launch] so the UI matches the PawnMC setting. */
     fun setLanguage(lang: Lang) {
         current = lang
+    }
+
+    /** Called by the host before [PocketSamp.launch] so the UI follows the PawnMC theme. */
+    fun setTheme(mode: Theme) {
+        theme = mode
     }
 
     /** Convenience lookup for composables that did not receive a lang parameter. */
@@ -125,10 +141,10 @@ object PocketSampLocales {
             Lang.RU to "Решения для устройства",
         ),
         "folder.pick" to mapOf(
-            Lang.ID to "Pilih Folder",
-            Lang.EN to "Pick folder",
-            Lang.ES to "Elegir carpeta",
-            Lang.RU to "Выбрать папку",
+            Lang.ID to "Pilih...",
+            Lang.EN to "Pick...",
+            Lang.ES to "Elegir...",
+            Lang.RU to "Выбрать...",
         ),
         "folder.reset" to mapOf(
             Lang.ID to "Reset Default",
@@ -143,10 +159,10 @@ object PocketSampLocales {
             Lang.RU to "Сброшено на значение PocketSAMP",
         ),
         "folder.gamemode" to mapOf(
-            Lang.ID to "Folder Gamemode",
-            Lang.EN to "Gamemode folder",
-            Lang.ES to "Carpeta de gamemode",
-            Lang.RU to "Папка gamemode",
+            Lang.ID to "Pilih... Folder Gamemode SA-MP",
+            Lang.EN to "Pick... SA-MP Gamemode Folder",
+            Lang.ES to "Elegir... Carpeta de Gamemode SA-MP",
+            Lang.RU to "Выбрать... Папку Gamemode SA-MP",
         ),
         "tab.dashboard" to mapOf(
             Lang.ID to "Dasbor",
@@ -270,10 +286,10 @@ object PocketSampLocales {
         ),
         // --- strings that used to be hardcoded in Indonesian on the dashboard ------
         "folder.changed" to mapOf(
-            Lang.ID to "Folder gamemode diubah ke",
-            Lang.EN to "Gamemode folder changed to",
-            Lang.ES to "Carpeta de gamemode cambiada a",
-            Lang.RU to "Папка gamemode изменена на",
+            Lang.ID to "Pilih... folder gamemode diubah ke",
+            Lang.EN to "Pick... gamemode folder changed to",
+            Lang.ES to "Elegir... carpeta de gamemode cambiada a",
+            Lang.RU to "Выбрать... папка gamemode изменена на",
         ),
         "folder.pick.failed" to mapOf(
             Lang.ID to "Gagal mendapatkan path folder yang dipilih.",

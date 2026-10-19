@@ -68,7 +68,10 @@ object Runner {
      *
      *  - After [AUTO_EXPLAIN_FAILURE_THRESHOLD] failures in a row the
      *    "Explain output" switch is enabled, so the next output is annotated with
-     *    the plain-language hints. It stays on until the user turns it off.
+     *    the plain-language hints. A switch-on driven by this automation is
+     *    one-shot: the compile that runs with it consumes [n_explain_auto] and
+     *    the switch is dropped again afterwards, so a user-set "Explain output"
+     *    stays on while an automatic one behaves like a temporary instruction.
      *  - When the failure reads `cannot read from file "path/..."` (a long path,
      *    i.e. an include reference with `/` or `\` in it), the "Ignore case"
      *    filesystem conversion is enabled for the next attempt. The one-shot
@@ -87,6 +90,7 @@ object Runner {
         if (CONSECUTIVE_FAILURES >= AUTO_EXPLAIN_FAILURE_THRESHOLD && !n_config.n_explain_output) {
             Log.i("Compiler", "Auto-assist: enabling Explain output after $CONSECUTIVE_FAILURES consecutive failures")
             n_config.n_explain_output = true
+            n_config.n_explain_auto = true
         }
 
         if (!n_config.n_ignore_case && CANNOT_READ_FROM_FILE_REGEX.containsMatchIn(output)) {
@@ -289,8 +293,18 @@ object Runner {
         // One-shot "Ignore case": if the previous failure turned it on
         // automatically, this compile is the one it was meant to help, so the
         // conversion runs and the switch is dropped again afterwards.
+        // One-shot "Explain output": if the previous failure turned it on
+        // automatically, this compile is the one it was meant to help, so the
+        // annotation runs and the switch is dropped again afterwards — the
+        // mirrored `n_explain_output` keeps whatever the user set in Settings.
         val n_config = CompilerConfig.getInstanceOrNull()
-        if (n_config?.n_ignore_case_auto == true) {
+        if (n_config?.n_explain_auto == true) {
+            Log.i("Compiler", "Auto-assist: dropping the temporary Explain output instruction")
+            n_config.n_explain_output = false
+            n_config.n_explain_auto = false
+        }
+
+        val n_args = if (manualArguments) {
             Log.i("Compiler", "Auto-assist: disabling the temporary Ignore case instruction")
             n_config.n_ignore_case = false
             n_config.n_ignore_case_auto = false

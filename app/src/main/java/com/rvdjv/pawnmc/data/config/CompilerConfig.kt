@@ -114,7 +114,7 @@ class CompilerConfig private constructor(context: Context) {
         }
 
     var n_explain_output: Boolean
-        get() = prefs.getBoolean(KEY_EXPLAIN_OUTPUT, false)
+        get() = prefs.getBoolean(KEY_EXPLAIN_OUTPUT, true)
         set(value) {
             prefs.edit { putBoolean(KEY_EXPLAIN_OUTPUT, value) }
             mirrorToFile()
@@ -209,6 +209,20 @@ class CompilerConfig private constructor(context: Context) {
     var n_ignore_case_auto: Boolean
         get() = prefs.getBoolean(KEY_IGNORE_CASE_AUTO, false)
         set(value) = prefs.edit { putBoolean(KEY_IGNORE_CASE_AUTO, value) }
+
+    /**
+     * Marks "Explain output" as having been switched on by the automatic
+     * consecutive-failure detection instead of by the user.
+     *
+     * The flag travels with [n_explain_output]: the compile that runs after the
+     * automatic switch-on consumes it and drops both the flag and the switch, so
+     * a user-set "Explain output" stays untouched while an automatic one behaves
+     * like a one-shot instruction. It is deliberately not mirrored to the JSON
+     * file — it only has to outlive a single failed compile.
+     */
+    var n_explain_auto: Boolean
+        get() = prefs.getBoolean(KEY_EXPLAIN_AUTO, false)
+        set(value) = prefs.edit { putBoolean(KEY_EXPLAIN_AUTO, value) }
 
     var lastSelectedFilePath: String?
         get() = n_last_selected_file_path
@@ -621,6 +635,7 @@ class CompilerConfig private constructor(context: Context) {
         internal const val KEY_LAST_FILE        = "last_sel_file"
         private const val KEY_CASE_BACKUP_DIR  = "case_insensitive_backup_dir"
         private const val KEY_IGNORE_CASE_AUTO = "ignore_case_auto"
+        private const val KEY_EXPLAIN_AUTO = "explain_output_auto"
         internal const val KEY_SEMICOLONS       = "semicolons"
         internal const val KEY_PARENTHESES      = "parentheses"
         internal const val KEY_CUSTOM_FLAGS     = "custom_flags"

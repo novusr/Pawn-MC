@@ -1148,17 +1148,13 @@ fun SettingsScreen(
             title = { Text(localizer.get("settings.theme.selector", appLanguage, "Select Theme")) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    CompilerConfig.AppTheme.entries.forEachIndexed { index, theme ->
+                    // Compact list, same slim rows as the language dialog.
+                    CompilerConfig.AppTheme.entries.forEach { theme ->
                         RadioButtonRow(
                             text = localizer.get(
                                 "settings.theme.option.${theme.value}.label",
                                 appLanguage,
                                 theme.label
-                            ),
-                            description = localizer.get(
-                                "settings.theme.option.${theme.value}.desc",
-                                appLanguage,
-                                theme.description
                             ),
                             selected = viewModel.n_app_theme == theme,
                             onClick = {
@@ -1166,14 +1162,6 @@ fun SettingsScreen(
                                 showThemeDialog = false
                             }
                         )
-
-                        if (index < CompilerConfig.AppTheme.entries.size - 1) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                thickness = 1.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                            )
-                        }
                     }
                 }
             },
@@ -1191,17 +1179,15 @@ fun SettingsScreen(
             title = { Text(localizer.get("settings.language.selector", appLanguage, "Select Language")) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    CompilerConfig.AppLanguage.entries.forEachIndexed { index, language ->
+                    // Compact list: each language is a single slim row (label + native
+                    // name only, no descriptions or dividers) so the dialog stays
+                    // small and scannable. Indonesian is part of the entries.
+                    CompilerConfig.AppLanguage.entries.forEach { language ->
                         RadioButtonRow(
                             text = localizer.get(
                                 "settings.language.option.${language.value}.label",
                                 appLanguage,
                                 language.label
-                            ),
-                            description = localizer.get(
-                                "settings.language.option.${language.value}.desc",
-                                appLanguage,
-                                language.description
                             ),
                             selected = viewModel.n_app_language == language,
                             onClick = {
@@ -1209,14 +1195,6 @@ fun SettingsScreen(
                                 showLanguageDialog = false
                             }
                         )
-
-                        if (index < CompilerConfig.AppLanguage.entries.size - 1) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                thickness = 1.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                            )
-                        }
                     }
                 }
             },
@@ -1323,17 +1301,12 @@ fun SettingsScreen(
             },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    CompilerConfig.CompilerVersion.entries.forEachIndexed { index, version ->
+                    CompilerConfig.CompilerVersion.entries.forEach { version ->
                         RadioButtonRow(
                             text = localizer.get(
                                 "settings.compiler.version.${version.value.filter(Char::isDigit)}.label",
                                 appLanguage,
                                 version.label
-                            ),
-                            description = localizer.get(
-                                "settings.compiler.version.${version.value.filter(Char::isDigit)}.desc",
-                                appLanguage,
-                                version.description
                             ),
                             selected = viewModel.n_compiler_version == version,
                             onClick = {
@@ -1345,14 +1318,6 @@ fun SettingsScreen(
                                 }
                             }
                         )
-
-                        if (index < CompilerConfig.CompilerVersion.entries.size - 1) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                thickness = 1.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                            )
-                        }
                     }
                 }
             },
@@ -1518,34 +1483,25 @@ fun RadioButtonRow(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    description: String? = null
+    @Suppress("UNUSED_PARAMETER") description: String? = null
 ) {
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         RadioButton(
             selected = selected,
             onClick = onClick
         )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            if (description != null) {
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 

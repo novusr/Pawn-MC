@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.main
+﻿package com.rvdjv.pawnmc.`interface`.main
 
 import android.Manifest
 import android.content.ClipData
@@ -126,7 +126,7 @@ internal val SpaceXL = 32.dp
 internal val CardShape = RoundedCornerShape(20.dp)
 internal val PillShape = RoundedCornerShape(28.dp)
 internal val ActionButtonHeight = 48.dp
-internal const val OUTPUT_PLACEHOLDER = "Ah shit, here we go again.\n"
+internal const val OUTPUT_PLACEHOLDER = "Ah, another project — a breath of fresh air everyone will inhale whether they asked for it or not.\n"
 internal val OutputPanelHeight = 240.dp
 internal fun shouldRestoreLastSelectedFile(workspaceAvailable: Boolean): Boolean = !workspaceAvailable
 
@@ -338,13 +338,22 @@ fun MainScreen(
     // top of this screen and returns here through its back handling, the same way
     // the Sora-based editor screen is hosted.
     fun openPocketSamp() {
-        // The embedded runtime speaks the language the PawnMC settings hold.
+        // The embedded runtime speaks the language the PawnMC settings hold and
+        // follows the same theme (light/dark/system); the dark look is the same
+        // semi-violet ramp as this interface.
         PocketSampLocales.setLanguage(
             when (appLanguage) {
                 CompilerConfig.AppLanguage.ID -> PocketSampLocales.Lang.ID
                 CompilerConfig.AppLanguage.ES -> PocketSampLocales.Lang.ES
                 CompilerConfig.AppLanguage.RU -> PocketSampLocales.Lang.RU
                 else -> PocketSampLocales.Lang.EN
+            }
+        )
+        PocketSampLocales.setTheme(
+            when (viewModel.n_app_theme) {
+                CompilerConfig.AppTheme.LIGHT -> PocketSampLocales.Theme.LIGHT
+                CompilerConfig.AppTheme.DARK -> PocketSampLocales.Theme.DARK
+                else -> PocketSampLocales.Theme.SYSTEM
             }
         )
         PocketSamp.launch(context)

@@ -205,7 +205,7 @@ internal object CompilerConfigFile {
             prefs.getInt(CompilerConfig.KEY_OPTIMIZATION, CompilerConfig.OptimizationLevel.O0.value),
         )
         root.put(CompilerConfig.KEY_IGNORE_CASE, prefs.getBoolean(CompilerConfig.KEY_IGNORE_CASE, false))
-        root.put(CompilerConfig.KEY_EXPLAIN_OUTPUT, prefs.getBoolean(CompilerConfig.KEY_EXPLAIN_OUTPUT, false))
+        root.put(CompilerConfig.KEY_EXPLAIN_OUTPUT, prefs.getBoolean(CompilerConfig.KEY_EXPLAIN_OUTPUT, true))
         root.put(CompilerConfig.KEY_SEMICOLONS, prefs.getBoolean(CompilerConfig.KEY_SEMICOLONS, true))
         root.put(CompilerConfig.KEY_PARENTHESES, prefs.getBoolean(CompilerConfig.KEY_PARENTHESES, true))
         root.put(CompilerConfig.KEY_CUSTOM_FLAGS, prefs.getString(CompilerConfig.KEY_CUSTOM_FLAGS, "") ?: "")

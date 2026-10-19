@@ -68,17 +68,17 @@ fun CrashLogsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgDark)
+            .background(SampThemeColors.bg)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Warning Banner
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = if (isCrashActivity) StatusRed.copy(alpha = 0.15f) else SurfaceCard),
+            colors = CardDefaults.cardColors(containerColor = if (isCrashActivity) SampThemeColors.danger.copy(alpha = 0.15f) else SampThemeColors.card),
             border = androidx.compose.foundation.BorderStroke(
                 1.dp,
-                if (isCrashActivity) StatusRed else SurfaceCardBorder
+                if (isCrashActivity) SampThemeColors.danger else SampThemeColors.cardBorder
             ),
             shape = RoundedCornerShape(12.dp)
         ) {
@@ -87,16 +87,10 @@ fun CrashLogsScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Icon(
-                    imageVector = if (isCrashActivity) Icons.Default.Warning else Icons.Default.BugReport,
-                    contentDescription = "Crash Icon",
-                    tint = if (isCrashActivity) StatusRed else AccentOrange,
-                    modifier = Modifier.size(32.dp)
-                )
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = if (isCrashActivity) "Aplikasi Mengalami Crash (Ditahan)" else "Sistem Pemantau Crash & Error",
-                        color = TextPrimary,
+                        color = SampThemeColors.textPrimary,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -105,7 +99,7 @@ fun CrashLogsScreen(
                             "Proses ditahan agar Anda dapat menyalin log error sebelum restart."
                         else
                             "Semua riwayat crash sistem tersimpan di sini untuk analisis.",
-                        color = TextSecondary,
+                        color = SampThemeColors.textSecondary,
                         fontSize = 12.sp
                     )
                 }
@@ -115,21 +109,19 @@ fun CrashLogsScreen(
         // Sub-tabs: Detail / Riwayat
         TabRow(
             selectedTabIndex = activeSubTab,
-            containerColor = SurfaceDark,
-            contentColor = AccentCyan,
+            containerColor = SampThemeColors.surface,
+            contentColor = SampThemeColors.accent,
             divider = {}
         ) {
             Tab(
                 selected = activeSubTab == 0,
                 onClick = { activeSubTab = 0 },
-                text = { Text("Detail Crash", fontWeight = FontWeight.SemiBold) },
-                icon = { Icon(Icons.Default.Terminal, contentDescription = null) }
+                text = { Text("Detail Crash", fontWeight = FontWeight.SemiBold) }
             )
             Tab(
                 selected = activeSubTab == 1,
                 onClick = { activeSubTab = 1 },
-                text = { Text("Riwayat (${crashes.size})", fontWeight = FontWeight.SemiBold) },
-                icon = { Icon(Icons.Default.History, contentDescription = null) }
+                text = { Text("Riwayat (${crashes.size})", fontWeight = FontWeight.SemiBold) }
             )
         }
 
@@ -205,36 +197,30 @@ private fun CrashDetailView(
         ) {
             Button(
                 onClick = onCopy,
-                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Icon(Icons.Default.ContentCopy, contentDescription = null, tint = Color.Black)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Salin Log Crash", color = Color.Black, fontWeight = FontWeight.Bold)
+                Text("Salin Log Crash", fontWeight = FontWeight.Bold)
             }
 
             if (isCrashActivity && onRestart != null) {
                 Button(
                     onClick = onRestart,
-                    colors = ButtonDefaults.buttonColors(containerColor = StatusGreen),
+                    colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.success, contentColor = SampThemeColors.bg),
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.Black)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Buka Ulang App", color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text("Buka Ulang App", fontWeight = FontWeight.Bold)
                 }
             } else {
                 OutlinedButton(
                     onClick = onDelete,
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = StatusRed),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StatusRed.copy(alpha = 0.5f)),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = SampThemeColors.danger),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, SampThemeColors.danger.copy(alpha = 0.5f)),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.Delete, contentDescription = null, tint = StatusRed)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Hapus", color = StatusRed)
+                    Text("Hapus", color = SampThemeColors.danger)
                 }
             }
         }
@@ -242,13 +228,13 @@ private fun CrashDetailView(
         // Summary Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+            colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
             shape = RoundedCornerShape(10.dp)
         ) {
             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(
                     text = report.exceptionClass,
-                    color = StatusRed,
+                    color = SampThemeColors.danger,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace
@@ -256,17 +242,17 @@ private fun CrashDetailView(
                 report.message?.let { msg ->
                     Text(
                         text = msg,
-                        color = TextPrimary,
+                        color = SampThemeColors.textPrimary,
                         fontSize = 13.sp
                     )
                 }
-                Divider(color = SurfaceCardBorder, modifier = Modifier.padding(vertical = 4.dp))
+                Divider(color = SampThemeColors.cardBorder, modifier = Modifier.padding(vertical = 4.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Waktu: ${report.formattedDate}", color = TextSecondary, fontSize = 12.sp)
-                    Text("Thread: ${report.threadName}", color = TextSecondary, fontSize = 12.sp)
+                    Text("Waktu: ${report.formattedDate}", color = SampThemeColors.textSecondary, fontSize = 12.sp)
+                    Text("Thread: ${report.threadName}", color = SampThemeColors.textSecondary, fontSize = 12.sp)
                 }
             }
         }
@@ -274,14 +260,14 @@ private fun CrashDetailView(
         // Device Info Card
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = SurfaceDark),
+            colors = CardDefaults.cardColors(containerColor = SampThemeColors.surface),
             shape = RoundedCornerShape(10.dp)
         ) {
             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Informasi Perangkat", color = AccentCyan, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text("Informasi Perangkat", color = SampThemeColors.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 Text(
                     text = report.deviceInfo,
-                    color = TextSecondary,
+                    color = SampThemeColors.textSecondary,
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace
                 )
@@ -289,19 +275,19 @@ private fun CrashDetailView(
         }
 
         // Stack Trace Box
-        Text("Stack Trace Lengkap:", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text("Stack Trace Lengkap:", color = SampThemeColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(8.dp))
-                .background(Color(0xFF0A0C10))
-                .border(1.dp, SurfaceCardBorder, RoundedCornerShape(8.dp))
+                .background(SampThemeColors.terminal)
+                .border(1.dp, SampThemeColors.cardBorder, RoundedCornerShape(8.dp))
                 .padding(12.dp)
                 .horizontalScroll(rememberScrollState())
         ) {
             Text(
                 text = report.stackTrace,
-                color = Color(0xFFFF8A80),
+                color = SampThemeColors.danger.copy(alpha = 0.85f),
                 fontSize = 11.sp,
                 fontFamily = FontFamily.Monospace,
                 lineHeight = 16.sp
@@ -330,15 +316,13 @@ private fun CrashHistoryList(
         ) {
             Text(
                 text = "Total Log Tersimpan: ${crashes.size}",
-                color = TextSecondary,
+                color = SampThemeColors.textSecondary,
                 fontSize = 13.sp
             )
             TextButton(
                 onClick = onClearAll,
-                colors = ButtonDefaults.textButtonColors(contentColor = StatusRed)
+                colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.danger)
             ) {
-                Icon(Icons.Default.DeleteSweep, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.width(4.dp))
                 Text("Hapus Semua", fontSize = 13.sp)
             }
         }
@@ -354,11 +338,11 @@ private fun CrashHistoryList(
                         .fillMaxWidth()
                         .clickable { onSelect(report) },
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isSelected) SurfaceCard.copy(alpha = 0.9f) else SurfaceDark
+                        containerColor = if (isSelected) SampThemeColors.card.copy(alpha = 0.9f) else SampThemeColors.surface
                     ),
                     border = androidx.compose.foundation.BorderStroke(
                         1.dp,
-                        if (isSelected) AccentCyan else SurfaceCardBorder
+                        if (isSelected) SampThemeColors.accent else SampThemeColors.cardBorder
                     ),
                     shape = RoundedCornerShape(10.dp)
                 ) {
@@ -366,58 +350,27 @@ private fun CrashHistoryList(
                         modifier = Modifier.padding(14.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = report.formattedDate,
-                                color = AccentOrange,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                IconButton(
-                                    onClick = { onCopy(report) },
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Default.ContentCopy,
-                                        contentDescription = "Salin",
-                                        tint = AccentCyan,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                                IconButton(
-                                    onClick = { onDelete(report) },
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Hapus",
-                                        tint = TextMuted,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-                        }
+                        Text(
+                            text = report.formattedDate,
+                            color = SampThemeColors.warn,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
 
                         Text(
                             text = report.exceptionClass.substringAfterLast('.'),
-                            color = StatusRed,
+                            color = SampThemeColors.danger,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
 
                         Text(
                             text = report.message ?: "Thread: ${report.threadName}",
-                            color = TextSecondary,
+                            color = SampThemeColors.textSecondary,
                             fontSize = 12.sp,
                             maxLines = 2
                         )
                     }
-                }
             }
         }
     }
@@ -434,15 +387,9 @@ private fun EmptyCrashState(message: String) {
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.padding(32.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = null,
-                tint = StatusGreen,
-                modifier = Modifier.size(48.dp)
-            )
             Text(
                 text = message,
-                color = TextSecondary,
+                color = SampThemeColors.textSecondary,
                 fontSize = 14.sp,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )

@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.main
+﻿﻿package com.rvdjv.pawnmc.`interface`.main
 
 import android.content.Context
 import android.net.Uri
@@ -253,7 +253,7 @@ class MainViewModel(
     var isCompiling by mutableStateOf(false)
         private set
 
-    var outputText by mutableStateOf("Ah shit, here we go again.\n")
+    var outputText by mutableStateOf("Ah, another project — a breath of fresh air everyone will inhale whether they asked for it or not.\n")
         private set
 
     var hasCompilerOutput by mutableStateOf(false)

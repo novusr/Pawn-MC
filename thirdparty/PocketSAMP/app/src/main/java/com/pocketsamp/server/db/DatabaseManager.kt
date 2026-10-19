@@ -70,6 +70,26 @@ class DatabaseManager {
         dbs
     }
 
+    suspend fun createDatabase(name: String): Pair<Boolean, String> = withContext(Dispatchers.IO) {
+        val cleanName = name.trim()
+        if (cleanName.isEmpty()) return@withContext Pair(false, "Database name is empty")
+        // Only allow characters that are safe unquoted in an identifier; the
+        // MariaDB wire protocol accepts either quoting or this stricter subset.
+        if (!cleanName.matches(Regex("[A-Za-z0-9_]+"))) {
+            return@withContext Pair(false, "Database name can only contain letters, digits and underscores")
+        }
+        try {
+            getConnection().use { conn ->
+                conn.createStatement().use { stmt ->
+                    stmt.execute("CREATE DATABASE IF NOT EXISTS `$cleanName`")
+                }
+            }
+            Pair(true, "Database '$cleanName' created")
+        } catch (e: Throwable) {
+            Pair(false, e.message ?: "Failed to create database")
+        }
+    }
+
     suspend fun listTables(database: String): List<String> = withContext(Dispatchers.IO) {
         val tables = mutableListOf<String>()
         try {

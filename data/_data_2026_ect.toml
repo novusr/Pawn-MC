@@ -1,4 +1,4 @@
-﻿# PawnMC localization data - 2026 format
+﻿﻿# PawnMC localization data - 2026 format
 #
 # Naming: _data_2026_ect.toml  (extract)
 # Every table name is an existing setting name, so a lookup uses the same
@@ -585,10 +585,10 @@ ru = "Настройки, PawnMC Editor и Self-Test временно недос
 es = "Configuracion, PawnMC Editor y Self-Test no estan disponibles hasta que termine la compilacion."
 
 [main.busy.completed]
-id = "Kompilasi selesai. Pengaturan, PawnMC Editor, dan Self-Test sudah tersedia kembali."
-en = "Compilation finished. Settings, PawnMC Editor, and Self-Test are available again."
-ru = "Компиляция завершена. Настройки, PawnMC Editor и Self-Test снова доступны."
-es = "Compilacion terminada. Configuracion, PawnMC Editor y Self-Test vuelven a estar disponibles."
+id = "Kompilasi selesai. Pengaturan, PawnMC Editor sudah tersedia kembali."
+en = "Compilation finished. Settings, PawnMC Editor are available again."
+ru = "Компиляция завершена. Настройки, PawnMC Editor снова доступны."
+es = "Compilacion terminada. Configuracion, PawnMC Editor vuelven a estar disponibles."
 
 [main.busy.dismiss]
 id = "Tutup pemberitahuan kompilasi"
@@ -675,10 +675,10 @@ ru = "Выбрать файл"
 es = "Elegir archivo"
 
 [main.output.title]
-id = "Berikut adalah hasil kompilasi:"
-en = "Here is the compiler output:"
-ru = "Вот результат компиляции:"
-es = "Aquí está la salida del compilador:"
+id = "Keluaran kompilasi — periksa pelan-pelan."
+en = "Compile output — read it through."
+ru = "Вывод компиляции — прочти не спеша."
+es = "Salida de compilación — léela con calma."
 
 [main.output.actions]
 id = "Aksi"
@@ -1118,3 +1118,159 @@ en = "Insert braces, parentheses, brackets, punctuation, or digits at the cursor
 ru = "Вставляет скобки, кавычки, знаки препинания или цифры в позицию курсора."
 es = "Inserta llaves, parentesis, corchetes, signos de puntuacion o numeros en la posicion del cursor."
 
+
+[main.promo.title]
+id = "Semua yang bisa diatur di PawnMC"
+en = "Everything PawnMC can be configured to do"
+ru = "Всё, что можно настроить в PawnMC"
+es = "Todo lo que puedes configurar en PawnMC"
+
+[main.promo.subtitle]
+id = "Ketuk salah satu entri untuk membuka Pengaturan langsung ke bagiannya."
+en = "Tap any entry to open Settings at that section."
+ru = "Нажмите на любой пункт, чтобы открыть настройки в этом разделе."
+es = "Toca cualquier entrada para abrir Ajustes en esa seccion."
+
+[main.promo.language.title]
+id = "Bahasa"
+en = "Language"
+ru = "Язык"
+es = "Idioma"
+
+[main.promo.language.desc]
+id = "Indonesia, Inggris, Spanyol (Argentina), atau Rusia untuk seluruh antarmuka."
+en = "Indonesian, English, Spanish (Argentina) or Russian for the entire interface."
+ru = "Индонезийский, английский, испанский (Аргентина) или русский для всего интерфейса."
+es = "Indones, ingles, espanol (Argentina) o ruso para toda la interfaz."
+
+[main.promo.compiler.title]
+id = "Versi compiler"
+en = "Compiler version"
+ru = "Версия компилятора"
+es = "Version del compilador"
+
+[main.promo.compiler.desc]
+id = "Bangun dengan Pawn 3.10.7 atau 3.10.11, dan atur apakah pawncc di samping skripmu lebih diutamakan daripada yang bawaan."
+en = "Build with Pawn 3.10.7 or 3.10.11, and choose whether a pawncc next to your script wins over the bundled one."
+ru = "Собирайте на Pawn 3.10.7 или 3.10.11 и решайте, имеет ли pawncc рядом со скриптом приоритет над встроенным."
+es = "Compila con Pawn 3.10.7 o 3.10.11 y elige si un pawncc junto a tu script tiene prioridad sobre el incluido."
+
+[main.promo.options.title]
+id = "Opsi compiler"
+en = "Compiler options"
+ru = "Параметры компилятора"
+es = "Opciones del compilador"
+
+[main.promo.options.desc]
+id = "Tingkat debug, optimasi, titik koma dan tanda kurung wajib, plus flag pawncc tambahan lain yang kamu butuhkan."
+en = "Debug level, optimization, mandatory semicolons and parentheses, plus any extra pawncc flag you need."
+ru = "Уровень отладки, оптимизация, обязательные точки с запятой и скобки, плюс любые дополнительные флаги pawncc."
+es = "Nivel de depuracion, optimizacion, punto y coma y parentesis obligatorios, mas cualquier flag extra de pawncc que necesites."
+
+[main.promo.includes.title]
+id = "Path include"
+en = "Include paths"
+ru = "Пути include"
+es = "Rutas de includes"
+
+[main.promo.includes.desc]
+id = "Arahkan compiler ke folder include proyekmu; pawno/include dan gamemodes ditemukan otomatis."
+en = "Point the compiler at your project's include folder; pawno/include and gamemodes are found automatically."
+ru = "Укажите компилятору папку include вашего проекта; pawno/include и gamemodes находятся автоматически."
+es = "Apunta el compilador a la carpeta de includes de tu proyecto; pawno/include y gamemodes se detectan automaticamente."
+
+[main.promo.ignorecase.title]
+id = "Sistem berkas"
+en = "Filesystem"
+ru = "Файловая система"
+es = "Sistema de archivos"
+
+[main.promo.ignorecase.desc]
+id = "Cadangkan sebuah folder lalu ubah namanya dan referensi #include-nya menjadi huruf kecil sekali jalan, untuk proyek yang ditulis di Windows."
+en = "Back a folder up and lowercase its names and #include references once, for projects written on Windows."
+ru = "Сделайте резервную копию папки и один раз приведите её имена и ссылки #include к нижнему регистру — для проектов, написанных на Windows."
+es = "Haz una copia de seguridad de una carpeta y pasa sus nombres y referencias #include a minusculas una sola vez, para proyectos escritos en Windows."
+
+[main.promo.explain.title]
+id = "Jelaskan output"
+en = "Explain output"
+ru = "Объяснение вывода"
+es = "Explicar la salida"
+
+[main.promo.explain.desc]
+id = "Beri anotasi berupa penjelasan bahasa sederhana pada setiap peringatan, error, dan pesan fatal."
+en = "Annotate every warning, error and fatal message with a plain-language explanation."
+ru = "Снабжает каждое предупреждение, ошибку и фатальное сообщение пояснением простым языком."
+es = "Anota cada advertencia, error y mensaje fatal con una explicacion en lenguaje sencillo."
+
+[main.promo.editor.title]
+id = "Tampilan editor"
+en = "Editor appearance"
+ru = "Вид редактора"
+es = "Apariencia del editor"
+
+[main.promo.editor.desc]
+id = "Pilih warna kanvas kode, atau biarkan mengikuti tema aplikasi."
+en = "Pick the code canvas colour, or let it follow the app theme."
+ru = "Выберите цвет полотна кода или пусть он следует теме приложения."
+es = "Elige el color del lienzo del codigo, o deja que siga el tema de la app."
+
+[main.promo.updates.title]
+id = "Pembaruan"
+en = "Updates"
+ru = "Обновления"
+es = "Actualizaciones"
+
+[main.promo.updates.desc]
+id = "Periksa GitHub untuk rilis yang lebih baru dan pasang tanpa keluar dari aplikasi."
+en = "Check GitHub for a newer release and install it without leaving the app."
+ru = "Проверьте GitHub на новый релиз и установите его, не выходя из приложения."
+es = "Consulta GitHub para ver si hay un lanzamiento nuevo e instálalo sin salir de la app."
+
+[main.promo.theme.title]
+id = "Tema"
+en = "Theme"
+ru = "Тема"
+es = "Tema"
+
+[main.promo.theme.desc]
+id = "Ikuti tema sistem Android, atau kunci PawnMC ke mode terang atau gelap."
+en = "Follow the Android system theme, or pin PawnMC to light or dark."
+ru = "Следуйте системной теме Android или закрепите PawnMC в светлом или тёмном режиме."
+es = "Sigue el tema del sistema Android, o fija PawnMC en claro u oscuro."
+
+[main.promo.about.title]
+id = "Tentang dan diagnostik"
+en = "About and diagnostics"
+ru = "О программе и диагностика"
+es = "Acerca de y diagnostico"
+
+[main.promo.about.desc]
+id = "Versi terpasang, repositori sumber, dan rangkaian self-test bawaan."
+en = "Installed version, source repository, and the built-in self-test suite."
+ru = "Установленная версия, исходный репозиторий и встроенный набор самопроверок."
+es = "Version instalada, repositorio fuente y la suite de autopruebas integrada."
+
+[main.promo.forcestop.title]
+id = "Mulai ulang aplikasi"
+en = "Restart the app"
+ru = "Перезапустить приложение"
+es = "Reiniciar la aplicacion"
+
+[main.promo.forcestop.desc]
+id = "Buka kembali PawnMC agar perubahan versi compiler diterapkan dari awal."
+en = "Reopen PawnMC so a compiler-version change is applied from scratch."
+ru = "Заново откройте PawnMC, чтобы изменение версии компилятора применилось с нуля."
+es = "Reabre PawnMC para que el cambio de version del compilador se aplique desde cero."
+
+[main.promo.storage.title]
+id = "Lokasi workspace"
+en = "Workspace location"
+ru = "Расположение workspace"
+es = "Ubicacion del workspace"
+
+[main.promo.storage.desc]
+id = "Setelan dan workspace awalmu tersimpan di folder PawnMC pada penyimpanan bersama, jadi bisa diedit di luar aplikasi."
+en = "Your settings and starter workspace live in the PawnMC folder on shared storage, so you can edit them outside the app."
+ru = "Ваши настройки и стартовый workspace лежат в папке PawnMC на общем хранилище, поэтому их можно править вне приложения."
+es = "Tus ajustes y workspace inicial viven en la carpeta PawnMC del almacen compartido, asi que puedes editarlos fuera de la app."

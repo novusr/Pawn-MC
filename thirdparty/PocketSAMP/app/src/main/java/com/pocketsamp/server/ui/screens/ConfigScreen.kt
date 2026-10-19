@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -43,7 +41,7 @@ fun ConfigScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgDark)
+            .background(SampThemeColors.bg)
             .padding(16.dp)
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -59,12 +57,12 @@ fun ConfigScreen() {
                     text = "Server Configuration",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = SampThemeColors.textPrimary
                 )
                 Text(
                     text = "server.cfg Editor",
                     fontSize = 12.sp,
-                    color = TextSecondary
+                    color = SampThemeColors.textSecondary
                 )
             }
 
@@ -80,11 +78,9 @@ fun ConfigScreen() {
                     ServerConfig.saveToFile(config, configFile)
                     Toast.makeText(context, "server.cfg saved successfully!", Toast.LENGTH_SHORT).show()
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan, contentColor = BgDark),
+                colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Icon(imageVector = Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
-                Spacer(modifier = Modifier.width(6.dp))
                 Text(text = "Save", fontWeight = FontWeight.Bold)
             }
         }
@@ -110,7 +106,7 @@ private fun ConfigField(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary)
+        Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SampThemeColors.textSecondary)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
@@ -118,19 +114,19 @@ private fun ConfigField(
             textStyle = LocalTextStyle.current.copy(
                 fontFamily = FontFamily.Monospace,
                 fontSize = 13.sp,
-                color = TextPrimary
+                color = SampThemeColors.textPrimary
             ),
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = AccentCyan,
-                unfocusedBorderColor = SurfaceCardBorder,
-                focusedContainerColor = SurfaceCard,
-                unfocusedContainerColor = SurfaceCard
+                focusedBorderColor = SampThemeColors.accent,
+                unfocusedBorderColor = SampThemeColors.cardBorder,
+                focusedContainerColor = SampThemeColors.card,
+                unfocusedContainerColor = SampThemeColors.card
             ),
             shape = RoundedCornerShape(10.dp)
         )
         if (hint != null) {
-            Text(text = hint, fontSize = 10.sp, color = TextMuted)
+            Text(text = hint, fontSize = 10.sp, color = SampThemeColors.textMuted)
         }
     }
 }
