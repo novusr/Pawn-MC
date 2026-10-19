@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pocketsamp.server.ui.theme.*
@@ -62,12 +63,10 @@ fun ConsoleScreen(
                     onClick = onClearLogs,
                     colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.textSecondary)
                 ) {
-                    // 📭 matches the emoji-style icons used across the editor (Xed
-                    // Editor), so the clear action reads the same way here as it
-                    // does in the editor's toolbar.
                     Text(
-                        text = "\uD83D\uDCED",
-                        fontSize = 18.sp,
+                        text = "Clear",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = SampThemeColors.textSecondary
                     )
                 }

@@ -402,7 +402,7 @@ fun DashboardScreen(
                                 Toast.makeText(context, t("perm.file.settings"), Toast.LENGTH_LONG).show()
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.warn, contentColor = SampThemeColors.bg),
+                        colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.warn, contentColor = SampThemeColors.accentOn),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -456,7 +456,7 @@ fun DashboardScreen(
                                 context.startActivity(intent)
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),
+                        colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.accentOn),
                         shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .fillMaxWidth()
@@ -640,7 +640,7 @@ fun DashboardScreen(
                 ) {
                     Button(
                         onClick = { folderPickerLauncher.launch(null) },
-                        colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),
+                        colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.accentOn),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier
                             .weight(1f)

@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -75,8 +74,8 @@ fun DatabaseScreen(
         }
     }
 
-    // SQL File Import Launcher (exposed for the Database tab's import flow;
-    // invoked by the query toolbar's import action when a database is selected)
+    // SQL File Import Launcher: opens the system document picker so a chosen
+    // .sql script can be imported into the selected database.
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
@@ -128,25 +127,6 @@ fun DatabaseScreen(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                // Import SQL file: opens the system document picker so the chosen
-                // .sql script is imported into the selected database. It was a
-                // dead button before; the launcher above is only wired through
-                // here, which is what made it feel unresponsive.
-                IconButton(
-                    onClick = { importLauncher.launch(arrayOf("text/plain", "application/sql", "text/x-sql", "application/octet-stream")) },
-                    enabled = isDbRunning,
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(SampThemeColors.card)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.FileOpen,
-                        contentDescription = "Import SQL file",
-                        tint = SampThemeColors.accent,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
                 // Refresh Button
                 IconButton(
                     onClick = { refreshDbs() },
