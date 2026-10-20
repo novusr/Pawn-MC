@@ -1,6 +1,7 @@
 package com.rvdjv.pawnmc.data.compiler
 
 import android.content.Context
+import com.rvdjv.pawnmc.data.config.AppStorage
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.config.TomlData
 import java.io.File
@@ -8,10 +9,9 @@ import java.io.File
 /**
  * Loader of the external compiler explanation table.
  *
- * `data/_data_2026_exp.toml` is the single source of truth for the local explanations of
- * Pawn compiler messages. The asset is read once per process and cached; there is
- * deliberately no bundled copy in Kotlin sources, so a message only ever has to be
- * maintained in one place.
+ * `data/_data_2026_exp.toml` provides the bundled defaults. An optional override at
+ * `Documents/PawnMC/config/_data_2026_exp.toml` takes precedence. The selected table
+ * is read once per process and cached.
  *
  * The file is TOML: one `[explain."<code>"]` table per message code and the
  * languages as leaves, which replaces the old `0x01:<code>:0x02:<explanation>`
@@ -23,6 +23,8 @@ object Explanations {
     private const val ASSET_PATH = "_data_2026_exp.toml"
 
     private const val FALLBACK_PATH = "data/_data_2026_exp.toml"
+
+    private const val PUBLIC_OVERRIDE_PATH = "config/_data_2026_exp.toml"
 
     /** Prefix of every explanation table, e.g. `explain.` in `[explain."013"]`. */
     private const val TABLE_PREFIX = "explain"
@@ -46,14 +48,22 @@ object Explanations {
      * indexed in one go, which is why the app defers this load instead of doing it
      * during `MainActivity.onCreate`.
      */
+    @Synchronized
     fun load(context: Context) {
-        if (cached != null) return
         val n_context = context.applicationContext ?: context
         appContext = n_context
+        // Explicit reloads (e.g. Settings → reload localization) must also refresh
+        // the external override instead of keeping a stale per-process copy.
+        cached = null
+        val overrideData = runCatching {
+            File(AppStorage.dataRoot(n_context), PUBLIC_OVERRIDE_PATH)
+                .takeIf { it.isFile }
+                ?.readText()
+        }.getOrNull()?.takeIf { it.isNotBlank() }
         val assetData = runCatching {
             n_context.assets.open(ASSET_PATH).bufferedReader().use { it.readText() }
         }.getOrNull()
-        cached = parse(assetData ?: readFromFileSystem() ?: "")
+        cached = parse(overrideData ?: assetData ?: readFromFileSystem() ?: "")
     }
 
     /**
@@ -104,7 +114,7 @@ object Explanations {
     }
 
     private fun readFromFileSystem(): String? =
-        sequenceOf(File(FALLBACK_PATH), File(ASSET_PATH))
+        sequenceOf(File(PUBLIC_OVERRIDE_PATH), File(FALLBACK_PATH), File(ASSET_PATH))
             .mapNotNull { file -> runCatching { file.takeIf { it.isFile }?.readText() }.getOrNull() }
             .firstOrNull { it.isNotBlank() }
 

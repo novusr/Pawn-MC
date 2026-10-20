@@ -20,7 +20,7 @@ class AssetExtractor(private val context: Context) {
         private const val TAG = "AssetExtractor"
         private const val PREF_NAME = "pocketsamp_assets"
         private const val KEY_INSTALLED_VERSION = "assets_installed_version"
-        private const val CURRENT_VERSION = 6
+        private const val CURRENT_VERSION = 7
 
         fun getServerDirectory(context: Context): File {
             return ServerDirectoryManager.getServerDirectory(context)
@@ -69,9 +69,14 @@ class AssetExtractor(private val context: Context) {
         File(mariadbDir, "bin/mariadbd").let { if (it.exists()) it.setExecutable(true, false) }
         File(mariadbDir, "bin/mariadb-install-db").let { if (it.exists()) it.setExecutable(true, false) }
 
-        // 4. Copy my.cnf template
+        // 4. Copy and render MariaDB config using this app's private storage paths.
         onProgress("Configuring low-memory database...")
-        copyAssetToFile("my.cnf", File(mariadbDir, "my.cnf"))
+        val mariadbConfig = File(mariadbDir, "my.cnf")
+        val configTemplate = context.assets.open("my.cnf").bufferedReader().use { it.readText() }
+        val renderedConfig = configTemplate
+            .replace("/data/data/com.pocketsamp.server/files/mariadb", mariadbDir.absolutePath)
+            .replace("/data/user/0/com.pocketsamp.server/files/mariadb", mariadbDir.absolutePath)
+        mariadbConfig.writeText(renderedConfig)
 
         // Save extraction state
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)

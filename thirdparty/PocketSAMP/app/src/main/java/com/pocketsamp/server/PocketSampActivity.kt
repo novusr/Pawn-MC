@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
@@ -31,10 +32,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import androidx.core.content.ContextCompat
 import com.pocketsamp.server.db.DatabaseManager
 import com.pocketsamp.server.service.ServerForegroundService
@@ -76,7 +80,6 @@ class PocketSampActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         // Request notification permission on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -102,6 +105,16 @@ class PocketSampActivity : ComponentActivity() {
 
         setContent {
             PocketSAMPTheme {
+                val view = LocalView.current
+                androidx.compose.runtime.SideEffect {
+                    val isDark = PocketSampLocales.theme == PocketSampLocales.Theme.DARK ||
+                        (PocketSampLocales.theme == PocketSampLocales.Theme.SYSTEM &&
+                            resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+                            android.content.res.Configuration.UI_MODE_NIGHT_YES)
+                    val statusBarBackground = if (isDark) BgDark else BgLight
+                    window.statusBarColor = statusBarBackground.toArgb()
+                    WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDark
+                }
                 MainAppLayout()
             }
         }
@@ -130,7 +143,8 @@ class PocketSampActivity : ComponentActivity() {
                     .background(SampThemeColors.bg)
             ) {
                 Surface(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+ color = SampThemeColors.bg
                 ) {
                     when (currentTab) {
                         AppTab.DASHBOARD -> DashboardScreen(
@@ -165,11 +179,11 @@ class PocketSampActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 12.dp, bottom = 16.dp)
+                        .padding(end = 16.dp, bottom = 24.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(SampThemeColors.surface)
                         .border(1.dp, SampThemeColors.card, RoundedCornerShape(20.dp))
-                        .padding(vertical = 6.dp, horizontal = 4.dp),
+                        .padding(vertical = 8.dp, horizontal = 6.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -180,19 +194,20 @@ class PocketSampActivity : ComponentActivity() {
                                 .clip(RoundedCornerShape(14.dp))
                                 .background(if (selected) SampThemeColors.card else Color.Transparent)
                                 .clickable { currentTab = tab }
-                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                                .padding(horizontal = if (selected) 14.dp else 12.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
                                 imageVector = tab.icon,
-                                contentDescription = tab.label,
-                                tint = if (selected) SampThemeColors.accent else SampThemeColors.textMuted
+                                contentDescription = t("tab.${tab.name.lowercase()}"),
+                                tint = if (selected) SampThemeColors.accent else SampThemeColors.textMuted,
+                                modifier = Modifier.size(22.dp)
                             )
                             if (selected) {
                                 Text(
                                     text = t("tab.${tab.name.lowercase()}"),
-                                    fontSize = 11.sp,
+                                    fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = SampThemeColors.accent
                                 )

@@ -173,6 +173,20 @@ class CompilerConfigFileTest {
             resetDocumentsOverride()
         }
     }
+    @Test fun restoreFile_appliesEditedDocumentsValuesWithoutClobberingTheFile() {
+        val documents = temporaryFolder.newFolder("editable-documents")
+        val external = temporaryFolder.newFolder("editable-external")
+        val context = TestContextWithPublicDocs(temporaryFolder.newFolder("editable-private"), documents, external)
+        val primary = File(File(documents, AppStorage.PUBLIC_DIR_NAME).let { File(it, "config") }, CompilerConfigFile.FILE_NAME)
+        primary.parentFile?.mkdirs()
+        primary.writeText("{\"schema\":2,\"ignore_case\":true}")
+        val prefs = InMemoryPreferences().apply { all[CompilerConfig.KEY_IGNORE_CASE] = false }
+
+        assertTrue(CompilerConfigFile.restore(context, prefs))
+        assertEquals(true, prefs.all[CompilerConfig.KEY_IGNORE_CASE])
+        assertFalse(CompilerConfigFile.candidateFiles(context).filter { it != primary }.any { it.isFile })
+    }
+
     @Test fun exists_isFalseBeforeTheFirstMirror() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         assertFalse(CompilerConfigFile.exists(context))

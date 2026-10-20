@@ -213,10 +213,18 @@ class ServerForegroundService : Service() {
 
                 // 2. Initialize and start MariaDB
                 updateNotification("Starting MariaDB (MySQL)...")
-                mariaDbEngine.initializeIfNeeded(this)
-                mariaDbEngine.start(serviceScope)
-                _isDbRunning.value = true
-                delay(1000)
+                val databaseInitialized = mariaDbEngine.initializeIfNeeded(this)
+                if (databaseInitialized) {
+                    mariaDbEngine.start(serviceScope)
+                    delay(1500)
+                    _isDbRunning.value = mariaDbEngine.isRunning
+                    if (!mariaDbEngine.isRunning) {
+                        appendLog("[MariaDB Error] Process exited before opening the localhost SQL port.")
+                    }
+                } else {
+                    _isDbRunning.value = false
+                    appendLog("[MariaDB Error] Database initialization failed; SQL access is unavailable.")
+                }
 
                 // 3. Start SA-MP server via QEMU
                 updateNotification("Launching SA-MP Server...")

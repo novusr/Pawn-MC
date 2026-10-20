@@ -25,6 +25,7 @@ object Explainer {
     ): String {
         if (rawText.isBlank()) return rawText
 
+        val n_language = CompilerConfig.getInstanceOrNull()?.n_app_language ?: language
         val outputCache = File(cacheDir, "compiler_output_cache_${System.nanoTime()}.log")
         outputCache.writeText(rawText)
 
@@ -35,8 +36,8 @@ object Explainer {
                 val match = COMPILER_MESSAGE_REGEX.find(line)
                 if (match != null) {
                     val code = match.groupValues[2].trimStart('0')
-                    val explanation = Explanations.explanationFor(code, language)
-                        ?: Explanations.explanationFor(match.groupValues[2], language)
+                    val explanation = Explanations.explanationFor(code, n_language)
+                        ?: Explanations.explanationFor(match.groupValues[2], n_language)
                         ?: NO_LOCAL_EXPLANATION
                     // Marker with explicit padding so interfaces that colourise the
                     // token by substring keep matching it even when the hint text is

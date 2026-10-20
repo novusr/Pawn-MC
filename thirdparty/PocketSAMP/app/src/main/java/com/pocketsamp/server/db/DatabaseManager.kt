@@ -35,9 +35,9 @@ class DatabaseManager {
 
     private fun getConnection(database: String? = null): Connection {
         val url = if (database.isNullOrBlank()) {
-            "$DB_URL_BASE?connectTimeout=3000"
+            "$DB_URL_BASE?connectTimeout=10000&socketTimeout=10000"
         } else {
-            "$DB_URL_BASE/$database?connectTimeout=3000"
+            "$DB_URL_BASE/$database?connectTimeout=10000&socketTimeout=10000&allowMultiQueries=true"
         }
         return DriverManager.getConnection(url, DB_USER, DB_PASS)
     }

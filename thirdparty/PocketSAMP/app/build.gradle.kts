@@ -47,21 +47,20 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.activity.compose)
+    // Reuse PawnMC's version catalog and exact versions so this embedded module
+    // does not pull in a second Compose/lifecycle/coroutines stack.
+    implementation(platform(rootProject.libs.androidx.compose.bom))
+    implementation(rootProject.libs.androidx.core.ktx)
+    implementation(rootProject.libs.androidx.lifecycle.runtime.ktx)
+    implementation(rootProject.libs.androidx.lifecycle.viewmodel.compose)
+    implementation(rootProject.libs.androidx.activity.compose)
 
-    implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material.icons.extended)
+    implementation(rootProject.libs.androidx.ui)
+    implementation(rootProject.libs.androidx.ui.graphics)
+    implementation(rootProject.libs.androidx.material3)
+    implementation(rootProject.libs.androidx.material.icons.extended)
 
-    implementation(libs.kotlinx.coroutines.android)
-    // The MariaDB JDBC driver: the Maven artifact is the single source (the vendored
-    // upstream jar is kept only as a fallback reference and is not on any classpath,
-    // so the two can never collide).
-    implementation(libs.mariadb.java.client)
-    implementation(libs.commons.compress)
+    implementation(rootProject.libs.kotlinx.coroutines.android)
+    implementation(rootProject.libs.mariadb.java.client)
+    implementation(rootProject.libs.commons.compress)
 }

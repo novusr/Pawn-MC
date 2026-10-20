@@ -14,9 +14,16 @@ class CompilerConfig private constructor(context: Context) {
 
     /** Application context for data-layer helpers that need one at call time. */
     fun applicationContextHolder(): Context = appContext
-
     private val prefs: SharedPreferences =
         appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+    internal fun registerExternalConfigListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+    }
+
+    private val prefListener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+        if (!suppressMirror) refreshPropertiesFromPreferences()
+    }
 
     /**
      * True while [restoreFromFile] / [mirrorToFile] are writing through the setters.
@@ -32,6 +39,7 @@ class CompilerConfig private constructor(context: Context) {
         // getter has been called, so `attachBaseContext` still sees the restored
         // language on the very first launch after a reinstall.
         restoreFromFile()
+        prefs.registerOnSharedPreferenceChangeListener(prefListener)
         // On a truly fresh install (no JSON anywhere) this seeds the mirror file
         // immediately with the defaults, so the file the next reinstall will
         // read back always exists from the very first run — it is not written
@@ -76,6 +84,33 @@ class CompilerConfig private constructor(context: Context) {
             suppressMirror = false
         }
         mirrorToFile()
+    }
+
+    /** Refreshes Compose state holders after a JSON reload without writing them back. */
+    private fun refreshPropertiesFromPreferences() {
+        suppressMirror = true
+        try {
+            refreshPropertiesFromPreferencesInternal()
+        } finally {
+            suppressMirror = false
+        }
+    }
+
+    private fun refreshPropertiesFromPreferencesInternal() {
+        n_debug_level = n_debug_level
+        n_optimization_level = n_optimization_level
+        n_ignore_case = n_ignore_case
+        n_explain_output = n_explain_output
+        n_mandatory_semicolons = n_mandatory_semicolons
+        n_mandatory_parentheses = n_mandatory_parentheses
+        n_custom_flags = n_custom_flags
+        n_include_paths = n_include_paths
+        n_compiler_version = n_compiler_version
+        n_app_theme = n_app_theme
+        n_app_language = n_app_language
+        n_editor_background_color = n_editor_background_color
+        n_last_selected_file_path = n_last_selected_file_path
+        n_last_opened_dir_path = n_last_opened_dir_path
     }
 
     /**
@@ -957,10 +992,17 @@ class CompilerConfig private constructor(context: Context) {
 
         fun getInstanceOrNull(): CompilerConfig? = instance
 
+        @Synchronized
         fun getInstance(context: Context): CompilerConfig {
-            return instance ?: synchronized(this) {
-                instance ?: CompilerConfig(context).also { instance = it }
-            }
+            return instance ?: CompilerConfig(context).also { instance = it }
+        }
+
+        /** Re-read the user-editable mirror file into the live preferences. */
+        fun reloadFromFile(context: Context): Boolean {
+            val current = getInstance(context)
+            val loaded = CompilerConfigFile.restore(context, current.prefs)
+            if (loaded) current.refreshPropertiesFromPreferences()
+            return loaded
         }
     }
 }

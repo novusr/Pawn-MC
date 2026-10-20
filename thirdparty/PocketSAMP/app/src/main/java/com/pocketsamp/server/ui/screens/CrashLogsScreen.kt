@@ -67,8 +67,8 @@ fun CrashLogsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(SampThemeColors.bg)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Warning Banner
         Card(
@@ -81,7 +81,7 @@ fun CrashLogsScreen(
             shape = RoundedCornerShape(12.dp)
         ) {
             Row(
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
@@ -89,7 +89,7 @@ fun CrashLogsScreen(
                     Text(
                         text = if (isCrashActivity) "Aplikasi Mengalami Crash (Ditahan)" else "Sistem Pemantau Crash & Error",
                         color = SampThemeColors.textPrimary,
-                        fontSize = 16.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
@@ -98,7 +98,7 @@ fun CrashLogsScreen(
                         else
                             "Semua riwayat crash sistem tersimpan di sini untuk analisis.",
                         color = SampThemeColors.textSecondary,
-                        fontSize = 12.sp
+                        fontSize = 14.sp
                     )
                 }
             }
@@ -249,8 +249,8 @@ private fun CrashDetailView(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Waktu: ${report.formattedDate}", color = SampThemeColors.textSecondary, fontSize = 12.sp)
-                    Text("Thread: ${report.threadName}", color = SampThemeColors.textSecondary, fontSize = 12.sp)
+                    Text("Waktu: ${report.formattedDate}", color = SampThemeColors.textSecondary, fontSize = 13.sp)
+                    Text("Thread: ${report.threadName}", color = SampThemeColors.textSecondary, fontSize = 13.sp)
                 }
             }
         }
@@ -262,11 +262,11 @@ private fun CrashDetailView(
             shape = RoundedCornerShape(10.dp)
         ) {
             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Informasi Perangkat", color = SampThemeColors.accent, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text("Informasi Perangkat", color = SampThemeColors.accent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 Text(
                     text = report.deviceInfo,
                     color = SampThemeColors.textSecondary,
-                    fontSize = 11.sp,
+                    fontSize = 13.sp,
                     fontFamily = FontFamily.Monospace
                 )
             }
@@ -286,9 +286,9 @@ private fun CrashDetailView(
             Text(
                 text = report.stackTrace,
                 color = SampThemeColors.danger.copy(alpha = 0.85f),
-                fontSize = 11.sp,
+                fontSize = 13.sp,
                 fontFamily = FontFamily.Monospace,
-                lineHeight = 16.sp
+                lineHeight = 19.sp
             )
         }
     }
@@ -315,13 +315,13 @@ private fun CrashHistoryList(
             Text(
                 text = "Total Log Tersimpan: ${crashes.size}",
                 color = SampThemeColors.textSecondary,
-                fontSize = 13.sp
+                fontSize = 14.sp
             )
             TextButton(
                 onClick = onClearAll,
                 colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.danger)
             ) {
-                Text("Hapus Semua", fontSize = 13.sp)
+                Text("Hapus Semua", fontSize = 14.sp)
             }
         }
 
@@ -351,7 +351,7 @@ private fun CrashHistoryList(
                         Text(
                             text = report.formattedDate,
                             color = SampThemeColors.warn,
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold
                         )
 
@@ -365,7 +365,7 @@ private fun CrashHistoryList(
                         Text(
                             text = report.message ?: "Thread: ${report.threadName}",
                             color = SampThemeColors.textSecondary,
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             maxLines = 2
                         )
                     }

@@ -36,7 +36,7 @@ fun ConsoleScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(SampThemeColors.bg)
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Console Header
@@ -53,7 +53,7 @@ fun ConsoleScreen(
                 )
                 Text(
                     text = "${logs.size} log lines buffered",
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     color = SampThemeColors.textSecondary
                 )
             }
@@ -65,7 +65,7 @@ fun ConsoleScreen(
                 ) {
                     Text(
                         text = "Clear",
-                        fontSize = 13.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = SampThemeColors.textSecondary
                     )
@@ -79,12 +79,12 @@ fun ConsoleScreen(
                 .fillMaxSize()
                 .clip(RoundedCornerShape(12.dp))
                 .background(SampThemeColors.terminal)
-                .padding(12.dp)
+                .padding(16.dp)
         ) {
             if (logs.isEmpty()) {
                 Text(
                     text = "Server console is idle. Press 'Start Server' to view live execution logs.",
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     fontFamily = FontFamily.Monospace,
                     color = SampThemeColors.textMuted,
                     modifier = Modifier.align(Alignment.Center)
@@ -107,10 +107,10 @@ fun ConsoleScreen(
 
                         Text(
                             text = line,
-                            fontSize = 11.sp,
+                            fontSize = 13.sp,
                             fontFamily = FontFamily.Monospace,
                             color = lineColor,
-                            lineHeight = 16.sp
+                            lineHeight = 19.sp
                         )
                     }
                 }

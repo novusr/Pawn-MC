@@ -194,6 +194,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        CompilerConfig.reloadFromFile(applicationContext)
         viewModel.refreshTheme()
         viewModel.refreshLanguage()
         viewModel.refreshEditorBackgroundColor()

@@ -298,7 +298,7 @@ object Runner {
         // annotation runs and the switch is dropped again afterwards — the
         // mirrored `n_explain_output` keeps whatever the user set in Settings.
         val n_config = CompilerConfig.getInstanceOrNull()
-        if (n_config?.n_explain_auto == true && !n_config.n_explain_output) {
+        if (n_config?.n_explain_auto == true) {
             Log.i("Compiler", "Auto-assist: dropping the temporary Explain output instruction")
             n_config.n_explain_output = false
             n_config.n_explain_auto = false

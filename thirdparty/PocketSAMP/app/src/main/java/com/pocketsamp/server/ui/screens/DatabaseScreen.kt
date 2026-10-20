@@ -19,6 +19,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,6 +70,12 @@ fun DatabaseScreen(
         }
     }
 
+    LaunchedEffect(Unit) {
+        snapshotFlow { isDbRunning }
+            .distinctUntilChanged()
+            .collect { running -> if (running) refreshDbs() }
+    }
+
     LaunchedEffect(isDbRunning) {
         if (isDbRunning) {
             refreshDbs()
@@ -103,8 +111,8 @@ fun DatabaseScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(SampThemeColors.bg)
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Header
         Row(
@@ -121,7 +129,7 @@ fun DatabaseScreen(
                 )
                 Text(
                     text = if (isDbRunning) "Connected: 127.0.0.1:3306 (root)" else "Database server is offline",
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     color = if (isDbRunning) SampThemeColors.success else SampThemeColors.danger
                 )
             }
@@ -132,15 +140,15 @@ fun DatabaseScreen(
                     onClick = { refreshDbs() },
                     enabled = isDbRunning,
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(10.dp))
                         .background(SampThemeColors.card)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Refresh",
                         tint = SampThemeColors.accent,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -152,12 +160,12 @@ fun DatabaseScreen(
                     .fillMaxSize()
                     .clip(RoundedCornerShape(12.dp))
                     .background(SampThemeColors.card)
-                    .padding(24.dp),
+                    .padding(20.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = "Start the server on Dashboard to connect to MySQL database.",
-                    fontSize = 13.sp,
+                    fontSize = 14.sp,
                     color = SampThemeColors.textMuted
                 )
             }
@@ -175,7 +183,7 @@ fun DatabaseScreen(
                             selectedDb = db
                             scope.launch { tables = dbManager.listTables(db) }
                         },
-                        label = { Text(db, fontSize = 12.sp) },
+                        label = { Text(db, fontSize = 14.sp) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = SampThemeColors.accent,
                             selectedLabelColor = SampThemeColors.bg,
@@ -197,11 +205,11 @@ fun DatabaseScreen(
                                     imageVector = Icons.Default.Add,
                                     contentDescription = null,
                                     tint = SampThemeColors.success,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(18.dp)
                                 )
                                 Text(
                                     text = "New",
-                                    fontSize = 12.sp,
+                                    fontSize = 14.sp,
                                     color = SampThemeColors.textPrimary,
                                     modifier = Modifier.padding(start = 4.dp)
                                 )
@@ -220,10 +228,10 @@ fun DatabaseScreen(
                 value = sqlQuery,
                 onValueChange = { sqlQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("SQL Query", fontSize = 12.sp) },
+                label = { Text("SQL Query", fontSize = 14.sp) },
                 textStyle = LocalTextStyle.current.copy(
                     fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     color = SampThemeColors.textPrimary
                 ),
                 maxLines = 3,
@@ -265,14 +273,14 @@ fun DatabaseScreen(
                         text = "Error: ${result.error}",
                         color = SampThemeColors.danger,
                         fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp
+                        fontSize = 13.sp
                     )
                 } else if (!result.isSelect) {
                     Text(
                         text = "Query OK, ${result.affectedRows} rows affected.",
                         color = SampThemeColors.success,
                         fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp
+                        fontSize = 13.sp
                     )
                 } else {
                     // Result Table
@@ -292,7 +300,7 @@ fun DatabaseScreen(
                                         Text(
                                             text = col,
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 11.sp,
+                                            fontSize = 12.sp,
                                             fontFamily = FontFamily.Monospace,
                                             color = SampThemeColors.accent,
                                             modifier = Modifier.widthIn(min = 80.dp)
@@ -308,7 +316,7 @@ fun DatabaseScreen(
                                     row.forEach { cell ->
                                         Text(
                                             text = cell,
-                                            fontSize = 11.sp,
+                                            fontSize = 12.sp,
                                             fontFamily = FontFamily.Monospace,
                                             color = SampThemeColors.textSecondary,
                                             modifier = Modifier.widthIn(min = 80.dp)
@@ -344,9 +352,9 @@ fun DatabaseScreen(
                         value = newDbName,
                         onValueChange = { newDbName = it },
                         singleLine = true,
-                        label = { Text("Database name", fontSize = 12.sp) },
+                        label = { Text("Database name", fontSize = 14.sp) },
                         textStyle = LocalTextStyle.current.copy(
-                            fontSize = 13.sp,
+                            fontSize = 14.sp,
                             color = SampThemeColors.textPrimary
                         ),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -382,7 +390,7 @@ fun DatabaseScreen(
                     if (isCreating) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     } else {
-                        Text("Create", color = SampThemeColors.accent, fontWeight = FontWeight.SemiBold)
+                        Text("Create", fontSize = 14.sp, color = SampThemeColors.accent, fontWeight = FontWeight.SemiBold)
                     }
                 }
             },

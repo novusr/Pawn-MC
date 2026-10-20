@@ -28,23 +28,36 @@ fun ConfigScreen() {
 
     var config by remember(configFile) { mutableStateOf(ServerConfig.loadFromFile(configFile)) }
 
-    var hostname by remember { mutableStateOf(config.hostname) }
-    var port by remember { mutableStateOf(config.port.toString()) }
-    var maxPlayers by remember { mutableStateOf(config.maxPlayers.toString()) }
-    var rconPassword by remember { mutableStateOf(config.rconPassword) }
-    var gamemode by remember { mutableStateOf(config.gamemode) }
-    var filterscripts by remember { mutableStateOf(config.filterscripts) }
-    var plugins by remember { mutableStateOf(config.plugins) }
+    var hostname by remember(config) { mutableStateOf(config.hostname) }
+    var port by remember(config) { mutableStateOf(config.port.toString()) }
+    var maxPlayers by remember(config) { mutableStateOf(config.maxPlayers.toString()) }
+    var rconPassword by remember(config) { mutableStateOf(config.rconPassword) }
+    var gamemode by remember(config) { mutableStateOf(config.gamemode) }
+    var filterscripts by remember(config) { mutableStateOf(config.filterscripts) }
+    var plugins by remember(config) { mutableStateOf(config.plugins) }
 
     val scrollState = rememberScrollState()
+
+    val lifecycleOwner = context as? androidx.lifecycle.LifecycleOwner
+    if (lifecycleOwner != null) {
+        DisposableEffect(lifecycleOwner, configFile) {
+            val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+                if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                    config = ServerConfig.loadFromFile(configFile)
+                }
+            }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(SampThemeColors.bg)
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
             .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Header
         Row(
@@ -61,7 +74,7 @@ fun ConfigScreen() {
                 )
                 Text(
                     text = "server.cfg Editor",
-                    fontSize = 12.sp,
+                    fontSize = 14.sp,
                     color = SampThemeColors.textSecondary
                 )
             }
@@ -81,7 +94,7 @@ fun ConfigScreen() {
                 colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(text = "Save", fontWeight = FontWeight.Bold)
+                Text(text = "Save", fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
         }
 
@@ -106,14 +119,14 @@ private fun ConfigField(
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SampThemeColors.textSecondary)
+        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = SampThemeColors.textSecondary)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             textStyle = LocalTextStyle.current.copy(
                 fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 color = SampThemeColors.textPrimary
             ),
             singleLine = true,
@@ -126,7 +139,7 @@ private fun ConfigField(
             shape = RoundedCornerShape(10.dp)
         )
         if (hint != null) {
-            Text(text = hint, fontSize = 10.sp, color = SampThemeColors.textMuted)
+            Text(text = hint, fontSize = 12.sp, color = SampThemeColors.textMuted)
         }
     }
 }

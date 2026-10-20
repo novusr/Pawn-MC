@@ -45,16 +45,14 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Pinch
 import androidx.compose.material.icons.filled.SatelliteAlt
+import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.filled.ContentCut
-import androidx.compose.material.icons.filled.Terminal
-import androidx.compose.material.icons.filled.Webhook
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.SmallFloatingActionButton
@@ -397,12 +395,10 @@ fun MainScreen(
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
                 Icon(
-                    imageVector = if (atBottom) Icons.Filled.ArrowUpward else Icons.Filled.Webhook,
-                    contentDescription = if (atBottom) {
-                        localizer?.get("main.fab.top", appLanguage, "Back to the top") ?: "Back to the top"
-                    } else {
-                        localizer?.get("main.fab.portal", appLanguage, "Open the settings guide") ?: "Open the settings guide"
-                    }
+                    imageVector = if (atBottom) Icons.Filled.ArrowUpward else Icons.Filled.ContentCut,
+                    contentDescription = if (atBottom) "Scroll to top" else "Scroll to settings",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -1014,10 +1010,10 @@ internal fun CompilerLogsSection(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Filled.Terminal,
+                    imageVector = Icons.Filled.DirectionsBike,
                     contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(SpaceXS + 2.dp))
                 Text(

@@ -194,7 +194,7 @@ internal fun DeveloperPortalPromoCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = text("main.promo.title", "Everything PawnMC can be configured to do"),
+                    text = text("main.promo.title", "Settings"),
                     style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
@@ -204,7 +204,7 @@ internal fun DeveloperPortalPromoCard(
             Text(
                 text = text(
                     "main.promo.subtitle",
-                    "Tap any entry to open Settings at that section."
+                    "Select a section to open its settings."
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

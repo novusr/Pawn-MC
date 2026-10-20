@@ -65,9 +65,8 @@ internal object CompilerConfigFile {
      * 3. `files/.pawnmc/config/…` — private fallback when shared storage is
      *    unavailable.
      *
-     * [restore] reads the first file that parses, and [mirror] rewrites the
-     * primary; after that first successful write the app-scoped copy is stale but
-     * harmless, and it stops being consulted once the primary exists.
+     * [restore] reads the first existing file, prioritizing the user-editable Documents
+     * copy, and [mirror] writes the current values back to the primary location.
      */
     fun candidateFiles(context: Context): List<File> {
         val locations = mutableListOf<File>()
@@ -109,11 +108,26 @@ internal object CompilerConfigFile {
      * @return true when the file existed and parsed, i.e. something may have been restored
      */
     fun restore(context: Context, prefs: SharedPreferences): Boolean {
-        val source = candidateFiles(context).firstOrNull { it.isFile } ?: return false
+        val files = candidateFiles(context)
+        val source = files.firstOrNull { it.isFile } ?: return false
+        // Documents is the editable source of truth. If it exists but is malformed,
+        // do not silently prefer an older app-scoped mirror over the user's edit.
+        return restoreFile(source, prefs, files)
+    }
 
+    /** Loads an explicitly selected JSON mirror and applies its values to preferences. */
+    fun restoreFile(source: File, prefs: SharedPreferences): Boolean =
+        restoreFile(source, prefs, listOf(source))
+
+    private fun restoreFile(
+        source: File,
+        prefs: SharedPreferences,
+        files: List<File>
+    ): Boolean {
+        if (!source.isFile) return false
         val root = runCatching { JSONObject(source.readText()) }.getOrNull() ?: return false
 
-        runCatching {
+        val restored = runCatching {
             val editor = prefs.edit()
 
             // Enum / integer settings are stored as the value that is actually shown,
@@ -175,9 +189,13 @@ internal object CompilerConfigFile {
                 ?.toStringList()
                 ?.let { editor.putString(CompilerConfig.KEY_INCLUDE_PATHS, it.joinToString(";")) }
 
-            editor.apply()
-        }
-
+            // Persist the restore synchronously before settings getters run during
+            // app startup; otherwise they can observe the pre-restore SharedPreferences.
+            editor.commit()
+        }.getOrDefault(false)
+        if (!restored) return false
+        // Do not rewrite other mirrors on reload: the public file may have been
+        // hand-edited, and subsequent app-owned changes are mirrored by setters.
         return true
     }
 
@@ -265,8 +283,8 @@ internal object CompilerConfigFile {
      * already restored.
      */
     fun restoreIncludePaths(context: Context, prefs: SharedPreferences): Int {
-        val source = candidateFiles(context).firstOrNull { it.isFile } ?: return 0
-
+        val source = file(context)
+        if (!source.isFile) return 0
         val root = runCatching { JSONObject(source.readText()) }.getOrNull() ?: return 0
         val paths = root.optJSONArray(CompilerConfig.KEY_INCLUDE_PATHS)?.toStringList() ?: return 0
         if (paths.isEmpty()) return 0

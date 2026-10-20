@@ -109,9 +109,9 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(SampThemeColors.bg)
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 12.dp)
             .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // App Header. The back arrow mirrors the Xed editor's navigation icon: one
         // tap lands back on the PawnMC main interface, because expecting the system
@@ -132,13 +132,13 @@ fun DashboardScreen(
                 Column {
                     Text(
                         text = "PocketSAMP",
-                        fontSize = 24.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = SampThemeColors.textPrimary
                     )
                     Text(
                         text = t("tagline"),
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         color = SampThemeColors.textSecondary
                     )
                 }
@@ -156,7 +156,7 @@ fun DashboardScreen(
                 modifier = Modifier
                     .clip(RoundedCornerShape(20.dp))
                     .background(statusColor.copy(alpha = 0.15f))
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
@@ -168,7 +168,7 @@ fun DashboardScreen(
                 )
                 Text(
                     text = statusText,
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = statusColor
                 )
@@ -183,7 +183,7 @@ fun DashboardScreen(
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // Section 1: Localhost (Main di HP Ini - Disarankan)
                 Column(
@@ -204,7 +204,7 @@ fun DashboardScreen(
                         ) {
                             Text(
                                 text = t("dash.local.title"),
-                                fontSize = 12.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = SampThemeColors.accent
                             )
@@ -223,14 +223,14 @@ fun DashboardScreen(
                                 imageVector = Icons.Default.ContentCopy,
                                 contentDescription = "Copy Localhost IP",
                                 tint = SampThemeColors.accent,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                     }
 
                     Text(
                         text = "127.0.0.1:7777",
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
                         color = SampThemeColors.textPrimary
@@ -238,7 +238,7 @@ fun DashboardScreen(
 
                     Text(
                         text = t("dash.local.note"),
-                        fontSize = 11.sp,
+                        fontSize = 13.sp,
                         color = SampThemeColors.textSecondary
                     )
                 }
@@ -259,7 +259,7 @@ fun DashboardScreen(
                         ) {
                             Text(
                                 text = t("dash.lan.title"),
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = SampThemeColors.textSecondary
                             )
@@ -293,7 +293,7 @@ fun DashboardScreen(
 
                     Text(
                         text = t("dash.lan.note"),
-                        fontSize = 11.sp,
+                        fontSize = 13.sp,
                         color = SampThemeColors.textMuted
                     )
                 }
@@ -320,13 +320,13 @@ fun DashboardScreen(
                     Column {
                         Text(
                             text = "MariaDB (MySQL 5.7/8.0 Wire)",
-                            fontSize = 14.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = SampThemeColors.textPrimary
                         )
                         Text(
                             text = if (isDbRunning) "127.0.0.1:3306 (Active)" else "Stopped",
-                            fontSize = 12.sp,
+                            fontSize = 13.sp,
                             fontFamily = FontFamily.Monospace,
                             color = if (isDbRunning) SampThemeColors.success else SampThemeColors.textMuted
                         )
@@ -338,7 +338,7 @@ fun DashboardScreen(
 
                 Text(
                     text = dbStatusText,
-                    fontSize = 11.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     color = dbColor
                 )
@@ -382,7 +382,7 @@ fun DashboardScreen(
                     ) {
                         Text(
                             text = t("perm.file.title"),
-                            fontSize = 13.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = SampThemeColors.warn
                         )
@@ -390,7 +390,7 @@ fun DashboardScreen(
 
                     Text(
                         text = t("perm.file.desc"),
-                        fontSize = 11.sp,
+                        fontSize = 13.sp,
                         color = SampThemeColors.textPrimary
                     )
 
@@ -408,7 +408,7 @@ fun DashboardScreen(
                             .fillMaxWidth()
                             .height(36.dp)
                     ) {
-                        Text(text = t("perm.file.button"), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(text = t("perm.file.button"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                 }
             }
@@ -432,7 +432,7 @@ fun DashboardScreen(
                     ) {
                         Text(
                             text = t("perm.battery.title"),
-                            fontSize = 13.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = SampThemeColors.accent
                         )
@@ -440,7 +440,7 @@ fun DashboardScreen(
 
                     Text(
                         text = t("perm.battery.desc"),
-                        fontSize = 11.sp,
+                        fontSize = 13.sp,
                         color = SampThemeColors.textPrimary
                     )
 
@@ -462,7 +462,7 @@ fun DashboardScreen(
                             .fillMaxWidth()
                             .height(36.dp)
                     ) {
-                        Text(text = t("perm.battery.button"), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(text = t("perm.battery.button"), fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
                 }
             }
@@ -491,7 +491,7 @@ fun DashboardScreen(
                     ) {
                         Text(
                             text = t("guide.antidc.title"),
-                            fontSize = 13.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = SampThemeColors.textPrimary
                         )
@@ -517,44 +517,44 @@ fun DashboardScreen(
                     ) {
                         Text(
                             text = t("guide.antidc.step1"),
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = SampThemeColors.accent
                         )
                         Text(
                             text = t("guide.antidc.step1.desc"),
-                            fontSize = 11.sp,
+                            fontSize = 13.sp,
                             color = SampThemeColors.textSecondary
                         )
 
                         Text(
                             text = t("guide.antidc.step2"),
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = SampThemeColors.accent
                         )
                         Text(
                             text = t("guide.antidc.step2.desc"),
-                            fontSize = 11.sp,
+                            fontSize = 13.sp,
                             color = SampThemeColors.textSecondary
                         )
 
                         Text(
                             text = t("guide.antidc.step3"),
-                            fontSize = 12.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = SampThemeColors.accent
                         )
                         Text(
                             text = t("guide.antidc.step3.desc"),
-                            fontSize = 11.sp,
+                            fontSize = 13.sp,
                             color = SampThemeColors.textSecondary
                         )
                     }
                 } else {
                     Text(
                         text = t("guide.antidc.short"),
-                        fontSize = 11.sp,
+                        fontSize = 13.sp,
                         color = SampThemeColors.textMuted
                     )
                 }
@@ -570,8 +570,8 @@ fun DashboardScreen(
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -584,7 +584,7 @@ fun DashboardScreen(
                     ) {
                         Text(
                             text = t("folder.gamemode") + " SA-MP",
-                            fontSize = 14.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = SampThemeColors.textSecondary
                         )
@@ -594,7 +594,7 @@ fun DashboardScreen(
                     val badgeText = if (hasCfg) "server.cfg OK" else "server.cfg"
                     Text(
                         text = badgeText,
-                        fontSize = 10.sp,
+                        fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = badgeColor,
                         modifier = Modifier
@@ -611,7 +611,7 @@ fun DashboardScreen(
                 ) {
                     Text(
                         text = currentServerDir.absolutePath,
-                        fontSize = 12.sp,
+                        fontSize = 13.sp,
                         fontFamily = FontFamily.Monospace,
                         color = SampThemeColors.textPrimary,
                         modifier = Modifier.weight(1f)
@@ -646,7 +646,7 @@ fun DashboardScreen(
                             .weight(1f)
                             .height(38.dp)
                     ) {
-                        Text(text = t("folder.pick"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(text = t("folder.pick"), fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
 
                     OutlinedButton(
@@ -658,13 +658,13 @@ fun DashboardScreen(
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.height(38.dp)
                     ) {
-                        Text(text = t("folder.reset"), fontSize = 12.sp)
+                        Text(text = t("folder.reset"), fontSize = 14.sp)
                     }
                 }
 
                 Text(
                     text = if (hasCfg) t("folder.has.cfg") else t("folder.no.cfg"),
-                    fontSize = 11.sp,
+                    fontSize = 13.sp,
                     color = if (hasCfg) SampThemeColors.textMuted else SampThemeColors.warn
                 )
             }
@@ -705,7 +705,7 @@ fun DashboardScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = if (isRunning) t("action.stop") else t("action.start"),
-                    fontSize = 16.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -731,7 +731,7 @@ private fun SpecCard(
         ) {
             Text(
                 text = title,
-                fontSize = 10.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 color = SampThemeColors.textSecondary
             )
@@ -743,7 +743,7 @@ private fun SpecCard(
             )
             Text(
                 text = subtext,
-                fontSize = 11.sp,
+                fontSize = 13.sp,
                 color = SampThemeColors.textMuted
             )
         }

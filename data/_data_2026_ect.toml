@@ -1,4 +1,4 @@
-﻿﻿# PawnMC localization data - 2026 format
+﻿# PawnMC localization data - 2026 format
 #
 # Naming: _data_2026_ect.toml  (extract)
 # Every table name is an existing setting name, so a lookup uses the same
@@ -1120,10 +1120,10 @@ es = "Inserta llaves, parentesis, corchetes, signos de puntuacion o numeros en l
 
 
 [main.promo.title]
-id = "Semua yang bisa diatur di PawnMC"
-en = "Everything PawnMC can be configured to do"
-ru = "Всё, что можно настроить в PawnMC"
-es = "Todo lo que puedes configurar en PawnMC"
+id = "Pengaturan"
+en = "Settings"
+ru = "Настройки"
+es = "Ajustes"
 
 [main.promo.subtitle]
 id = "Ketuk salah satu entri untuk membuka Pengaturan langsung ke bagiannya."

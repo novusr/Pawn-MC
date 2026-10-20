@@ -11,11 +11,11 @@ val SurfaceDark = Color(0xFF1A1429)
 val SurfaceCard = Color(0xFF241B38)
 val SurfaceCardBorder = Color(0xFF332748)
 
-// Light ramp (PawnMC light look)
-val BgLight = Color(0xFFFCFAFE)
-val SurfaceLight = Color(0xFFF6F1FB)
-val SurfaceCardLight = Color(0xFFF0EAF7)
-val SurfaceCardBorderLight = Color(0xFFDFD4EE)
+// Light ramp stays white with subtle neutral/violet elevation.
+val BgLight = Color(0xFFFFFBFF)
+val SurfaceLight = Color(0xFFFFFFFF)
+val SurfaceCardLight = Color(0xFFF8F6FA)
+val SurfaceCardBorderLight = Color(0xFFE6E0EA)
 
 val AccentCyan = Color(0xFF00E5FF)
 val AccentCyanDarkText = Color(0xFF006A8B) // readable cyan tint on light surfaces

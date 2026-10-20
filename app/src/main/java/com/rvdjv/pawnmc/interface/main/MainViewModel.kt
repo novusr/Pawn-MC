@@ -66,26 +66,22 @@ class MainViewModel(
                 return 200;
             }
 
-            forward testing2(); public testing2() {
+            forward testing2();
+            public testing2() {
                 return 1;
             }
 
             stock something(const str[]) {
-                if (str[0] == '\0')
-                    return 1;
+                if (str[0] == '\\0') return 1;
                 printf("something: %s", str);
                 return 1;
             }
 
-            /**
-             * <summary>Sums two integers; also shows a user-defined operator.</summary>
-             */
+            /** Sums two integers. */
             stock sum(a, b) {
                 return a + b;
             }
 
-            // A user-defined tag from an enum: assigning a plain int to a
-            // `Gauge:` slot is a compiler warning unless the tag is named.
             enum Gauge {
                 Gauge:value
             }
@@ -97,22 +93,16 @@ class MainViewModel(
 
             stock average(const values[], size = sizeof(values)) {
                 new total = 0;
-                for (new i = 0; i < size; i++) {
-                    total += values[i];
-                }
+                for (new i = 0; i < size; i++) total += values[i];
                 return (size > 0) ? total / size : 0;
             }
 
             stock describeCount(count) {
                 switch (count) {
-                    case 0:
-                        return "nothing";
-                    case 1:
-                        return "one item";
-                    case 2 .. 5:
-                        return "a few items";
-                    default:
-                        return "many items";
+                    case 0: return "nothing";
+                    case 1: return "one item";
+                    case 2 .. 5: return "a few items";
+                    default: return "many items";
                 }
                 return "?";
             }
@@ -124,18 +114,14 @@ class MainViewModel(
             }
 
             stock demoCallout() {
-                // Call a public function by name, resolved at runtime.
                 CallLocalFunction("testing2", "");
                 return 1;
             }
 
             main() {
                 print("Hello, World from PawnMC " #VERSION_STRING "!");
-
                 new val = testing();
-                if (val == 200) {
-                    printf("testing(): %d", val);
-                }
+                if (val == 200) printf("testing(): %d", val);
 
                 new str[256];
                 format(str, sizeof(str), "Hello! sum(2, 3) = %d", sum(2, 3));
@@ -145,7 +131,6 @@ class MainViewModel(
                 new numbers[5] = { 10, 20, 30, 40, 50 };
                 printf("average(numbers) = %d", average(numbers));
                 printf("count 3 is %s", describeCount(3));
-
                 demoFloatMath();
                 demoCallout();
                 SetTimer("testing2", 1000, false);
@@ -174,8 +159,7 @@ class MainViewModel(
                 print("OnPlayerDisconnect!");
                 return 1;
             }
-
-        """.trimIndent()
+".trimIndent()
 
         /**
          * Creates the starter script in the user-visible app workspace.
@@ -263,6 +247,13 @@ class MainViewModel(
 
     private var detectedCompilerVersionCache: CompilerConfig.CompilerVersion? = null
     private var detectedCompilerSourcePath: String? = null
+    private val configPreferenceListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+        if (key == CompilerConfig.KEY_IGNORE_CASE) n_ignore_case = config.n_ignore_case
+    }
+
+    init {
+        config.registerExternalConfigListener(configPreferenceListener)
+    }
 
     /**
      * Include folders this process already created, so the auto-detection launch does not
@@ -593,7 +584,7 @@ class MainViewModel(
             }
             val duration = System.currentTimeMillis() - startTime
 
-            val compilerOutput = if (config.n_explain_output) {
+            val compilerOutput = if (config.n_explain_output || config.n_explain_auto) {
                 Compiler.explainCompilerOutput(result.second, appDirectory, config.n_app_language)
             } else {
                 result.second
