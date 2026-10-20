@@ -314,12 +314,12 @@ class MainViewModel(
                     val contentResolver = appContext.contentResolver
                     val copied = runCatching {
                         val extension = u.lastPathSegment?.substringAfterLast('.', "pwn") ?: "pwn"
-                        val fileName = "pawnmc-open-${System.nanoTime()}.$extension"
-                        val target = File(appContext.cacheDir, fileName)
-                        contentResolver.openInputStream(u)?.use { input ->
-                            target.outputStream().use { output -> input.copyTo(output) }
+                        val n_fileName = "pawnmc-open-${System.nanoTime()}.$extension"
+                        val n_target = File(appContext.cacheDir, n_fileName)
+                        contentResolver.openInputStream(u)?.use { n_input ->
+                            n_target.outputStream().use { n_output -> n_input.copyTo(n_output) }
                         }
-                        target
+                        n_target
                     }.getOrNull()
                     copied?.absolutePath
                 }
@@ -464,14 +464,13 @@ class MainViewModel(
             val n_currentPaths = n_detection.currentPaths
             val n_autoIncludePaths = n_detection.autoIncludePaths
             val n_detected = n_detection.detectedVersion
-            if (n_autoIncludePaths.isNotEmpty()) {                val n_createdPaths = withContext(Dispatchers.IO) {
-                    n_autoIncludePaths.filter { path ->
-                        val directory = File(path)
-                        !directory.exists() && directory.mkdirs()
+            if (n_autoIncludePaths.isNotEmpty()) {
+                val n_createdPaths = withContext(Dispatchers.IO) {
+                    n_autoIncludePaths.filter { n_path ->
+                        val n_directory = File(n_path)
+                        !n_directory.exists() && n_directory.mkdirs()
                     }
                 }
-                // Merge against the value the store holds now, so a path added from
-                // Settings while the scan was running is not written away.
                 config.n_include_paths = config.n_include_paths + n_autoIncludePaths
                 if (n_createdPaths.isNotEmpty()) {
                     validIncludePathCache.removeAll(n_createdPaths.toSet())
@@ -543,9 +542,9 @@ class MainViewModel(
         // Detection is only consulted when forced mode is off, and it hashes the binary,
         // so it runs once here and the result is handed to the config rather than being
         // recomputed on the side.
-        val detectedVersion = if (forcedCompilerMode) null else Compiler.detectCompilerVersionForFile(sourcePath)
-        val version = config.repinCompilerModeFor(sourcePath, detectedVersion)
-        if (!forcedCompilerMode) config.n_compiler_version = version
+        val n_detectedVersion = if (forcedCompilerMode) null else Compiler.detectCompilerVersionForFile(sourcePath)
+        val n_version = config.repinCompilerModeFor(sourcePath, n_detectedVersion)
+        if (!forcedCompilerMode) config.n_compiler_version = n_version
 
         // The conversion already happened when the file was browsed, so compiling
         // only has to make sure the folder is still consistent.
@@ -563,42 +562,41 @@ class MainViewModel(
         isCompiling = true
         outputText = ""
         viewModelScope.launch {
-            val selectedVersion = config.n_compiler_version
-            val options = config.buildOptions(selectedVersion)
+            val n_selectedVersion = config.n_compiler_version
+            val n_options = config.buildOptions(n_selectedVersion)
 
-            val backupRefreshed = withContext(Dispatchers.IO) {
+            val n_backupRefreshed = withContext(Dispatchers.IO) {
                 !config.n_ignore_case || Compiler.refreshBackupForCompile(
                     File(sourcePath).parentFile ?: File(".")
                 )
             }
-            if (!backupRefreshed) {
+            if (!n_backupRefreshed) {
                 outputText = "Failed to refresh the .backup folder; compilation was not started.\n"
                 lastExitCode = -1
                 isCompiling = false
                 return@launch
             }
 
-            val startTime = System.currentTimeMillis()
-            val result = withContext(Dispatchers.IO) {
-                Compiler.compile(sourcePath, options, selectedVersion)
+            val n_startTime = System.currentTimeMillis()
+            val n_result = withContext(Dispatchers.IO) {
+                Compiler.compile(sourcePath, n_options, n_selectedVersion)
             }
-            val duration = System.currentTimeMillis() - startTime
-
+            val n_duration = System.currentTimeMillis() - n_startTime
             val compilerOutput = if (config.n_explain_output || config.n_explain_auto) {
-                Compiler.explainCompilerOutput(result.second, appDirectory, config.n_app_language)
+                Compiler.explainCompilerOutput(n_result.second, appDirectory, config.n_app_language)
             } else {
-                result.second
+                n_result.second
             }
 
             outputText += compilerOutput
-            val timeString = if (duration >= 1000) {
-                String.format("%.2f seconds", duration / 1000.0)
+            val n_timeString = if (n_duration >= 1000) {
+                String.format("%.2f seconds", n_duration / 1000.0)
             } else {
-                "$duration ms"
+                "$n_duration ms"
             }
-            outputText += "\nCompilation time: $timeString\n"
+            outputText += "\nCompilation time: $n_timeString\n"
 
-            lastExitCode = result.first
+            lastExitCode = n_result.first
             isCompiling = false
         }
     }

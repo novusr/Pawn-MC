@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.main
+﻿﻿package com.rvdjv.pawnmc.`interface`.main
 
 import android.Manifest
 import android.content.ClipData
@@ -505,7 +505,8 @@ fun MainScreen(
                 appLanguage = appLanguage
             ) }
 
-            viewModel.selectionError?.let { error -> item {
+            viewModel.selectionError?.let { error ->
+                item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = SpaceS, start = SpaceXS)
@@ -523,9 +524,11 @@ fun MainScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-            } }
+                }
+            }
 
-            viewModel.temporaryFileNotice?.let { notice -> item {
+            viewModel.temporaryFileNotice?.let { notice ->
+                item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = SpaceS, start = SpaceXS)
@@ -543,9 +546,11 @@ fun MainScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-            } }
+                }
+            }
 
-            viewModel.filesystemNotice?.let { notice -> item {
+            viewModel.filesystemNotice?.let { notice ->
+                item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(top = SpaceS, start = SpaceXS)
@@ -575,7 +580,8 @@ fun MainScreen(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
-            } }
+                }
+            }
 
             item { Spacer(modifier = Modifier.height(SpaceXL)) }
 
