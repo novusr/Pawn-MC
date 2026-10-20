@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.editor.xedapi
+package com.rvdjv.pawnmc.`interface`.editor.xedapi
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

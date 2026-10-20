@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.editor.Workspace
+package com.rvdjv.pawnmc.`interface`.editor.Workspace
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

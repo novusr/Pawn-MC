@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`
+package com.rvdjv.pawnmc.`interface`
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathFillType

@@ -314,7 +314,7 @@ class MainViewModel(
                     val contentResolver = appContext.contentResolver
                     val copied = runCatching {
                         val extension = u.lastPathSegment?.substringAfterLast('.', "pwn") ?: "pwn"
-                        val n_fileName = "pawnmc-open-${System.nanoTime()}.$extension"
+                        val n_fileName = "pawnmc-open-${System.nanoTime()}.${extension}"
                         val n_target = File(appContext.cacheDir, n_fileName)
                         contentResolver.openInputStream(u)?.use { n_input ->
                             n_target.outputStream().use { n_output -> n_input.copyTo(n_output) }
@@ -369,7 +369,7 @@ class MainViewModel(
             lastExitCode = null
             selectedFilePath = path
             config.n_last_selected_file_path = path
-            outputText = if (openedFromIntent) "Opened file: $path\n" else "Opened file: $path\n"
+            outputText = "Opened file: ${path}\n"
             applyCompilerAutoDetection(path)
             return
         }
@@ -382,7 +382,7 @@ class MainViewModel(
         selectedFilePath = path
         config.n_last_selected_file_path = path
         if (!isStartupLoad) {
-            outputText = "Selected file: $path\n"
+            outputText = "Selected file: ${path}\n"
         }
         isPreparingFilesystem = true
         filesystemNotice = IGNORE_CASE_BUSY_NOTICE
@@ -589,12 +589,12 @@ class MainViewModel(
             }
 
             outputText += compilerOutput
-            val n_timeString = if (n_duration >= 1000) {
+            val n_elapsedLabel = if (n_duration >= 1000) {
                 String.format("%.2f seconds", n_duration / 1000.0)
             } else {
                 "$n_duration ms"
             }
-            outputText += "\nCompilation time: $n_timeString\n"
+            outputText += "\nCompilation time: ${n_elapsedLabel}\n"
 
             lastExitCode = n_result.first
             isCompiling = false
@@ -614,8 +614,9 @@ class MainViewModel(
     fun requestCompileFromEditor(path: String) {
         hasCompilerOutput = true
         val n_validExtensions = setOf("pawn", "pwn", "p", "inc")
-        if (File(path).extension.lowercase() !in n_validExtensions) {
-            outputText = "Cannot compile '${File(path).name}': unsupported file type.\n"
+        val n_sourceFile = File(path)
+        if (n_sourceFile.extension.lowercase() !in n_validExtensions) {
+            outputText = "Cannot compile '${n_sourceFile.name}': unsupported file type.\n"
             return
         }
         selectedFilePath = path

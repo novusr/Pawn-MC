@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.editor.Workspace
+package com.rvdjv.pawnmc.`interface`.editor.Workspace
 
 import android.content.Context
 import android.os.Build

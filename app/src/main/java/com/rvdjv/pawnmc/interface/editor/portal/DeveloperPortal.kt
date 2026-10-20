@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.editor.portal
+package com.rvdjv.pawnmc.`interface`.editor.portal
 
 import android.content.Context
 import androidx.activity.compose.BackHandler

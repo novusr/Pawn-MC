@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.settings
+package com.rvdjv.pawnmc.`interface`.settings
 
 import android.content.Context
 import androidx.compose.runtime.getValue

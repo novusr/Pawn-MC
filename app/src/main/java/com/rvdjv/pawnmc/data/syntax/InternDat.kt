@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.data.syntax
+package com.rvdjv.pawnmc.data.syntax
 
 import android.content.Context
 import com.rvdjv.pawnmc.data.config.TomlData

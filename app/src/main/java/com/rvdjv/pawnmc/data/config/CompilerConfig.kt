@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.data.config
+package com.rvdjv.pawnmc.data.config
 
 import android.content.Context
 import android.content.SharedPreferences

@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.editor.syntax
+package com.rvdjv.pawnmc.`interface`.editor.syntax
 
 import android.os.Bundle
 import com.rvdjv.pawnmc.data.syntax._item

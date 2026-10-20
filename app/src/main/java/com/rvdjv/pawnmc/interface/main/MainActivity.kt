@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.main
+package com.rvdjv.pawnmc.`interface`.main
 
 import android.Manifest
 import android.content.Intent

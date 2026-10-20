@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.main
+package com.rvdjv.pawnmc.`interface`.main
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
