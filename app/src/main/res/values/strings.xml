@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">PawnMC</string>
+
+    <!-- English (default) localized strings used by the main compiler screen. -->
+    <string name="n_app_theme">App theme</string>
+    <string name="n_app_language">App language</string>
+    <string name="n_editor_background_color">Editor background color</string>
+    <string name="n_result">Result</string>
+    <string name="n_duration">Duration</string>
+    <string name="n_elapsedLabel">Elapsed</string>
+    <string name="n_sourceFile">Source file</string>
 </resources>
