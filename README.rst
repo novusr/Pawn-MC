@@ -25,9 +25,9 @@ the need to transfer files to a PC just to verify your code in most cases.
 Indonesian | Tutorial
 ---------------------
 
-* https://youtu.be/ym9E1QH1ABU?si=xcL-mrqrx3RknBYs
-* https://youtu.be/sgG58JTytI4?si=r6r3TukcnwxD58SP
-* https://youtu.be/xSit9n80DoM?si=tDVehEI6KHBvSZME
+* https://www.youtube.com/watch?v=ym9E1QH1ABU
+* https://www.youtube.com/watch?v=sgG58JTytI4
+* https://www.youtube.com/watch?v=xSit9n80DoM
 
 Notes
 =====
