@@ -1,4 +1,4 @@
-﻿package com.rvdjv.pawnmc.`interface`.editor
+package com.rvdjv.pawnmc.`interface`.editor
 
 import com.rvdjv.pawnmc.data.syntax.PawnRegistry
 import com.rvdjv.pawnmc.data.syntax.InternDat

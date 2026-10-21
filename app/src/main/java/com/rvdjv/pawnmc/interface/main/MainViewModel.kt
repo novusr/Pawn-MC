@@ -159,7 +159,7 @@ class MainViewModel(
                 print("OnPlayerDisconnect!");
                 return 1;
             }
-".trimIndent()
+        """.trimIndent()
 
         /**
          * Creates the starter script in the user-visible app workspace.

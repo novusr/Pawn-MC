@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Assembly, binary and temporary-file back ends.
  * File: Files.cpp
  * Location: app/src/main/cpp

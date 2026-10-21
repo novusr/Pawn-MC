@@ -1,4 +1,4 @@
-﻿PawnMC Roadmap & Architecture Overview
+PawnMC Roadmap & Architecture Overview
 ======================================
 
 

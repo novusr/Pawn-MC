@@ -1,4 +1,4 @@
-﻿# CMakeLists.txt for Pawn Compiler JNI Wrapper
+# CMakeLists.txt for Pawn Compiler JNI Wrapper
 
 cmake_minimum_required(VERSION 3.22.1)
 project("pawnc" C CXX)
