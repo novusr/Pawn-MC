@@ -1,12 +1,12 @@
 PawnMC
 ======
 
-**New Updates** link: https://github.com/novusr/Pawn-MC/actions/runs/39209114573/artifacts/12167545085
+**New Updates** link: https://github.com/novusr/Pawn-MC/actions/runs/39585538347/artifacts/12339174423
 
 *PawnMC* expands the workflow of the Pawn scripting language with a complete, native
 compilation environment for your mobile device.
 
-.. image:: https://raw.githubusercontent.com/machijine/mc-content/refs/heads/main/content/PAWNMC2.png
+.. image:: https://raw.githubusercontent.com/machijine/mc-content/refs/heads/main/content/PAWNMC.png
    :alt: PawnMC running on Android
 
 With this application, you can use on-the-go development techniques, manage local
