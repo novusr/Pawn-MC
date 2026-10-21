@@ -127,7 +127,7 @@ class AssetExtractor(private val context: Context) {
             }
 
             TarArchiveInputStream(tarStream).use { tarInput ->
-                var entry: TarArchiveEntry? = tarInput.nextTarEntry
+                var entry: TarArchiveEntry? = tarInput.nextEntry
                 val buffer = ByteArray(8192)
                 while (entry != null) {
                     val outputFile = File(outputDir, entry.name)
@@ -157,7 +157,7 @@ class AssetExtractor(private val context: Context) {
                             }
                         }
                     }
-                    entry = tarInput.nextTarEntry
+                    entry = tarInput.nextEntry
                 }
             }
         }

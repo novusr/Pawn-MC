@@ -209,6 +209,9 @@ class MainViewModel(
     var n_editor_background_color by mutableStateOf(config.n_editor_background_color)
         private set
 
+    var n_ignore_case by mutableStateOf(config.n_ignore_case)
+        private set
+
     var selectedFilePath by mutableStateOf<String?>(null)
         private set
 

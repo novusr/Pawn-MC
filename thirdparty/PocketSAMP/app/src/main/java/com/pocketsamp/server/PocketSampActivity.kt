@@ -112,6 +112,7 @@ class PocketSampActivity : ComponentActivity() {
                             resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
                             android.content.res.Configuration.UI_MODE_NIGHT_YES)
                     val statusBarBackground = if (isDark) BgDark else BgLight
+                    @Suppress("DEPRECATION")
                     window.statusBarColor = statusBarBackground.toArgb()
                     WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDark
                 }

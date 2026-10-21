@@ -244,7 +244,7 @@ private fun CrashDetailView(
                         fontSize = 13.sp
                     )
                 }
-                Divider(color = SampThemeColors.cardBorder, modifier = Modifier.padding(vertical = 4.dp))
+                HorizontalDivider(color = SampThemeColors.cardBorder, modifier = Modifier.padding(vertical = 4.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween

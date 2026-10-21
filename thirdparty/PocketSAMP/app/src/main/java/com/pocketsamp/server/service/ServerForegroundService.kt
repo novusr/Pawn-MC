@@ -319,6 +319,7 @@ class ServerForegroundService : Service() {
         val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
 
         // 1. Wi-Fi Lock with High Performance (keeps Wi-Fi active in background; LOW_LATENCY is deactivated by Android when app leaves foreground)
+        @Suppress("DEPRECATION")
         wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "PocketSAMP::WifiLock").apply {
             setReferenceCounted(false)
             acquire()
