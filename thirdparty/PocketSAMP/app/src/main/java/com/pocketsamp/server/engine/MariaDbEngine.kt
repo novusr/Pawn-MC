@@ -26,31 +26,70 @@ class MariaDbEngine(private val context: Context) {
     val isRunning: Boolean
         get() = processRunner.isRunning
 
+    private fun findInstallDbBinary(context: Context, mariadbDir: File): File? {
+        val candidates = listOf(
+            File(mariadbDir, "bin/mariadb-install-db"),
+            File(mariadbDir, "bin/mysql_install_db"),
+            File(context.filesDir, "bin/mariadb-install-db"),
+            File(context.filesDir, "bin/mysql_install_db"),
+            File(context.applicationInfo.nativeLibraryDir, "libmariadb-install-db.so"),
+            File(context.applicationInfo.nativeLibraryDir, "mariadb-install-db")
+        )
+        return candidates.firstOrNull { it.exists() && (it.canExecute() || it.setExecutable(true, false)) }
+    }
+
+    private fun findMariadbdBinary(context: Context, mariadbDir: File): File? {
+        val candidates = listOf(
+            File(mariadbDir, "bin/mariadbd"),
+            File(mariadbDir, "bin/mysqld"),
+            File(context.filesDir, "bin/mariadbd"),
+            File(context.filesDir, "bin/mysqld"),
+            File(context.applicationInfo.nativeLibraryDir, "libmariadbd.so"),
+            File(context.applicationInfo.nativeLibraryDir, "mariadbd"),
+            File(context.applicationInfo.nativeLibraryDir, "libmysqld.so"),
+            File(context.applicationInfo.nativeLibraryDir, "mysqld")
+        )
+        return candidates.firstOrNull { it.exists() && (it.canExecute() || it.setExecutable(true, false)) }
+    }
+
     suspend fun initializeIfNeeded(scope: CoroutineScope): Boolean = withContext(Dispatchers.IO) {
         val mariadbDir = File(context.filesDir, "mariadb")
         val dataDir = File(mariadbDir, "data")
         val tmpDir = File(mariadbDir, "tmp")
-        val installDb = File(mariadbDir, "bin/mariadb-install-db")
         val markerFile = File(mariadbDir, "data/.pawnmc-initialized")
 
         dataDir.mkdirs()
         tmpDir.mkdirs()
 
         if (!markerFile.isFile) {
-            if (!installDb.isFile) {
-                _dbLogs.emit("[MariaDB Error] Initialization tool not found: ${installDb.absolutePath}")
+            val installDb = findInstallDbBinary(context, mariadbDir)
+            val mariadbd = findMariadbdBinary(context, mariadbDir)
+
+            if (installDb == null && mariadbd == null) {
+                _dbLogs.emit("[MariaDB Info] MariaDB binary/installer not found in app storage or native libraries.")
+                _dbLogs.emit("[MariaDB Info] Database service is optional for SQLite/file gamemodes.")
                 return@withContext false
             }
+
             val runtimeHome = File(mariadbDir, "runtime-home").apply { mkdirs() }
-            installDb.setExecutable(true, false)
-            val installBuilder = ProcessBuilder(
-                installDb.absolutePath,
-                "--datadir=${dataDir.absolutePath}",
-                "--auth-root-authentication-method=normal",
-                "--skip-test-db",
-                "--basedir=${mariadbDir.absolutePath}",
-                "--lc-messages-dir=${File(mariadbDir, "share/mariadb").absolutePath}"
-            ).directory(mariadbDir).redirectErrorStream(true)
+            val installBuilder = if (installDb != null) {
+                ProcessBuilder(
+                    installDb.absolutePath,
+                    "--datadir=${dataDir.absolutePath}",
+                    "--auth-root-authentication-method=normal",
+                    "--skip-test-db",
+                    "--basedir=${mariadbDir.absolutePath}",
+                    "--lc-messages-dir=${File(mariadbDir, "share/mariadb").absolutePath}"
+                ).directory(mariadbDir).redirectErrorStream(true)
+            } else {
+                ProcessBuilder(
+                    mariadbd!!.absolutePath,
+                    "--initialize-insecure",
+                    "--datadir=${dataDir.absolutePath}",
+                    "--basedir=${mariadbDir.absolutePath}",
+                    "--lc-messages-dir=${File(mariadbDir, "share/mariadb").absolutePath}"
+                ).directory(mariadbDir).redirectErrorStream(true)
+            }
             installBuilder.environment()["HOME"] = runtimeHome.absolutePath
             installBuilder.environment()["TMPDIR"] = tmpDir.absolutePath
             installBuilder.environment()["LD_LIBRARY_PATH"] = listOf(
@@ -81,18 +120,15 @@ class MariaDbEngine(private val context: Context) {
 
         val mariadbDir = File(context.filesDir, "mariadb")
         val runtimeHome = File(mariadbDir, "runtime-home").apply { mkdirs() }
-        val mariadbdBinary = File(mariadbDir, "bin/mariadbd").apply {
-            if (isFile) setExecutable(true, false)
-        }
+        val mariadbdBinary = findMariadbdBinary(context, mariadbDir)
         val cnfFile = File(mariadbDir, "my.cnf")
         val dataDir = File(mariadbDir, "data").apply { mkdirs() }
         val tmpDir = File(mariadbDir, "tmp").apply { mkdirs() }
         val shareDir = File(mariadbDir, "share/mariadb")
-        File(mariadbDir, "bin/mariadbd").let { if (it.exists()) it.setExecutable(true, false) }
 
-        if (!mariadbdBinary.exists() || !mariadbdBinary.canExecute()) {
+        if (mariadbdBinary == null || !mariadbdBinary.exists() || !mariadbdBinary.canExecute()) {
             scope.launch {
-                _dbLogs.emit("[MariaDB Error] Binary not found: ${mariadbdBinary.absolutePath}")
+                _dbLogs.emit("[MariaDB Info] MariaDB daemon not found in app storage or native libraries.")
             }
             return
         }

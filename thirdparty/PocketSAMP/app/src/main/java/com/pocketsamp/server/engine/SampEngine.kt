@@ -32,13 +32,38 @@ class SampEngine(private val context: Context) {
     val isRunning: Boolean
         get() = processRunner.isRunning
 
+    private fun findQemuBinary(context: Context): File? {
+        val nativeLibDir = context.applicationInfo.nativeLibraryDir
+        val filesDir = context.filesDir
+        val candidates = mutableListOf(
+            File(nativeLibDir, "libqemu-i386.so"),
+            File(nativeLibDir, "qemu-i386"),
+            File(filesDir, "bin/qemu-i386"),
+            File(filesDir, "bin/libqemu-i386.so"),
+            File(filesDir, "rootfs_i386/bin/qemu-i386"),
+            File(filesDir, "rootfs_i386/usr/bin/qemu-i386"),
+            File("/system/bin/qemu-i386"),
+            File("/vendor/bin/qemu-i386")
+        )
+        try {
+            File(nativeLibDir).parentFile?.listFiles()?.forEach { dir ->
+                if (dir.isDirectory) {
+                    candidates.add(File(dir, "libqemu-i386.so"))
+                    candidates.add(File(dir, "qemu-i386"))
+                }
+            }
+        } catch (_: Exception) {}
+
+        return candidates.firstOrNull { it.exists() && (it.canExecute() || it.setExecutable(true, false)) }
+    }
+
     fun start(scope: CoroutineScope) {
         if (isRunning) return
 
         val nativeLibDir = context.applicationInfo.nativeLibraryDir
         val filesDir = context.filesDir
 
-        val qemuBinary = File(nativeLibDir, "libqemu-i386.so")
+        val qemuBinary = findQemuBinary(context)
         val rootfsDir = File(filesDir, "rootfs_i386")
         val sampDir = com.pocketsamp.server.config.ServerDirectoryManager.getServerDirectory(context)
         val serverBinary = File(filesDir, "bin/samp03svr").takeIf { it.exists() }
@@ -46,9 +71,19 @@ class SampEngine(private val context: Context) {
             ?: File(sampDir, "samp03svr")
         val tempDir = File(context.cacheDir, "samp_tmp").apply { mkdirs() }
 
-        if (!qemuBinary.exists()) {
+        val isX86Host = android.os.Build.SUPPORTED_ABIS.any { it.contains("x86") }
+        val ldLinuxCandidates = listOf(
+            File(rootfsDir, "lib/ld-linux.so.2"),
+            File(rootfsDir, "lib/i386-linux-gnu/ld-linux.so.2"),
+            File("/lib/ld-linux.so.2")
+        )
+        val ldLinux = ldLinuxCandidates.firstOrNull { it.exists() }
+        val useNativeX86 = isX86Host && (ldLinux != null || serverBinary.canExecute())
+
+        if (qemuBinary == null && !useNativeX86) {
             scope.launch {
-                _serverLogs.emit("[SA-MP Error] QEMU binary not found in $nativeLibDir")
+                _serverLogs.emit("[SA-MP Error] QEMU binary (libqemu-i386.so) not found in $nativeLibDir.")
+                _serverLogs.emit("[SA-MP Info] PocketSAMP requires QEMU translator to run 32-bit x86 SA-MP server on ARM64.")
             }
             return
         }
@@ -131,14 +166,26 @@ class SampEngine(private val context: Context) {
             logFile.delete()
         }
 
-        // Execute SA-MP server via QEMU user-mode translation directly (-L provides the x86 sysroot).
-        // This eliminates PRoot ptrace overhead, glue rootfs bugs, and /tmp permission failures.
-        val command = listOf(
-            qemuBinary.absolutePath,
-            "-L", rootfsDir.absolutePath,
-            "-E", "LD_LIBRARY_PATH=/usr/lib/i386-linux-gnu:/lib/i386-linux-gnu:/usr/lib:/lib:./plugins:plugins",
-            serverBinary.absolutePath
-        )
+        // Execute SA-MP server via QEMU user-mode translation directly (-L provides the x86 sysroot),
+        // or natively on x86/x86_64 hosts via ld-linux.so.2.
+        val command = if (qemuBinary != null) {
+            listOf(
+                qemuBinary.absolutePath,
+                "-L", rootfsDir.absolutePath,
+                "-E", "LD_LIBRARY_PATH=/usr/lib/i386-linux-gnu:/lib/i386-linux-gnu:/usr/lib:/lib:./plugins:plugins",
+                serverBinary.absolutePath
+            )
+        } else if (ldLinux != null) {
+            ldLinux.setExecutable(true, false)
+            listOf(
+                ldLinux.absolutePath,
+                "--library-path",
+                "${rootfsDir.absolutePath}/usr/lib/i386-linux-gnu:${rootfsDir.absolutePath}/lib/i386-linux-gnu:${sampDir.absolutePath}/plugins:./plugins",
+                serverBinary.absolutePath
+            )
+        } else {
+            listOf(serverBinary.absolutePath)
+        }
 
         val env = mapOf(
             "TMPDIR" to tempDir.absolutePath,

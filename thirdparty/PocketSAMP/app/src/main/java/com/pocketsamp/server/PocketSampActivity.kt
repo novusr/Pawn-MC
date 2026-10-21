@@ -180,11 +180,11 @@ class PocketSampActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = 24.dp)
-                        .clip(RoundedCornerShape(20.dp))
+                        .padding(end = 12.dp, bottom = 16.dp)
+                        .clip(RoundedCornerShape(14.dp))
                         .background(SampThemeColors.surface)
-                        .border(1.dp, SampThemeColors.card, RoundedCornerShape(20.dp))
-                        .padding(vertical = 8.dp, horizontal = 6.dp),
+                        .border(1.dp, SampThemeColors.card, RoundedCornerShape(14.dp))
+                        .padding(vertical = 4.dp, horizontal = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -192,18 +192,18 @@ class PocketSampActivity : ComponentActivity() {
                         val selected = tab == currentTab
                         Row(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(14.dp))
+                                .clip(RoundedCornerShape(10.dp))
                                 .background(if (selected) SampThemeColors.card else Color.Transparent)
                                 .clickable { currentTab = tab }
-                                .padding(horizontal = if (selected) 14.dp else 12.dp, vertical = 12.dp),
+                                .padding(horizontal = if (selected) 10.dp else 8.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
                             Icon(
                                 imageVector = tab.icon,
                                 contentDescription = t("tab.${tab.name.lowercase()}"),
                                 tint = if (selected) SampThemeColors.accent else SampThemeColors.textMuted,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                             if (selected) {
                                 Text(

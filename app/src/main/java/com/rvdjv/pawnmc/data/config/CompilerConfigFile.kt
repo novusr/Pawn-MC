@@ -119,6 +119,182 @@ internal object CompilerConfigFile {
     fun restoreFile(source: File, prefs: SharedPreferences): Boolean =
         restoreFile(source, prefs, listOf(source))
 
+    /**
+     * Validates [root] against expected types, permitted ranges, and allowed values.
+     *
+     * If a value is invalid, a boolean does not match the expected format, or a numeric
+     * value exceeds its permitted limits, it is reset to its default value and [root] is modified.
+     *
+     * @return true if any setting had to be corrected/reset to default.
+     */
+    fun validateAndCorrect(root: JSONObject): Boolean {
+        var corrected = false
+
+        // 1. schema: integer
+        if (root.has(SCHEMA_KEY)) {
+            val schemaVal = root.opt(SCHEMA_KEY)
+            if (schemaVal !is Number || (schemaVal is Double && schemaVal % 1.0 != 0.0)) {
+                root.put(SCHEMA_KEY, SCHEMA_VERSION)
+                corrected = true
+            }
+        }
+
+        // 2. debug_level: 0..3
+        if (root.has(CompilerConfig.KEY_DEBUG)) {
+            val debugVal = root.opt(CompilerConfig.KEY_DEBUG)
+            val intVal = (debugVal as? Number)?.toInt()
+            if (debugVal !is Number || intVal == null || intVal !in 0..3) {
+                root.put(CompilerConfig.KEY_DEBUG, CompilerConfig.DebugLevel.D0.value)
+                corrected = true
+            }
+        }
+
+        // 3. optimization_level: 0..2
+        if (root.has(CompilerConfig.KEY_OPTIMIZATION)) {
+            val optVal = root.opt(CompilerConfig.KEY_OPTIMIZATION)
+            val intVal = (optVal as? Number)?.toInt()
+            if (optVal !is Number || intVal == null || intVal !in 0..2) {
+                root.put(CompilerConfig.KEY_OPTIMIZATION, CompilerConfig.OptimizationLevel.O0.value)
+                corrected = true
+            }
+        }
+
+        // Helper for strictly validating boolean fields
+        fun validateBoolean(key: String, defaultVal: Boolean) {
+            if (root.has(key)) {
+                val value = root.opt(key)
+                if (value !is Boolean) {
+                    root.put(key, defaultVal)
+                    corrected = true
+                }
+            }
+        }
+
+        validateBoolean(CompilerConfig.KEY_IGNORE_CASE, false)
+        validateBoolean(CompilerConfig.KEY_EXPLAIN_OUTPUT, true)
+        validateBoolean(CompilerConfig.KEY_SEMICOLONS, true)
+        validateBoolean(CompilerConfig.KEY_PARENTHESES, true)
+        validateBoolean(CompilerConfig.KEY_APP_LANGUAGE_SET, false)
+        validateBoolean(CompilerConfig.KEY_FORCED_MODE, false)
+        validateBoolean(CompilerConfig.KEY_FORCED_INCLUDE_PATH_AUTO, false)
+
+        // 4. custom_flags: String
+        if (root.has(CompilerConfig.KEY_CUSTOM_FLAGS)) {
+            val value = root.opt(CompilerConfig.KEY_CUSTOM_FLAGS)
+            if (value != null && value != JSONObject.NULL && value !is String) {
+                root.put(CompilerConfig.KEY_CUSTOM_FLAGS, "")
+                corrected = true
+            }
+        }
+
+        // 5. compiler_version: "3.10.7" | "3.10.11" | null
+        if (root.has(CompilerConfig.KEY_COMPILER_VERSION)) {
+            val value = root.opt(CompilerConfig.KEY_COMPILER_VERSION)
+            if (value != null && value != JSONObject.NULL) {
+                val str = value as? String
+                if (str == null || (str != CompilerConfig.STR_V3107 && str != CompilerConfig.STR_V31011)) {
+                    root.put(CompilerConfig.KEY_COMPILER_VERSION, JSONObject.NULL)
+                    corrected = true
+                }
+            }
+        }
+
+        // 6. app_theme: "system" | "light" | "dark" | null
+        if (root.has(CompilerConfig.KEY_APP_THEME)) {
+            val value = root.opt(CompilerConfig.KEY_APP_THEME)
+            if (value != null && value != JSONObject.NULL) {
+                val str = value as? String
+                val allowedThemes = setOf("system", "light", "dark")
+                if (str == null || str.lowercase() !in allowedThemes) {
+                    root.put(CompilerConfig.KEY_APP_THEME, JSONObject.NULL)
+                    corrected = true
+                }
+            }
+        }
+
+        // 7. app_language: "id" | "en" | "es" | "ru" | "in" | "es-ar" | "es_ar" | "ru-ru" | "ru_ru" | null
+        if (root.has(CompilerConfig.KEY_APP_LANGUAGE)) {
+            val value = root.opt(CompilerConfig.KEY_APP_LANGUAGE)
+            if (value != null && value != JSONObject.NULL) {
+                val str = value as? String
+                val allowedLangs = setOf("id", "en", "es", "ru", "in", "es-ar", "es_ar", "ru-ru", "ru_ru")
+                if (str == null || str.lowercase() !in allowedLangs) {
+                    root.put(CompilerConfig.KEY_APP_LANGUAGE, JSONObject.NULL)
+                    corrected = true
+                }
+            }
+        }
+
+        // 8. editor_background_color: null or hex color #RRGGBB / #AARRGGBB
+        if (root.has(CompilerConfig.KEY_EDITOR_BG_COLOR)) {
+            val value = root.opt(CompilerConfig.KEY_EDITOR_BG_COLOR)
+            if (value != null && value != JSONObject.NULL) {
+                val str = value as? String
+                val hexRegex = Regex("^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+                if (str == null || !str.matches(hexRegex)) {
+                    root.put(CompilerConfig.KEY_EDITOR_BG_COLOR, JSONObject.NULL)
+                    corrected = true
+                }
+            }
+        }
+
+        // 9. include_paths: JSONArray of Strings
+        if (root.has(CompilerConfig.KEY_INCLUDE_PATHS)) {
+            val value = root.opt(CompilerConfig.KEY_INCLUDE_PATHS)
+            if (value !is JSONArray) {
+                root.put(CompilerConfig.KEY_INCLUDE_PATHS, JSONArray())
+                corrected = true
+            } else {
+                val sanitizedArray = JSONArray()
+                var arrayModified = false
+                for (i in 0 until value.length()) {
+                    val item = value.opt(i)
+                    if (item is String) {
+                        sanitizedArray.put(item)
+                    } else {
+                        arrayModified = true
+                    }
+                }
+                if (arrayModified) {
+                    root.put(CompilerConfig.KEY_INCLUDE_PATHS, sanitizedArray)
+                    corrected = true
+                }
+            }
+        }
+
+        // 10. string or null paths
+        listOf(
+            CompilerConfig.KEY_WORKSPACE_FOLDERS,
+            CompilerConfig.KEY_LAST_FILE,
+            CompilerConfig.KEY_LAST_DIR
+        ).forEach { key ->
+            if (root.has(key)) {
+                val value = root.opt(key)
+                if (value != null && value != JSONObject.NULL && value !is String) {
+                    root.put(key, JSONObject.NULL)
+                    corrected = true
+                }
+            }
+        }
+
+        return corrected
+    }
+
+    /**
+     * Validates settings in [file] against expected types and ranges.
+     * If any setting is invalid, resets it to default and rewrites the corrected file.
+     */
+    fun validateAndCorrect(file: File): Boolean {
+        if (!file.isFile) return false
+        val content = runCatching { file.readText() }.getOrNull() ?: return false
+        val root = runCatching { JSONObject(content) }.getOrNull() ?: return false
+        val modified = validateAndCorrect(root)
+        if (modified) {
+            runCatching { file.writeText(root.toString(2)) }
+        }
+        return modified
+    }
+
     private fun restoreFile(
         source: File,
         prefs: SharedPreferences,
@@ -126,6 +302,12 @@ internal object CompilerConfigFile {
     ): Boolean {
         if (!source.isFile) return false
         val root = runCatching { JSONObject(source.readText()) }.getOrNull() ?: return false
+
+        // Validate and correct any hand-edited or malformed settings safely
+        val wasCorrected = validateAndCorrect(root)
+        if (wasCorrected) {
+            runCatching { source.writeText(root.toString(2)) }
+        }
 
         val restored = runCatching {
             val editor = prefs.edit()

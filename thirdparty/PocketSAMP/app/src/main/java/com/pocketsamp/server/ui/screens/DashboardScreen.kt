@@ -109,9 +109,9 @@ fun DashboardScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(SampThemeColors.bg)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 14.dp, vertical = 10.dp)
             .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // App Header. The back arrow mirrors the Xed editor's navigation icon: one
         // tap lands back on the PawnMC main interface, because expecting the system
@@ -154,11 +154,11 @@ fun DashboardScreen(
 
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(14.dp))
                     .background(statusColor.copy(alpha = 0.15f))
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Box(
                     modifier = Modifier
@@ -179,19 +179,19 @@ fun DashboardScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(12.dp)
         ) {
             Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // Section 1: Localhost (Main di HP Ini - Disarankan)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(SampThemeColors.accent.copy(alpha = 0.08f), RoundedCornerShape(12.dp))
-                        .padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                        .background(SampThemeColors.accent.copy(alpha = 0.08f), RoundedCornerShape(8.dp))
+                        .padding(10.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -304,12 +304,12 @@ fun DashboardScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(12.dp)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -567,11 +567,11 @@ fun DashboardScreen(
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(12.dp)
         ) {
             Column(
-                modifier = Modifier.padding(12.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -580,11 +580,11 @@ fun DashboardScreen(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
                             text = t("folder.gamemode") + " SA-MP",
-                            fontSize = 15.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = SampThemeColors.textSecondary
                         )
@@ -594,11 +594,11 @@ fun DashboardScreen(
                     val badgeText = if (hasCfg) "server.cfg OK" else "server.cfg"
                     Text(
                         text = badgeText,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = badgeColor,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
+                            .clip(RoundedCornerShape(4.dp))
                             .background(badgeColor.copy(alpha = 0.15f))
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     )
@@ -611,7 +611,7 @@ fun DashboardScreen(
                 ) {
                     Text(
                         text = currentServerDir.absolutePath,
-                        fontSize = 13.sp,
+                        fontSize = 12.sp,
                         fontFamily = FontFamily.Monospace,
                         color = SampThemeColors.textPrimary,
                         modifier = Modifier.weight(1f)
@@ -623,30 +623,31 @@ fun DashboardScreen(
                             clipboard.setPrimaryClip(clip)
                             Toast.makeText(context, t("copy.path.done"), Toast.LENGTH_SHORT).show()
                         },
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(24.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
                             contentDescription = "Copy Path",
                             tint = SampThemeColors.accent,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                     }
                 }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Button(
                         onClick = { folderPickerLauncher.launch(null) },
                         colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.accentOn),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(8.dp),
                         modifier = Modifier
                             .weight(1f)
-                            .height(38.dp)
+                            .height(32.dp),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                     ) {
-                        Text(text = t("folder.pick"), fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(text = t("folder.pick"), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
 
                     OutlinedButton(
@@ -655,16 +656,17 @@ fun DashboardScreen(
                             Toast.makeText(context, t("folder.reset.done"), Toast.LENGTH_SHORT).show()
                         },
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = SampThemeColors.textSecondary),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.height(38.dp)
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.height(32.dp),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                     ) {
-                        Text(text = t("folder.reset"), fontSize = 14.sp)
+                        Text(text = t("folder.reset"), fontSize = 13.sp)
                     }
                 }
 
                 Text(
                     text = if (hasCfg) t("folder.has.cfg") else t("folder.no.cfg"),
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     color = if (hasCfg) SampThemeColors.textMuted else SampThemeColors.warn
                 )
             }
@@ -683,8 +685,8 @@ fun DashboardScreen(
             enabled = !isBusy,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(16.dp),
+                .height(44.dp),
+            shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isRunning) SampThemeColors.danger else SampThemeColors.accent,
                 contentColor = if (isRunning) Color.White else SampThemeColors.bg
@@ -692,7 +694,7 @@ fun DashboardScreen(
         ) {
             if (isBusy) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(20.dp),
                     color = SampThemeColors.textPrimary,
                     strokeWidth = 2.dp
                 )
@@ -700,12 +702,12 @@ fun DashboardScreen(
                 Icon(
                     imageVector = if (isRunning) Icons.Default.Stop else Icons.Default.PlayArrow,
                     contentDescription = null,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = if (isRunning) t("action.stop") else t("action.start"),
-                    fontSize = 18.sp,
+                    fontSize = 15.sp,
                     fontWeight = FontWeight.Bold
                 )
             }

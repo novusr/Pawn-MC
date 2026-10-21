@@ -24,7 +24,6 @@
  * JNI-onward layer only, and pulling those in from here would drag them into the two
  * `pc_*` trampolines as well.
  */
-extern "C" {
 
 // --- Compiler.cpp ---------------------------------------------------------------
 // JNI entry points. Their names encode the owner class:
@@ -88,7 +87,5 @@ bool MC_is_pawn_source_argument(const char* value);
  * direct call when the thread cannot be created.
  */
 int MC_compile_on_worker_thread(int argc, char** argv);
-
-} // extern "C"
 
 #endif // PAWN_BRIDGE_H

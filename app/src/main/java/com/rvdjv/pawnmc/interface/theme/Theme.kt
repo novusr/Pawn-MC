@@ -145,3 +145,18 @@ fun PawnMCTheme(
         content = content
     )
 }
+
+/**
+ * Wraps section containers that must display in a dark theme even when the overall
+ * theme is light/white (e.g. main action card, compiler log container, settings promo).
+ */
+@Composable
+fun DarkSectionContainer(
+    content: @Composable () -> Unit
+) {
+    MaterialTheme(
+        colorScheme = DarkColorScheme,
+        typography = Typography,
+        content = content
+    )
+}

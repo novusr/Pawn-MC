@@ -675,10 +675,10 @@ ru = "Выбрать файл"
 es = "Elegir archivo"
 
 [main.output.title]
-id = "Keluaran kompilasi — periksa pelan-pelan."
-en = "Compile output — read it through."
-ru = "Вывод компиляции — прочти не спеша."
-es = "Salida de compilación — léela con calma."
+id = "periksa pelan-pelan."
+en = "read it through."
+ru = "прочти не спеша."
+es = "léela con calma."
 
 [main.output.actions]
 id = "Aksi"
@@ -705,10 +705,10 @@ ru = "Требуются Grand Permissions!"
 es = "Se necesitan permisos totales!"
 
 [main.perm.grand.desc]
-id = "Izin Semua Berkas (Grand Permissions) diperlukan PawnMC agar bisa mengompilasi berkas pawn dan menulis hasil amx ke lokasi mana pun."
-en = "PawnMC needs Grand Permissions (All files access) so it can compile pawn files and write the amx output anywhere."
-ru = "PawnMC нужны Grand Permissions (доступ ко всем файлам), чтобы компилировать файлы pawn и записывать вывод amx в любое место."
-es = "PawnMC necesita Permisos Totales (acceso a todos los archivos) para poder compilar archivos pawn y escribir la salida amx donde le indiques."
+id = "Izin Semua Berkas (Grand Permissions) diperlukan PawnMC agar bisa mengompilasi berkas pawn dan menulis hasil amx ke lokasi mana pun. Izin ini juga penting karena jika aplikasi dicopot pemasangannya (uninstall), konfigurasi sebelumnya dapat dipulihkan kembali saat aplikasi dipasang ulang."
+en = "PawnMC needs Grand Permissions (All files access) so it can compile pawn files and write the amx output anywhere. This permission is also important because, if the application is uninstalled, your previous configurations can be restored when the application is reinstalled."
+ru = "PawnMC нужны Grand Permissions (доступ ко всем файлам), чтобы компилировать файлы pawn и записывать вывод amx в любое место. Это разрешение также важно, поскольку при удалении приложения ваши предыдущие настройки могут быть восстановлены при повторной установке."
+es = "PawnMC necesita Permisos Totales (acceso a todos los archivos) para poder compilar archivos pawn y escribir la salida amx donde le indiques. Este permiso también es importante porque, si se desinstala la aplicación, tus configuraciones anteriores se podrán restaurar al reinstalarla."
 
 [main.perm.grand.grant]
 id = "Beri Izin"

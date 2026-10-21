@@ -104,6 +104,7 @@ import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserMode
 import com.rvdjv.pawnmc.`interface`.theme.PawnMCTheme
+import com.rvdjv.pawnmc.`interface`.theme.DarkSectionContainer
 import com.rvdjv.pawnmc.`interface`.theme.status_error
 import com.rvdjv.pawnmc.`interface`.theme.status_error_container
 import com.rvdjv.pawnmc.`interface`.theme.status_idle
@@ -307,7 +308,7 @@ fun MainScreen(
             onDismissRequest = { showPermissionDialog = false },
             title = { Text(localizer.get("main.perm.grand.title", appLanguage, "Grand Permissions Required!")) },
             text = {
-                Text(localizer.get("main.perm.grand.desc", appLanguage, "PawnMC needs Grand Permissions (All files access) so it can compile pawn files and write the amx output anywhere."))
+                Text(localizer.get("main.perm.grand.desc", appLanguage, "PawnMC needs Grand Permissions (All files access) so it can compile pawn files and write the amx output anywhere. This permission is also important because, if the application is uninstalled, your previous configurations can be restored when the application is reinstalled."))
             },
             confirmButton = {
                 TextButton(
@@ -394,12 +395,20 @@ fun MainScreen(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
-                Icon(
-                    imageVector = if (atBottom) Icons.Filled.ArrowUpward else Icons.Filled.ContentCut,
-                    contentDescription = if (atBottom) "Scroll to top" else "Scroll to settings",
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.size(24.dp)
-                )
+                if (atBottom) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowUpward,
+                        contentDescription = "Scroll to top",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = "🛹",
+                        fontSize = 18.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -481,29 +490,33 @@ fun MainScreen(
 
             item { Spacer(modifier = Modifier.height(SpaceL)) }
 
-            item { CompileActionCard(
-                selectedFileName = viewModel.selectedFilePath?.let { File(it).name },
-                selectedFileSize = viewModel.selectedFilePath?.let { formatFileSize(File(it).length()) },
-                isCompiling = viewModel.isCompiling || viewModel.isPreparingFilesystem,
-                onChangeFileClick = {
-                    if (!isStoragePermissionGranted) {
-                        showPermissionDialog = true
-                    } else {
-                        showFileBrowser = true
-                    }
-                },
-                onCompileClick = {
-                    viewModel.selectedFilePath?.let { path ->
-                        viewModel.compileFile(
-                            path = path,
-                            isStoragePermissionGranted = isStoragePermissionGranted,
-                            onPermissionRequired = { showPermissionDialog = true }
-                        )
-                    }
-                },
-                localizer = localizer,
-                appLanguage = appLanguage
-            ) }
+            item {
+                DarkSectionContainer {
+                    CompileActionCard(
+                        selectedFileName = viewModel.selectedFilePath?.let { File(it).name },
+                        selectedFileSize = viewModel.selectedFilePath?.let { formatFileSize(File(it).length()) },
+                        isCompiling = viewModel.isCompiling || viewModel.isPreparingFilesystem,
+                        onChangeFileClick = {
+                            if (!isStoragePermissionGranted) {
+                                showPermissionDialog = true
+                            } else {
+                                showFileBrowser = true
+                            }
+                        },
+                        onCompileClick = {
+                            viewModel.selectedFilePath?.let { path ->
+                                viewModel.compileFile(
+                                    path = path,
+                                    isStoragePermissionGranted = isStoragePermissionGranted,
+                                    onPermissionRequired = { showPermissionDialog = true }
+                                )
+                            }
+                        },
+                        localizer = localizer,
+                        appLanguage = appLanguage
+                    )
+                }
+            }
 
             viewModel.selectionError?.let { error ->
                 item {
@@ -620,17 +633,21 @@ fun MainScreen(
             // carries the settings guide: one row per thing PawnMC can be configured to
             // do, each one opening Settings *at that section* rather than at the top, so
             // the card is a way in rather than an advertisement.
-            item { DeveloperPortalPromoCard(
-                onEntryClick = { target ->
-                    if (viewModel.isCompiling) {
-                        showCompilingBlockedToast()
-                    } else {
-                        onOpenSettingsTarget(target)
-                    }
-                },
-                localizer = localizer,
-                appLanguage = appLanguage
-            ) }
+            item {
+                DarkSectionContainer {
+                    DeveloperPortalPromoCard(
+                        onEntryClick = { target ->
+                            if (viewModel.isCompiling) {
+                                showCompilingBlockedToast()
+                            } else {
+                                onOpenSettingsTarget(target)
+                            }
+                        },
+                        localizer = localizer,
+                        appLanguage = appLanguage
+                    )
+                }
+            }
 
             item { Spacer(modifier = Modifier.height(SpaceL)) }
         }
@@ -1063,11 +1080,13 @@ internal fun CompilerLogsSection(
 
         Spacer(modifier = Modifier.height(SpaceS))
 
-        OutputPanel(
-            outputText = outputText,
-            isCompiling = status == CompileStatus.COMPILING,
-            scrollState = scrollState
-        )
+        DarkSectionContainer {
+            OutputPanel(
+                outputText = outputText,
+                isCompiling = status == CompileStatus.COMPILING,
+                scrollState = scrollState
+            )
+        }
     }
 }
 

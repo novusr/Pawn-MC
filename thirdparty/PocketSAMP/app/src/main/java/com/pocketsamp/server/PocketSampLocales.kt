@@ -304,10 +304,10 @@ object PocketSampLocales {
             Lang.RU to "Игра на этом телефоне (одно устройство)",
         ),
         "dash.local.note" to mapOf(
-            Lang.ID to "⭐ Sangat Disarankan: Koneksi internal langsung (0ms ping), tidak bergantung sinyal Wi-Fi, dan anti-putus saat beralih/membuka game.",
-            Lang.EN to "⭐ Highly recommended: direct internal connection (0 ms ping), independent of Wi-Fi signal, and it never drops when switching to or opening the game.",
-            Lang.ES to "⭐ Muy recomendado: conexión interna directa (0 ms de ping), sin depender de la señal Wi-Fi, y sin cortes al cambiar o abrir el juego.",
-            Lang.RU to "⭐ Настоятельно рекомендуется: прямое внутреннее соединение (пинг 0 мс), не зависит от сигнала Wi-Fi и не обрывается при переключении на игру.",
+            Lang.ID to "Sangat Disarankan: Koneksi internal langsung (0ms ping), tidak bergantung sinyal Wi-Fi, dan anti-putus saat beralih/membuka game.",
+            Lang.EN to "Highly recommended: direct internal connection (0 ms ping), independent of Wi-Fi signal, and it never drops when switching to or opening the game.",
+            Lang.ES to "Muy recomendado: conexión interna directa (0 ms de ping), sin depender de la señal Wi-Fi, y sin cortes al cambiar o abrir el juego.",
+            Lang.RU to "Настоятельно рекомендуется: прямое внутреннее соединение (пинг 0 мс), не зависит от сигнала Wi-Fi и не обрывается при переключении на игру.",
         ),
         "dash.lan.title" to mapOf(
             Lang.ID to "Main Bareng Teman (Satu Wi-Fi)",

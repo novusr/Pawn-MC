@@ -223,7 +223,7 @@ class ServerForegroundService : Service() {
                     }
                 } else {
                     _isDbRunning.value = false
-                    appendLog("[MariaDB Error] Database initialization failed; SQL access is unavailable.")
+                    appendLog("[MariaDB Info] Local database not running; SQL access is unavailable.")
                 }
 
                 // 3. Start SA-MP server via QEMU

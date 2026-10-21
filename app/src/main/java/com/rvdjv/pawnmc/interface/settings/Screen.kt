@@ -381,14 +381,20 @@ fun SettingsScreen(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
-                Icon(
-                    imageVector = if (atBottom) Icons.Filled.ArrowUpward else Icons.Filled.Webhook,
-                    contentDescription = if (atBottom) {
-                        localizer.get("main.fab.top", appLanguage, "Back to the top")
-                    } else {
-                        localizer.get("main.fab.bottom", appLanguage, "Go to the bottom")
-                    }
-                )
+                if (atBottom) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowUpward,
+                        contentDescription = localizer.get("main.fab.top", appLanguage, "Back to the top"),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Text(
+                        text = "🛹",
+                        fontSize = 18.sp,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
             }
         },
         topBar = {

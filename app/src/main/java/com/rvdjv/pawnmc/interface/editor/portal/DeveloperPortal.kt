@@ -82,7 +82,10 @@ import kotlin.math.roundToInt
 internal data class PawnccInvocation(val source: File, val options: List<String>)
 
 internal object PortalCommandParser {
-    val commandNames = listOf("help", "docs", "pawncc", "switch", "clear", "celar")
+    val commandNames = listOf(
+        "help", "docs", "pawncc", "switch", "clear", "celar",
+        "ls", "whoami", "time", "date", "which", "deviceinfo", "version", "github"
+    )
 
     fun tokenize(command: String): List<String>? {
         val tokens = mutableListOf<String>()
@@ -152,6 +155,12 @@ internal object PortalCommandParser {
             return listOf("3.10.7", "3.10.11")
                 .filter { it.startsWith(trimmed.substringAfter(' ').trim(), ignoreCase = true) }
                 .map { "switch $it" }
+        }
+        if (trimmed.startsWith("which ", ignoreCase = true)) {
+            val arg = trimmed.substringAfter(' ').trim()
+            return listOf("pawncc", "mariadbd", "qemu-i386", "sh")
+                .filter { it.startsWith(arg, ignoreCase = true) }
+                .map { "which $it" }
         }
         return emptyList()
     }
@@ -326,6 +335,69 @@ internal fun DeveloperPortal(
                             }
                         }
                     }
+                    "ls" -> {
+                        val root = workspaceRoot ?: activeSource?.parentFile
+                        val files = root?.listFiles()?.map { if (it.isDirectory) "${it.name}/" else it.name }?.sorted()
+                        output = if (!files.isNullOrEmpty()) {
+                            files.joinToString("  ")
+                        } else {
+                            "gamemodes/  filterscripts/  include/  pawno/  scriptfiles/  server.cfg"
+                        }
+                        markdown = false
+                    }
+                    "whoami" -> {
+                        output = "pawnmc"
+                        markdown = false
+                    }
+                    "time" -> {
+                        val timeFormat = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
+                        output = timeFormat.format(java.util.Date())
+                        markdown = false
+                    }
+                    "date" -> {
+                        val dateFormat = java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", java.util.Locale.US)
+                        output = dateFormat.format(java.util.Date())
+                        markdown = false
+                    }
+                    "which" -> {
+                        val target = tokens.getOrNull(1)
+                        output = when (target?.lowercase()) {
+                            null -> "usage: which <command>"
+                            "pawncc" -> "/system/bin/pawncc (${selectedVersion.value})"
+                            "mariadbd", "mariadb" -> "${context.filesDir.absolutePath}/mariadb/bin/mariadbd"
+                            "qemu-i386" -> "${context.applicationInfo.nativeLibraryDir}/libqemu-i386.so"
+                            "sh", "bash" -> "/system/bin/sh"
+                            "ls", "whoami", "time", "date", "which", "deviceinfo", "version", "github", "help", "docs", "switch", "clear" -> "built-in command: $target"
+                            else -> "$target: command not found"
+                        }
+                        markdown = false
+                    }
+                    "deviceinfo" -> {
+                        output = buildString {
+                            appendLine("Device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (${android.os.Build.DEVICE})")
+                            appendLine("Android: ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})")
+                            appendLine("ABIs: ${android.os.Build.SUPPORTED_ABIS.joinToString(", ")}")
+                            append("Board: ${android.os.Build.BOARD} | Hardware: ${android.os.Build.HARDWARE}")
+                        }
+                        markdown = false
+                    }
+                    "version" -> {
+                        val packageInfo = runCatching {
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                                context.packageManager.getPackageInfo(context.packageName, android.content.pm.PackageManager.PackageInfoFlags.of(0))
+                            } else {
+                                @Suppress("DEPRECATION")
+                                context.packageManager.getPackageInfo(context.packageName, 0)
+                            }
+                        }.getOrNull()
+                        val versionName = packageInfo?.versionName ?: "1.5.1"
+                        output = "PawnMC v$versionName (compiler: ${selectedVersion.value})"
+                        markdown = false
+                    }
+                    "github" -> {
+                        output = "https://github.com/novusr/PawnMC"
+                        markdown = false
+                    }
                     else -> {
                         output = text("terminal.error.command")
                         markdown = false
@@ -413,23 +485,13 @@ internal fun DeveloperPortal(
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    // The dots: the immersive affordance. Tapping it drops the console
-                    // down and floats the input over the centre, so the text field is
-                    // within thumb reach and the terminal behind keeps scrolling.
-                    IconButton(
-                        onClick = { inputImmersive = !inputImmersive },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.MoreHoriz,
-                            contentDescription = text("terminal.input.toggle"),
-                            tint = if (inputImmersive) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        )
-                    }
+                    Text(
+                        text = "Hi!",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
                     IconButton(onClick = onClose, modifier = Modifier.size(40.dp)) {
                         Icon(Icons.Filled.Close, contentDescription = text("terminal.close"))
                     }
