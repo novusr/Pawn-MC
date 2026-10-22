@@ -212,7 +212,7 @@ class ServerForegroundService : Service() {
         // A previous daemon may still hold the socket/port after a re-init.
         if (mariaDbEngine.isRunning) mariaDbEngine.stop()
 
-        val databaseInitialized = mariaDbEngine.initializeIfNeeded(this)
+        val databaseInitialized = mariaDbEngine.initializeIfNeeded(serviceScope)
         if (databaseInitialized) {
             mariaDbEngine.start(serviceScope)
             delay(1500)

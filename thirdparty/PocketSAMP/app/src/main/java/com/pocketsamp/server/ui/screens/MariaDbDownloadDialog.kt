@@ -84,8 +84,10 @@ fun MariaDbDownloadDialog(
                 sha256 = sha256.trim().takeIf { it.isNotEmpty() }
             ) { line ->
                 progressLine = line
-                // "Downloading bundle... 42%" is the only line carrying a number; the
-                // bar follows it so a slow transfer is visibly moving.
+                // Only the transfer line carries a percentage. Every other line
+                // ("Extracting bundle...", "Verifying SHA-256...") is indeterminate, so
+                // the bar switches back to a spinner instead of freezing at the last
+                // download percentage.
                 val match = Regex("(\\d{1,3})%").find(line)
                 progressFraction = match?.groupValues?.get(1)?.toIntOrNull()?.div(100f)
             }

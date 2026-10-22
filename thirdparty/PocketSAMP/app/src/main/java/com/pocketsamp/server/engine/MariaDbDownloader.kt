@@ -9,7 +9,6 @@ import java.io.FileInputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
-import java.util.zip.GZIPInputStream
 
 /**
  * Downloads, validates and activates a MariaDB bundle at runtime.
@@ -36,8 +35,8 @@ import java.util.zip.GZIPInputStream
  * would download successfully and then fail to start — the exact trap this design
  * avoids.
  *
- * A `.zip` bundle is also accepted when it contains a `lib/arm64-v8a/` entry, so a
- * prebuilt native-library package can be dropped in unchanged.
+ * A `.zip` bundle is accepted when it contains a `lib/arm64-v8a/` tree; that tree is
+ * flattened into the staging directory and must still yield `bin/mariadbd`.
  */
 class MariaDbDownloader(private val context: Context) {
 
@@ -146,10 +145,13 @@ class MariaDbDownloader(private val context: Context) {
 
             val total = connection.contentLengthLong + if (resuming) already else 0L
             val append = resuming
+            // The byte count is assigned to a local and returned *after* the streams
+            // are closed: `return` inside nested `use {}` lambdas would be a
+            // non-local return, which Kotlin does not allow here.
+            var copied = if (append) already else 0L
             connection.inputStream.use { input ->
                 java.io.FileOutputStream(target, append).use { out ->
                     val buffer = ByteArray(64 * 1024)
-                    var copied = if (append) already else 0L
                     var lastPercent = -1
                     var read: Int
                     while (input.read(buffer).also { read = it } != -1) {
@@ -164,9 +166,9 @@ class MariaDbDownloader(private val context: Context) {
                         }
                     }
                     out.fd.sync()
-                    return copied
                 }
             }
+            return copied
         } finally {
             connection.disconnect()
         }
@@ -202,9 +204,9 @@ class MariaDbDownloader(private val context: Context) {
             unzip(archive, libRoot)
             val abiDir = libRoot.walkTopDown().firstOrNull {
                 it.isDirectory && it.name == "arm64-v8a"
-            } ?: return Result(false, "Zip has no lib/arm64-v8a/ entries; that is the only layout accepted.")
-            // A prebuilt zip carries libs at the ABI root; the daemon is optional in it,
-            // but the share/ and lib/ trees around the daemon must be present.
+            } ?: return Result(false, "Zip has no lib/arm64-v8a/ entries.")
+            // A prebuilt zip carries its tree under <abi>/; flatten it into staging so
+            // the daemon check below applies the same rule to both formats.
             abiDir.copyRecursively(staging, overwrite = true)
         } else {
             onProgress("Extracting bundle...")
@@ -257,15 +259,16 @@ class MariaDbDownloader(private val context: Context) {
 
     private fun unzip(archive: File, destination: File) {
         java.util.zip.ZipInputStream(FileInputStream(archive)).use { zip ->
-            while (zip.nextEntry.also { entry = it } != null) {
-                val name = entry!!.name.trimStart('/', '.')
+            // The destination is canonicalised once: comparing a canonical entry path
+            // against a non-canonical root rejected every entry on builds where the
+            // cache dir resolves through /data/user/0.
+            val root = destination.canonicalPath + File.separator
+            var entry: java.util.zip.ZipEntry? = zip.nextEntry
+            while (entry != null) {
+                val name = entry.name.trimStart('/', '.')
                 val target = File(destination, name).canonicalFile
-                // canonicalPath comparison needs the destination canonical too: the
-                // cache dir resolves through /data/user/0, which is a different
-                // string than filesDir on some Android builds.
-                val root = destination.canonicalPath + File.separator
                 if (target.path.startsWith(root)) {
-                    if (entry!!.isDirectory) {
+                    if (entry.isDirectory) {
                         target.mkdirs()
                     } else {
                         target.parentFile?.mkdirs()
@@ -273,6 +276,7 @@ class MariaDbDownloader(private val context: Context) {
                     }
                 }
                 zip.closeEntry()
+                entry = zip.nextEntry
             }
         }
     }
