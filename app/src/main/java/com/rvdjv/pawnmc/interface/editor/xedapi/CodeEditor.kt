@@ -182,7 +182,9 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
         val textHeight = metrics.descent - metrics.ascent
         val y = (top + bottom) / 2f - textHeight / 2f - metrics.ascent
 
-        val label = "$line$LINE_COLUMN_SEPARATOR$column"
+        // Both the gutter chip and the status bar go through
+        // `cursorPositionLabel`, so the two readouts can never disagree by a row.
+        val label = cursorPositionLabel(line, column)
         chipPaint.textSize = host.textSizePx * 0.82f
         chipPaint.typeface = host.typefaceLineNumber
         val textWidth = chipPaint.measureText(label)

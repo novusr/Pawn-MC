@@ -32,64 +32,70 @@ fun ConsoleScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SampThemeColors.bg)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        // Console Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Server Console",
-                    fontSize = 20.sp,
-                    color = SampThemeColors.textPrimary
-                )
-                Text(
-                    text = "${logs.size} log lines buffered",
-                    fontSize = 14.sp,
-                    color = SampThemeColors.textSecondary
-                )
-            }
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(
-                    onClick = onClearLogs,
-                    colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.textSecondary)
-                ) {
-                    Text(
-                        text = "Clear",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = SampThemeColors.textSecondary
-                    )
-                }
-            }
-        }
-
-        // Terminal Box
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(12.dp))
-                .background(SampThemeColors.terminal)
-                .padding(16.dp)
+                .background(SampThemeColors.bg)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            if (logs.isEmpty()) {
-                Text(
-                    text = "Server console is idle. Press 'Start Server' to view live execution logs.",
-                    fontSize = 14.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = SampThemeColors.textMuted,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            } else {
+            // Console Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Server Console",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SampThemeColors.textPrimary,
+                        maxLines = 1
+                    )
+                    Text(
+                        text = "${logs.size} log lines buffered",
+                        fontSize = 12.sp,
+                        color = SampThemeColors.textSecondary,
+                        maxLines = 1
+                    )
+                }
+
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    TextButton(
+                        onClick = onClearLogs,
+                        colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.textSecondary),
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                    ) {
+                        Text(
+                            text = "Clear",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = SampThemeColors.textSecondary
+                        )
+                    }
+                }
+            }
+
+            // Terminal Box. Bottom padding keeps the floating tab rail from covering
+            // the last log lines.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 52.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(SampThemeColors.terminal)
+                    .padding(12.dp)
+            ) {
+                if (logs.isEmpty()) {
+                    Text(
+                        text = "Server console is idle. Press 'Start Server' to view live execution logs.",
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace,
+                        color = SampThemeColors.textMuted,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                } else {
                 LazyColumn(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
@@ -107,10 +113,10 @@ fun ConsoleScreen(
 
                         Text(
                             text = line,
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontFamily = FontFamily.Monospace,
                             color = lineColor,
-                            lineHeight = 19.sp
+                            lineHeight = 17.sp
                         )
                     }
                 }

@@ -38,13 +38,13 @@ import com.rvdjv.pawnmc.`interface`._Icons
  * to be dropped straight onto, so the id travels with the row instead of being inferred
  * from the position in the list.
  */
-data class DeveloperPortalEntry(
+data class SettingsPromoEntry(
     val title: String,
     val description: String,
     val target: SettingsTarget
 )
 
-/** Where a [DeveloperPortalEntry] should land the user inside the Settings screen. */
+/** Where a [SettingsPromoEntry] should land the user inside the Settings screen. */
 enum class SettingsTarget {
     /** Top of the screen; the general section. */
     General,
@@ -58,7 +58,7 @@ enum class SettingsTarget {
 }
 
 /**
- * Promotional card at the bottom of the main screen: every setting PawnMC has, with a
+ * Settings guide card at the bottom of the main screen: every setting PawnMC has, with a
  * one-line explanation, as a scannable list.
  *
  * The card exists because a first-time user has no way to discover that the app is
@@ -68,12 +68,16 @@ enum class SettingsTarget {
  * so tapping a row opens Settings *at that section* — which is why the Settings screen grew
  * a scroll target in the same change.
  *
+ * It is deliberately *not* called a developer portal: the in-editor Developer Portal is a
+ * separate, real terminal, and sharing the name made the two look like one feature. This
+ * card only promotes Settings, so that is what its file and symbols are named after.
+ *
  * The whole list scrolls with the main screen rather than inside the card: an inner
  * scrollable would fight the page for the vertical drag, which is the same trap the
  * workspace panel already documents.
  */
 @Composable
-internal fun DeveloperPortalPromoCard(
+internal fun SettingsPromoCard(
     onEntryClick: (SettingsTarget) -> Unit,
     localizer: AppLocalization? = null,
     appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN,
@@ -83,7 +87,7 @@ internal fun DeveloperPortalPromoCard(
         localizer?.get(key, appLanguage, fallback) ?: fallback
 
     val entries = listOf(
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.language.title", "Language"),
             description = text(
                 "main.promo.language.desc",
@@ -91,7 +95,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.Language
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.compiler.title", "Compiler version"),
             description = text(
                 "main.promo.compiler.desc",
@@ -99,7 +103,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.CompilerVersion
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.options.title", "Compiler options"),
             description = text(
                 "main.promo.options.desc",
@@ -107,7 +111,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.CompilerOptions
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.includes.title", "Include paths"),
             description = text(
                 "main.promo.includes.desc",
@@ -115,7 +119,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.IncludePaths
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.ignorecase.title", "Filesystem"),
             description = text(
                 "main.promo.ignorecase.desc",
@@ -123,7 +127,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.CompilerOptions
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.explain.title", "Explain output"),
             description = text(
                 "main.promo.explain.desc",
@@ -131,7 +135,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.CompilerOptions
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.editor.title", "Editor appearance"),
             description = text(
                 "main.promo.editor.desc",
@@ -139,7 +143,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.EditorAppearance
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.updates.title", "Updates"),
             description = text(
                 "main.promo.updates.desc",
@@ -147,7 +151,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.Updates
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.theme.title", "Theme"),
             description = text(
                 "main.promo.theme.desc",
@@ -155,7 +159,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.General
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.about.title", "About and diagnostics"),
             description = text(
                 "main.promo.about.desc",
@@ -163,7 +167,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.About
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.forcestop.title", "Restart the app"),
             description = text(
                 "main.promo.forcestop.desc",
@@ -171,7 +175,7 @@ internal fun DeveloperPortalPromoCard(
             ),
             target = SettingsTarget.About
         ),
-        DeveloperPortalEntry(
+        SettingsPromoEntry(
             title = text("main.promo.storage.title", "Workspace location"),
             description = text(
                 "main.promo.storage.desc",

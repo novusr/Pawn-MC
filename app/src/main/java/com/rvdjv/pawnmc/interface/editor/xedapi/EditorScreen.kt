@@ -188,8 +188,12 @@ fun EditorScreen(
 
     var canUndo by remember { mutableStateOf(false) }
     var canRedo by remember { mutableStateOf(false) }
-    var cursorLine by remember { mutableIntStateOf(1) }
-    var cursorCol by remember { mutableIntStateOf(1) }
+    // Both readouts are 0-based exactly as Sora reports them; the status bar adds
+    // the one-based offset when it renders. Keeping the raw value here is what
+    // stopped the "Line 4 -> 5" drift: the old code stored `leftLine + 1` and the
+    // status bar's formatter added its own +1 on top of it.
+    var cursorLine by remember { mutableIntStateOf(0) }
+    var cursorCol by remember { mutableIntStateOf(0) }
 
     var showExitDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
@@ -1265,8 +1269,10 @@ fun EditorScreen(
                                     }
 
                                     subscribeEvent(SelectionChangeEvent::class.java) { _, _ ->
-                                        cursorLine = cursor.leftLine + 1
-                                        cursorCol = cursor.leftColumn + 1
+                                        // No +1 here: the status bar applies the
+                                        // single one-based conversion itself.
+                                        cursorLine = cursor.leftLine
+                                        cursorCol = cursor.leftColumn
                                         refreshColumnSuffixWidth()
                                     }
 
@@ -1294,8 +1300,8 @@ fun EditorScreen(
                                 if (loadedBuffer.needsReload(document, singlePath, singleContent, editorReloadToken)) {
                                     editor.setText(targetContent)
                                     loadedBuffer.store(document, targetPath, targetContent, editorReloadToken)
-                                    cursorLine = 1
-                                    cursorCol = 1
+                                    cursorLine = 0
+                                    cursorCol = 0
                                 }
                             },
                             modifier = Modifier.fillMaxSize()
@@ -1587,7 +1593,7 @@ fun EditorScreen(
                 // Compact caret readout: no padding around the numbers, no spacing
                 // between them, so the pill covers as little of the editor as possible.
                 Text(
-                    text = "$cursorLine-$cursorCol",
+                    text = cursorPositionLabel(cursorLine, cursorCol),
                     fontFamily = FontFamily.Monospace,
                     fontSize = 11.sp,
                     style = MaterialTheme.typography.labelSmall,
@@ -2383,6 +2389,17 @@ private fun insertIndentAtCursor(editor: CodeEditor?) {
     val baseIndent = lineText.take(leading)
     target.text.insert(line, column, baseIndent + "    ")
 }
+
+/**
+ * Formats the caret readout of the status bar as `line-column`, both one-based.
+ *
+ * [line] and [column] are the raw, 0-based values a `GtkTextIter`-style caret
+ * reports, so the one-based conversion happens here and nowhere else. Doing the
+ * `+1` both where the state is captured and again here is what made the bar show
+ * "5-7" for a caret on line 4, column 7.
+ */
+internal fun cursorPositionLabel(line: Int, column: Int): String =
+    "${line + 1}${LINE_COLUMN_SEPARATOR}${column + 1}"
 
 /** Applies the first matching Pawn completion, falling back to normal indentation. */
 private fun applyTabAction(editor: CodeEditor?) {

@@ -81,11 +81,27 @@ import kotlin.math.roundToInt
 
 internal data class PawnccInvocation(val source: File, val options: List<String>)
 
+/** Columns in the Developer Portal command suggestion grid. */
+private const val SUGGESTION_COLUMNS = 3
+
+/** Rows in the Developer Portal command suggestion grid (3x3). */
+private const val SUGGESTION_ROWS = 3
+
 internal object PortalCommandParser {
+    /**
+     * Every command the portal actually dispatches.
+     *
+     * The suggestion grid, the typo hints and the "unknown command" notice all read
+     * from this one list, so a new command can never again be advertised as missing
+     * the moment it is wired into `submit`.
+     */
     val commandNames = listOf(
-        "help", "docs", "pawncc", "switch", "clear", "celar",
-        "ls", "whoami", "time", "date", "which", "deviceinfo", "version", "github"
+        "help", "docs", "pawncc", "switch", "clear", "ls",
+        "whoami", "time", "date", "which", "deviceinfo", "version", "github"
     )
+
+    /** Commands with no arguments of their own; `which`/`switch`/`pawncc` are separate. */
+    private val argumentlessCommands = commandNames.filterNot { it == "which" || it == "switch" || it == "pawncc" }
 
     fun tokenize(command: String): List<String>? {
         val tokens = mutableListOf<String>()
@@ -144,7 +160,12 @@ internal object PortalCommandParser {
     fun suggestions(input: String, activeSourceName: String?): List<String> {
         val trimmed = input.trimStart()
         if (!trimmed.contains(' ')) {
-            return commandNames.filter { it.startsWith(trimmed, ignoreCase = true) && it != trimmed }
+            // Longest prefix plus the shorter deep forms, deduplicated: typing `dev`
+            // offers `deviceinfo`, and typing nothing changes nothing because an empty
+            // prefix is filtered out (`it != trimmed`).
+            return argumentlessCommands
+                .filter { it.startsWith(trimmed, ignoreCase = true) && it != trimmed }
+                .take(SUGGESTION_LIMIT)
         }
         if (trimmed.startsWith("pawncc ", ignoreCase = true) &&
             trimmed.substringAfter(' ').isBlank() && activeSourceName != null
@@ -164,6 +185,68 @@ internal object PortalCommandParser {
         }
         return emptyList()
     }
+
+    /**
+     * The 3x3 grid shown above the input field when nothing is being typed.
+     *
+     * The first cell is the `docs` help page; the other eight are the everyday
+     * commands. `pawncc` and `switch` stay off the grid because they are only useful
+     * with an argument that the grid cannot supply.
+     */
+    fun commandGrid(activeSourceName: String?): List<String> = listOf(
+        "docs",
+        "help",
+        "ls",
+        "clear",
+        "whoami",
+        "time",
+        "date",
+        "version",
+        "deviceinfo"
+    ).let { names ->
+        if (activeSourceName.isNullOrBlank()) names
+        else names.dropLast(1) + "pawncc \"$activeSourceName\""
+    }.take(SUGGESTION_LIMIT)
+
+    /** A command [input] must be a known one; used to word the unknown-command help. */
+    fun isKnownCommand(input: String): Boolean {
+        val name = input.trimStart().substringBefore(' ').lowercase()
+        return name == "celar" || name in commandNames
+    }
+
+    /** Commands close enough to [word] to be worth naming in the error output. */
+    fun nearMisses(word: String, limit: Int = 3): List<String> {
+        val needle = word.lowercase()
+        if (needle.length < 2) return emptyList()
+        return commandNames
+            .map { name -> name to editDistance(needle, name) }
+            .filter { (name, distance) ->
+                distance <= 2 || name.startsWith(needle.take(2)) || name.contains(needle)
+            }
+            .sortedBy { (_, distance) -> distance }
+            .map { (name, _) -> name }
+            .take(limit)
+    }
+
+    /** Levenshtein distance, small enough to inline for typo hints. */
+    private fun editDistance(a: String, b: String): Int {
+        var previous = IntArray(b.length + 1) { it }
+        var current = IntArray(b.length + 1)
+        for (i in 1..a.length) {
+            current[0] = i
+            for (j in 1..b.length) {
+                val substitution = previous[j - 1] + if (a[i - 1] == b[j - 1]) 0 else 1
+                current[j] = minOf(current[j - 1] + 1, previous[j] + 1, substitution)
+            }
+            val swap = previous
+            previous = current
+            current = swap
+        }
+        return previous[b.length]
+    }
+
+    /** Suggestions per state; the grid and the inline list both cap at nine. */
+    const val SUGGESTION_LIMIT = 9
 }
 
 internal object PortalText {
@@ -367,7 +450,7 @@ internal fun DeveloperPortal(
                             "mariadbd", "mariadb" -> "${context.filesDir.absolutePath}/mariadb/bin/mariadbd"
                             "qemu-i386" -> "${context.applicationInfo.nativeLibraryDir}/libqemu-i386.so"
                             "sh", "bash" -> "/system/bin/sh"
-                            "ls", "whoami", "time", "date", "which", "deviceinfo", "version", "github", "help", "docs", "switch", "clear" -> "built-in command: $target"
+                            "ls", "whoami", "time", "date", "which", "deviceinfo", "version", "github", "help", "docs", "switch", "clear", "celar" -> "built-in command: $target"
                             else -> "$target: command not found"
                         }
                         markdown = false
@@ -399,7 +482,21 @@ internal fun DeveloperPortal(
                         markdown = false
                     }
                     else -> {
-                        output = text("terminal.error.command")
+                        // The notice is composed from the command catalogue rather
+                        // than a hand-written sentence: `ls`, `whoami`, `time`, ... are
+                        // real commands now, and a hardcoded list kept telling users
+                        // they did not exist. A near miss is named when it is obvious.
+                        val typed = tokens.firstOrNull().orEmpty()
+                        val near = PortalCommandParser.nearMisses(typed)
+                        val base = text("terminal.error.command")
+                            .replace("{commands}", PortalCommandParser.commandNames.joinToString(", ") { "`$it`" })
+                        output = if (near.isEmpty()) {
+                            base
+                        } else {
+                            base + "\n" +
+                                text("terminal.error.command.suggest")
+                                    .replace("{matches}", near.joinToString(", ") { "`$it`" })
+                        }
                         markdown = false
                     }
                 }
@@ -550,14 +647,32 @@ internal fun DeveloperPortal(
                     exit = fadeOut() + shrinkVertically()
                 ) {
                     Column {
-                        suggestions.take(3).forEach { suggestion ->
-                            Text(
-                                text = suggestion,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { input = suggestion },
-                                color = MaterialTheme.colorScheme.primary,
-                                style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace)
+                        // 3x3 grid of what can actually be typed. With nothing typed
+                        // it lists every everyday command (`ls`, `whoami`, `time`, ...)
+                        // rather than only the PawnCC documentation; while typing it
+                        // shows the prefix matches, still laid out as a grid so the
+                        // rows never turn into a tall list that pushes the input off
+                        // the bottom of the floating card.
+                        val gridCells = if (input.isBlank()) {
+                            PortalCommandParser.commandGrid(activeSource?.name)
+                        } else {
+                            suggestions
+                        }
+                        if (gridCells.isNotEmpty()) {
+                            CommandSuggestionGrid(
+                                cells = gridCells,
+                                // A plain command runs on tap, since the grid is the
+                                // discoverability surface for them. A cell that is a
+                                // template (`pawncc "file.pwn"`) only fills the field,
+                                // because compiling whatever is loaded should stay an
+                                // explicit choice.
+                                onCellClick = { cell ->
+                                    if (cell.contains(' ')) {
+                                        input = cell
+                                    } else {
+                                        submit(cell)
+                                    }
+                                }
                             )
                         }
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -583,6 +698,55 @@ internal fun DeveloperPortal(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CommandSuggestionGrid(
+    cells: List<String>,
+    onCellClick: (String) -> Unit
+) {
+    // Laid out as three columns of three. A `Column` of fixed-width `Row`s rather
+    // than a `LazyVerticalGrid`: the portal card is already a scroll container and
+    // nine cells do not need recycling, while a nested lazy grid inside a
+    // `verticalScroll` parent throws on unbounded height.
+    val rows = cells.chunked(SUGGESTION_COLUMNS).take(SUGGESTION_ROWS)
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        rows.forEach { rowCells ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                rowCells.forEach { cell ->
+                    Surface(
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { onCellClick(cell) }
+                    ) {
+                        Text(
+                            text = cell,
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelSmall.copy(fontFamily = FontFamily.Monospace),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 6.dp)
+                        )
+                    }
+                }
+                // Keep the last row's cells the same width as the full rows so a
+                // stray one or two matches do not stretch across the card.
+                repeat(SUGGESTION_COLUMNS - rowCells.size) {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }

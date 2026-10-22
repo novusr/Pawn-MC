@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,8 +12,13 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -24,26 +28,39 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import com.pocketsamp.server.PocketSampLocales
 import com.pocketsamp.server.db.DatabaseManager
 import com.pocketsamp.server.db.QueryResult
 import com.pocketsamp.server.ui.theme.*
 import kotlinx.coroutines.launch
 
+/**
+ * Local MariaDB control surface.
+ *
+ * Inputs come from [DatabaseManager] (list/create databases, list tables, run SQL,
+ * import scripts). [onOpenPhpMyAdmin] opens the local phpMyAdmin in the built-in
+ * browser, so the two ways of touching the same server — queries here, the full web
+ * UI there — are one tap apart.
+ */
 @Composable
 fun DatabaseScreen(
     dbManager: DatabaseManager,
-    isDbRunning: Boolean
+    isDbRunning: Boolean,
+    onOpenPhpMyAdmin: () -> Unit = {},
+    lang: PocketSampLocales.Lang = PocketSampLocales.current
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+
+    fun t(key: String): String = PocketSampLocales.text(lang, key)
 
     var databases by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedDb by remember { mutableStateOf<String?>(null) }
@@ -54,8 +71,11 @@ fun DatabaseScreen(
     var isExecuting by remember { mutableStateOf(false) }
 
     var showCreateDialog by remember { mutableStateOf(false) }
-    var newDbName by remember { mutableStateOf(TextFieldValue("")) }
+    var newDbName by remember { mutableStateOf("") }
     var isCreating by remember { mutableStateOf(false) }
+    // Name of the database the user just created, echoed in a confirmation banner
+    // above the chip row until the next creation or a database switch.
+    var lastCreatedDb by remember { mutableStateOf<String?>(null) }
 
     fun refreshDbs() {
         if (!isDbRunning) return
@@ -67,6 +87,19 @@ fun DatabaseScreen(
             selectedDb?.let { db ->
                 tables = dbManager.listTables(db)
             }
+        }
+    }
+
+    fun runQuery() {
+        if (sqlQuery.isBlank() || isExecuting) return
+        focusManager.clearFocus()
+        scope.launch {
+            isExecuting = true
+            queryResult = dbManager.executeQuery(selectedDb, sqlQuery)
+            isExecuting = false
+            // A statement may have created or dropped a table, so the table count
+            // in the header is refreshed alongside the result.
+            selectedDb?.let { db -> tables = dbManager.listTables(db) }
         }
     }
 
@@ -91,7 +124,7 @@ fun DatabaseScreen(
             scope.launch {
                 try {
                     context.contentResolver.openInputStream(uri)?.use { inputStream ->
-                        Toast.makeText(context, "Importing SQL script...", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, t("db.importing"), Toast.LENGTH_SHORT).show()
                         val (success, msg) = dbManager.importSql(selectedDb!!, inputStream)
                         Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                         if (success) {
@@ -99,20 +132,27 @@ fun DatabaseScreen(
                         }
                     }
                 } catch (e: Exception) {
-                    Toast.makeText(context, "Import Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, "${t("db.import.error")}: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         } else if (selectedDb == null) {
-            Toast.makeText(context, "Select or create a database first!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, t("db.select.first"), Toast.LENGTH_SHORT).show()
         }
     }
+
+    // The whole screen is one vertical scroll. The query result used to be the only
+    // flexible child, so on a short screen the header, the chips and the SQL field
+    // were squeezed and clipped; laying them out at their natural height and letting
+    // the page scroll keeps every control usable.
+    val pageScroll = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(SampThemeColors.bg)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .verticalScroll(pageScroll)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // Header
         Row(
@@ -120,35 +160,37 @@ fun DatabaseScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Database Manager",
-                    fontSize = 20.sp,
+                    text = t("db.title"),
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = SampThemeColors.textPrimary
+                    color = SampThemeColors.textPrimary,
+                    maxLines = 1
                 )
                 Text(
-                    text = if (isDbRunning) "Connected: 127.0.0.1:3306 (root)" else "Database server is offline",
-                    fontSize = 13.sp,
-                    color = if (isDbRunning) SampThemeColors.success else SampThemeColors.danger
+                    text = if (isDbRunning) t("db.connected") else t("db.offline"),
+                    fontSize = 12.sp,
+                    color = if (isDbRunning) SampThemeColors.success else SampThemeColors.danger,
+                    maxLines = 1
                 )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 // Refresh Button
                 IconButton(
                     onClick = { refreshDbs() },
                     enabled = isDbRunning,
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(38.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .background(SampThemeColors.card)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = "Refresh",
-                        tint = SampThemeColors.accent,
-                        modifier = Modifier.size(20.dp)
+                        contentDescription = t("db.refresh"),
+                        tint = if (isDbRunning) SampThemeColors.accent else SampThemeColors.textMuted,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -157,23 +199,63 @@ fun DatabaseScreen(
         if (!isDbRunning) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(SampThemeColors.card)
-                    .padding(20.dp),
+                    .padding(18.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Start the server on Dashboard to connect to MySQL database.",
-                    fontSize = 14.sp,
+                    text = t("db.offline.hint"),
+                    fontSize = 13.sp,
                     color = SampThemeColors.textMuted
                 )
             }
         } else {
+            // Confirmation for the database the user just created: the name the
+            // server accepted is echoed back above the chip row.
+            lastCreatedDb?.let { created ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(SampThemeColors.success.copy(alpha = 0.12f))
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = SampThemeColors.success,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = t("db.created"),
+                            fontSize = 12.sp,
+                            color = SampThemeColors.textSecondary,
+                            maxLines = 1
+                        )
+                        Text(
+                            text = created,
+                            fontSize = 14.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            color = SampThemeColors.success,
+                            maxLines = 1
+                        )
+                    }
+                    TextButton(onClick = { lastCreatedDb = null }) {
+                        Text(t("perm.close"), fontSize = 12.sp, color = SampThemeColors.textMuted)
+                    }
+                }
+            }
+
             // Database Selector Chips
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items(databases) { db ->
                     val isSelected = db == selectedDb
@@ -181,15 +263,17 @@ fun DatabaseScreen(
                         selected = isSelected,
                         onClick = {
                             selectedDb = db
+                            lastCreatedDb = null
                             scope.launch { tables = dbManager.listTables(db) }
                         },
-                        label = { Text(db, fontSize = 14.sp) },
+                        label = { Text(db, fontSize = 12.sp, maxLines = 1) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = SampThemeColors.accent,
                             selectedLabelColor = SampThemeColors.bg,
                             containerColor = SampThemeColors.card,
                             labelColor = SampThemeColors.textPrimary
-                        )
+                        ),
+                        modifier = Modifier.heightIn(max = 34.dp)
                     )
                 }
                 // Create database: sits in the empty lane after the last chip so
@@ -205,11 +289,11 @@ fun DatabaseScreen(
                                     imageVector = Icons.Default.Add,
                                     contentDescription = null,
                                     tint = SampThemeColors.success,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                                 Text(
-                                    text = "New",
-                                    fontSize = 14.sp,
+                                    text = t("db.new"),
+                                    fontSize = 12.sp,
                                     color = SampThemeColors.textPrimary,
                                     modifier = Modifier.padding(start = 4.dp)
                                 )
@@ -218,8 +302,67 @@ fun DatabaseScreen(
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = SampThemeColors.card,
                             labelColor = SampThemeColors.textPrimary
-                        )
+                        ),
+                        modifier = Modifier.heightIn(max = 34.dp)
                     )
+                }
+                // phpMyAdmin sits next to the database list because it is another
+                // view of the same server, not a separate tool.
+                item {
+                    FilterChip(
+                        selected = false,
+                        onClick = onOpenPhpMyAdmin,
+                        label = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.OpenInBrowser,
+                                    contentDescription = null,
+                                    tint = SampThemeColors.accent,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = t("db.phpmyadmin"),
+                                    fontSize = 12.sp,
+                                    color = SampThemeColors.textPrimary,
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
+                            }
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = SampThemeColors.card,
+                            labelColor = SampThemeColors.textPrimary
+                        ),
+                        modifier = Modifier.heightIn(max = 34.dp)
+                    )
+                }
+            }
+
+            // Selected database summary: name, table count, and SQL import.
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = selectedDb ?: t("db.none"),
+                    fontSize = 12.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = SampThemeColors.accent,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = t("db.tables").replace("{count}", tables.size.toString()),
+                    fontSize = 12.sp,
+                    color = SampThemeColors.textSecondary,
+                    maxLines = 1
+                )
+                TextButton(
+                    onClick = { importLauncher.launch(arrayOf("*/*")) },
+                    enabled = selectedDb != null,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+                ) {
+                    Text(t("db.import"), fontSize = 12.sp, color = SampThemeColors.accent)
                 }
             }
 
@@ -228,30 +371,26 @@ fun DatabaseScreen(
                 value = sqlQuery,
                 onValueChange = { sqlQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("SQL Query", fontSize = 14.sp) },
+                label = { Text(t("sql.query"), fontSize = 13.sp) },
                 textStyle = LocalTextStyle.current.copy(
                     fontFamily = FontFamily.Monospace,
-                    fontSize = 14.sp,
+                    fontSize = 13.sp,
                     color = SampThemeColors.textPrimary
                 ),
-                maxLines = 3,
+                maxLines = 4,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(onDone = { runQuery() }),
                 trailingIcon = {
                     IconButton(
-                        onClick = {
-                            scope.launch {
-                                isExecuting = true
-                                queryResult = dbManager.executeQuery(selectedDb, sqlQuery)
-                                isExecuting = false
-                            }
-                        },
-                        enabled = !isExecuting
+                        onClick = { runQuery() },
+                        enabled = !isExecuting && sqlQuery.isNotBlank()
                     ) {
                         if (isExecuting) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                         } else {
                             Icon(
                                 imageVector = Icons.Default.PlayArrow,
-                                contentDescription = "Run",
+                                contentDescription = t("sql.run"),
                                 tint = SampThemeColors.accent
                             )
                         }
@@ -266,61 +405,71 @@ fun DatabaseScreen(
                 shape = RoundedCornerShape(12.dp)
             )
 
-            // Result Area
+            // Result Area. Errors and OK messages are plain rows; a SELECT fills a
+            // bounded, independently scrollable table so a long result cannot push
+            // the query field off the page.
             queryResult?.let { result ->
-                if (result.error != null) {
-                    Text(
-                        text = "Error: ${result.error}",
+                when {
+                    result.error != null -> Text(
+                        text = "${t("sql.error")}: ${result.error}",
                         color = SampThemeColors.danger,
                         fontFamily = FontFamily.Monospace,
-                        fontSize = 13.sp
+                        fontSize = 12.sp
                     )
-                } else if (!result.isSelect) {
-                    Text(
-                        text = "Query OK, ${result.affectedRows} rows affected.",
+                    !result.isSelect -> Text(
+                        text = t("sql.ok").replace("{count}", result.affectedRows.toString()),
                         color = SampThemeColors.success,
                         fontFamily = FontFamily.Monospace,
-                        fontSize = 13.sp
+                        fontSize = 12.sp
                     )
-                } else {
-                    // Result Table
-                    Box(
+                    else -> Box(
                         modifier = Modifier
-                            .fillMaxSize()
+                            .fillMaxWidth()
+                            .heightIn(min = 60.dp, max = RESULT_MAX_HEIGHT)
                             .clip(RoundedCornerShape(12.dp))
                             .background(SampThemeColors.terminal)
-                            .horizontalScroll(rememberScrollState())
-                            .padding(8.dp)
                     ) {
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            // Headers
-                            item {
-                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    result.columns.forEach { col ->
-                                        Text(
-                                            text = col,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 12.sp,
-                                            fontFamily = FontFamily.Monospace,
-                                            color = SampThemeColors.accent,
-                                            modifier = Modifier.widthIn(min = 80.dp)
-                                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .padding(8.dp)
+                        ) {
+                            LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                // Headers
+                                item {
+                                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                        result.columns.forEach { col ->
+                                            Text(
+                                                text = col,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 11.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                color = SampThemeColors.accent,
+                                                maxLines = 1,
+                                                modifier = Modifier.widthIn(min = 70.dp)
+                                            )
+                                        }
                                     }
+                                    HorizontalDivider(
+                                        modifier = Modifier.padding(vertical = 4.dp),
+                                        color = SampThemeColors.cardBorder
+                                    )
                                 }
-                                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = SampThemeColors.cardBorder)
-                            }
 
-                            // Rows
-                            items(result.rows) { row ->
-                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                    row.forEach { cell ->
-                                        Text(
-                                            text = cell,
-                                            fontSize = 12.sp,
-                                            fontFamily = FontFamily.Monospace,
-                                            color = SampThemeColors.textSecondary,
-                                            modifier = Modifier.widthIn(min = 80.dp)
-                                        )
+                                // Rows
+                                items(result.rows) { row ->
+                                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                        row.forEach { cell ->
+                                            Text(
+                                                text = cell,
+                                                fontSize = 11.sp,
+                                                fontFamily = FontFamily.Monospace,
+                                                color = SampThemeColors.textSecondary,
+                                                maxLines = 1,
+                                                modifier = Modifier.widthIn(min = 70.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -328,35 +477,92 @@ fun DatabaseScreen(
                     }
                 }
             }
+
+            // Direct launch: phpMyAdmin in the built-in full-screen browser.
+            Button(
+                onClick = onOpenPhpMyAdmin,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SampThemeColors.accent,
+                    contentColor = SampThemeColors.accentOn
+                ),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.OpenInBrowser,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = t("db.open.phpmyadmin"),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+            }
+
+            // Bottom room so the floating tab rail never covers the launch button.
+            Spacer(modifier = Modifier.height(56.dp))
         }
     }
 
     // Create Database dialog: the "+ New" chip opens it; the name goes straight
-    // to MariaDB's CREATE DATABASE so the new database appears in the chip row
-    // and can be selected immediately.
+    // to MariaDB's CREATE DATABASE and the accepted name is echoed back in the
+    // confirmation banner above the chip row.
     if (showCreateDialog) {
+        val canCreate = newDbName.trim().matches(Regex("[A-Za-z0-9_]+")) && !isCreating
+        fun create() {
+            val name = newDbName.trim()
+            if (!canCreate) return
+            scope.launch {
+                isCreating = true
+                val (success, msg) = dbManager.createDatabase(name)
+                isCreating = false
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                if (success) {
+                    // Select the new database immediately and show its name, then
+                    // refresh the chip row so it is there on the next open too.
+                    selectedDb = name
+                    databases = dbManager.listDatabases()
+                    tables = dbManager.listTables(name)
+                    lastCreatedDb = name
+                    showCreateDialog = false
+                    newDbName = ""
+                }
+            }
+        }
         AlertDialog(
-            onDismissRequest = { showCreateDialog = false },
+            onDismissRequest = { if (!isCreating) showCreateDialog = false },
             containerColor = SampThemeColors.card,
             titleContentColor = SampThemeColors.textPrimary,
             textContentColor = SampThemeColors.textSecondary,
-            title = { Text("New Database", fontSize = 16.sp, fontWeight = FontWeight.Bold) },
+            title = {
+                Text(t("db.new.title"), fontSize = 16.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
-                        text = "The database is created on the running MariaDB server (letters, digits and underscores only).",
+                        text = t("db.new.desc"),
                         fontSize = 12.sp,
                         color = SampThemeColors.textSecondary
                     )
                     OutlinedTextField(
                         value = newDbName,
-                        onValueChange = { newDbName = it },
+                        onValueChange = { newDbName = it.take(64) },
                         singleLine = true,
-                        label = { Text("Database name", fontSize = 14.sp) },
+                        enabled = !isCreating,
+                        label = { Text(t("db.new.name"), fontSize = 13.sp) },
                         textStyle = LocalTextStyle.current.copy(
                             fontSize = 14.sp,
+                            fontFamily = FontFamily.Monospace,
                             color = SampThemeColors.textPrimary
                         ),
+                        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                        keyboardActions = KeyboardActions(onDone = { create() }),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = SampThemeColors.accent,
                             unfocusedBorderColor = SampThemeColors.cardBorder,
@@ -365,40 +571,39 @@ fun DatabaseScreen(
                         ),
                         shape = RoundedCornerShape(10.dp)
                     )
+                    Text(
+                        text = t("db.new.rule"),
+                        fontSize = 11.sp,
+                        color = SampThemeColors.textMuted
+                    )
                 }
             },
             confirmButton = {
                 TextButton(
-                    onClick = {
-                        val name = newDbName.text.trim()
-                        if (name.isEmpty() || isCreating) return@TextButton
-                        scope.launch {
-                            isCreating = true
-                            val (success, msg) = dbManager.createDatabase(name)
-                            isCreating = false
-                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
-                            if (success) {
-                                selectedDb = name
-                                refreshDbs()
-                                showCreateDialog = false
-                                newDbName = TextFieldValue("")
-                            }
-                        }
-                    },
-                    enabled = newDbName.text.isNotBlank() && !isCreating
+                    onClick = { create() },
+                    enabled = canCreate
                 ) {
                     if (isCreating) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                     } else {
-                        Text("Create", fontSize = 14.sp, color = SampThemeColors.accent, fontWeight = FontWeight.SemiBold)
+                        Text(
+                            t("db.new.create"),
+                            fontSize = 14.sp,
+                            color = SampThemeColors.accent,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showCreateDialog = false }) {
-                    Text("Cancel", color = SampThemeColors.textSecondary)
+                TextButton(onClick = { showCreateDialog = false }, enabled = !isCreating) {
+                    Text(t("perm.close"), color = SampThemeColors.textSecondary)
                 }
             }
         )
     }
 }
+
+/** Height cap for the SELECT result table, so it never swallows the whole page. */
+private val RESULT_MAX_HEIGHT = 260.dp
+

@@ -13,6 +13,7 @@ import com.rvdjv.pawnmc.`interface`.editor.portal.PortalCommandParser
 import com.rvdjv.pawnmc.`interface`.editor.portal.PortalText
 import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorViewModel
 import com.rvdjv.pawnmc.`interface`.editor.xedapi.LINE_COLUMN_SEPARATOR
+import com.rvdjv.pawnmc.`interface`.editor.xedapi.cursorPositionLabel
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.`interface`.main.shouldRestoreLastSelectedFile
 import kotlinx.coroutines.Dispatchers
@@ -49,6 +50,15 @@ class EditorTest {
     @Test
     fun `line column label uses a compact separator`() {
         assertEquals("-", LINE_COLUMN_SEPARATOR)
+    }
+
+    @Test
+    fun `status bar converts a zero based caret to one based display`() {
+        // Sora reports the caret on line index 3 / column index 6 for the
+        // fourth line, seventh column; the bar must print "4-7", not "5-7".
+        assertEquals("4-7", cursorPositionLabel(line = 3, column = 6))
+        assertEquals("1-1", cursorPositionLabel(line = 0, column = 0))
+        assertEquals("12-1", cursorPositionLabel(line = 11, column = 0))
     }
 
     @Test
@@ -417,6 +427,33 @@ class EditorTest {
             listOf("switch 3.10.7", "switch 3.10.11"),
             PortalCommandParser.suggestions("switch 3", "mode.pwn")
         )
+    }
+
+    @Test
+    fun `portal suggestion grid is a 3x3 of commands that really exist`() {
+        val grid = PortalCommandParser.commandGrid("mode.pwn")
+        assertEquals(9, grid.size)
+        assertEquals("docs", grid.first())
+        assertTrue("ls must be offered, it is a real command", "ls" in grid)
+        grid.forEach { cell ->
+            val name = cell.substringBefore(' ')
+            assertTrue("$name is dispatched by the portal", PortalCommandParser.isKnownCommand(cell))
+        }
+
+        // Without an open source there is no pawncc invocation to suggest, so the
+        // last everyday command fills the ninth cell instead.
+        val withoutSource = PortalCommandParser.commandGrid(null)
+        assertEquals(9, withoutSource.size)
+        assertTrue(withoutSource.none { it.startsWith("pawncc") })
+    }
+
+    @Test
+    fun `portal treats the extended commands as available and names near misses`() {
+        listOf("ls", "whoami", "time", "date", "which pawncc", "deviceinfo", "version", "github")
+            .forEach { assertTrue("$it should be recognized", PortalCommandParser.isKnownCommand(it)) }
+        assertFalse(PortalCommandParser.isKnownCommand("lsfoo"))
+        assertTrue("lss should point at ls", "ls" in PortalCommandParser.nearMisses("lss"))
+        assertTrue("hep should point at help", "help" in PortalCommandParser.nearMisses("hep"))
     }
 
     @Test

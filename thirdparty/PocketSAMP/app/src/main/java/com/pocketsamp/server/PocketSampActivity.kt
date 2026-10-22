@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BugReport
@@ -48,6 +50,7 @@ import com.pocketsamp.server.ui.screens.ConsoleScreen
 import com.pocketsamp.server.ui.screens.CrashLogsScreen
 import com.pocketsamp.server.ui.screens.DashboardScreen
 import com.pocketsamp.server.ui.screens.DatabaseScreen
+import com.pocketsamp.server.ui.screens.PhpMyAdminScreen
 import com.pocketsamp.server.ui.theme.*
 
 enum class AppTab(val label: String, val icon: ImageVector) {
@@ -124,6 +127,10 @@ class PocketSampActivity : ComponentActivity() {
     @Composable
     private fun MainAppLayout() {
         var currentTab by remember { mutableStateOf(AppTab.DASHBOARD) }
+        // phpMyAdmin is a full-screen surface above the tab content rather than a
+        // sixth tab: it is a transient view of the database server, and closing it
+        // must land back on whichever tab opened it.
+        var isPhpMyAdminVisible by remember { mutableStateOf(false) }
         // The whole embedded UI follows the language configured in the PawnMC main
         // interface (Settings → Language); the host set it before launching.
         val lang = PocketSampLocales.current
@@ -135,7 +142,12 @@ class PocketSampActivity : ComponentActivity() {
         val lanIp by ServerForegroundService.lanIp.collectAsState()
 
         Scaffold(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
+            // The floating rail is an overlay, not part of the scaffold: no bottom
+            // inset is reserved for it. Screens add their own bottom room instead,
+            // which keeps the pages from getting a double bottom gap. Only the
+            // system bars stay inset-aware so nothing slides under the status bar.
+            contentWindowInsets = WindowInsets.systemBars
         ) { paddingValues ->
             Box(
                 modifier = Modifier
@@ -155,6 +167,7 @@ class PocketSampActivity : ComponentActivity() {
                             onStartServer = { startServerService() },
                             onStopServer = { stopServerService() },
                             lang = lang,
+                            onOpenDatabase = { currentTab = AppTab.DATABASE },
                             onNavigateBack = {
                                 val callback = onNavigateBack
                                 if (callback != null) callback() else finish()
@@ -166,11 +179,22 @@ class PocketSampActivity : ComponentActivity() {
                         )
                         AppTab.DATABASE -> DatabaseScreen(
                             dbManager = dbManager,
-                            isDbRunning = isDbRunning
+                            isDbRunning = isDbRunning,
+                            onOpenPhpMyAdmin = { isPhpMyAdminVisible = true },
+                            lang = lang
                         )
                         AppTab.CRASHES -> CrashLogsScreen()
                         AppTab.CONFIG -> ConfigScreen()
                     }
+                }
+
+                // Full-screen phpMyAdmin over the tab content.
+                if (isPhpMyAdminVisible) {
+                    PhpMyAdminScreen(
+                        isDbRunning = isDbRunning,
+                        onClose = { isPhpMyAdminVisible = false },
+                        lang = lang
+                    )
                 }
 
                 // Floating tab rail, like the floating toolbar in the Xed editor:
@@ -188,7 +212,9 @@ class PocketSampActivity : ComponentActivity() {
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    AppTab.values().forEach { tab ->
+                    // Hidden while phpMyAdmin is open so the browser is truly
+                    // full-screen and the rail cannot overlap its pages.
+                    if (!isPhpMyAdminVisible) AppTab.values().forEach { tab ->
                         val selected = tab == currentTab
                         Row(
                             modifier = Modifier

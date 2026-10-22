@@ -55,27 +55,29 @@ fun ConfigScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(SampThemeColors.bg)
-            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .padding(horizontal = 14.dp, vertical = 10.dp)
             .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // Header
+        // Header. Bottom room keeps the last field clear of the floating tab rail.
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "Server Configuration",
-                    fontSize = 20.sp,
+                    fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = SampThemeColors.textPrimary
+                    color = SampThemeColors.textPrimary,
+                    maxLines = 1
                 )
                 Text(
                     text = "server.cfg Editor",
-                    fontSize = 14.sp,
-                    color = SampThemeColors.textSecondary
+                    fontSize = 12.sp,
+                    color = SampThemeColors.textSecondary,
+                    maxLines = 1
                 )
             }
 
@@ -92,14 +94,15 @@ fun ConfigScreen() {
                     Toast.makeText(context, "server.cfg saved successfully!", Toast.LENGTH_SHORT).show()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
             ) {
-                Text(text = "Save", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(text = "Save", fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
 
         ConfigField(label = "Server Hostname", value = hostname, onValueChange = { hostname = it })
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             ConfigField(label = "Port", value = port, onValueChange = { port = it }, modifier = Modifier.weight(1f))
             ConfigField(label = "Max Players", value = maxPlayers, onValueChange = { maxPlayers = it }, modifier = Modifier.weight(1f))
         }
@@ -107,6 +110,7 @@ fun ConfigScreen() {
         ConfigField(label = "Gamemode0", value = gamemode, onValueChange = { gamemode = it }, hint = "e.g. bare 1 or your_gamemode 1")
         ConfigField(label = "Filterscripts", value = filterscripts, onValueChange = { filterscripts = it }, hint = "Space-separated .amx names")
         ConfigField(label = "Plugins (.so)", value = plugins, onValueChange = { plugins = it }, hint = "e.g. mysql.so streamer.so sscanf.so")
+        Spacer(modifier = Modifier.height(52.dp))
     }
 }
 
@@ -118,15 +122,15 @@ private fun ConfigField(
     hint: String? = null,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(text = label, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = SampThemeColors.textSecondary)
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SampThemeColors.textSecondary, maxLines = 1)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             textStyle = LocalTextStyle.current.copy(
                 fontFamily = FontFamily.Monospace,
-                fontSize = 15.sp,
+                fontSize = 13.sp,
                 color = SampThemeColors.textPrimary
             ),
             singleLine = true,
@@ -139,7 +143,7 @@ private fun ConfigField(
             shape = RoundedCornerShape(10.dp)
         )
         if (hint != null) {
-            Text(text = hint, fontSize = 12.sp, color = SampThemeColors.textMuted)
+            Text(text = hint, fontSize = 11.sp, color = SampThemeColors.textMuted)
         }
     }
 }

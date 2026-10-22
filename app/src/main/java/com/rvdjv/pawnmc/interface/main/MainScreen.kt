@@ -631,12 +631,12 @@ fun MainScreen(
             item { Spacer(modifier = Modifier.height(SpaceL)) }
 
             // The empty space under the compiler output used to be dead room. It now
-            // carries the settings guide: one row per thing PawnMC can be configured to
-            // do, each one opening Settings *at that section* rather than at the top, so
-            // the card is a way in rather than an advertisement.
+            // carries the settings guide (SettingsPromo): one row per thing PawnMC can
+            // be configured to do, each one opening Settings *at that section* rather
+            // than at the top, so the card is a way in rather than an advertisement.
             item {
                 DarkSectionContainer {
-                    DeveloperPortalPromoCard(
+                    SettingsPromoCard(
                         onEntryClick = { target ->
                             if (viewModel.isCompiling) {
                                 showCompilingBlockedToast()

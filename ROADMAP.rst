@@ -95,7 +95,7 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
    * - Workspace-wide tools
      - Find/replace across every file of a workspace, plus search-in-workspace
    * - Editor command portal
-     - In-editor Developer Portal (``help``, ``docs``, ``pawncc``, ``switch``, ``clear``) with source resolution inside the workspace root
+     - In-editor Developer Portal (``help``, ``docs``, ``pawncc``, ``switch``, ``clear``, ``ls``, ``whoami``, ``time``, ``date``, ``which``, ``deviceinfo``, ``version``, ``github``) with source resolution inside the workspace root and a 3x3 suggestion grid
    * - Localization
      - Indonesian, English, Spanish (Argentina), and Russian strings served from ``data/_data_2026_ect.toml``
    * - Pawn symbol data
@@ -172,6 +172,8 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
      - Pawn compiler sources as git submodules (3.10.11, 3.10.7)
    * - thirdparty/PocketSAMP/
      - Embedded SA-MP server runtime, included as the ``:pocketsamp`` module
+   * - PocketSAMP Database Manager
+     - Local MariaDB control tab: list/create databases (with a confirmation showing the created name), run SQL, import ``.sql`` scripts, and launch the local phpMyAdmin in a full-screen in-app WebView
    * - data/
      - All shipped data assets (see 4.3)
 
@@ -313,7 +315,7 @@ Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.p
    * - interface/editor/Workspace/FolderPicker.kt
      - Builds ``ACTION_OPEN_DOCUMENT_TREE`` intents (Downloads start location) and resolves a tree URI to a real ``File``
    * - interface/editor/portal/DeveloperPortal.kt
-     - Editor Developer Portal: command tokenizer, ``pawncc`` invocation confinement, ``switch`` suggestions, ``_data_2026_term.toml`` lookup, and the floating portal UI; runs ``docs`` automatically on first open so the console is never empty
+     - Editor Developer Portal: command tokenizer, ``pawncc`` invocation confinement, ``switch`` suggestions, a 3x3 command grid built from the dispatchable command list, ``_data_2026_term.toml`` lookup, and the floating portal UI; runs ``docs`` automatically on first open so the console is never empty
    * - interface/editor/xedapi/ToolPanel.kt
      - Search / replace panel for workspace-wide operations
    * - interface/editor/xedapi/CodeEditor.kt

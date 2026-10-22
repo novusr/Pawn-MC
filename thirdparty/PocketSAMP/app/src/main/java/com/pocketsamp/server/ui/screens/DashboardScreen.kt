@@ -6,6 +6,7 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -49,6 +52,7 @@ fun DashboardScreen(
     onStartServer: () -> Unit,
     onStopServer: () -> Unit,
     lang: PocketSampLocales.Lang = PocketSampLocales.Lang.EN,
+    onOpenDatabase: () -> Unit = {},
     onNavigateBack: () -> Unit = {}
 ) {
     fun t(key: String): String = PocketSampLocales.text(lang, key)
@@ -56,6 +60,10 @@ fun DashboardScreen(
     val lifecycleOwner = context as? androidx.lifecycle.LifecycleOwner
     var currentServerDir by remember { mutableStateOf(ServerDirectoryManager.getServerDirectory(context)) }
     var hasStoragePermission by remember { mutableStateOf(ServerDirectoryManager.hasStoragePermission(context)) }
+    // phpMyAdmin is offered from the Dashboard too: the MariaDB card is the first
+    // place a user looks after starting the server, and making them open the
+    // Database tab first only hid an action they were about to take anyway.
+    var showPhpMyAdmin by remember { mutableStateOf(false) }
 
     val powerManager = remember { context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager }
     var isBatteryOptIgnored by remember {
@@ -105,6 +113,17 @@ fun DashboardScreen(
 
     val scrollState = rememberScrollState()
 
+    // Dashboard-level phpMyAdmin: a full-screen browser over the dashboard so the
+    // MariaDB card can open it without routing through the Database tab.
+    if (showPhpMyAdmin) {
+        PhpMyAdminScreen(
+            isDbRunning = isDbRunning,
+            onClose = { showPhpMyAdmin = false },
+            lang = lang
+        )
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -132,14 +151,17 @@ fun DashboardScreen(
                 Column {
                     Text(
                         text = "PocketSAMP",
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = SampThemeColors.textPrimary
+                        color = SampThemeColors.textPrimary,
+                        maxLines = 1
                     )
                     Text(
                         text = t("tagline"),
-                        fontSize = 14.sp,
-                        color = SampThemeColors.textSecondary
+                        fontSize = 12.sp,
+                        color = SampThemeColors.textSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -168,9 +190,10 @@ fun DashboardScreen(
                 )
                 Text(
                     text = statusText,
-                    fontSize = 13.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = statusColor
+                    color = statusColor,
+                    maxLines = 1
                 )
             }
         }
@@ -230,15 +253,16 @@ fun DashboardScreen(
 
                     Text(
                         text = "127.0.0.1:7777",
-                        fontSize = 18.sp,
+                        fontSize = 15.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = SampThemeColors.textPrimary
+                        color = SampThemeColors.textPrimary,
+                        maxLines = 1
                     )
 
                     Text(
                         text = t("dash.local.note"),
-                        fontSize = 13.sp,
+                        fontSize = 11.sp,
                         color = SampThemeColors.textSecondary
                     )
                 }
@@ -285,15 +309,17 @@ fun DashboardScreen(
 
                     Text(
                         text = "$lanIp:7777",
-                        fontSize = 16.sp,
+                        fontSize = 13.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.SemiBold,
-                        color = SampThemeColors.textPrimary
+                        color = SampThemeColors.textPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
 
                     Text(
                         text = t("dash.lan.note"),
-                        fontSize = 13.sp,
+                        fontSize = 11.sp,
                         color = SampThemeColors.textMuted
                     )
                 }
@@ -302,7 +328,9 @@ fun DashboardScreen(
 
         // Database Card
         Card(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onOpenDatabase() },
             colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
             shape = RoundedCornerShape(12.dp)
         ) {
@@ -314,21 +342,25 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
+                    modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Column {
                         Text(
                             text = "MariaDB (MySQL 5.7/8.0 Wire)",
-                            fontSize = 15.sp,
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = SampThemeColors.textPrimary
+                            color = SampThemeColors.textPrimary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
                             text = if (isDbRunning) "127.0.0.1:3306 (Active)" else "Stopped",
-                            fontSize = 13.sp,
+                            fontSize = 12.sp,
                             fontFamily = FontFamily.Monospace,
-                            color = if (isDbRunning) SampThemeColors.success else SampThemeColors.textMuted
+                            color = if (isDbRunning) SampThemeColors.success else SampThemeColors.textMuted,
+                            maxLines = 1
                         )
                     }
                 }
@@ -338,17 +370,57 @@ fun DashboardScreen(
 
                 Text(
                     text = dbStatusText,
-                    fontSize = 13.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = dbColor
+                    color = dbColor,
+                    maxLines = 1
                 )
+            }
+
+            // Direct phpMyAdmin launch, enabled only while the server is up: the
+            // page is served by MariaDB's local web stack.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 12.dp, end = 12.dp, bottom = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = { onOpenDatabase() },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(32.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = SampThemeColors.accent)
+                ) {
+                    Text(text = t("db.manage"), fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                }
+                OutlinedButton(
+                    onClick = { showPhpMyAdmin = true },
+                    enabled = isDbRunning,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(32.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = SampThemeColors.accent)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.OpenInBrowser,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(text = t("db.phpmyadmin"), fontSize = 12.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                }
             }
         }
 
         // Specification Grid
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             SpecCard(
                 title = "ARCH TRANSLATION",
@@ -707,8 +779,9 @@ fun DashboardScreen(
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = if (isRunning) t("action.stop") else t("action.start"),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
                 )
             }
         }
@@ -725,28 +798,33 @@ private fun SpecCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
-        shape = RoundedCornerShape(14.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             Text(
                 text = title,
-                fontSize = 12.sp,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = SampThemeColors.textSecondary
+                color = SampThemeColors.textSecondary,
+                maxLines = 1
             )
             Text(
                 text = value,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = SampThemeColors.accent
+                color = SampThemeColors.accent,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = subtext,
-                fontSize = 13.sp,
-                color = SampThemeColors.textMuted
+                fontSize = 11.sp,
+                color = SampThemeColors.textMuted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

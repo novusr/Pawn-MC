@@ -67,8 +67,8 @@ fun CrashLogsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(SampThemeColors.bg)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // Warning Banner
         Card(
@@ -89,8 +89,9 @@ fun CrashLogsScreen(
                     Text(
                         text = if (isCrashActivity) "Aplikasi Mengalami Crash (Ditahan)" else "Sistem Pemantau Crash & Error",
                         color = SampThemeColors.textPrimary,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2
                     )
                     Text(
                         text = if (isCrashActivity)
@@ -98,7 +99,7 @@ fun CrashLogsScreen(
                         else
                             "Semua riwayat crash sistem tersimpan di sini untuk analisis.",
                         color = SampThemeColors.textSecondary,
-                        fontSize = 14.sp
+                        fontSize = 12.sp
                     )
                 }
             }
@@ -114,17 +115,18 @@ fun CrashLogsScreen(
             Tab(
                 selected = activeSubTab == 0,
                 onClick = { activeSubTab = 0 },
-                text = { Text("Detail Crash", fontWeight = FontWeight.SemiBold) }
+                text = { Text("Detail Crash", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
             )
             Tab(
                 selected = activeSubTab == 1,
                 onClick = { activeSubTab = 1 },
-                text = { Text("Riwayat (${crashes.size})", fontWeight = FontWeight.SemiBold) }
+                text = { Text("Riwayat (${crashes.size})", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
             )
         }
 
-        // Content Area
-        Box(modifier = Modifier.weight(1f)) {
+        // Content Area. The bottom inset is carried by the area itself so the
+        // floating tab rail cannot cover the stack trace or the last list row.
+        Box(modifier = Modifier.weight(1f).padding(bottom = 52.dp)) {
             if (activeSubTab == 0) {
                 // Detail Tab
                 if (selectedReport != null) {
@@ -233,7 +235,7 @@ private fun CrashDetailView(
                 Text(
                     text = report.exceptionClass,
                     color = SampThemeColors.danger,
-                    fontSize = 15.sp,
+                    fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace
                 )
@@ -241,7 +243,7 @@ private fun CrashDetailView(
                     Text(
                         text = msg,
                         color = SampThemeColors.textPrimary,
-                        fontSize = 13.sp
+                        fontSize = 12.sp
                     )
                 }
                 HorizontalDivider(color = SampThemeColors.cardBorder, modifier = Modifier.padding(vertical = 4.dp))
@@ -249,8 +251,8 @@ private fun CrashDetailView(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Waktu: ${report.formattedDate}", color = SampThemeColors.textSecondary, fontSize = 13.sp)
-                    Text("Thread: ${report.threadName}", color = SampThemeColors.textSecondary, fontSize = 13.sp)
+                    Text("Waktu: ${report.formattedDate}", color = SampThemeColors.textSecondary, fontSize = 11.sp)
+                    Text("Thread: ${report.threadName}", color = SampThemeColors.textSecondary, fontSize = 11.sp)
                 }
             }
         }
@@ -262,18 +264,18 @@ private fun CrashDetailView(
             shape = RoundedCornerShape(10.dp)
         ) {
             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Informasi Perangkat", color = SampThemeColors.accent, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Informasi Perangkat", color = SampThemeColors.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Text(
                     text = report.deviceInfo,
                     color = SampThemeColors.textSecondary,
-                    fontSize = 13.sp,
+                    fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace
                 )
             }
         }
 
         // Stack Trace Box
-        Text("Stack Trace Lengkap:", color = SampThemeColors.textPrimary, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+        Text("Stack Trace Lengkap:", color = SampThemeColors.textPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -286,9 +288,9 @@ private fun CrashDetailView(
             Text(
                 text = report.stackTrace,
                 color = SampThemeColors.danger.copy(alpha = 0.85f),
-                fontSize = 13.sp,
+                fontSize = 11.sp,
                 fontFamily = FontFamily.Monospace,
-                lineHeight = 19.sp
+                lineHeight = 16.sp
             )
         }
     }
