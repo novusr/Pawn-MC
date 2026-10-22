@@ -100,3 +100,24 @@ Push this repository to GitHub. The included workflow `.github/workflows/build-a
 - PRoot is licensed under GPL-2.0.
 - QEMU is licensed under GPL-2.0.
 - MariaDB is licensed under GPL-2.0.
+
+---
+
+## 🗄️ MariaDB Asset Bundle Requirements
+
+The embedded runtime extracts `app/src/main/assets/mariadb_arm64.tar(.gz)` into
+`filesDir/mariadb/`. For the database service to start, that archive **must** contain,
+for **arm64-v8a**:
+
+```
+bin/mariadbd
+bin/mariadb-install-db
+lib/            (server libraries; also used as LD_LIBRARY_PATH)
+share/mariadb/  (error messages, lc-messages-dir)
+```
+
+If `bin/` is absent the runtime logs
+`The MariaDB asset bundle contains no bin/ directory.` and keeps the database
+service off — the SA-MP server itself still runs, since database support is optional
+for SQLite/file gamemodes. A bundle that ships only `share/` data is an incomplete
+build, not a runtime bug.

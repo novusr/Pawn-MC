@@ -242,6 +242,12 @@ object PocketSampLocales {
             Lang.ES to "Inicia el servidor en el Panel para conectarte a la base de datos MySQL.",
             Lang.RU to "Запустите сервер на панели, чтобы подключиться к базе данных MySQL.",
         ),
+        "db.unavailable.hint" to mapOf(
+            Lang.ID to "Basis data bersifat opsional: jika server SA-MP sudah berjalan tetapi MariaDB tetap tidak aktif, buka tab Konsol untuk melihat alasan pastinya (mis. paket binary MariaDB tidak lengkap).",
+            Lang.EN to "The database is optional: if the SA-MP server is running but MariaDB still stays down, open the Console tab for the exact reason (for example an incomplete MariaDB binary bundle).",
+            Lang.ES to "La base de datos es opcional: si el servidor SA-MP está en marcha pero MariaDB sigue detenido, abre la pestaña Consola para ver el motivo exacto (por ejemplo un paquete de binarios MariaDB incompleto).",
+            Lang.RU to "База данных необязательна: если сервер SA-MP запущен, а MariaDB всё ещё не работает, откройте вкладку «Консоль» — там указана точная причина (например, неполный пакет бинарников MariaDB).",
+        ),
         "db.refresh" to mapOf(
             Lang.ID to "Muat ulang daftar basis data",
             Lang.EN to "Reload the database list",

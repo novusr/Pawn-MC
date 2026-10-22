@@ -35,7 +35,7 @@ class MariaDbEngine(private val context: Context) {
             File(context.applicationInfo.nativeLibraryDir, "libmariadb-install-db.so"),
             File(context.applicationInfo.nativeLibraryDir, "mariadb-install-db")
         )
-        return candidates.firstOrNull { it.exists() && (it.canExecute() || it.setExecutable(true, false)) }
+        return candidates.firstOrNull { isUsableBinary(it) }
     }
 
     private fun findMariadbdBinary(context: Context, mariadbDir: File): File? {
@@ -49,8 +49,27 @@ class MariaDbEngine(private val context: Context) {
             File(context.applicationInfo.nativeLibraryDir, "libmysqld.so"),
             File(context.applicationInfo.nativeLibraryDir, "mysqld")
         )
-        return candidates.firstOrNull { it.exists() && (it.canExecute() || it.setExecutable(true, false)) }
+        return candidates.firstOrNull { isUsableBinary(it) }
     }
+
+    /**
+     * True when [file] is a real executable, not just an existing path.
+     *
+     * The old check was `it.exists() && (it.canExecute() || it.setExecutable(true))`.
+     * A *directory* named `mariadbd` passes both (`File.canExecute()` is true for a
+     * directory you own), so the daemon "was found" and the engine then tried to
+     * execute a folder. Requiring a regular file and a non-zero length is what makes
+     * a missing or truncated deployment report itself honestly instead.
+     */
+    private fun isUsableBinary(file: File): Boolean {
+        if (!file.isFile || file.length() == 0L) return false
+        if (file.canExecute()) return true
+        return runCatching { file.setExecutable(true, false) }.getOrDefault(false)
+    }
+
+    /** Binaries are shipped for 64-bit ARM only; QEMU syscalls of the guest are i386. */
+    private fun isArm64Device(): Boolean =
+        android.os.Build.SUPPORTED_ABIS.any { it == "arm64-v8a" }
 
     suspend fun initializeIfNeeded(scope: CoroutineScope): Boolean = withContext(Dispatchers.IO) {
         val mariadbDir = File(context.filesDir, "mariadb")
@@ -66,7 +85,19 @@ class MariaDbEngine(private val context: Context) {
             val mariadbd = findMariadbdBinary(context, mariadbDir)
 
             if (installDb == null && mariadbd == null) {
-                _dbLogs.emit("[MariaDB Info] MariaDB binary/installer not found in app storage or native libraries.")
+                // Say *why*, instead of one generic line that reads like a bug in the
+                // engine. The asset bundle is the usual reason on a development build:
+                // `mariadb_arm64.tar.gz` ships only share/ data unless a full server
+                // build was packaged, and the daemon is 64-bit ARM only.
+                val binDir = File(mariadbDir, "bin")
+                if (!binDir.isDirectory) {
+                    _dbLogs.emit("[MariaDB Info] The MariaDB asset bundle contains no bin/ directory.")
+                    _dbLogs.emit("[MariaDB Info] Rebuild assets: mariadb_arm64.tar.gz must hold bin/mariadbd, bin/mariadb-install-db and lib/ for arm64-v8a.")
+                } else if (!isArm64Device()) {
+                    _dbLogs.emit("[MariaDB Info] MariaDB binaries are arm64-v8a only; this device reports ${android.os.Build.SUPPORTED_ABIS.joinToString(", ")}.")
+                } else {
+                    _dbLogs.emit("[MariaDB Info] MariaDB binary/installer not found in app storage or native libraries.")
+                }
                 _dbLogs.emit("[MariaDB Info] Database service is optional for SQLite/file gamemodes.")
                 return@withContext false
             }
@@ -103,7 +134,16 @@ class MariaDbEngine(private val context: Context) {
                 result.inputStream.bufferedReader().use { it.readText() }
             }
             val exitCode = withContext(Dispatchers.IO) { result.waitFor() }
-            if (exitCode != 0 || !File(dataDir, "mysql/global_priv.MAD").exists() && !File(dataDir, "mysql/db.opt").exists()) {
+            // MariaDB creates `mysql/global_priv.MAD` (new auth tables) or, on older
+            // builds, `mysql/db.opt`. Any of the classic system tables proves the
+            // datadir was really initialized; testing only those two file names
+            // reported a successful install as a failure on other server versions.
+            val systemDb = File(dataDir, "mysql")
+            val initialized = File(dataDir, "mysql/global_priv.MAD").exists() ||
+                File(dataDir, "mysql/db.opt").exists() ||
+                File(dataDir, "mysql/user.MYD").exists() ||
+                File(systemDb, "user.frm").exists()
+            if (exitCode != 0 || !initialized) {
                 _dbLogs.emit("[MariaDB Error] Database initialization failed (exit $exitCode): ${output.takeLast(2000)}")
                 return@withContext false
             }
@@ -126,7 +166,7 @@ class MariaDbEngine(private val context: Context) {
         val tmpDir = File(mariadbDir, "tmp").apply { mkdirs() }
         val shareDir = File(mariadbDir, "share/mariadb")
 
-        if (mariadbdBinary == null || !mariadbdBinary.exists() || !mariadbdBinary.canExecute()) {
+        if (mariadbdBinary == null) {
             scope.launch {
                 _dbLogs.emit("[MariaDB Info] MariaDB daemon not found in app storage or native libraries.")
             }

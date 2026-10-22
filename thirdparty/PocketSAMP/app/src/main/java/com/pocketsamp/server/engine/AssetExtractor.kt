@@ -20,7 +20,9 @@ class AssetExtractor(private val context: Context) {
         private const val TAG = "AssetExtractor"
         private const val PREF_NAME = "pocketsamp_assets"
         private const val KEY_INSTALLED_VERSION = "assets_installed_version"
-        private const val CURRENT_VERSION = 7
+        // Bumped so devices that already unpacked the incomplete MariaDB bundle run
+        // the extraction (and its new verification message) once more.
+        private const val CURRENT_VERSION = 8
 
         fun getServerDirectory(context: Context): File {
             return ServerDirectoryManager.getServerDirectory(context)
@@ -68,6 +70,15 @@ class AssetExtractor(private val context: Context) {
         // Ensure binaries have executable bit set if present
         File(mariadbDir, "bin/mariadbd").let { if (it.exists()) it.setExecutable(true, false) }
         File(mariadbDir, "bin/mariadb-install-db").let { if (it.exists()) it.setExecutable(true, false) }
+
+        // Verify the deployment instead of trusting the extraction loop. A bundle
+        // that ships only share/ data (as `mariadb_arm64.tar.gz` does until a full
+        // server build is packaged) used to print "Deploying..." and then fail later
+        // with a generic "binary not found" line, hiding which step was incomplete.
+        val daemon = File(mariadbDir, "bin/mariadbd")
+        if (!daemon.isFile || daemon.length() == 0L) {
+            onProgress("MariaDB daemon missing from the asset bundle (bin/mariadbd); SQL stays disabled.")
+        }
 
         // 4. Copy and render MariaDB config using this app's private storage paths.
         onProgress("Configuring low-memory database...")

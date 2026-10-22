@@ -197,17 +197,26 @@ fun DatabaseScreen(
         }
 
         if (!isDbRunning) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(SampThemeColors.card)
                     .padding(18.dp),
-                contentAlignment = Alignment.Center
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = t("db.offline.hint"),
                     fontSize = 13.sp,
+                    color = SampThemeColors.textMuted
+                )
+                // MariaDB is optional and can stay down even with the SA-MP server
+                // running (the shipped asset bundle has no daemon). Say so here, and
+                // offer the console, where the engine logs the exact reason.
+                Text(
+                    text = t("db.unavailable.hint"),
+                    fontSize = 12.sp,
                     color = SampThemeColors.textMuted
                 )
             }
