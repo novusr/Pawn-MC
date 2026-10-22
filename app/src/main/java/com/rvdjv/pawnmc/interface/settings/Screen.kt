@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Webhook
+import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
@@ -389,10 +390,11 @@ fun SettingsScreen(
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
-                    Text(
-                        text = "🛹",
-                        fontSize = 18.sp,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    Icon(
+                        imageVector = Icons.Filled.DirectionsBike,
+                        contentDescription = "Skateboard",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }

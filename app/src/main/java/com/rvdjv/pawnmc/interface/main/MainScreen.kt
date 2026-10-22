@@ -403,10 +403,11 @@ fun MainScreen(
                         modifier = Modifier.size(24.dp)
                     )
                 } else {
-                    Text(
-                        text = "🛹",
-                        fontSize = 18.sp,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    Icon(
+                        imageVector = Icons.Filled.DirectionsBike,
+                        contentDescription = "Skateboard",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
