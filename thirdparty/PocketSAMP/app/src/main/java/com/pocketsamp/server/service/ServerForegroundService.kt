@@ -46,7 +46,19 @@ class ServerForegroundService : Service() {
 
         const val ACTION_START = "com.pocketsamp.server.ACTION_START"
         const val ACTION_STOP = "com.pocketsamp.server.ACTION_STOP"
+        /**
+         * Re-runs MariaDB initialization and starts the daemon that was just installed.
+         *
+         * Sent after a bundle download: the engine resolves its binary on every start,
+         * so one message is enough to pick the new daemon up without restarting the
+         * SA-MP server or the app.
+         */
+        const val ACTION_REINIT_DB = "com.pocketsamp.server.ACTION_REINIT_DB"
 
+        /** True while the service (and therefore the engine) is alive. */
+        @Volatile
+        var isServiceRunning: Boolean = false
+            private set
         private val _serverStatus = MutableStateFlow(ServerStatus.STOPPED)
         val serverStatus: StateFlow<ServerStatus> = _serverStatus.asStateFlow()
 
@@ -94,10 +106,15 @@ class ServerForegroundService : Service() {
 
     private val binder = LocalBinder()
 
+    /** Whether [startForeground] already ran; guards the one-shot call Android requires. */
+    @Volatile
+    private var isForeground = false
+
     override fun onBind(intent: Intent?): IBinder = binder
 
     override fun onCreate() {
         super.onCreate()
+        isServiceRunning = true
         createNotificationChannel()
 
         assetExtractor = AssetExtractor(this)
@@ -172,8 +189,60 @@ class ServerForegroundService : Service() {
                 prefs.edit().putBoolean("server_running_state", false).apply()
                 stopServers()
             }
+            ACTION_REINIT_DB -> {
+                serviceScope.launch { initializeDatabase() }
+            }
         }
         return START_STICKY
+    }
+
+    /**
+     * Initializes (first run) and starts the MariaDB daemon.
+     *
+     * Shared by the normal boot path and [ACTION_REINIT_DB], so a bundle installed
+     * while the service is already running goes through exactly the same steps —
+     * including datadir creation — as one present at boot.
+     */
+    private suspend fun initializeDatabase() {
+        // A re-init arrives through startForegroundService(); Android requires the
+        // service to call startForeground() within 5 s or it throws
+        // ForegroundServiceDidNotStartInTimeException. Calling it twice on an
+        // already-foregrounded service is equally illegal, so this branches.
+        ensureForeground("Starting MariaDB (MySQL)...")
+        // A previous daemon may still hold the socket/port after a re-init.
+        if (mariaDbEngine.isRunning) mariaDbEngine.stop()
+
+        val databaseInitialized = mariaDbEngine.initializeIfNeeded(this)
+        if (databaseInitialized) {
+            mariaDbEngine.start(serviceScope)
+            delay(1500)
+            _isDbRunning.value = mariaDbEngine.isRunning
+            if (!mariaDbEngine.isRunning) {
+                appendLog("[MariaDB Error] Process exited before opening the localhost SQL port.")
+            }
+        } else {
+            _isDbRunning.value = false
+            appendLog("[MariaDB Info] Local database not running; SQL access is unavailable.")
+        }
+    }
+
+    /** Starts the foreground notification once, or updates it if already shown. */
+    private fun ensureForeground(text: String) {
+        if (isForeground) {
+            updateNotification(text)
+            return
+        }
+        val notif = buildNotification(text)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            var serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                serviceType = serviceType or ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            }
+            startForeground(NOTIFICATION_ID, notif, serviceType)
+        } else {
+            startForeground(NOTIFICATION_ID, notif)
+        }
+        isForeground = true
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
@@ -198,6 +267,7 @@ class ServerForegroundService : Service() {
         } else {
             startForeground(NOTIFICATION_ID, notif)
         }
+        isForeground = true
 
         serviceScope.launch {
             try {
@@ -212,19 +282,7 @@ class ServerForegroundService : Service() {
                 }
 
                 // 2. Initialize and start MariaDB
-                updateNotification("Starting MariaDB (MySQL)...")
-                val databaseInitialized = mariaDbEngine.initializeIfNeeded(this)
-                if (databaseInitialized) {
-                    mariaDbEngine.start(serviceScope)
-                    delay(1500)
-                    _isDbRunning.value = mariaDbEngine.isRunning
-                    if (!mariaDbEngine.isRunning) {
-                        appendLog("[MariaDB Error] Process exited before opening the localhost SQL port.")
-                    }
-                } else {
-                    _isDbRunning.value = false
-                    appendLog("[MariaDB Info] Local database not running; SQL access is unavailable.")
-                }
+                initializeDatabase()
 
                 // 3. Start SA-MP server via QEMU
                 updateNotification("Launching SA-MP Server...")
@@ -393,6 +451,8 @@ class ServerForegroundService : Service() {
     }
 
     override fun onDestroy() {
+        isServiceRunning = false
+        isForeground = false
         serviceScope.cancel()
         releaseLocks()
         super.onDestroy()

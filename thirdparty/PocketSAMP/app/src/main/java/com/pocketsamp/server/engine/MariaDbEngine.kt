@@ -40,6 +40,11 @@ class MariaDbEngine(private val context: Context) {
 
     private fun findMariadbdBinary(context: Context, mariadbDir: File): File? {
         val candidates = listOf(
+            // A daemon installed from a downloaded bundle. It lives in a *private*
+            // path that mirrors the package (filesDir/mariadb-native/arm64-v8a),
+            // which is the only way exec() is allowed there since API 29; see
+            // MariaDbDownloader.
+            File(MariaDbDownloader.nativeDir(context), "bin/mariadbd"),
             File(mariadbDir, "bin/mariadbd"),
             File(mariadbDir, "bin/mysqld"),
             File(context.filesDir, "bin/mariadbd"),
@@ -71,7 +76,24 @@ class MariaDbEngine(private val context: Context) {
     private fun isArm64Device(): Boolean =
         android.os.Build.SUPPORTED_ABIS.any { it == "arm64-v8a" }
 
+    /**
+     * The install tree the daemon should be resolved from.
+     *
+     * A bundle installed from the Database tab lives in the private, package-mirrored
+     * `mariadb-native/arm64-v8a` tree and brings its own `bin/`, `lib/` and `share/`.
+     * The bundled asset tree (`filesDir/mariadb`) only wins when no downloaded daemon
+     * is present, so an incomplete asset bundle can never shadow a working download.
+     */
+    private fun mariadbInstallRoot(): File {
+        val downloaded = MariaDbDownloader.nativeDir(context)
+        return if (MariaDbDownloader.downloadedDaemon(context) != null) downloaded
+        else File(context.filesDir, "mariadb")
+    }
+
     suspend fun initializeIfNeeded(scope: CoroutineScope): Boolean = withContext(Dispatchers.IO) {
+        // A downloaded bundle lives outside mariadb/, so its data directory, my.cnf
+        // template and share/ tree are resolved from the install the daemon came from.
+        val installed = mariadbInstallRoot()
         val mariadbDir = File(context.filesDir, "mariadb")
         val dataDir = File(mariadbDir, "data")
         val tmpDir = File(mariadbDir, "tmp")
@@ -81,8 +103,8 @@ class MariaDbEngine(private val context: Context) {
         tmpDir.mkdirs()
 
         if (!markerFile.isFile) {
-            val installDb = findInstallDbBinary(context, mariadbDir)
-            val mariadbd = findMariadbdBinary(context, mariadbDir)
+            val installDb = findInstallDbBinary(context, installed)
+            val mariadbd = findMariadbdBinary(context, installed)
 
             if (installDb == null && mariadbd == null) {
                 // Say *why*, instead of one generic line that reads like a bug in the
@@ -109,23 +131,23 @@ class MariaDbEngine(private val context: Context) {
                     "--datadir=${dataDir.absolutePath}",
                     "--auth-root-authentication-method=normal",
                     "--skip-test-db",
-                    "--basedir=${mariadbDir.absolutePath}",
-                    "--lc-messages-dir=${File(mariadbDir, "share/mariadb").absolutePath}"
-                ).directory(mariadbDir).redirectErrorStream(true)
+                    "--basedir=${installed.absolutePath}",
+                    "--lc-messages-dir=${File(installed, "share/mariadb").absolutePath}"
+                ).directory(installed).redirectErrorStream(true)
             } else {
                 ProcessBuilder(
                     mariadbd!!.absolutePath,
                     "--initialize-insecure",
                     "--datadir=${dataDir.absolutePath}",
-                    "--basedir=${mariadbDir.absolutePath}",
-                    "--lc-messages-dir=${File(mariadbDir, "share/mariadb").absolutePath}"
-                ).directory(mariadbDir).redirectErrorStream(true)
+                    "--basedir=${installed.absolutePath}",
+                    "--lc-messages-dir=${File(installed, "share/mariadb").absolutePath}"
+                ).directory(installed).redirectErrorStream(true)
             }
             installBuilder.environment()["HOME"] = runtimeHome.absolutePath
             installBuilder.environment()["TMPDIR"] = tmpDir.absolutePath
             installBuilder.environment()["LD_LIBRARY_PATH"] = listOf(
-                File(mariadbDir, "lib").absolutePath,
-                File(mariadbDir, "lib/plugin").absolutePath,
+                File(installed, "lib").absolutePath,
+                File(installed, "lib/plugin").absolutePath,
                 context.applicationInfo.nativeLibraryDir,
                 System.getenv("LD_LIBRARY_PATH").orEmpty()
             ).filter { it.isNotBlank() }.joinToString(":")
@@ -158,17 +180,27 @@ class MariaDbEngine(private val context: Context) {
     fun start(scope: CoroutineScope) {
         if (isRunning) return
 
+        val installed = mariadbInstallRoot()
         val mariadbDir = File(context.filesDir, "mariadb")
         val runtimeHome = File(mariadbDir, "runtime-home").apply { mkdirs() }
-        val mariadbdBinary = findMariadbdBinary(context, mariadbDir)
+        val mariadbdBinary = findMariadbdBinary(context, installed)
         val cnfFile = File(mariadbDir, "my.cnf")
         val dataDir = File(mariadbDir, "data").apply { mkdirs() }
         val tmpDir = File(mariadbDir, "tmp").apply { mkdirs() }
-        val shareDir = File(mariadbDir, "share/mariadb")
+        val shareDir = File(installed, "share/mariadb")
 
         if (mariadbdBinary == null) {
             scope.launch {
                 _dbLogs.emit("[MariaDB Info] MariaDB daemon not found in app storage or native libraries.")
+                // A daemon that exists but cannot be made executable is almost always
+                // the Android 10+ W^X rule: the file is in app storage, not in the
+                // private package-mirrored path or nativeLibraryDir.
+                val blocked = File(installed, "bin/mariadbd").takeIf { it.isFile && it.length() > 0 }
+                    ?: File(mariadbDir, "bin/mariadbd").takeIf { it.isFile && it.length() > 0 }
+                if (blocked != null) {
+                    _dbLogs.emit("[MariaDB Info] Found ${blocked.absolutePath} but it is not executable (Android blocks exec() in app storage).")
+                    _dbLogs.emit("[MariaDB Info] Install the bundle from the Database tab so it lands in ${MariaDbDownloader.nativeDir(context).absolutePath}.")
+                }
             }
             return
         }
@@ -179,6 +211,7 @@ class MariaDbEngine(private val context: Context) {
         val command = listOf(
             mariadbdBinary.absolutePath,
             "--defaults-file=${cnfFile.absolutePath}",
+            "--basedir=${installed.absolutePath}",
             "--datadir=${dataDir.absolutePath}",
             "--socket=${socketFile.absolutePath}",
             "--pid-file=${pidFile.absolutePath}",
@@ -191,20 +224,23 @@ class MariaDbEngine(private val context: Context) {
 
         val env = mapOf(
             "LD_LIBRARY_PATH" to listOf(
-                File(mariadbDir, "lib").absolutePath,
-                File(mariadbDir, "lib/plugin").absolutePath,
+                File(installed, "lib").absolutePath,
+                File(installed, "lib/plugin").absolutePath,
                 context.applicationInfo.nativeLibraryDir,
                 System.getenv("LD_LIBRARY_PATH").orEmpty()
             ).filter { it.isNotBlank() }.joinToString(":"),
             "TMPDIR" to tmpDir.absolutePath,
             "HOME" to runtimeHome.absolutePath,
             "USER" to android.os.Process.myUid().toString(),
-            "MYSQL_HOME" to mariadbDir.absolutePath
+            "MYSQL_HOME" to installed.absolutePath
         )
 
         processRunner.start(
             command = command,
-            workingDir = mariadbDir,
+            // The daemon's own directory: a downloaded bundle keeps its data files
+            // next to bin/ and lib/, so a relative lookup must not fall through to
+            // the asset tree.
+            workingDir = installed,
             environment = env,
             scope = scope
         )

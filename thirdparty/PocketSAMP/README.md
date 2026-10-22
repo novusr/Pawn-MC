@@ -121,3 +121,19 @@ If `bin/` is absent the runtime logs
 service off — the SA-MP server itself still runs, since database support is optional
 for SQLite/file gamemodes. A bundle that ships only `share/` data is an incomplete
 build, not a runtime bug.
+
+### Installing a bundle without rebuilding the APK
+
+The **Database** tab offers *Install a MariaDB bundle* when no daemon is present. It
+downloads over HTTPS, optionally verifies a SHA-256, and only accepts an archive that
+contains `bin/mariadbd` (plus `lib/`, `share/mariadb/` and
+`bin/mariadb-install-db`). A zip is also accepted if it holds a `lib/arm64-v8a/`
+tree.
+
+The bundle is unpacked into
+`filesDir/mariadb-native/arm64-v8a/`. That path is deliberate: since Android 10 the
+kernel refuses `exec()` on files under the app's data directory unless the location
+is a *private* directory that mirrors the package the way `nativeLibraryDir` does.
+Extracting into `filesDir/mariadb/` would download successfully and then fail to
+start. A distro package is still unusable at that point — it links against glibc,
+not Android's bionic `libc`.
