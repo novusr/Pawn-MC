@@ -57,6 +57,7 @@ class MariaDbDownloader(private val context: Context) {
 
         private const val CONNECT_TIMEOUT = 20_000
         private const val READ_TIMEOUT = 60_000
+        private const val MAX_ATTEMPTS = 3
         private const val MAX_BUNDLE_BYTES = 512L * 1024 * 1024
         private const val USER_AGENT = "PocketSAMP-MariaDbBundle/1.0"
     }
@@ -88,9 +89,27 @@ class MariaDbDownloader(private val context: Context) {
         val partial = File(workDir, "bundle.download.part")
 
         try {
-            onProgress("Connecting to bundle host...")
-            val downloaded = fetch(url, partial) { percent ->
-                onProgress("Downloading bundle... $percent%")
+            // A long transfer over Wi-Fi can be cut mid-body; the resume support in
+            // fetch() makes a retry cheap, so a truncated response is retried instead
+            // of being handed to the gzip reader (which reported it as
+            // "Unexpected end of stream").
+            var downloaded = 0L
+            var attempt = 1
+            while (true) {
+                try {
+                    onProgress(
+                        if (attempt == 1) "Connecting to bundle host..."
+                        else "Resuming download (attempt $attempt/$MAX_ATTEMPTS)..."
+                    )
+                    downloaded = fetch(url, partial) { percent ->
+                        onProgress("Downloading bundle... $percent%")
+                    }
+                    break
+                } catch (truncated: java.io.EOFException) {
+                    if (attempt >= MAX_ATTEMPTS) throw truncated
+                    attempt++
+                    onProgress("Connection dropped (${truncated.message}); retrying...")
+                }
             }
 
             if (sha256.isNullOrBlank()) {
@@ -123,6 +142,12 @@ class MariaDbDownloader(private val context: Context) {
     /**
      * Streams [url] into [target], resuming from the existing byte count so a dropped
      * connection continues instead of restarting a 40 MB transfer.
+     *
+     * A body shorter than `Content-Length` is an **error**, not a finished download.
+     * This is what made a dropped transfer surface as
+     * `Unexpected end of stream` from the gzip reader during extraction: the socket
+     * closed early, `read()` returned -1, and the truncated file was handed to the
+     * tar/gzip parser as if it were complete.
      */
     private fun fetch(url: String, target: File, onPercent: (Int) -> Unit): Long {
         val already = if (target.isFile) target.length() else 0L
@@ -132,23 +157,41 @@ class MariaDbDownloader(private val context: Context) {
             instanceFollowRedirects = true
             setRequestProperty("User-Agent", USER_AGENT)
             setRequestProperty("Accept", "application/gzip, application/x-tar, application/zip, */*")
+            setRequestProperty("Accept-Encoding", "identity")
             if (already > 0) setRequestProperty("Range", "bytes=$already-")
         }
 
         try {
             val code = connection.responseCode
-            val resuming = code == HttpURLConnection.HTTP_PARTIAL && already > 0
-            if (code != HttpURLConnection.HTTP_OK && !resuming) {
+            // A server that ignores Range answers 200 with the whole body. Appending
+            // it to the bytes we already have would corrupt the archive, so the file
+            // is restarted from zero. `Content-Encoding` must be identity: a gzip
+            // content-coding would be decompressed by the HTTP layer and then fed to
+            // the tar reader as if it were still compressed.
+            val rangeHonoured = code == HttpURLConnection.HTTP_PARTIAL && already > 0
+            val restart = already > 0 && !rangeHonoured
+            if (code != HttpURLConnection.HTTP_OK && !rangeHonoured) {
                 val detail = connection.errorStream?.bufferedReader()?.use { it.readText() }?.take(300)
                 throw IllegalStateException("HTTP $code${if (detail.isNullOrBlank()) "" else ": $detail"}")
             }
+            if (connection.contentEncoding?.lowercase()?.contains("gzip") == true) {
+                throw IllegalStateException(
+                    "Server sent a gzip Content-Encoding; the bundle must be served as bytes (identity)."
+                )
+            }
 
-            val total = connection.contentLengthLong + if (resuming) already else 0L
-            val append = resuming
+            val bodyLength = connection.contentLengthLong
+            val total = if (bodyLength > 0) bodyLength + if (rangeHonoured) already else 0L else -1L
+            val append = rangeHonoured
+            if (restart) {
+                // Drop the partial bytes so the retry starts from a clean file.
+                target.delete()
+            }
             // The byte count is assigned to a local and returned *after* the streams
             // are closed: `return` inside nested `use {}` lambdas would be a
             // non-local return, which Kotlin does not allow here.
             var copied = if (append) already else 0L
+            val bodyStart = copied
             connection.inputStream.use { input ->
                 java.io.FileOutputStream(target, append).use { out ->
                     val buffer = ByteArray(64 * 1024)
@@ -167,6 +210,14 @@ class MariaDbDownloader(private val context: Context) {
                     }
                     out.fd.sync()
                 }
+            }
+
+            // Truncation check: the server promised bodyLength bytes in this response.
+            val received = copied - bodyStart
+            if (bodyLength > 0 && received < bodyLength) {
+                throw java.io.EOFException(
+                    "Transfer stopped after $received of $bodyLength bytes"
+                )
             }
             return copied
         } finally {
