@@ -1,31 +1,39 @@
 name: MariaDB i386 Bundle
 
-# Builds the MariaDB bundle that PocketSAMP runs through QEMU.
+# Assembles the MariaDB bundle that PocketSAMP runs through QEMU.
 #
-# Why i386 and not arm64: the SA-MP server is already i386, the shared rootfs
-# (`rootfs_i386`) already carries the glibc it needs, and the bundled translator
-# (`qemu-i386`) can run 32-bit x86. An i386 MariaDB therefore uses an ordinary
-# Linux build with a real glibc — no bespoke Android/NDK cross-build, which in
-# practice does not link (MariaDB needs nsswitch, getpwent and dlopen behaviour
-# that bionic does not provide).
+# Why i386: the SA-MP server is already i386, the shared rootfs (`rootfs_i386`)
+# already carries a real glibc, and the bundled translator (`qemu-i386`) runs 32-bit
+# x86. A native arm64 MariaDB would need a bespoke Android/bionic build, which in
+# practice does not link (MariaDB needs nsswitch, getpwent and glibc dlopen).
 #
-# The result is `mariadb_i386.tar.gz`, laid out exactly as MariaDbEngine expects:
+# Why Debian and not Ubuntu: Ubuntu 24.04 (noble) builds MariaDB for amd64, arm64,
+# armhf, ppc64el, riscv64 and s390x only — there is no i386 package, which is why
+# `mariadb-server-core:10.11` resolved to nothing. Debian still ships i386 for
+# bookworm (10.11), trixie and sid (11.8), so the .deb files are fetched straight
+# from the Debian index instead of through apt.
+#
+# Result: `mariadb_i386.tar.gz` laid out exactly as MariaDbEngine expects:
 #   bin/mariadbd
 #   bin/mariadb-install-db
 #   lib/...
 #   share/mariadb/...
 
 on:
-  # A manual run is the normal path: you pick the MariaDB series and download the
-  # artifact. The push trigger exists so the bundle is built (and its log visible in
-  # Actions) whenever this workflow or the engine that consumes it changes, which is
-  # how it shows up next to the lint/build jobs instead of only on demand.
+  # Manual run is the normal path: pick the Debian suite and download the artifact.
+  # The push trigger makes the job visible in Actions alongside lint/build whenever
+  # the workflow or the engine that consumes it changes.
   workflow_dispatch:
     inputs:
-      mariadb_version:
-        description: 'MariaDB major series to fetch (e.g. 10.11, 11.4)'
+      suite:
+        description: 'Debian suite to take i386 packages from'
         required: false
-        default: '10.11'
+        default: 'bookworm'
+        type: choice
+        options:
+          - bookworm
+          - trixie
+          - sid
   push:
     branches: [ main, develop ]
     paths:
@@ -45,56 +53,72 @@ jobs:
   build-bundle:
     name: Assemble mariadb_i386.tar.gz
     runs-on: ubuntu-24.04
+    env:
+      # Used by push/PR runs, where there is no user input.
+      SUITE: ${{ github.event.inputs.suite || 'bookworm' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Enable i386 multiarch
+      - name: Resolve package URLs from the Debian index
         run: |
-          set -e
-          sudo dpkg --add-architecture i386
-          sudo apt-get update
+          set -euo pipefail
+          echo "Suite: $SUITE"
+          mkdir -p debs meta
 
-      - name: Fetch MariaDB i386 packages
-        run: |
-          set -e
-          VER="${{ github.event.inputs.mariadb_version || '10.11' }}"
-          # -core holds mariadbd + the client libs; -client-core holds the
-          # install-db helper; -server ships share/mariadb (error messages).
-          # Run inside debs/ WITHOUT sudo: apt-get download writes into the current
-          # directory and reads the package lists, both of which the runner user
-          # already owns. Sudo would leave root-owned files behind and break the
-          # dpkg-deb step below.
-          mkdir -p debs
-          set +e
-          for pkg in \
-            "mariadb-server-core:$VER" \
-            "mariadb-client-core:$VER" \
-            "mariadb-server:$VER" \
-            "mariadb-common:$VER"; do
-            ( cd debs && apt-get download "$pkg" ) \
-              && echo "got $pkg" \
-              || echo "::warning::could not fetch $pkg"
+          # Packages.xz for i386. MariaDB lives in main; no other component needed.
+          BASE="https://deb.debian.org/debian/dists/$SUITE/main/binary-i386"
+          curl -fsSL "$BASE/Packages.xz" -o meta/Packages.xz
+          xz -dk -f meta/Packages.xz
+          echo "index entries: $(grep -c '^Package: ' meta/Packages)"
+
+          # Flat index: records are separated by a blank line, fields by newline.
+          filename_for() {
+            awk -v pkg="$1" 'BEGIN { RS=""; FS="\n" }
+              $0 ~ ("^Package: " pkg "$") {
+                for (i = 1; i <= NF; i++) {
+                  if ($i ~ /^Filename: /) { sub(/^Filename: /, "", $i); print $i; exit }
+                }
+              }' meta/Packages
+          }
+
+          : > meta/urls.txt
+          for pkg in mariadb-server-core mariadb-client-core mariadb-common; do
+            f=$(filename_for "$pkg" || true)
+            if [ -z "${f:-}" ]; then
+              echo "::warning::package $pkg not found in $SUITE/main/binary-i386"
+              continue
+            fi
+            echo "https://deb.debian.org/debian/${f#./}" | tee -a meta/urls.txt
           done
-          set -e
+
+          if [ ! -s meta/urls.txt ]; then
+            echo "::error::No MariaDB i386 packages in suite '$SUITE'. Try trixie or sid."
+            exit 1
+          fi
+
+          ( cd debs && xargs -n1 -a ../meta/urls.txt curl -fsSLO )
           ls -la debs
 
       - name: Unpack packages
         run: |
-          set -e
+          set -euo pipefail
           mkdir -p out
           for f in debs/*.deb; do
             [ -e "$f" ] || continue
             dpkg-deb -x "$f" out
           done
-          echo "--- unpacked tree ---"
-          find out -maxdepth 3 -type d | head -40
+          echo "--- daemon candidates ---"
+          find out -type f \( -name mariadbd -o -name mysqld \) -print
+          echo "--- shared libraries ---"
+          find out -type d -name 'i386-linux-gnu' -print
 
       - name: Assemble bundle layout
         run: |
-          set -e
+          set -euo pipefail
           BUNDLE=bundle
-          rm -rf "$BUNDLE" && mkdir -p "$BUNDLE/bin" "$BUNDLE/lib" "$BUNDLE/share"
+          rm -rf "$BUNDLE"
+          mkdir -p "$BUNDLE/bin" "$BUNDLE/lib" "$BUNDLE/share/mariadb"
 
           DAEMON=$(find out -type f \( -name mariadbd -o -name mysqld \) | head -n1)
           if [ -z "$DAEMON" ]; then
@@ -132,15 +156,17 @@ jobs:
           file "$BUNDLE/bin/mariadbd"
 
           # The engine launches this through qemu-i386, which only accepts 32-bit
-          # x86. Fail loudly here rather than on the device.
+          # x86. Fail here rather than on the device.
           if ! file "$BUNDLE/bin/mariadbd" | grep -q 'ELF 32-bit LSB.*Intel 80386'; then
-            echo "::error::mariadbd is not an i386 ELF. The apt mirror served a different ABI; check that dpkg --add-architecture i386 was applied before apt-get update."
+            echo "::error::mariadbd is not an i386 ELF; refusing to publish a bundle the translator cannot run."
             exit 1
           fi
 
+          chmod +x "$BUNDLE/bin/"* 2>/dev/null || true
+
       - name: Package and checksum
         run: |
-          set -e
+          set -euo pipefail
           tar -C bundle -czf mariadb_i386.tar.gz bin lib share
           sha256sum mariadb_i386.tar.gz | tee mariadb_i386.tar.gz.sha256
           ls -lh mariadb_i386.tar.gz
@@ -148,7 +174,7 @@ jobs:
       - name: Upload bundle
         uses: actions/upload-artifact@v4
         with:
-          name: mariadb_i386-bundle
+          name: mariadb_i386-bundle-${{ env.SUITE }}
           path: |
             mariadb_i386.tar.gz
             mariadb_i386.tar.gz.sha256
