@@ -37,27 +37,31 @@ on:
           - bookworm
           - trixie
           - sid
+  # No `paths:` filter on purpose. With one, a push that touches anything else (an
+  # asset, a commit made through the web UI, a merge) never starts this job, so it
+  # silently disappears from the run list while the unfiltered Build & Lint job still
+  # runs. Building the bundle is cheap enough to do on every push to the main line.
   push:
     branches: [ main, develop ]
-    paths:
-      - '.github/workflows/mariadb-i386-bundle.yml'
-      - 'thirdparty/PocketSAMP/app/src/main/java/com/pocketsamp/server/engine/**'
   pull_request:
     branches: [ main ]
-    paths:
-      - '.github/workflows/mariadb-i386-bundle.yml'
-      - 'thirdparty/PocketSAMP/app/src/main/java/com/pocketsamp/server/engine/**'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Keyed by event as well as ref: a manual run must not be cancelled by a push that
+  # lands while it is downloading packages.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
 
 jobs:
   build-bundle:
     name: Assemble mariadb_i386.tar.gz
     runs-on: ubuntu-24.04
     env:
-      SUITE: ${{ github.event.inputs.suite || 'bookworm' }}
+      # `github.event.inputs.suite` is empty for push/PR runs (there is no input), and
+      # `||` does not help there: an empty string is falsy but the object path itself
+      # is undefined. `env.SUITE_FALLBACK` is a plain literal, so the job-level env
+      # always ends up with a real suite name.
+      SUITE: ${{ github.event.inputs.suite != '' && github.event.inputs.suite || 'bookworm' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
