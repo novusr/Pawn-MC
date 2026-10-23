@@ -16,12 +16,30 @@ name: MariaDB i386 Bundle
 #   share/mariadb/...
 
 on:
+  # A manual run is the normal path: you pick the MariaDB series and download the
+  # artifact. The push trigger exists so the bundle is built (and its log visible in
+  # Actions) whenever this workflow or the engine that consumes it changes, which is
+  # how it shows up next to the lint/build jobs instead of only on demand.
   workflow_dispatch:
     inputs:
       mariadb_version:
         description: 'MariaDB major series to fetch (e.g. 10.11, 11.4)'
         required: false
         default: '10.11'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '.github/workflows/mariadb-i386-bundle.yml'
+      - 'thirdparty/PocketSAMP/app/src/main/java/com/pocketsamp/server/engine/**'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/mariadb-i386-bundle.yml'
+      - 'thirdparty/PocketSAMP/app/src/main/java/com/pocketsamp/server/engine/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-bundle:
@@ -43,13 +61,23 @@ jobs:
           VER="${{ github.event.inputs.mariadb_version || '10.11' }}"
           # -core holds mariadbd + the client libs; -client-core holds the
           # install-db helper; -server ships share/mariadb (error messages).
-          mkdir -p debs && cd debs
-          apt-get download \
+          # Run inside debs/ WITHOUT sudo: apt-get download writes into the current
+          # directory and reads the package lists, both of which the runner user
+          # already owns. Sudo would leave root-owned files behind and break the
+          # dpkg-deb step below.
+          mkdir -p debs
+          set +e
+          for pkg in \
             "mariadb-server-core:$VER" \
             "mariadb-client-core:$VER" \
             "mariadb-server:$VER" \
-            "mariadb-common:$VER" 2>/dev/null || true
-          ls -la
+            "mariadb-common:$VER"; do
+            ( cd debs && apt-get download "$pkg" ) \
+              && echo "got $pkg" \
+              || echo "::warning::could not fetch $pkg"
+          done
+          set -e
+          ls -la debs
 
       - name: Unpack packages
         run: |
@@ -95,11 +123,20 @@ jobs:
           elif [ -d out/usr/share/mariadb ]; then
             mkdir -p "$BUNDLE/share/mariadb"
             cp -a out/usr/share/mariadb/. "$BUNDLE/share/mariadb/"
+          else
+            echo "::warning::no share/mysql or share/mariadb found; error messages will fall back to codes"
           fi
 
           echo "--- bundle ---"
           find "$BUNDLE" -maxdepth 2 | sort | head -40
           file "$BUNDLE/bin/mariadbd"
+
+          # The engine launches this through qemu-i386, which only accepts 32-bit
+          # x86. Fail loudly here rather than on the device.
+          if ! file "$BUNDLE/bin/mariadbd" | grep -q 'ELF 32-bit LSB.*Intel 80386'; then
+            echo "::error::mariadbd is not an i386 ELF. The apt mirror served a different ABI; check that dpkg --add-architecture i386 was applied before apt-get update."
+            exit 1
+          fi
 
       - name: Package and checksum
         run: |
