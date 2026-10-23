@@ -7,7 +7,7 @@ name: MariaDB i386 Bundle
 # need a bionic build, which MariaDB cannot do (nsswitch, getpwent, glibc dlopen).
 #
 # Why Debian and not Ubuntu: Ubuntu 24.04 builds MariaDB for amd64/arm64/armhf/
-# ppc64el/riscv64/s390x only — no i386 package exists, which is why
+# ppc64el/riscv64/s390x only - no i386 package exists, which is why
 # `mariadb-server-core:10.11` resolved to nothing. Debian still ships i386.
 #
 # The bundle must be SELF-CONTAINED. `mariadbd` lists these NEEDED entries, and the
@@ -183,37 +183,25 @@ jobs:
             exit 1
           fi
 
-          # Every NEEDED entry must be satisfied by the rootfs or by lib/. The rootfs
-          # ships exactly these four, so anything else has to be in the bundle.
+          # Every NEEDED entry must be satisfied by the rootfs or by lib/.
+          # The list is a plain shell variable, NOT a heredoc: a `<<'EOF'` block whose
+          # body sits at column 0 terminates the YAML literal block for `run: |`, so
+          # GitHub read "libaio.so.1", "libc.so.6" ... as top-level workflow keys and
+          # rejected the whole file (which is why no run ever appeared).
           ROOTFS_PROVIDED="libc.so.6 libm.so.6 libz.so.1 libgcc_s.so.1 libstdc++.so.6"
+          NEEDED="libaio.so.1 libc.so.6 libcrypt.so.1 libcrypto.so.3 libgcc_s.so.1 libm.so.6 libnuma.so.1 libpcre2-8.so.0 libssl.so.3 libstdc++.so.6 libsystemd.so.0 liburing.so.2 libz.so.1"
+
           MISSING=0
-          while read -r so; do
-            [ -n "$so" ] || continue
+          for so in $NEEDED; do
             if echo " $ROOTFS_PROVIDED " | grep -q " $so "; then
               echo "ok (rootfs)  $so"
-              continue
-            fi
-            if [ -e "$BUNDLE/lib/$so" ]; then
+            elif [ -e "$BUNDLE/lib/$so" ]; then
               echo "ok (bundle)  $so"
             else
               echo "::error::missing $so"
               MISSING=1
             fi
-          done <<'EOF'
-libaio.so.1
-libc.so.6
-libcrypt.so.1
-libcrypto.so.3
-libgcc_s.so.1
-libm.so.6
-libnuma.so.1
-libpcre2-8.so.0
-libssl.so.3
-libstdc++.so.6
-libsystemd.so.0
-liburing.so.2
-libz.so.1
-EOF
+          done
 
           if [ "$MISSING" -ne 0 ]; then
             echo "::error::Bundle is incomplete; refusing to publish it."
