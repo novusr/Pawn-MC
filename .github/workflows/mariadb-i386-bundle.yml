@@ -66,20 +66,35 @@ jobs:
           echo "Suite: $SUITE"
           mkdir -p debs meta
 
-          # Packages.xz for i386. MariaDB lives in main; no other component needed.
+          # Debian's index is served xz-compressed; `xz -dk` keeps the original and
+          # writes `Packages`. Fall back to gunzip-style `.gz` if a mirror only has that.
           BASE="https://deb.debian.org/debian/dists/$SUITE/main/binary-i386"
-          curl -fsSL "$BASE/Packages.xz" -o meta/Packages.xz
-          xz -dk -f meta/Packages.xz
-          echo "index entries: $(grep -c '^Package: ' meta/Packages)"
+          if curl -fsSL "$BASE/Packages.xz" -o meta/Packages.xz; then
+            xz -dk -f meta/Packages.xz
+          else
+            curl -fsSL "$BASE/Packages.gz" | gunzip > meta/Packages
+          fi
+          echo "index entries: $(grep -c '^Package: ' meta/Packages || true)"
+          echo "mariadb entries: $(grep -c '^Package: mariadb' meta/Packages || true)"
 
-          # Flat index: records are separated by a blank line, fields by newline.
+          # Flat index. Parsed line by line instead of with RS="": with a custom
+          # record separator, `$0` keeps the blank line that follows a record, so a
+          # `^Package: x$` anchor never matches and every lookup silently fails
+          # (which is exactly what happened on the previous run).
+          #
+          # States: looking for `Package: <wanted>`, then the first `Filename:` after it.
           filename_for() {
-            awk -v pkg="$1" 'BEGIN { RS=""; FS="\n" }
-              $0 ~ ("^Package: " pkg "$") {
-                for (i = 1; i <= NF; i++) {
-                  if ($i ~ /^Filename: /) { sub(/^Filename: /, "", $i); print $i; exit }
-                }
-              }' meta/Packages
+            awk -v pkg="$1" '
+              { sub(/\r$/, "") }
+              /^Package: / {
+                matching = (substr($0, 10) == pkg)
+                next
+              }
+              matching && /^Filename: / {
+                print substr($0, 11)
+                exit
+              }
+            ' meta/Packages
           }
 
           : > meta/urls.txt
@@ -89,8 +104,10 @@ jobs:
               echo "::warning::package $pkg not found in $SUITE/main/binary-i386"
               continue
             fi
-            echo "https://deb.debian.org/debian/${f#./}" | tee -a meta/urls.txt
+            echo "https://deb.debian.org/debian/${f#./}" >> meta/urls.txt
+            echo "resolved $pkg"
           done
+          cat meta/urls.txt
 
           if [ ! -s meta/urls.txt ]; then
             echo "::error::No MariaDB i386 packages in suite '$SUITE'. Try trixie or sid."
