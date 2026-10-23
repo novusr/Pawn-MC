@@ -1,0 +1,118 @@
+name: MariaDB i386 Bundle
+
+# Builds the MariaDB bundle that PocketSAMP runs through QEMU.
+#
+# Why i386 and not arm64: the SA-MP server is already i386, the shared rootfs
+# (`rootfs_i386`) already carries the glibc it needs, and the bundled translator
+# (`qemu-i386`) can run 32-bit x86. An i386 MariaDB therefore uses an ordinary
+# Linux build with a real glibc — no bespoke Android/NDK cross-build, which in
+# practice does not link (MariaDB needs nsswitch, getpwent and dlopen behaviour
+# that bionic does not provide).
+#
+# The result is `mariadb_i386.tar.gz`, laid out exactly as MariaDbEngine expects:
+#   bin/mariadbd
+#   bin/mariadb-install-db
+#   lib/...
+#   share/mariadb/...
+
+on:
+  workflow_dispatch:
+    inputs:
+      mariadb_version:
+        description: 'MariaDB major series to fetch (e.g. 10.11, 11.4)'
+        required: false
+        default: '10.11'
+
+jobs:
+  build-bundle:
+    name: Assemble mariadb_i386.tar.gz
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Enable i386 multiarch
+        run: |
+          set -e
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+
+      - name: Fetch MariaDB i386 packages
+        run: |
+          set -e
+          VER="${{ github.event.inputs.mariadb_version || '10.11' }}"
+          # -core holds mariadbd + the client libs; -client-core holds the
+          # install-db helper; -server ships share/mariadb (error messages).
+          mkdir -p debs && cd debs
+          apt-get download \
+            "mariadb-server-core:$VER" \
+            "mariadb-client-core:$VER" \
+            "mariadb-server:$VER" \
+            "mariadb-common:$VER" 2>/dev/null || true
+          ls -la
+
+      - name: Unpack packages
+        run: |
+          set -e
+          mkdir -p out
+          for f in debs/*.deb; do
+            [ -e "$f" ] || continue
+            dpkg-deb -x "$f" out
+          done
+          echo "--- unpacked tree ---"
+          find out -maxdepth 3 -type d | head -40
+
+      - name: Assemble bundle layout
+        run: |
+          set -e
+          BUNDLE=bundle
+          rm -rf "$BUNDLE" && mkdir -p "$BUNDLE/bin" "$BUNDLE/lib" "$BUNDLE/share"
+
+          DAEMON=$(find out -type f \( -name mariadbd -o -name mysqld \) | head -n1)
+          if [ -z "$DAEMON" ]; then
+            echo "::error::No mariadbd found in the fetched packages"
+            exit 1
+          fi
+          INSTALL_DB=$(find out -type f \( -name mariadb-install-db -o -name mysql_install_db \) | head -n1)
+
+          cp "$DAEMON" "$BUNDLE/bin/mariadbd"
+          if [ -n "$INSTALL_DB" ]; then
+            cp "$INSTALL_DB" "$BUNDLE/bin/mariadb-install-db"
+          else
+            echo "::warning::mariadb-install-db missing; the engine falls back to mariadbd --initialize-insecure"
+          fi
+
+          # Copy the shared libraries the daemon needs but that the i386 rootfs does
+          # not already provide. Anything missing at runtime shows up in the console.
+          for libdir in $(find out -type d -name 'i386-linux-gnu'); do
+            cp -a "$libdir"/. "$BUNDLE/lib/" 2>/dev/null || true
+          done
+
+          # Error messages (--lc-messages-dir).
+          if [ -d out/usr/share/mysql ]; then
+            mkdir -p "$BUNDLE/share/mariadb"
+            cp -a out/usr/share/mysql/. "$BUNDLE/share/mariadb/"
+          elif [ -d out/usr/share/mariadb ]; then
+            mkdir -p "$BUNDLE/share/mariadb"
+            cp -a out/usr/share/mariadb/. "$BUNDLE/share/mariadb/"
+          fi
+
+          echo "--- bundle ---"
+          find "$BUNDLE" -maxdepth 2 | sort | head -40
+          file "$BUNDLE/bin/mariadbd"
+
+      - name: Package and checksum
+        run: |
+          set -e
+          tar -C bundle -czf mariadb_i386.tar.gz bin lib share
+          sha256sum mariadb_i386.tar.gz | tee mariadb_i386.tar.gz.sha256
+          ls -lh mariadb_i386.tar.gz
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: mariadb_i386-bundle
+          path: |
+            mariadb_i386.tar.gz
+            mariadb_i386.tar.gz.sha256
+          retention-days: 30

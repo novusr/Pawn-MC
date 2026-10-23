@@ -32,30 +32,7 @@ class SampEngine(private val context: Context) {
     val isRunning: Boolean
         get() = processRunner.isRunning
 
-    private fun findQemuBinary(context: Context): File? {
-        val nativeLibDir = context.applicationInfo.nativeLibraryDir
-        val filesDir = context.filesDir
-        val candidates = mutableListOf(
-            File(nativeLibDir, "libqemu-i386.so"),
-            File(nativeLibDir, "qemu-i386"),
-            File(filesDir, "bin/qemu-i386"),
-            File(filesDir, "bin/libqemu-i386.so"),
-            File(filesDir, "rootfs_i386/bin/qemu-i386"),
-            File(filesDir, "rootfs_i386/usr/bin/qemu-i386"),
-            File("/system/bin/qemu-i386"),
-            File("/vendor/bin/qemu-i386")
-        )
-        try {
-            File(nativeLibDir).parentFile?.listFiles()?.forEach { dir ->
-                if (dir.isDirectory) {
-                    candidates.add(File(dir, "libqemu-i386.so"))
-                    candidates.add(File(dir, "qemu-i386"))
-                }
-            }
-        } catch (_: Exception) {}
-
-        return candidates.firstOrNull { it.exists() && (it.canExecute() || it.setExecutable(true, false)) }
-    }
+    private fun findQemuBinary(context: Context): File? = BinaryLauncher.findQemu(context)
 
     fun start(scope: CoroutineScope) {
         if (isRunning) return

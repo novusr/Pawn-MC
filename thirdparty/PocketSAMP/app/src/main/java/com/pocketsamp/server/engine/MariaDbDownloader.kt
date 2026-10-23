@@ -47,9 +47,27 @@ class MariaDbDownloader(private val context: Context) {
         fun nativeDir(context: Context): File =
             File(context.filesDir, "mariadb-native/arm64-v8a")
 
+        /**
+         * Executable copy of an **i386** bundle.
+         *
+         * i386 is 32-bit, so Android still permits `exec()` on app storage files for
+         * it; the private package-mirrored path is reused anyway so both bundle kinds
+         * follow one layout.
+         */
+        fun i386Dir(context: Context): File =
+            File(context.filesDir, "mariadb-native/x86")
+
+        /** Install root of whichever bundle is present, i386 preferred for QEMU. */
+        fun activeInstallRoot(context: Context): File? = when {
+            File(i386Dir(context), "bin/mariadbd").isFile -> i386Dir(context)
+            File(nativeDir(context), "bin/mariadbd").isFile -> nativeDir(context)
+            else -> null
+        }
+
         /** Executable daemon resolved from a downloaded bundle, if any. */
         fun downloadedDaemon(context: Context): File? =
-            File(nativeDir(context), "bin/mariadbd").takeIf { it.isFile && it.length() > 0 }
+            activeInstallRoot(context)?.let { File(it, "bin/mariadbd") }
+                ?.takeIf { it.isFile && it.length() > 0 }
 
         /** Data directory that belongs to the downloaded build (separate from assets). */
         fun downloadedDataDir(context: Context): File =
@@ -78,10 +96,13 @@ class MariaDbDownloader(private val context: Context) {
         if (!url.startsWith("https://")) {
             return@withContext Result(false, "Bundle URL must be https:// (refused: $url)")
         }
+        // i386 bundles run through QEMU, and the translator only ships for arm64 in
+        // this project, so that is still the requirement — but the bundle itself may
+        // legitimately be either arm64-v8a or i386.
         if (!android.os.Build.SUPPORTED_ABIS.contains("arm64-v8a")) {
             return@withContext Result(
                 false,
-                "This device is ${android.os.Build.SUPPORTED_ABIS.joinToString(", ")}; the bundle is arm64-v8a only."
+                "This device is ${android.os.Build.SUPPORTED_ABIS.joinToString(", ")}; the QEMU translator and native bundle are arm64-v8a only."
             )
         }
 
@@ -254,8 +275,8 @@ class MariaDbDownloader(private val context: Context) {
             val libRoot = File(staging, "jni")
             unzip(archive, libRoot)
             val abiDir = libRoot.walkTopDown().firstOrNull {
-                it.isDirectory && it.name == "arm64-v8a"
-            } ?: return Result(false, "Zip has no lib/arm64-v8a/ entries.")
+                it.isDirectory && (it.name == "arm64-v8a" || it.name == "x86")
+            } ?: return Result(false, "Zip has no lib/arm64-v8a/ or lib/x86/ entries.")
             // A prebuilt zip carries its tree under <abi>/; flatten it into staging so
             // the daemon check below applies the same rule to both formats.
             abiDir.copyRecursively(staging, overwrite = true)
@@ -269,15 +290,28 @@ class MariaDbDownloader(private val context: Context) {
             staging.deleteRecursively()
             return Result(
                 false,
-                "Bundle extracted but contains no bin/mariadbd. Expected bin/mariadbd, bin/mariadb-install-db, lib/ and share/mariadb/ for arm64-v8a."
+                "Bundle extracted but contains no bin/mariadbd. Expected bin/mariadbd, bin/mariadb-install-db, lib/ and share/mariadb/ for arm64-v8a (native) or i386 (QEMU)."
             )
         }
 
-        onProgress("Installing daemon...")
+        // The bundle's ABI decides where it is installed and how it will be launched.
+        // i386 goes to the QEMU tree; anything else is treated as a native build.
+        val kind = BinaryLauncher.kindOf(daemon)
+        val isI386 = kind == BinaryLauncher.Kind.I386 || kind == BinaryLauncher.Kind.X86_64
+        if (isI386 && BinaryLauncher.findQemu(context) == null) {
+            staging.deleteRecursively()
+            return Result(
+                false,
+                "Bundle is ${kind.name} but QEMU (libqemu-i386.so) is missing, so it could not run. " +
+                    "Put libqemu-i386.so in jniLibs/arm64-v8a or use an arm64-v8a bundle."
+            )
+        }
+
+        onProgress("Installing ${kind.name} daemon...")
         daemon.setExecutable(true, false)
         File(staging, "bin/mariadb-install-db").let { if (it.isFile) it.setExecutable(true, false) }
 
-        val destination = nativeDir(context)
+        val destination = if (isI386) i386Dir(context) else nativeDir(context)
         // Keep the old tree until the new one is fully moved in.
         val previous = File(context.filesDir, "mariadb-native/previous")
         previous.deleteRecursively()
@@ -296,7 +330,8 @@ class MariaDbDownloader(private val context: Context) {
         previous.deleteRecursively()
         return Result(
             true,
-            "MariaDB bundle installed at ${destination.absolutePath}.\nRestart the server to start the database."
+            "MariaDB bundle (${kind.name}) installed at ${destination.absolutePath}.\n" +
+                "Restart the server to start the database."
         )
     }
 

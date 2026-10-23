@@ -30,12 +30,16 @@ class MariaDbEngine(private val context: Context) {
         val candidates = listOf(
             File(mariadbDir, "bin/mariadb-install-db"),
             File(mariadbDir, "bin/mysql_install_db"),
+            File(mariadbDir, "bin/install-db"),
             File(context.filesDir, "bin/mariadb-install-db"),
             File(context.filesDir, "bin/mysql_install_db"),
+            // i386 build shipped inside the shared rootfs: executed through QEMU.
+            File(context.filesDir, "rootfs_i386/usr/bin/mariadb-install-db"),
+            File(context.filesDir, "rootfs_i386/usr/sbin/mariadb-install-db"),
             File(context.applicationInfo.nativeLibraryDir, "libmariadb-install-db.so"),
             File(context.applicationInfo.nativeLibraryDir, "mariadb-install-db")
         )
-        return candidates.firstOrNull { isUsableBinary(it) }
+        return firstRunnable(candidates)
     }
 
     private fun findMariadbdBinary(context: Context, mariadbDir: File): File? {
@@ -45,17 +49,29 @@ class MariaDbEngine(private val context: Context) {
             // which is the only way exec() is allowed there since API 29; see
             // MariaDbDownloader.
             File(MariaDbDownloader.nativeDir(context), "bin/mariadbd"),
+            File(MariaDbDownloader.i386Dir(context), "bin/mariadbd"),
             File(mariadbDir, "bin/mariadbd"),
             File(mariadbDir, "bin/mysqld"),
             File(context.filesDir, "bin/mariadbd"),
             File(context.filesDir, "bin/mysqld"),
+            // i386 build inside the shared rootfs: executed through QEMU.
+            File(context.filesDir, "rootfs_i386/usr/sbin/mariadbd"),
+            File(context.filesDir, "rootfs_i386/usr/sbin/mysqld"),
+            File(context.filesDir, "rootfs_i386/usr/bin/mariadbd"),
             File(context.applicationInfo.nativeLibraryDir, "libmariadbd.so"),
             File(context.applicationInfo.nativeLibraryDir, "mariadbd"),
             File(context.applicationInfo.nativeLibraryDir, "libmysqld.so"),
             File(context.applicationInfo.nativeLibraryDir, "mysqld")
         )
-        return candidates.firstOrNull { isUsableBinary(it) }
+        return firstRunnable(candidates)
     }
+
+    /**
+     * First candidate that is executable *and* runnable here: a native ARM64 daemon on
+     * an x86 emulator is present but useless, and an i386 one without QEMU likewise.
+     */
+    private fun firstRunnable(candidates: List<File>): File? =
+        candidates.firstOrNull { isUsableBinary(it) && isRunnableOnThisDevice(it) }
 
     /**
      * True when [file] is a real executable, not just an existing path.
@@ -66,15 +82,25 @@ class MariaDbEngine(private val context: Context) {
      * execute a folder. Requiring a regular file and a non-zero length is what makes
      * a missing or truncated deployment report itself honestly instead.
      */
-    private fun isUsableBinary(file: File): Boolean {
-        if (!file.isFile || file.length() == 0L) return false
-        if (file.canExecute()) return true
-        return runCatching { file.setExecutable(true, false) }.getOrDefault(false)
+    private fun isUsableBinary(file: File): Boolean = BinaryLauncher.isExecutableFile(file)
+
+    /**
+     * Whether the host can execute [binary]: native ARM64 builds need an ARM64 device,
+     * i386 builds need QEMU, which only ships for arm64 in this project.
+     */
+    private fun isRunnableOnThisDevice(binary: File): Boolean {
+        if (BinaryLauncher.needsQemu(binary)) return BinaryLauncher.findQemu(context) != null
+        val kind = BinaryLauncher.kindOf(binary)
+        return when (kind) {
+            BinaryLauncher.Kind.AARCH64 -> android.os.Build.SUPPORTED_ABIS.any { it == "arm64-v8a" }
+            BinaryLauncher.Kind.ARM -> android.os.Build.SUPPORTED_ABIS.any { it.startsWith("armeabi") }
+            // A non-ELF or unrecognised file: let the exec attempt decide.
+            else -> true
+        }
     }
 
-    /** Binaries are shipped for 64-bit ARM only; QEMU syscalls of the guest are i386. */
-    private fun isArm64Device(): Boolean =
-        android.os.Build.SUPPORTED_ABIS.any { it == "arm64-v8a" }
+    /** i386 sysroot that QEMU uses with `-L`, shared with [SampEngine]. */
+    private fun rootfsDir(): File = File(context.filesDir, "rootfs_i386")
 
     /**
      * The install tree the daemon should be resolved from.
@@ -85,9 +111,10 @@ class MariaDbEngine(private val context: Context) {
      * is present, so an incomplete asset bundle can never shadow a working download.
      */
     private fun mariadbInstallRoot(): File {
-        val downloaded = MariaDbDownloader.nativeDir(context)
-        return if (MariaDbDownloader.downloadedDaemon(context) != null) downloaded
-        else File(context.filesDir, "mariadb")
+        // `activeInstallRoot` already prefers the i386 bundle when one is installed, so
+        // a QEMU bundle and a native bundle use one code path.
+        return MariaDbDownloader.activeInstallRoot(context)
+            ?: File(context.filesDir, "mariadb")
     }
 
     suspend fun initializeIfNeeded(scope: CoroutineScope): Boolean = withContext(Dispatchers.IO) {
@@ -114,9 +141,7 @@ class MariaDbEngine(private val context: Context) {
                 val binDir = File(mariadbDir, "bin")
                 if (!binDir.isDirectory) {
                     _dbLogs.emit("[MariaDB Info] The MariaDB asset bundle contains no bin/ directory.")
-                    _dbLogs.emit("[MariaDB Info] Rebuild assets: mariadb_arm64.tar.gz must hold bin/mariadbd, bin/mariadb-install-db and lib/ for arm64-v8a.")
-                } else if (!isArm64Device()) {
-                    _dbLogs.emit("[MariaDB Info] MariaDB binaries are arm64-v8a only; this device reports ${android.os.Build.SUPPORTED_ABIS.joinToString(", ")}.")
+                    _dbLogs.emit("[MariaDB Info] The bundle must hold bin/mariadbd, bin/mariadb-install-db, lib/ and share/mariadb/ — arm64-v8a (native) or i386 (via QEMU).")
                 } else {
                     _dbLogs.emit("[MariaDB Info] MariaDB binary/installer not found in app storage or native libraries.")
                 }
@@ -125,32 +150,57 @@ class MariaDbEngine(private val context: Context) {
             }
 
             val runtimeHome = File(mariadbDir, "runtime-home").apply { mkdirs() }
-            val installBuilder = if (installDb != null) {
-                ProcessBuilder(
-                    installDb.absolutePath,
+            // The installer is launched through the same ELF-aware path as the daemon:
+            // an i386 `mariadb-install-db` would otherwise be executed directly and
+            // fail with ENOEXEC on an ARM device.
+            val installerBinary = installDb ?: mariadbd!!
+            val installerArgs = if (installDb != null) {
+                listOf(
                     "--datadir=${dataDir.absolutePath}",
                     "--auth-root-authentication-method=normal",
                     "--skip-test-db",
                     "--basedir=${installed.absolutePath}",
                     "--lc-messages-dir=${File(installed, "share/mariadb").absolutePath}"
-                ).directory(installed).redirectErrorStream(true)
+                )
             } else {
-                ProcessBuilder(
-                    mariadbd!!.absolutePath,
+                listOf(
                     "--initialize-insecure",
                     "--datadir=${dataDir.absolutePath}",
                     "--basedir=${installed.absolutePath}",
                     "--lc-messages-dir=${File(installed, "share/mariadb").absolutePath}"
-                ).directory(installed).redirectErrorStream(true)
+                )
             }
+            val guestLibs = listOf(
+                File(installed, "lib").absolutePath,
+                File(installed, "lib/plugin").absolutePath
+            ).joinToString(":")
+            val installerCommand = BinaryLauncher.command(
+                binary = installerBinary,
+                arguments = installerArgs,
+                qemu = BinaryLauncher.findQemu(context),
+                rootfsDir = rootfsDir(),
+                guestLibraryPath = guestLibs
+            )
+            if (installerCommand == null) {
+                _dbLogs.emit("[MariaDB Info] ${installerBinary.name} is a 32-bit x86 binary but QEMU was not found; cannot initialize the data directory.")
+                return@withContext false
+            }
+            val installBuilder = ProcessBuilder(installerCommand)
+                .directory(installed)
+                .redirectErrorStream(true)
             installBuilder.environment()["HOME"] = runtimeHome.absolutePath
             installBuilder.environment()["TMPDIR"] = tmpDir.absolutePath
-            installBuilder.environment()["LD_LIBRARY_PATH"] = listOf(
-                File(installed, "lib").absolutePath,
-                File(installed, "lib/plugin").absolutePath,
-                context.applicationInfo.nativeLibraryDir,
-                System.getenv("LD_LIBRARY_PATH").orEmpty()
-            ).filter { it.isNotBlank() }.joinToString(":")
+            installBuilder.environment()["LD_LIBRARY_PATH"] = if (BinaryLauncher.needsQemu(installerBinary)) {
+                // Guest libs travel through `-E`; the host only needs its own libs.
+                context.applicationInfo.nativeLibraryDir
+            } else {
+                listOf(
+                    File(installed, "lib").absolutePath,
+                    File(installed, "lib/plugin").absolutePath,
+                    context.applicationInfo.nativeLibraryDir,
+                    System.getenv("LD_LIBRARY_PATH").orEmpty()
+                ).filter { it.isNotBlank() }.joinToString(":")
+            }
             val result = installBuilder.start()
             val output = withContext(Dispatchers.IO) {
                 result.inputStream.bufferedReader().use { it.readText() }
@@ -208,8 +258,16 @@ class MariaDbEngine(private val context: Context) {
         val socketFile = File(tmpDir, "mysql.sock")
         val pidFile = File(tmpDir, "mysql.pid")
 
-        val command = listOf(
-            mariadbdBinary.absolutePath,
+        // An i386 MariaDB build is a first-class option, not a fallback: it lets the
+        // app run an ordinary Linux package that already links glibc, instead of a
+        // bespoke Android build. The translator is shared with SampEngine.
+        val qemu = BinaryLauncher.findQemu(context)
+        val guestLibs = listOf(
+            File(installed, "lib").absolutePath,
+            File(installed, "lib/plugin").absolutePath
+        ).joinToString(":")
+
+        val daemonArgs = listOf(
             "--defaults-file=${cnfFile.absolutePath}",
             "--basedir=${installed.absolutePath}",
             "--datadir=${dataDir.absolutePath}",
@@ -222,13 +280,41 @@ class MariaDbEngine(private val context: Context) {
             "--user=${android.os.Process.myUid()}"
         )
 
+        val command = BinaryLauncher.command(
+            binary = mariadbdBinary,
+            arguments = daemonArgs,
+            qemu = qemu,
+            rootfsDir = rootfsDir(),
+            guestLibraryPath = guestLibs
+        )
+        if (command == null) {
+            scope.launch {
+                _dbLogs.emit("[MariaDB Info] ${mariadbdBinary.name} is a 32-bit x86 binary but QEMU (libqemu-i386.so) was not found.")
+                _dbLogs.emit("[MariaDB Info] Add libqemu-i386.so to jniLibs/arm64-v8a, the same one SA-MP uses.")
+            }
+            return
+        }
+
+        scope.launch {
+            _dbLogs.emit("[MariaDB] Launching ${mariadbdBinary.name} (${BinaryLauncher.kindOf(mariadbdBinary)}) via ${if (BinaryLauncher.needsQemu(mariadbdBinary)) "QEMU" else "native exec"}.")
+        }
+
+        val usesQemu = BinaryLauncher.needsQemu(mariadbdBinary)
         val env = mapOf(
-            "LD_LIBRARY_PATH" to listOf(
-                File(installed, "lib").absolutePath,
-                File(installed, "lib/plugin").absolutePath,
-                context.applicationInfo.nativeLibraryDir,
-                System.getenv("LD_LIBRARY_PATH").orEmpty()
-            ).filter { it.isNotBlank() }.joinToString(":"),
+            // `LD_LIBRARY_PATH` here belongs to the *host* process. For a QEMU launch
+            // the guest path is passed with `-E` inside the command instead, so the
+            // arm64 bundle libs must not be offered to the translator (it would try
+            // to load x86 objects as ARM).
+            "LD_LIBRARY_PATH" to if (usesQemu) {
+                context.applicationInfo.nativeLibraryDir
+            } else {
+                listOf(
+                    File(installed, "lib").absolutePath,
+                    File(installed, "lib/plugin").absolutePath,
+                    context.applicationInfo.nativeLibraryDir,
+                    System.getenv("LD_LIBRARY_PATH").orEmpty()
+                ).filter { it.isNotBlank() }.joinToString(":")
+            },
             "TMPDIR" to tmpDir.absolutePath,
             "HOME" to runtimeHome.absolutePath,
             "USER" to android.os.Process.myUid().toString(),
