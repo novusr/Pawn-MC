@@ -114,6 +114,24 @@ jobs:
             exit 1
           fi
 
+          # Copy the shared libraries the daemon needs. The i386 rootfs only provides
+          # libc, libstdc++, libgcc_s and libz, so every other dependency must travel
+          # with the bundle or mariadbd dies at startup with "error while loading
+          # shared libraries". Fetch them by name from the same Debian suite.
+          # Libraries mariadbd links against that the rootfs does not ship.
+          # The mapping from soname to package is small and stable, so it is spelled out
+          # rather than resolved through the Contents index.
+          EXTRA_PKGS="libssl3 libpcre2-8-0 libaio1 libnuma1 liburing2 libsystemd0 libcrypt1"
+          for pkg in $EXTRA_PKGS; do
+            f=$(filename_for "$pkg" || true)
+            if [ -z "${f:-}" ]; then
+              echo "::warning::dependency package $pkg not in $SUITE/main/binary-i386"
+              continue
+            fi
+            echo "https://deb.debian.org/debian/${f#./}" >> meta/urls.txt
+            echo "resolved dependency $pkg"
+          done
+
           ( cd debs && xargs -n1 -a ../meta/urls.txt curl -fsSLO )
           ls -la debs
 
@@ -144,18 +162,23 @@ jobs:
           fi
           INSTALL_DB=$(find out -type f \( -name mariadb-install-db -o -name mysql_install_db \) | head -n1)
 
-          cp "$DAEMON" "$BUNDLE/bin/mariadbd"
-          if [ -n "$INSTALL_DB" ]; then
+          cp "$DAEMON" "$BUNDLE/bin/mariadbd"          if [ -n "$INSTALL_DB" ]; then
             cp "$INSTALL_DB" "$BUNDLE/bin/mariadb-install-db"
           else
             echo "::warning::mariadb-install-db missing; the engine falls back to mariadbd --initialize-insecure"
           fi
 
-          # Copy the shared libraries the daemon needs but that the i386 rootfs does
-          # not already provide. Anything missing at runtime shows up in the console.
+          # Ship the libraries extracted from every dependency package. `cp -a` keeps
+          # the soname symlinks (libssl.so.3 -> libssl.so.3.x) that the loader needs.
           for libdir in $(find out -type d -name 'i386-linux-gnu'); do
             cp -a "$libdir"/. "$BUNDLE/lib/" 2>/dev/null || true
           done
+          # Debian also drops some sonames directly in /usr/lib; take those too.
+          ( find out/usr/lib out/lib -maxdepth 1 \( -type f -o -type l \) 2>/dev/null || true ) | \
+            while read -r f; do cp -a "$f" "$BUNDLE/lib/" 2>/dev/null || true; done
+
+          echo "--- bundle libraries ---"
+          ls -la "$BUNDLE/lib" | head -40
 
           # Error messages (--lc-messages-dir).
           if [ -d out/usr/share/mysql ]; then

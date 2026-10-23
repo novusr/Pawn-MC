@@ -20,9 +20,9 @@ class AssetExtractor(private val context: Context) {
         private const val TAG = "AssetExtractor"
         private const val PREF_NAME = "pocketsamp_assets"
         private const val KEY_INSTALLED_VERSION = "assets_installed_version"
-        // Bumped so devices that already unpacked the incomplete MariaDB bundle run
-        // the extraction (and its new verification message) once more.
-        private const val CURRENT_VERSION = 8
+        // Bumped when the asset set changes. 9 adds the i386 bundle and re-runs
+        // extraction on devices that already unpacked the share-only arm64 one.
+        private const val CURRENT_VERSION = 9
 
         fun getServerDirectory(context: Context): File {
             return ServerDirectoryManager.getServerDirectory(context)
@@ -61,11 +61,26 @@ class AssetExtractor(private val context: Context) {
             defaultDir.mkdirs()
         }
 
-        // 3. Extract mariadb_arm64
-        onProgress("Deploying MariaDB ARM64 engine...")
+        // 3. Extract the MariaDB engine. Two bundles may be present:
+        //   mariadb_i386.tar.gz  - Debian i386 build, executed through qemu-i386. This
+        //                          is the real one: it links glibc, which is what a
+        //                          Linux build expects and what rootfs_i386 provides.
+        //   mariadb_arm64.tar.gz - a native arm64 bundle, used when no i386 one exists.
+        // Each is tried independently; a missing asset is not an error.
+        onProgress("Deploying MariaDB engine...")
         val mariadbDir = File(filesDir, "mariadb")
         if (!mariadbDir.exists()) mariadbDir.mkdirs()
-        extractArchiveAsset("mariadb_arm64", mariadbDir)
+
+        val installedBundles = mutableListOf<String>()
+        for (base in listOf("mariadb_i386", "mariadb_arm64")) {
+            if (!assetExists(base)) continue
+            onProgress("Deploying $base...")
+            extractArchiveAsset(base, mariadbDir)
+            installedBundles += base
+        }
+        if (installedBundles.isEmpty()) {
+            onProgress("No MariaDB bundle in assets; SQL stays disabled.")
+        }
 
         // Ensure binaries have executable bit set if present
         File(mariadbDir, "bin/mariadbd").let { if (it.exists()) it.setExecutable(true, false) }
@@ -78,6 +93,12 @@ class AssetExtractor(private val context: Context) {
         val daemon = File(mariadbDir, "bin/mariadbd")
         if (!daemon.isFile || daemon.length() == 0L) {
             onProgress("MariaDB daemon missing from the asset bundle (bin/mariadbd); SQL stays disabled.")
+        } else {
+            val kind = BinaryLauncher.kindOf(daemon)
+            onProgress("MariaDB daemon ready: ${daemon.length() / 1024} KB, ${kind.name}.")
+            if (BinaryLauncher.needsQemu(daemon) && BinaryLauncher.findQemu(context) == null) {
+                onProgress("Warning: the bundled daemon is ${kind.name} but libqemu-i386.so was not found; SQL will stay disabled.")
+            }
         }
 
         // 4. Copy and render MariaDB config using this app's private storage paths.
@@ -94,6 +115,11 @@ class AssetExtractor(private val context: Context) {
         prefs.edit().putInt(KEY_INSTALLED_VERSION, CURRENT_VERSION).apply()
         onProgress("Initialization complete!")
     }
+
+    /** True when any of the accepted file names for [baseName] exists in assets. */
+    private fun assetExists(baseName: String): Boolean =
+        listOf("$baseName.tar.gz", "$baseName.tar", "$baseName.tgz", baseName)
+            .any { name -> runCatching { context.assets.open(name).close() }.isSuccess }
 
     private fun extractArchiveAsset(baseName: String, outputDir: File) {
         // AAPT sometimes strips .gz during APK packaging, leaving .tar
