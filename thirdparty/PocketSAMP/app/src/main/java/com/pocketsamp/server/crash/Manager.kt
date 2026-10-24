@@ -11,14 +11,14 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
-object CrashManager {
+object Manager {
 
-    private const val TAG = "CrashManager"
+    private const val TAG = "Manager"
     private const val DIR_NAME = "crash_reports"
     private const val DELIMITER = "===POCKETSAMP_CRASH_FIELD==="
 
-    private val _crashesFlow = MutableStateFlow<List<CrashReport>>(emptyList())
-    val crashesFlow: StateFlow<List<CrashReport>> = _crashesFlow.asStateFlow()
+    private val _crashesFlow = MutableStateFlow<List<Report>>(emptyList())
+    val crashesFlow: StateFlow<List<Report>> = _crashesFlow.asStateFlow()
 
     private fun getCrashDir(context: Context): File {
         val dir = File(context.filesDir, DIR_NAME)
@@ -28,7 +28,7 @@ object CrashManager {
         return dir
     }
 
-    fun saveCrash(context: Context, report: CrashReport): File {
+    fun saveCrash(context: Context, report: Report): File {
         return try {
             val dir = getCrashDir(context)
             val fileName = "crash_${report.timestamp}_${report.id}.txt"
@@ -54,7 +54,7 @@ object CrashManager {
         }
     }
 
-    fun getAllCrashes(context: Context): List<CrashReport> {
+    fun getAllCrashes(context: Context): List<Report> {
         val dir = getCrashDir(context)
         val files = dir.listFiles { f -> f.isFile && f.name.startsWith("crash_") } ?: return emptyList()
 
@@ -63,7 +63,7 @@ object CrashManager {
                 val content = file.readText()
                 val parts = content.split("\n$DELIMITER\n")
                 if (parts.size >= 8) {
-                    CrashReport(
+                    Report(
                         id = parts[0].trim(),
                         timestamp = parts[1].trim().toLongOrNull() ?: file.lastModified(),
                         formattedDate = parts[2].trim(),
@@ -104,7 +104,7 @@ object CrashManager {
         _crashesFlow.value = emptyList()
     }
 
-    fun formatForClipboard(report: CrashReport): String {
+    fun formatForClipboard(report: Report): String {
         return buildString {
             appendLine("=========================================")
             appendLine("           POCKETSAMP CRASH REPORT       ")

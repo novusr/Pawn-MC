@@ -10,7 +10,7 @@ package com.pocketsamp.server
  *
  * English is the fallback for any missing entry.
  */
-object PocketSampLocales {
+object Locales {
 
     enum class Lang { ID, EN, ES, RU }
 
@@ -30,12 +30,12 @@ object PocketSampLocales {
     var theme: Theme = Theme.SYSTEM
         private set
 
-    /** Called by the host before [PocketSamp.launch] so the UI matches the PawnMC setting. */
+    /** Called by the host before [SampApp.launch] so the UI matches the PawnMC setting. */
     fun setLanguage(lang: Lang) {
         current = lang
     }
 
-    /** Called by the host before [PocketSamp.launch] so the UI follows the PawnMC theme. */
+    /** Called by the host before [SampApp.launch] so the UI follows the PawnMC theme. */
     fun setTheme(mode: Theme) {
         theme = mode
     }

@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
-import com.pocketsamp.server.PocketSampLocales
+import com.pocketsamp.server.Locales
 
 private val DarkColorScheme = darkColorScheme(
     primary = AccentCyan,
@@ -38,10 +38,10 @@ private val LightColorScheme = lightColorScheme(
 
 /** True when the embedded UI should paint the dark semi-violet look. */
 @Composable
-fun isPocketSampDarkTheme(): Boolean = when (PocketSampLocales.theme) {
-    PocketSampLocales.Theme.DARK -> true
-    PocketSampLocales.Theme.LIGHT -> false
-    PocketSampLocales.Theme.SYSTEM -> isSystemInDarkTheme()
+fun isPocketSampDarkTheme(): Boolean = when (Locales.theme) {
+    Locales.Theme.DARK -> true
+    Locales.Theme.LIGHT -> false
+    Locales.Theme.SYSTEM -> isSystemInDarkTheme()
 }
 
 /**

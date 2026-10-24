@@ -12,10 +12,10 @@ import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.*
 
-class CrashHandler private constructor(private val application: Application) : Thread.UncaughtExceptionHandler {
+class Handler private constructor(private val application: Application) : Thread.UncaughtExceptionHandler {
 
     companion object {
-        private const val TAG = "PocketSAMPCrashHandler"
+        private const val TAG = "PocketSAMPHandler"
         const val EXTRA_CRASH_ID = "com.pocketsamp.server.EXTRA_CRASH_ID"
 
         @Volatile
@@ -25,10 +25,10 @@ class CrashHandler private constructor(private val application: Application) : T
             if (isInstalled) return
             synchronized(this) {
                 if (!isInstalled) {
-                    val handler = CrashHandler(application)
+                    val handler = Handler(application)
                     Thread.setDefaultUncaughtExceptionHandler(handler)
                     isInstalled = true
-                    Log.i(TAG, "Global CrashHandler successfully initialized.")
+                    Log.i(TAG, "Global Handler successfully initialized.")
                 }
             }
         }
@@ -84,7 +84,7 @@ class CrashHandler private constructor(private val application: Application) : T
 
             val deviceInfo = getDeviceInfo(application)
 
-            val report = CrashReport(
+            val report = Report(
                 id = crashId,
                 timestamp = timestamp,
                 formattedDate = formattedDate,
@@ -96,17 +96,17 @@ class CrashHandler private constructor(private val application: Application) : T
             )
 
             // Save crash report persistently to disk
-            CrashManager.saveCrash(application, report)
+            Manager.saveCrash(application, report)
 
-            // Launch dedicated CrashActivity in a clean isolated task
-            val intent = Intent(application, CrashActivity::class.java).apply {
+            // Launch dedicated CrashDialog in a clean isolated task
+            val intent = Intent(application, CrashDialog::class.java).apply {
                 putExtra(EXTRA_CRASH_ID, crashId)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             }
             application.startActivity(intent)
 
         } catch (e: Exception) {
-            Log.e(TAG, "Fatal failure inside CrashHandler", e)
+            Log.e(TAG, "Fatal failure inside Handler", e)
         } finally {
             // Terminate the crashing process cleanly to prevent OS "App has stopped" dialog
             Process.killProcess(Process.myPid())

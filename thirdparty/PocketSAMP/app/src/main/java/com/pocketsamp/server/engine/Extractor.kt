@@ -8,16 +8,17 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import java.io.BufferedInputStream
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.util.zip.GZIPInputStream
 
-import com.pocketsamp.server.config.ServerDirectoryManager
+import com.pocketsamp.server.config.DirectoryManager
 
-class AssetExtractor(private val context: Context) {
+class Extractor(private val context: Context) {
 
     companion object {
-        private const val TAG = "AssetExtractor"
+        private const val TAG = "Extractor"
         private const val PREF_NAME = "pocketsamp_assets"
         private const val KEY_INSTALLED_VERSION = "assets_installed_version"
         // Bumped when the asset set changes. 10 ships the complete i386 bundle
@@ -27,7 +28,7 @@ class AssetExtractor(private val context: Context) {
         private const val BUNDLE_ASSET = "mariadb_i386"
 
         fun getServerDirectory(context: Context): File {
-            return ServerDirectoryManager.getServerDirectory(context)
+            return DirectoryManager.getServerDirectory(context)
         }
     }
 
@@ -58,7 +59,7 @@ class AssetExtractor(private val context: Context) {
         File(binDir, "announce").setExecutable(true, false)
 
         // Ensure default public server folder exists for user convenience (/storage/emulated/0/PocketSAMP)
-        val defaultDir = ServerDirectoryManager.getDefaultServerDirectory()
+        val defaultDir = DirectoryManager.getDefaultServerDirectory()
         if (!defaultDir.exists()) {
             defaultDir.mkdirs()
         }
@@ -74,7 +75,7 @@ class AssetExtractor(private val context: Context) {
         val mariadbDir = File(filesDir, "mariadb")
         if (!mariadbDir.exists()) mariadbDir.mkdirs()
 
-        if (assetExists(BUNDLE_ASSET)) {
+        if (archiveExists(BUNDLE_ASSET)) {
             extractArchiveAsset(BUNDLE_ASSET, mariadbDir)
         } else {
             onProgress("No $BUNDLE_ASSET in assets; SQL stays disabled.")
@@ -90,19 +91,21 @@ class AssetExtractor(private val context: Context) {
         if (!daemon.isFile || daemon.length() == 0L) {
             onProgress("MariaDB daemon missing from the asset bundle (bin/mariadbd); SQL stays disabled.")
         } else {
-            onProgress("MariaDB daemon ready: ${daemon.length() / 1024} KB, ${BinaryLauncher.kindOf(daemon).name}.")
-            if (BinaryLauncher.findQemu(context) == null) {
-                onProgress("Warning: libqemu-i386.so was not found; MariaDB cannot run without the translator.")
+            onProgress("MariaDB daemon ready: ${daemon.length() / 1024} KB, ${Launcher.kindOf(daemon).name}.")
+            if (Launcher.findQemu(context) == null) {
+                onProgress("ERROR: no QEMU translator (libqemu-i386.so). Both the SA-MP server and")
+                onProgress("MariaDB are 32-bit x86 binaries; without it neither can start.")
             }
         }
 
-        // 4. Copy and render MariaDB config using this app's private storage paths.
+        // 4. Install MariaDB configuration.
+        //
+        // The template uses paths relative to the install root, so it is copied
+        // verbatim: rewriting absolute paths here only worked while the template still
+        // hard-coded an application id, and that id was never PawnMC's.
         onProgress("Configuring low-memory database...")
         val mariadbConfig = File(mariadbDir, "my.cnf")
-        val configTemplate = context.assets.open("my.cnf").bufferedReader().use { it.readText() }
-        val renderedConfig = configTemplate
-            .replace("/data/data/com.pocketsamp.server/files/mariadb", mariadbDir.absolutePath)
-            .replace("/data/user/0/com.pocketsamp.server/files/mariadb", mariadbDir.absolutePath)
+        val renderedConfig = context.assets.open("my.cnf").bufferedReader().use { it.readText() }
         mariadbConfig.writeText(renderedConfig)
 
         // Save extraction state
@@ -111,12 +114,27 @@ class AssetExtractor(private val context: Context) {
         onProgress("Initialization complete!")
     }
 
-    /** True when any of the accepted file names for [baseName] exists in assets. */
-    private fun assetExists(baseName: String): Boolean =
-        listOf("$baseName.tar.gz", "$baseName.tar", "$baseName.tgz", baseName)
-            .any { name -> runCatching { context.assets.open(name).close() }.isSuccess }
+    /** True when [baseName] can be obtained from storage or from assets. */
+    private fun archiveExists(baseName: String): Boolean =
+        Downloader.archiveFile(context, baseName).let { it.isFile && it.length() > 0 } ||
+            listOf("$baseName.tar.gz", "$baseName.tar", "$baseName.tgz", baseName)
+                .any { name -> runCatching { context.assets.open(name).close() }.isSuccess }
 
+    /**
+     * Unpacks `baseName` from shared storage, falling back to the APK assets.
+     *
+     * `Documents/PawnMC/storage/` is preferred because the archives are downloaded
+     * there (see [Downloader]) instead of being bundled; assets remain as a fallback
+     * for builds that still embed them.
+     */
     private fun extractArchiveAsset(baseName: String, outputDir: File) {
+        val stored = Downloader.archiveFile(context, baseName)
+        if (stored.isFile && stored.length() > 0) {
+            Log.i(TAG, "Unpacking ${stored.absolutePath} into ${outputDir.absolutePath}")
+            FileInputStream(stored).use { TarUnpacker.extract(it, outputDir) }
+            return
+        }
+
         // AAPT sometimes strips .gz during APK packaging, leaving .tar
         val candidates = listOf(
             "$baseName.tar.gz",
@@ -127,7 +145,6 @@ class AssetExtractor(private val context: Context) {
 
         var openedStream: InputStream? = null
         var matchedName: String? = null
-
         for (candidate in candidates) {
             try {
                 openedStream = context.assets.open(candidate)
@@ -138,7 +155,9 @@ class AssetExtractor(private val context: Context) {
         }
 
         if (openedStream == null) {
-            throw IllegalStateException("Asset not found for $baseName (checked: $candidates)")
+            throw IllegalStateException(
+                "Archive $baseName is in neither ${stored.parent} nor the APK assets (checked: $candidates)"
+            )
         }
 
         Log.i(TAG, "Unpacking asset: $matchedName into ${outputDir.absolutePath}")

@@ -35,7 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pocketsamp.server.PocketSampLocales
+import com.pocketsamp.server.Locales
 import com.pocketsamp.server.db.DatabaseManager
 import com.pocketsamp.server.db.QueryResult
 import com.pocketsamp.server.ui.theme.*
@@ -54,13 +54,13 @@ fun DatabaseScreen(
     dbManager: DatabaseManager,
     isDbRunning: Boolean,
     onOpenPhpMyAdmin: () -> Unit = {},
-    lang: PocketSampLocales.Lang = PocketSampLocales.current
+    lang: Locales.Lang = Locales.current
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
 
-    fun t(key: String): String = PocketSampLocales.text(lang, key)
+    fun t(key: String): String = Locales.text(lang, key)
 
     var databases by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedDb by remember { mutableStateOf<String?>(null) }

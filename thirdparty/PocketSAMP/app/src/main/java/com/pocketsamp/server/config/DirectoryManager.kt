@@ -8,9 +8,10 @@ import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.Settings
 import androidx.core.content.ContextCompat
+import com.pocketsamp.server.engine.Downloader
 import java.io.File
 
-object ServerDirectoryManager {
+object DirectoryManager {
     private const val PREF_NAME = "pocketsamp_prefs"
     private const val KEY_CUSTOM_SERVER_DIR = "custom_server_directory"
 
@@ -21,6 +22,19 @@ object ServerDirectoryManager {
         } else {
             File("/storage/emulated/0/PocketSAMP")
         }
+    }
+
+    /**
+     * `Documents/PawnMC`, the app's own folder on shared storage.
+     *
+     * Runtime archives are kept in `Documents/PawnMC/storage/` (see [Downloader]) so
+     * they survive reinstalls and can be inspected outside the app, instead of being
+     * unpacked from every APK.
+     */
+    fun getDocumentsPawnMcDir(): File {
+        val extStorage = Environment.getExternalStorageDirectory()
+            ?: return File("/storage/emulated/0/Documents/PawnMC")
+        return File(File(extStorage, Environment.DIRECTORY_DOCUMENTS), "PawnMC")
     }
 
     fun getServerDirectory(context: Context): File {
@@ -57,7 +71,7 @@ object ServerDirectoryManager {
         return defaultDir
     }
 
-    fun isServerConfigPresent(context: Context): Boolean {
+    fun isConfigPresent(context: Context): Boolean {
         val serverDir = getServerDirectory(context)
         return File(serverDir, "server.cfg").exists()
     }

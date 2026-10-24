@@ -38,28 +38,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.pocketsamp.server.PocketSampLocales
-import com.pocketsamp.server.config.ServerDirectoryManager
-import com.pocketsamp.server.service.ServerStatus
+import com.pocketsamp.server.Locales
+import com.pocketsamp.server.config.DirectoryManager
+import com.pocketsamp.server.service.Status
 import com.pocketsamp.server.ui.theme.*
 import java.io.File
 
 @Composable
 fun DashboardScreen(
-    status: ServerStatus,
+    status: Status,
     isDbRunning: Boolean,
     lanIp: String,
     onStartServer: () -> Unit,
     onStopServer: () -> Unit,
-    lang: PocketSampLocales.Lang = PocketSampLocales.Lang.EN,
+    lang: Locales.Lang = Locales.Lang.EN,
     onOpenDatabase: () -> Unit = {},
     onNavigateBack: () -> Unit = {}
 ) {
-    fun t(key: String): String = PocketSampLocales.text(lang, key)
+    fun t(key: String): String = Locales.text(lang, key)
     val context = LocalContext.current
     val lifecycleOwner = context as? androidx.lifecycle.LifecycleOwner
-    var currentServerDir by remember { mutableStateOf(ServerDirectoryManager.getServerDirectory(context)) }
-    var hasStoragePermission by remember { mutableStateOf(ServerDirectoryManager.hasStoragePermission(context)) }
+    var currentServerDir by remember { mutableStateOf(DirectoryManager.getServerDirectory(context)) }
+    var hasStoragePermission by remember { mutableStateOf(DirectoryManager.hasStoragePermission(context)) }
     // phpMyAdmin is offered from the Dashboard too: the MariaDB card is the first
     // place a user looks after starting the server, and making them open the
     // Database tab first only hid an action they were about to take anyway.
@@ -80,8 +80,8 @@ fun DashboardScreen(
         DisposableEffect(lifecycleOwner) {
             val observer = LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME) {
-                    hasStoragePermission = ServerDirectoryManager.hasStoragePermission(context)
-                    currentServerDir = ServerDirectoryManager.getServerDirectory(context)
+                    hasStoragePermission = DirectoryManager.hasStoragePermission(context)
+                    currentServerDir = DirectoryManager.getServerDirectory(context)
                     isBatteryOptIgnored = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                         powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
                     } else {
@@ -100,9 +100,9 @@ fun DashboardScreen(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
             if (uri != null) {
-        val dir = ServerDirectoryManager.parseTreeUriToFile(uri)
+        val dir = DirectoryManager.parseTreeUriToFile(uri)
         if (dir != null && dir.exists() && dir.isDirectory) {
-            ServerDirectoryManager.setServerDirectory(context, dir)
+            DirectoryManager.setServerDirectory(context, dir)
             currentServerDir = dir
             Toast.makeText(context, t("folder.changed") + ": ${dir.name}", Toast.LENGTH_SHORT).show()
         } else {
@@ -168,10 +168,10 @@ fun DashboardScreen(
 
             // Status Indicator Pill
             val (statusText, statusColor) = when (status) {
-                ServerStatus.RUNNING -> t("status.online") to SampThemeColors.success
-                ServerStatus.STARTING, ServerStatus.INITIALIZING -> t("status.starting") to SampThemeColors.warn
-                ServerStatus.STOPPING -> t("status.stopping") to SampThemeColors.warn
-                ServerStatus.STOPPED -> t("status.offline") to SampThemeColors.danger
+                Status.RUNNING -> t("status.online") to SampThemeColors.success
+                Status.STARTING, Status.INITIALIZING -> t("status.starting") to SampThemeColors.warn
+                Status.STOPPING -> t("status.stopping") to SampThemeColors.warn
+                Status.STOPPED -> t("status.offline") to SampThemeColors.danger
             }
 
             Row(
@@ -469,7 +469,7 @@ fun DashboardScreen(
                     Button(
                         onClick = {
                             try {
-                                context.startActivity(ServerDirectoryManager.getManageStorageIntent(context))
+                                context.startActivity(DirectoryManager.getManageStorageIntent(context))
                             } catch (e: Exception) {
                                 Toast.makeText(context, t("perm.file.settings"), Toast.LENGTH_LONG).show()
                             }
@@ -724,7 +724,7 @@ fun DashboardScreen(
 
                     OutlinedButton(
                         onClick = {
-                            currentServerDir = ServerDirectoryManager.resetToDefaultDirectory(context)
+                            currentServerDir = DirectoryManager.resetToDefaultDirectory(context)
                             Toast.makeText(context, t("folder.reset.done"), Toast.LENGTH_SHORT).show()
                         },
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = SampThemeColors.textSecondary),
@@ -747,8 +747,8 @@ fun DashboardScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Main Action Button
-        val isBusy = status == ServerStatus.STARTING || status == ServerStatus.INITIALIZING || status == ServerStatus.STOPPING
-        val isRunning = status == ServerStatus.RUNNING
+        val isBusy = status == Status.STARTING || status == Status.INITIALIZING || status == Status.STOPPING
+        val isRunning = status == Status.RUNNING
 
         Button(
             onClick = {

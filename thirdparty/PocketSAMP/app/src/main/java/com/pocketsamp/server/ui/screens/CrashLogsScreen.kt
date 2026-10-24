@@ -25,23 +25,23 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pocketsamp.server.crash.CrashManager
-import com.pocketsamp.server.crash.CrashReport
+import com.pocketsamp.server.crash.Manager
+import com.pocketsamp.server.crash.Report
 import com.pocketsamp.server.ui.theme.*
 
 @Composable
 fun CrashLogsScreen(
     initialCrashId: String? = null,
-    isCrashActivity: Boolean = false,
+    isCrashDialog: Boolean = false,
     onRestartApp: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
-    var crashes by remember { mutableStateOf<List<CrashReport>>(emptyList()) }
-    var selectedReport by remember { mutableStateOf<CrashReport?>(null) }
+    var crashes by remember { mutableStateOf<List<Report>>(emptyList()) }
+    var selectedReport by remember { mutableStateOf<Report?>(null) }
     var activeSubTab by remember { mutableStateOf(if (initialCrashId != null) 0 else 1) }
 
     fun refresh() {
-        val list = CrashManager.getAllCrashes(context)
+        val list = Manager.getAllCrashes(context)
         crashes = list
         if (selectedReport == null || list.none { it.id == selectedReport?.id }) {
             selectedReport = if (initialCrashId != null) {
@@ -73,10 +73,10 @@ fun CrashLogsScreen(
         // Warning Banner
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = if (isCrashActivity) SampThemeColors.danger.copy(alpha = 0.15f) else SampThemeColors.card),
+            colors = CardDefaults.cardColors(containerColor = if (isCrashDialog) SampThemeColors.danger.copy(alpha = 0.15f) else SampThemeColors.card),
             border = androidx.compose.foundation.BorderStroke(
                 1.dp,
-                if (isCrashActivity) SampThemeColors.danger else SampThemeColors.cardBorder
+                if (isCrashDialog) SampThemeColors.danger else SampThemeColors.cardBorder
             ),
             shape = RoundedCornerShape(12.dp)
         ) {
@@ -87,14 +87,14 @@ fun CrashLogsScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (isCrashActivity) "Aplikasi Mengalami Crash (Ditahan)" else "Sistem Pemantau Crash & Error",
+                        text = if (isCrashDialog) "Aplikasi Mengalami Crash (Ditahan)" else "Sistem Pemantau Crash & Error",
                         color = SampThemeColors.textPrimary,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         maxLines = 2
                     )
                     Text(
-                        text = if (isCrashActivity)
+                        text = if (isCrashDialog)
                             "Proses ditahan agar Anda dapat menyalin log error sebelum restart."
                         else
                             "Semua riwayat crash sistem tersimpan di sini untuk analisis.",
@@ -132,11 +132,11 @@ fun CrashLogsScreen(
                 if (selectedReport != null) {
                     CrashDetailView(
                         report = selectedReport!!,
-                        isCrashActivity = isCrashActivity,
-                        onCopy = { copyToClipboard(CrashManager.formatForClipboard(selectedReport!!)) },
+                        isCrashDialog = isCrashDialog,
+                        onCopy = { copyToClipboard(Manager.formatForClipboard(selectedReport!!)) },
                         onRestart = onRestartApp,
                         onDelete = {
-                            CrashManager.deleteCrash(context, selectedReport!!.id)
+                            Manager.deleteCrash(context, selectedReport!!.id)
                             refresh()
                             activeSubTab = 1
                         }
@@ -155,14 +155,14 @@ fun CrashLogsScreen(
                             activeSubTab = 0
                         },
                         onCopy = { report ->
-                            copyToClipboard(CrashManager.formatForClipboard(report))
+                            copyToClipboard(Manager.formatForClipboard(report))
                         },
                         onDelete = { report ->
-                            CrashManager.deleteCrash(context, report.id)
+                            Manager.deleteCrash(context, report.id)
                             refresh()
                         },
                         onClearAll = {
-                            CrashManager.clearAllCrashes(context)
+                            Manager.clearAllCrashes(context)
                             refresh()
                         }
                     )
@@ -176,8 +176,8 @@ fun CrashLogsScreen(
 
 @Composable
 private fun CrashDetailView(
-    report: CrashReport,
-    isCrashActivity: Boolean,
+    report: Report,
+    isCrashDialog: Boolean,
     onCopy: () -> Unit,
     onRestart: (() -> Unit)?,
     onDelete: () -> Unit
@@ -204,7 +204,7 @@ private fun CrashDetailView(
                 Text("Salin Log Crash", fontWeight = FontWeight.Bold)
             }
 
-            if (isCrashActivity && onRestart != null) {
+            if (isCrashDialog && onRestart != null) {
                 Button(
                     onClick = onRestart,
                     colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.success, contentColor = SampThemeColors.bg),
@@ -298,11 +298,11 @@ private fun CrashDetailView(
 
 @Composable
 private fun CrashHistoryList(
-    crashes: List<CrashReport>,
+    crashes: List<Report>,
     selectedId: String?,
-    onSelect: (CrashReport) -> Unit,
-    onCopy: (CrashReport) -> Unit,
-    onDelete: (CrashReport) -> Unit,
+    onSelect: (Report) -> Unit,
+    onCopy: (Report) -> Unit,
+    onDelete: (Report) -> Unit,
     onClearAll: () -> Unit
 ) {
     Column(

@@ -11,14 +11,14 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.pocketsamp.server.PocketSampActivity
+import com.pocketsamp.server.MainActivity
 import com.pocketsamp.server.R
-import com.pocketsamp.server.engine.AssetExtractor
-import com.pocketsamp.server.engine.MariaDbEngine
-import com.pocketsamp.server.engine.SampEngine
-import com.pocketsamp.server.crash.CrashHandler
-import com.pocketsamp.server.crash.CrashManager
-import com.pocketsamp.server.crash.CrashReport
+import com.pocketsamp.server.engine.Extractor
+import com.pocketsamp.server.engine.MariaDb
+import com.pocketsamp.server.engine.Samp
+import com.pocketsamp.server.crash.Handler
+import com.pocketsamp.server.crash.Manager
+import com.pocketsamp.server.crash.Report
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,7 +30,7 @@ import java.net.NetworkInterface
 import java.text.SimpleDateFormat
 import java.util.*
 
-enum class ServerStatus {
+enum class Status {
     STOPPED,
     INITIALIZING,
     STARTING,
@@ -38,7 +38,7 @@ enum class ServerStatus {
     STOPPING
 }
 
-class ServerForegroundService : Service() {
+class RuntimeService : Service() {
 
     companion object {
         const val CHANNEL_ID = "pocketsamp_active_service_v2"
@@ -51,8 +51,8 @@ class ServerForegroundService : Service() {
         @Volatile
         var isServiceRunning: Boolean = false
             private set
-        private val _serverStatus = MutableStateFlow(ServerStatus.STOPPED)
-        val serverStatus: StateFlow<ServerStatus> = _serverStatus.asStateFlow()
+        private val _serverStatus = MutableStateFlow(Status.STOPPED)
+        val serverStatus: StateFlow<Status> = _serverStatus.asStateFlow()
 
         private val _isDbRunning = MutableStateFlow(false)
         val isDbRunning: StateFlow<Boolean> = _isDbRunning.asStateFlow()
@@ -88,12 +88,12 @@ class ServerForegroundService : Service() {
     private var wifiLock: WifiManager.WifiLock? = null
     private var multicastLock: WifiManager.MulticastLock? = null
 
-    private lateinit var assetExtractor: AssetExtractor
-    private lateinit var sampEngine: SampEngine
-    private lateinit var mariaDbEngine: MariaDbEngine
+    private lateinit var assetExtractor: Extractor
+    private lateinit var sampEngine: Samp
+    private lateinit var mariaDbEngine: MariaDb
 
     inner class LocalBinder : Binder() {
-        fun getService(): ServerForegroundService = this@ServerForegroundService
+        fun getService(): Service = this@Service
     }
 
     private val binder = LocalBinder()
@@ -109,9 +109,9 @@ class ServerForegroundService : Service() {
         isServiceRunning = true
         createNotificationChannel()
 
-        assetExtractor = AssetExtractor(this)
-        sampEngine = SampEngine(this)
-        mariaDbEngine = MariaDbEngine(this)
+        assetExtractor = Extractor(this)
+        sampEngine = Samp(this)
+        mariaDbEngine = MariaDb(this)
 
         // Handle process termination (e.g. Android Phantom Process Killer / OOM)
         sampEngine.onExit = { exitCode ->
@@ -140,12 +140,12 @@ class ServerForegroundService : Service() {
                             appendLog("[PocketSAMP] Server SA-MP berhasil dipulihkan secara otomatis!")
                         } catch (e: Exception) {
                             appendLog("[PocketSAMP Error] Gagal memulihkan server: ${e.message}")
-                            _serverStatus.value = ServerStatus.STOPPED
+                            _serverStatus.value = Status.STOPPED
                         }
                     }
                 }
             } else {
-                _serverStatus.value = ServerStatus.STOPPED
+                _serverStatus.value = Status.STOPPED
             }
         }
 
@@ -165,8 +165,8 @@ class ServerForegroundService : Service() {
         if (intent == null) {
             // Recreated by Android OS after extreme memory pressure
             val shouldBeRunning = prefs.getBoolean("server_running_state", false)
-            if (shouldBeRunning && _serverStatus.value != ServerStatus.RUNNING) {
-                Log.i("ServerForegroundService", "Restoring server execution following OS process recreation.")
+            if (shouldBeRunning && _serverStatus.value != Status.RUNNING) {
+                Log.i("Service", "Restoring server execution following OS process recreation.")
                 startServers()
             }
             return START_STICKY
@@ -234,14 +234,14 @@ class ServerForegroundService : Service() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
-        Log.i("ServerForegroundService", "App task closed; keeping PocketSAMP server active in foreground.")
+        Log.i("Service", "App task closed; keeping PocketSAMP server active in foreground.")
     }
 
     private fun startServers() {
-        if (_serverStatus.value == ServerStatus.RUNNING || _serverStatus.value == ServerStatus.STARTING) return
+        if (_serverStatus.value == Status.RUNNING || _serverStatus.value == Status.STARTING) return
 
         clearLogs()
-        _serverStatus.value = ServerStatus.STARTING
+        _serverStatus.value = Status.STARTING
         acquireLocks()
 
         val notif = buildNotification("Starting servers...")
@@ -260,7 +260,7 @@ class ServerForegroundService : Service() {
             try {
                 // 1. Ensure assets are unpacked
                 if (!assetExtractor.isExtracted()) {
-                    _serverStatus.value = ServerStatus.INITIALIZING
+                    _serverStatus.value = Status.INITIALIZING
                     appendLog("[PocketSAMP] Initializing runtime assets for first boot...")
                     assetExtractor.extractAll { progress ->
                         appendLog("[Setup] $progress")
@@ -276,7 +276,7 @@ class ServerForegroundService : Service() {
                 sampEngine.start(serviceScope)
                 delay(1000)
 
-                _serverStatus.value = ServerStatus.RUNNING
+                _serverStatus.value = Status.RUNNING
                 updateLanIp()
                 updateNotification("SA-MP Server active on ${_lanIp.value}:7777")
                 appendLog("[PocketSAMP] All services active! Connect to ${_lanIp.value}:7777")
@@ -284,31 +284,31 @@ class ServerForegroundService : Service() {
             } catch (e: Exception) {
                 val errorDetails = e.message ?: e.javaClass.simpleName
                 appendLog("[PocketSAMP Error] Failed to start: $errorDetails")
-                Log.e("ServerForegroundService", "Startup error", e)
+                Log.e("Service", "Startup error", e)
 
-                // Record to CrashManager for in-app tracking
+                // Record to Manager for in-app tracking
                 try {
                     val timestamp = System.currentTimeMillis()
                     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                     val sw = StringWriter()
                     e.printStackTrace(PrintWriter(sw))
-                    CrashManager.saveCrash(
-                        this@ServerForegroundService,
-                        CrashReport(
+                    Manager.saveCrash(
+                        this@Service,
+                        Report(
                             id = UUID.randomUUID().toString().substring(0, 8),
                             timestamp = timestamp,
                             formattedDate = dateFormat.format(Date(timestamp)),
                             exceptionClass = e.javaClass.name,
                             message = e.message,
                             threadName = Thread.currentThread().name,
-                            deviceInfo = CrashHandler.getDeviceInfo(this@ServerForegroundService),
+                            deviceInfo = Handler.getDeviceInfo(this@Service),
                             stackTrace = sw.toString()
                         )
                     )
                 } catch (ignored: Exception) {
                 }
 
-                _serverStatus.value = ServerStatus.STOPPED
+                _serverStatus.value = Status.STOPPED
                 stopForeground(STOP_FOREGROUND_REMOVE)
             }
         }
@@ -317,14 +317,14 @@ class ServerForegroundService : Service() {
     private fun stopServers() {
         val prefs = getSharedPreferences("pocketsamp_prefs", Context.MODE_PRIVATE)
         prefs.edit().putBoolean("server_running_state", false).apply()
-        _serverStatus.value = ServerStatus.STOPPING
+        _serverStatus.value = Status.STOPPING
         serviceScope.launch {
             appendLog("[PocketSAMP] Shutting down SA-MP server...")
             sampEngine.stop()
             appendLog("[PocketSAMP] Shutting down MariaDB...")
             mariaDbEngine.stop()
             _isDbRunning.value = false
-            _serverStatus.value = ServerStatus.STOPPED
+            _serverStatus.value = Status.STOPPED
             releaseLocks()
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
@@ -377,7 +377,7 @@ class ServerForegroundService : Service() {
                 acquire()
             }
         } catch (e: Exception) {
-            Log.w("ServerForegroundService", "MulticastLock warning: ${e.message}")
+            Log.w("Service", "MulticastLock warning: ${e.message}")
         }
     }
 
@@ -409,13 +409,13 @@ class ServerForegroundService : Service() {
     private fun buildNotification(contentText: String): Notification {
         val pendingIntent = PendingIntent.getActivity(
             this, 0,
-            Intent(this, PocketSampActivity::class.java),
+            Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val stopIntent = PendingIntent.getService(
             this, 1,
-            Intent(this, ServerForegroundService::class.java).apply { action = ACTION_STOP },
+            Intent(this, RuntimeService::class.java).apply { action = ACTION_STOP },
             PendingIntent.FLAG_IMMUTABLE
         )
 

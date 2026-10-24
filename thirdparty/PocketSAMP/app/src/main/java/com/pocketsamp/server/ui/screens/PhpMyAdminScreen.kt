@@ -41,7 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.pocketsamp.server.PocketSampLocales
+import com.pocketsamp.server.Locales
 import com.pocketsamp.server.ui.theme.SampThemeColors
 
 /**
@@ -67,9 +67,9 @@ fun PhpMyAdminScreen(
     url: String = LOCAL_PHPMYADMIN_URL,
     isDbRunning: Boolean,
     onClose: () -> Unit,
-    lang: PocketSampLocales.Lang = PocketSampLocales.current
+    lang: Locales.Lang = Locales.current
 ) {
-    fun t(key: String): String = PocketSampLocales.text(lang, key)
+    fun t(key: String): String = Locales.text(lang, key)
 
     var webView by remember { mutableStateOf<WebView?>(null) }
     var isLoading by remember { mutableStateOf(true) }

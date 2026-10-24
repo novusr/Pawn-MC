@@ -1,6 +1,6 @@
 package com.pocketsamp.server.crash
 
-data class CrashReport(
+data class Report(
     val id: String,
     val timestamp: Long,
     val formattedDate: String,

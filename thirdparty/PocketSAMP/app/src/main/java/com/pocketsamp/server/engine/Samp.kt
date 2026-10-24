@@ -9,15 +9,15 @@ import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 import java.io.RandomAccessFile
 
-class SampEngine(private val context: Context) {
+class Samp(private val context: Context) {
 
     companion object {
-        private const val TAG = "SampEngine"
+        private const val TAG = "Samp"
     }
 
     var onExit: ((exitCode: Int) -> Unit)? = null
 
-    private val processRunner = ProcessRunner("SA-MP") { exitCode ->
+    private val processRunner = ProcessRun("SA-MP") { exitCode ->
         onExit?.invoke(exitCode)
     }
     private var logPollingJob: Job? = null
@@ -32,7 +32,7 @@ class SampEngine(private val context: Context) {
     val isRunning: Boolean
         get() = processRunner.isRunning
 
-    private fun findQemuBinary(context: Context): File? = BinaryLauncher.findQemu(context)
+    private fun findQemuBinary(context: Context): File? = Launcher.findQemu(context)
 
     fun start(scope: CoroutineScope) {
         if (isRunning) return
@@ -42,7 +42,7 @@ class SampEngine(private val context: Context) {
 
         val qemuBinary = findQemuBinary(context)
         val rootfsDir = File(filesDir, "rootfs_i386")
-        val sampDir = com.pocketsamp.server.config.ServerDirectoryManager.getServerDirectory(context)
+        val sampDir = com.pocketsamp.server.config.DirectoryManager.getServerDirectory(context)
         val serverBinary = File(filesDir, "bin/samp03svr").takeIf { it.exists() }
             ?: File(filesDir, "samp_server/samp03svr").takeIf { it.exists() }
             ?: File(sampDir, "samp03svr")

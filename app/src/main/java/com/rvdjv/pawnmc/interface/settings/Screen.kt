@@ -30,12 +30,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Webhook
-import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
@@ -391,8 +391,8 @@ fun SettingsScreen(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Filled.DirectionsBike,
-                        contentDescription = "Skateboard",
+                        imageVector = Icons.Filled.ArrowDownward,
+                        contentDescription = localizer.get("main.fab.bottom", appLanguage, "Go to the bottom"),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(24.dp)
                     )

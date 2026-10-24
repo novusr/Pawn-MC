@@ -7,8 +7,11 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,8 +19,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -42,9 +47,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.content.ContextCompat
+import com.pocketsamp.server.config.DirectoryManager
 import com.pocketsamp.server.db.DatabaseManager
-import com.pocketsamp.server.service.ServerForegroundService
-import com.pocketsamp.server.service.ServerStatus
+import com.pocketsamp.server.engine.Downloader
+import com.pocketsamp.server.service.Service
+import com.pocketsamp.server.service.Status
 import com.pocketsamp.server.ui.screens.ConfigScreen
 import com.pocketsamp.server.ui.screens.ConsoleScreen
 import com.pocketsamp.server.ui.screens.CrashLogsScreen
@@ -61,7 +68,7 @@ enum class AppTab(val label: String, val icon: ImageVector) {
     CONFIG("Config", Icons.Default.Timer)
 }
 
-class PocketSampActivity : ComponentActivity() {
+class MainActivity : ComponentActivity() {
 
     /**
      * Called when the user leaves PocketSAMP through the back button while no server
@@ -76,6 +83,44 @@ class PocketSampActivity : ComponentActivity() {
 
     private val dbManager by lazy { DatabaseManager() }
 
+    /** Storage access state, pushed into Compose; the gate reads it on every resume. */
+    private val hasAllFilesAccess = mutableStateOf(false)
+
+    /**
+     * Keeps [hasAllFilesAccess] in sync while the user is in the system settings screen.
+     *
+     * `ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION` leaves the app, so the value has
+     * to be re-read on ON_RESUME; a one-shot check in `onCreate` would keep showing the
+     * gate after the permission was granted.
+     */
+    private val permissionObserver = androidx.lifecycle.LifecycleEventObserver { _, event ->
+        if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+            val granted = DirectoryManager.hasStoragePermission(this)
+            hasAllFilesAccess.value = granted
+            if (granted) startRuntimeDownload()
+        }
+    }
+
+    /** Only one background sync per process lifetime. */
+    private var downloadStarted = false
+    /**
+     * Fetches the runtime archives into `Documents/PawnMC/storage` without any UI.
+     *
+     * Deliberately silent: the archives are a prerequisite, not an action the user
+     * asked for, so progress is only logged. The extraction step in [RuntimeService]
+     * picks the files up from storage and reports progress in the console where it
+     * belongs.
+     */
+    private fun startRuntimeDownload() {
+        if (downloadStarted) return
+        downloadStarted = true
+        lifecycleScope.launch {
+            val downloader = Downloader(applicationContext)
+            if (Downloader.isComplete(applicationContext)) return@launch
+            downloader.sync { line -> android.util.Log.i("RuntimeDownload", line) }
+        }
+    }
+
     private val requestNotificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
             // Handled
@@ -83,6 +128,8 @@ class PocketSampActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        lifecycle.addObserver(permissionObserver)
+        hasAllFilesAccess.value = DirectoryManager.hasStoragePermission(this)
         // Request notification permission on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -93,8 +140,8 @@ class PocketSampActivity : ComponentActivity() {
         // Prevent accidental server termination when pressing Back button/gesture
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                val isRunning = ServerForegroundService.serverStatus.value == ServerStatus.RUNNING ||
-                                ServerForegroundService.serverStatus.value == ServerStatus.STARTING
+                val isRunning = RuntimeService.serverStatus.value == Status.RUNNING ||
+                                RuntimeService.serverStatus.value == Status.STARTING
                 if (isRunning) {
                     moveTaskToBack(true)
                 } else {
@@ -110,8 +157,8 @@ class PocketSampActivity : ComponentActivity() {
             PocketSAMPTheme {
                 val view = LocalView.current
                 androidx.compose.runtime.SideEffect {
-                    val isDark = PocketSampLocales.theme == PocketSampLocales.Theme.DARK ||
-                        (PocketSampLocales.theme == PocketSampLocales.Theme.SYSTEM &&
+                    val isDark = Locales.theme == Locales.Theme.DARK ||
+                        (Locales.theme == Locales.Theme.SYSTEM &&
                             resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
                             android.content.res.Configuration.UI_MODE_NIGHT_YES)
                     val statusBarBackground = if (isDark) BgDark else BgLight
@@ -119,7 +166,20 @@ class PocketSampActivity : ComponentActivity() {
                     window.statusBarColor = statusBarBackground.toArgb()
                     WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDark
                 }
-                MainAppLayout()
+                // Storage access is a hard prerequisite: the runtime archives live in
+                // Documents/PawnMC/storage and are unpacked from there. Without the
+                // permission the screen shows the grant prompt only, with no way past
+                // it, and the archives start downloading in the background the moment
+                // the permission is granted.
+                if (hasAllFilesAccess) {
+                    MainAppLayout()
+                } else {
+                    StorageGate(
+                        onRequestAccess = {
+                            runCatching { startActivity(DirectoryManager.getManageStorageIntent(this)) }
+                        }
+                    )
+                }
             }
         }
     }
@@ -133,13 +193,13 @@ class PocketSampActivity : ComponentActivity() {
         var isPhpMyAdminVisible by remember { mutableStateOf(false) }
         // The whole embedded UI follows the language configured in the PawnMC main
         // interface (Settings → Language); the host set it before launching.
-        val lang = PocketSampLocales.current
-        fun t(key: String): String = PocketSampLocales.text(lang, key)
+        val lang = Locales.current
+        fun t(key: String): String = Locales.text(lang, key)
 
-        val serverStatus by ServerForegroundService.serverStatus.collectAsState()
-        val isDbRunning by ServerForegroundService.isDbRunning.collectAsState()
-        val logs by ServerForegroundService.logFeed.collectAsState()
-        val lanIp by ServerForegroundService.lanIp.collectAsState()
+        val serverStatus by RuntimeService.serverStatus.collectAsState()
+        val isDbRunning by RuntimeService.isDbRunning.collectAsState()
+        val logs by RuntimeService.logFeed.collectAsState()
+        val lanIp by RuntimeService.lanIp.collectAsState()
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -175,7 +235,7 @@ class PocketSampActivity : ComponentActivity() {
                         )
                         AppTab.CONSOLE -> ConsoleScreen(
                             logs = logs,
-                            onClearLogs = { ServerForegroundService.clearLogs() }
+                            onClearLogs = { RuntimeService.clearLogs() }
                         )
                         AppTab.DATABASE -> DatabaseScreen(
                             dbManager = dbManager,
@@ -246,24 +306,24 @@ class PocketSampActivity : ComponentActivity() {
         }
     }
 
-    private fun startServerService() {        if (!com.pocketsamp.server.config.ServerDirectoryManager.hasStoragePermission(this)) {
+    private fun startServerService() {        if (!com.pocketsamp.server.config.DirectoryManager.hasStoragePermission(this)) {
             android.widget.Toast.makeText(
                 this,
-                PocketSampLocales.text(
-                    PocketSampLocales.current,
+                Locales.text(
+                    Locales.current,
                     "perm.file.grant"
                 ),
                 android.widget.Toast.LENGTH_LONG
             ).show()
             try {
-                startActivity(com.pocketsamp.server.config.ServerDirectoryManager.getManageStorageIntent(this))
+                startActivity(com.pocketsamp.server.config.DirectoryManager.getManageStorageIntent(this))
             } catch (ignored: Exception) {
             }
             return
         }
 
-        val intent = Intent(this, ServerForegroundService::class.java).apply {
-            action = ServerForegroundService.ACTION_START
+        val intent = Intent(this, RuntimeService::class.java).apply {
+            action = RuntimeService.ACTION_START
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
@@ -273,9 +333,67 @@ class PocketSampActivity : ComponentActivity() {
     }
 
     private fun stopServerService() {
-        val intent = Intent(this, ServerForegroundService::class.java).apply {
-            action = ServerForegroundService.ACTION_STOP
+        val intent = Intent(this, RuntimeService::class.java).apply {
+            action = RuntimeService.ACTION_STOP
         }
         startService(intent)
     }
+}
+
+/**
+ * The one screen shown while "All files access" is missing.
+ *
+ * There is no dismiss, no back target and no tab rail: the runtime archives live in
+ * `Documents/PawnMC/storage/`, so without the permission the SA-MP server and the
+ * database cannot be started at all. Offering a "continue anyway" button would only
+ * move the failure somewhere less obvious.
+ *
+ * The back gesture is consumed here; the only ways out are granting the permission
+ * (which drops the user straight into the normal UI) or leaving via the system
+ * home/recents.
+ */
+@Composable
+private fun StorageGate(onRequestAccess: () -> Unit) {
+    BackHandler(enabled = true) { /* deliberately ignored */ }
+
+    Surface(modifier = Modifier.fillMaxSize(), color = SampThemeColors.bg) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Storage access is required",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = SampThemeColors.textPrimary
+            )
+            Spacer12()
+            Text(
+                text = "PocketSAMP reads its runtime files from Documents/PawnMC/storage. " +
+                    "Grant \"All files access\" to continue; the archives download in the " +
+                    "background once it is granted.",
+                fontSize = 13.sp,
+                color = SampThemeColors.textSecondary
+            )
+            Spacer12()
+            Button(
+                onClick = onRequestAccess,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SampThemeColors.accent,
+                    contentColor = SampThemeColors.accentOn
+                ),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Text(text = "Grant access", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun Spacer12() {
+    Spacer(modifier = Modifier.height(12.dp))
 }

@@ -2,7 +2,7 @@ package com.pocketsamp.server.config
 
 import java.io.File
 
-data class ServerConfig(
+data class Config(
     var hostname: String = "PocketSAMP Mobile Server",
     var port: Int = 7777,
     var maxPlayers: Int = 50,
@@ -16,8 +16,8 @@ data class ServerConfig(
     var sleep: Int = 1
 ) {
     companion object {
-        fun loadFromFile(file: File): ServerConfig {
-            val config = ServerConfig()
+        fun loadFromFile(file: File): Config {
+            val config = Config()
             if (!file.exists()) return config
 
             file.forEachLine { line ->
@@ -46,7 +46,7 @@ data class ServerConfig(
             return config
         }
 
-        fun saveToFile(config: ServerConfig, file: File) {
+        fun saveToFile(config: Config, file: File) {
             val content = buildString {
                 appendLine("echo Executing Server Config...")
                 appendLine("lanmode ${if (config.lanmode) 1 else 0}")

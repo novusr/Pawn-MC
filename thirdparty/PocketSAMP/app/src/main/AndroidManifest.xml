@@ -28,19 +28,19 @@
             back button, mirroring how the Sora-based Xed editor screen is hosted.
         -->
         <activity
-            android:name=".PocketSampActivity"
+            android:name=".MainActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.PocketSAMP" />
 
         <activity
-            android:name=".crash.CrashActivity"
+            android:name=".crash.CrashDialog"
             android:exported="false"
             android:process=":crash"
             android:theme="@style/Theme.PocketSAMP" />
 
         <service
-            android:name=".service.ServerForegroundService"
+            android:name=".service.RuntimeService"
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false"

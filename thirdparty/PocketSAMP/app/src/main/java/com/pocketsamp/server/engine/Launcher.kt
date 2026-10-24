@@ -18,7 +18,7 @@ import java.io.RandomAccessFile
  * `e_machine`), never from the file name, so a bundle can contain either build and
  * still be launched correctly.
  */
-internal object BinaryLauncher {
+internal object Launcher {
 
     /** ELF `e_machine` values this launcher distinguishes. */
     private const val EM_386 = 3
@@ -76,7 +76,7 @@ internal object BinaryLauncher {
     /**
      * Locates the QEMU user-mode translator.
      *
-     * Shared with [SampEngine] so both engines look in the same places: the copies
+     * Shared with [Samp] so both engines look in the same places: the copies
      * Android extracts from `jniLibs` first (the only ones guaranteed executable),
      * then the loose binaries a rootfs may carry.
      */

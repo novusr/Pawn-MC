@@ -99,7 +99,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.pocketsamp.server.PocketSamp
-import com.pocketsamp.server.PocketSampLocales
+import com.pocketsamp.server.Locales
 import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserMode
@@ -340,22 +340,22 @@ fun MainScreen(
         // The embedded runtime speaks the language the PawnMC settings hold and
         // follows the same theme (light/dark/system); the dark look is the same
         // semi-violet ramp as this interface.
-        PocketSampLocales.setLanguage(
+        Locales.setLanguage(
             when (appLanguage) {
-                CompilerConfig.AppLanguage.ID -> PocketSampLocales.Lang.ID
-                CompilerConfig.AppLanguage.ES -> PocketSampLocales.Lang.ES
-                CompilerConfig.AppLanguage.RU -> PocketSampLocales.Lang.RU
-                else -> PocketSampLocales.Lang.EN
+                CompilerConfig.AppLanguage.ID -> Locales.Lang.ID
+                CompilerConfig.AppLanguage.ES -> Locales.Lang.ES
+                CompilerConfig.AppLanguage.RU -> Locales.Lang.RU
+                else -> Locales.Lang.EN
             }
         )
-        PocketSampLocales.setTheme(
+        Locales.setTheme(
             when (viewModel.n_app_theme) {
-                CompilerConfig.AppTheme.LIGHT -> PocketSampLocales.Theme.LIGHT
-                CompilerConfig.AppTheme.DARK -> PocketSampLocales.Theme.DARK
-                else -> PocketSampLocales.Theme.SYSTEM
+                CompilerConfig.AppTheme.LIGHT -> Locales.Theme.LIGHT
+                CompilerConfig.AppTheme.DARK -> Locales.Theme.DARK
+                else -> Locales.Theme.SYSTEM
             }
         )
-        PocketSamp.launch(context)
+        SampApp.launch(context)
     }
     var showCompilingNotice by remember { mutableStateOf(false) }
 
@@ -404,8 +404,8 @@ fun MainScreen(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Filled.DirectionsBike,
-                        contentDescription = "Skateboard",
+                        imageVector = Icons.Filled.ArrowDownward,
+                        contentDescription = "Scroll to bottom",
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(24.dp)
                     )

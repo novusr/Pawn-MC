@@ -15,18 +15,18 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pocketsamp.server.config.ServerConfig
-import com.pocketsamp.server.config.ServerDirectoryManager
+import com.pocketsamp.server.config.Config
+import com.pocketsamp.server.config.DirectoryManager
 import com.pocketsamp.server.ui.theme.*
 import java.io.File
 
 @Composable
 fun ConfigScreen() {
     val context = LocalContext.current
-    val serverDir = remember { ServerDirectoryManager.getServerDirectory(context) }
+    val serverDir = remember { DirectoryManager.getServerDirectory(context) }
     val configFile = remember(serverDir) { File(serverDir, "server.cfg") }
 
-    var config by remember(configFile) { mutableStateOf(ServerConfig.loadFromFile(configFile)) }
+    var config by remember(configFile) { mutableStateOf(Config.loadFromFile(configFile)) }
 
     var hostname by remember(config) { mutableStateOf(config.hostname) }
     var port by remember(config) { mutableStateOf(config.port.toString()) }
@@ -43,7 +43,7 @@ fun ConfigScreen() {
         DisposableEffect(lifecycleOwner, configFile) {
             val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
                 if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                    config = ServerConfig.loadFromFile(configFile)
+                    config = Config.loadFromFile(configFile)
                 }
             }
             lifecycleOwner.lifecycle.addObserver(observer)
@@ -90,7 +90,7 @@ fun ConfigScreen() {
                     config.gamemode = gamemode
                     config.filterscripts = filterscripts
                     config.plugins = plugins
-                    ServerConfig.saveToFile(config, configFile)
+                    Config.saveToFile(config, configFile)
                     Toast.makeText(context, "server.cfg saved successfully!", Toast.LENGTH_SHORT).show()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),

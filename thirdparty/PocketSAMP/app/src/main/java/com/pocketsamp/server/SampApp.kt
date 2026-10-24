@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.pocketsamp.server.crash.CrashHandler
+import com.pocketsamp.server.crash.Handler
 
 /**
  * Entry point PawnMC uses to embed PocketSAMP.
@@ -15,13 +15,13 @@ import com.pocketsamp.server.crash.CrashHandler
  *
  *  - [install] replays the global crash handler (the isolated `:crash` process shows
  *    the report and restarts cleanly);
- *  - [launch] starts [PocketSampActivity] on top of the caller's task, which is how
+ *  - [launch] starts [MainActivity] on top of the caller's task, which is how
  *    the PawnMC main screen opens the runtime and how the back button returns to it.
  *
  * Nothing here renames or rebrands the module: the class, namespace and strings keep
  * the upstream PocketSAMP identity.
  */
-object PocketSamp {
+object SampApp {
 
     /**
      * Installs the process-wide pieces PocketSAMP expects. Call once from the host
@@ -29,7 +29,7 @@ object PocketSamp {
      */
     fun install(context: Context) {
         val app = context.applicationContext as? Application ?: return
-        CrashHandler.install(app)
+        Handler.install(app)
     }
 
     /**
@@ -40,6 +40,6 @@ object PocketSamp {
     fun launch(context: Context) {
         val activity = context as? androidx.activity.ComponentActivity
             ?: throw IllegalArgumentException("PocketSAMP must be launched from an Activity context")
-        activity.startActivity(Intent(activity, PocketSampActivity::class.java))
+        activity.startActivity(Intent(activity, MainActivity::class.java))
     }
 }
