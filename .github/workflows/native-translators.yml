@@ -31,6 +31,8 @@ env:
   QEMU_VERSION: '7.2.0'
   QEMU_SHA256: ''
   PRoot_COMMIT: 'master'
+  TALLOC_VERSION: '2.4.2'
+  GLIB_VERSION: '2.80.0'
 
 jobs:
   qemu:
@@ -81,7 +83,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             meson ninja-build pkg-config python3-pip libffi-dev
           pip3 install --break-system-packages meson
-          git clone --depth 1 --branch 2.80.0 https://gitlab.gnome.org/GNOME/glib.git glib-src
+          git clone --depth 1 --branch "${GLIB_VERSION}" https://gitlab.gnome.org/GNOME/glib.git glib-src
           # A meson cross file needs a real file; it is written with printf rather than a
           # here-document because a column-0 "EOF" ends the YAML literal block for
           # `run:`, which invalidates the whole workflow.
@@ -211,11 +213,14 @@ jobs:
           # libtalloc-dev from apt supplies x86_64 headers and a host .pc file. PRoot
           # compiles with the NDK against the Android sysroot, so talloc.h was not found
           # and the host archive could not be linked into a static aarch64 binary.
-          # talloc is a standalone Samba component with an autotools build; cross-build
-          # it once and install into a private prefix.
-          git clone --depth 1 --branch talloc-2.4.2 https://gitlab.com/samba-team/samba.git samba-src
-          cd samba-src/lib/talloc
-          ./autogen.sh
+          #
+          # Do not clone the Samba repository: lib/talloc there has no configure or
+          # autogen.sh, it is a waf component of the larger tree, and its talloc-2.4.2
+          # tag is annotated rather than a commit. The released standalone tarball is
+          # the supported way to build it; it ships a generated configure script.
+          curl -fsSL "https://www.samba.org/ftp/talloc/talloc-${TALLOC_VERSION}.tar.gz" -o talloc.tgz
+          tar xzf talloc.tgz
+          cd "talloc-${TALLOC_VERSION}"
           ./configure \
             --host=aarch64-linux-android \
             --prefix=/opt/talloc-android \
