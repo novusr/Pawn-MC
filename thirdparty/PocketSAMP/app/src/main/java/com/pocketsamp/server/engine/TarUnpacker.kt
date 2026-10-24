@@ -12,11 +12,11 @@ import java.util.zip.GZIPInputStream
 /**
  * Unpacks a `.tar.gz` / `.tar` stream into a directory.
  *
- * Shared by [AssetExtractor] (bundled assets) and [MariaDbDownloader] (a bundle the
- * user downloads later), so both obey the same rules: directories are created,
- * symlinks are recreated without following escaping targets, the executable bit from
- * the tar header is applied, and a partially written file can never be mistaken for
- * a complete one because every entry is written to `.part` and renamed on success.
+ * Used by [AssetExtractor] for the bundled MariaDB and SA-MP archives. The rules it
+ * enforces: directories are created, symlinks are recreated without following escaping
+ * targets, the executable bit from the tar header is applied, and a partially written
+ * file can never be mistaken for a complete one because every entry is written to
+ * `.part` and renamed on success.
  */
 internal object TarUnpacker {
 

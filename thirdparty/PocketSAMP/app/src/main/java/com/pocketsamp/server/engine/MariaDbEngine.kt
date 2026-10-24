@@ -35,21 +35,13 @@ class MariaDbEngine(private val context: Context) {
             File(context.filesDir, "bin/mysql_install_db"),
             // i386 build shipped inside the shared rootfs: executed through QEMU.
             File(context.filesDir, "rootfs_i386/usr/bin/mariadb-install-db"),
-            File(context.filesDir, "rootfs_i386/usr/sbin/mariadb-install-db"),
-            File(context.applicationInfo.nativeLibraryDir, "libmariadb-install-db.so"),
-            File(context.applicationInfo.nativeLibraryDir, "mariadb-install-db")
+            File(context.filesDir, "rootfs_i386/usr/sbin/mariadb-install-db")
         )
         return firstRunnable(candidates)
     }
 
     private fun findMariadbdBinary(context: Context, mariadbDir: File): File? {
         val candidates = listOf(
-            // A daemon installed from a downloaded bundle. It lives in a *private*
-            // path that mirrors the package (filesDir/mariadb-native/arm64-v8a),
-            // which is the only way exec() is allowed there since API 29; see
-            // MariaDbDownloader.
-            File(MariaDbDownloader.nativeDir(context), "bin/mariadbd"),
-            File(MariaDbDownloader.i386Dir(context), "bin/mariadbd"),
             File(mariadbDir, "bin/mariadbd"),
             File(mariadbDir, "bin/mysqld"),
             File(context.filesDir, "bin/mariadbd"),
@@ -57,18 +49,16 @@ class MariaDbEngine(private val context: Context) {
             // i386 build inside the shared rootfs: executed through QEMU.
             File(context.filesDir, "rootfs_i386/usr/sbin/mariadbd"),
             File(context.filesDir, "rootfs_i386/usr/sbin/mysqld"),
-            File(context.filesDir, "rootfs_i386/usr/bin/mariadbd"),
-            File(context.applicationInfo.nativeLibraryDir, "libmariadbd.so"),
-            File(context.applicationInfo.nativeLibraryDir, "mariadbd"),
-            File(context.applicationInfo.nativeLibraryDir, "libmysqld.so"),
-            File(context.applicationInfo.nativeLibraryDir, "mysqld")
+            File(context.filesDir, "rootfs_i386/usr/bin/mariadbd")
         )
         return firstRunnable(candidates)
     }
 
     /**
-     * First candidate that is executable *and* runnable here: a native ARM64 daemon on
-     * an x86 emulator is present but useless, and an i386 one without QEMU likewise.
+     * First candidate that is executable *and* runnable here.
+     *
+     * The daemon is i386 now, so "runnable" means the QEMU translator was found; an
+     * x86-64 native copy on the device would not be.
      */
     private fun firstRunnable(candidates: List<File>): File? =
         candidates.firstOrNull { isUsableBinary(it) && isRunnableOnThisDevice(it) }
@@ -85,8 +75,10 @@ class MariaDbEngine(private val context: Context) {
     private fun isUsableBinary(file: File): Boolean = BinaryLauncher.isExecutableFile(file)
 
     /**
-     * Whether the host can execute [binary]: native ARM64 builds need an ARM64 device,
-     * i386 builds need QEMU, which only ships for arm64 in this project.
+     * Whether the host can execute [binary].
+     *
+     * The daemon is i386, so this reduces to "was the QEMU translator found". A native
+     * ARM64 or ARM binary is only accepted when the device actually reports that ABI.
      */
     private fun isRunnableOnThisDevice(binary: File): Boolean {
         if (BinaryLauncher.needsQemu(binary)) return BinaryLauncher.findQemu(context) != null
@@ -103,19 +95,13 @@ class MariaDbEngine(private val context: Context) {
     private fun rootfsDir(): File = File(context.filesDir, "rootfs_i386")
 
     /**
-     * The install tree the daemon should be resolved from.
+     * The install tree the daemon is resolved from.
      *
-     * A bundle installed from the Database tab lives in the private, package-mirrored
-     * `mariadb-native/arm64-v8a` tree and brings its own `bin/`, `lib/` and `share/`.
-     * The bundled asset tree (`filesDir/mariadb`) only wins when no downloaded daemon
-     * is present, so an incomplete asset bundle can never shadow a working download.
+     * There is exactly one now: the i386 bundle extracted from assets into
+     * `filesDir/mariadb`. Its `bin/`, `lib/` and `share/mariadb/` are all that QEMU
+     * needs, so the data directory next to it is used unchanged.
      */
-    private fun mariadbInstallRoot(): File {
-        // `activeInstallRoot` already prefers the i386 bundle when one is installed, so
-        // a QEMU bundle and a native bundle use one code path.
-        return MariaDbDownloader.activeInstallRoot(context)
-            ?: File(context.filesDir, "mariadb")
-    }
+    private fun mariadbInstallRoot(): File = File(context.filesDir, "mariadb")
 
     suspend fun initializeIfNeeded(scope: CoroutineScope): Boolean = withContext(Dispatchers.IO) {
         // A downloaded bundle lives outside mariadb/, so its data directory, my.cnf
@@ -135,15 +121,13 @@ class MariaDbEngine(private val context: Context) {
 
             if (installDb == null && mariadbd == null) {
                 // Say *why*, instead of one generic line that reads like a bug in the
-                // engine. The asset bundle is the usual reason on a development build:
-                // `mariadb_arm64.tar.gz` ships only share/ data unless a full server
-                // build was packaged, and the daemon is 64-bit ARM only.
+                // engine. There is exactly one bundle now, so the diagnosis is short.
                 val binDir = File(mariadbDir, "bin")
                 if (!binDir.isDirectory) {
                     _dbLogs.emit("[MariaDB Info] The MariaDB asset bundle contains no bin/ directory.")
-                    _dbLogs.emit("[MariaDB Info] The bundle must hold bin/mariadbd, bin/mariadb-install-db, lib/ and share/mariadb/ — arm64-v8a (native) or i386 (via QEMU).")
+                    _dbLogs.emit("[MariaDB Info] The bundle must hold bin/mariadbd, bin/mariadb-install-db, lib/ and share/mariadb/ for i386.")
                 } else {
-                    _dbLogs.emit("[MariaDB Info] MariaDB binary/installer not found in app storage or native libraries.")
+                    _dbLogs.emit("[MariaDB Info] MariaDB binary/installer not found in app storage.")
                 }
                 _dbLogs.emit("[MariaDB Info] Database service is optional for SQLite/file gamemodes.")
                 return@withContext false
@@ -241,15 +225,13 @@ class MariaDbEngine(private val context: Context) {
 
         if (mariadbdBinary == null) {
             scope.launch {
-                _dbLogs.emit("[MariaDB Info] MariaDB daemon not found in app storage or native libraries.")
+                _dbLogs.emit("[MariaDB Info] MariaDB daemon not found in ${installed.absolutePath}/bin.")
                 // A daemon that exists but cannot be made executable is almost always
-                // the Android 10+ W^X rule: the file is in app storage, not in the
-                // private package-mirrored path or nativeLibraryDir.
+                // the Android 10+ W^X rule: the file is in app storage and not marked
+                // as a native library. Anchor points at the asset bundle.
                 val blocked = File(installed, "bin/mariadbd").takeIf { it.isFile && it.length() > 0 }
-                    ?: File(mariadbDir, "bin/mariadbd").takeIf { it.isFile && it.length() > 0 }
                 if (blocked != null) {
-                    _dbLogs.emit("[MariaDB Info] Found ${blocked.absolutePath} but it is not executable (Android blocks exec() in app storage).")
-                    _dbLogs.emit("[MariaDB Info] Install the bundle from the Database tab so it lands in ${MariaDbDownloader.nativeDir(context).absolutePath}.")
+                    _dbLogs.emit("[MariaDB Info] Found ${blocked.absolutePath} but it is not executable.")
                 }
             }
             return

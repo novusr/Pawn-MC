@@ -46,14 +46,6 @@ class ServerForegroundService : Service() {
 
         const val ACTION_START = "com.pocketsamp.server.ACTION_START"
         const val ACTION_STOP = "com.pocketsamp.server.ACTION_STOP"
-        /**
-         * Re-runs MariaDB initialization and starts the daemon that was just installed.
-         *
-         * Sent after a bundle download: the engine resolves its binary on every start,
-         * so one message is enough to pick the new daemon up without restarting the
-         * SA-MP server or the app.
-         */
-        const val ACTION_REINIT_DB = "com.pocketsamp.server.ACTION_REINIT_DB"
 
         /** True while the service (and therefore the engine) is alive. */
         @Volatile
@@ -189,9 +181,6 @@ class ServerForegroundService : Service() {
                 prefs.edit().putBoolean("server_running_state", false).apply()
                 stopServers()
             }
-            ACTION_REINIT_DB -> {
-                serviceScope.launch { initializeDatabase() }
-            }
         }
         return START_STICKY
     }
@@ -199,9 +188,7 @@ class ServerForegroundService : Service() {
     /**
      * Initializes (first run) and starts the MariaDB daemon.
      *
-     * Shared by the normal boot path and [ACTION_REINIT_DB], so a bundle installed
-     * while the service is already running goes through exactly the same steps —
-     * including datadir creation — as one present at boot.
+     * The only path that starts MariaDB: called once from [startServers].
      */
     private suspend fun initializeDatabase() {
         // A re-init arrives through startForegroundService(); Android requires the

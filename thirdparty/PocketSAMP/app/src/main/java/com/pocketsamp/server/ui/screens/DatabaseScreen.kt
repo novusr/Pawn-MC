@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.sp
 import com.pocketsamp.server.PocketSampLocales
 import com.pocketsamp.server.db.DatabaseManager
 import com.pocketsamp.server.db.QueryResult
-import com.pocketsamp.server.engine.MariaDbDownloader
 import com.pocketsamp.server.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -55,8 +54,7 @@ fun DatabaseScreen(
     dbManager: DatabaseManager,
     isDbRunning: Boolean,
     onOpenPhpMyAdmin: () -> Unit = {},
-    lang: PocketSampLocales.Lang = PocketSampLocales.current,
-    onBundleInstalled: () -> Unit = {}
+    lang: PocketSampLocales.Lang = PocketSampLocales.current
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -78,12 +76,6 @@ fun DatabaseScreen(
     // Name of the database the user just created, echoed in a confirmation banner
     // above the chip row until the next creation or a database switch.
     var lastCreatedDb by remember { mutableStateOf<String?>(null) }
-    // Whether a downloaded daemon is present; recomputed on every open and after an
-    // install, so the download prompt disappears as soon as the bundle lands.
-    var hasDownloadedDaemon by remember {
-        mutableStateOf(MariaDbDownloader.downloadedDaemon(context) != null)
-    }
-    var showDownloadDialog by remember { mutableStateOf(false) }
 
     fun refreshDbs() {
         if (!isDbRunning) return
@@ -227,23 +219,6 @@ fun DatabaseScreen(
                     fontSize = 12.sp,
                     color = SampThemeColors.textMuted
                 )
-                // The one action the user can actually take: install a complete
-                // arm64 bundle without rebuilding the APK.
-                if (!hasDownloadedDaemon) {
-                    Button(
-                        onClick = { showDownloadDialog = true },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(38.dp),
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = SampThemeColors.accent,
-                            contentColor = SampThemeColors.accentOn
-                        )
-                    ) {
-                        Text(t("db.download.install"), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
             }
         } else {
             // Confirmation for the database the user just created: the name the
@@ -542,21 +517,6 @@ fun DatabaseScreen(
             // Bottom room so the floating tab rail never covers the launch button.
             Spacer(modifier = Modifier.height(56.dp))
         }
-    }
-
-    // Downloading a complete bundle is the only way to get a daemon on a device
-    // when the packaged asset ships share/ only.
-    if (showDownloadDialog) {
-        MariaDbDownloadDialog(
-            onDismiss = { showDownloadDialog = false },
-            onInstalled = {
-                hasDownloadedDaemon = MariaDbDownloader.downloadedDaemon(context) != null
-                showDownloadDialog = false
-                // The service owns the engine; it re-runs initialization when asked.
-                onBundleInstalled()
-            },
-            lang = lang
-        )
     }
 
     // Create Database dialog: the "+ New" chip opens it; the name goes straight

@@ -18,7 +18,7 @@ graph TD
         Service["Foreground Service + WakeLock"]
         PRoot["PRoot Engine (libproot.so)"]
         QEMU["QEMU-i386 Translator (libqemu-i386.so)"]
-        MariaDB["MariaDB ARM64 Daemon (127.0.0.1:3306)"]
+        MariaDB["MariaDB i386 Daemon via QEMU (127.0.0.1:3306)"]
         DBManager["Native In-App SQL Client (JDBC)"]
     end
 
@@ -46,7 +46,7 @@ graph TD
 1. **CPU Emulation via QEMU User-Mode:** `libqemu-i386.so` translates x86 32-bit instructions into native ARM64 instructions at userland level.
 2. **Filesystem Sandboxing via PRoot:** `libproot.so` intercepts system calls and binds `/dev`, `/proc`, and internal app storage without needing `su` / root.
 3. **Ultra-Low Memory Footprint (~150 MB Total RAM):**
-   - Instead of heavy XAMPP stacks (Apache + PHP + MySQL default = 600MB+), MariaDB runs natively on ARM64 with `innodb_buffer_pool_size = 16M` and `performance_schema = OFF`.
+   - Instead of heavy XAMPP stacks (Apache + PHP + MySQL default = 600MB+), MariaDB runs as an i386 build under the same QEMU translator as the game server, with `innodb_buffer_pool_size = 16M` and `performance_schema = OFF`.
    - The in-app database manager connects directly over TCP loopback, eliminating the need for a web server or phpMyAdmin.
 4. **Android Power Management Resilience:** Runs within an Android Foreground Service using a `PartialWakeLock` and `WifiLock` to prevent CPU sleep and desync when the screen is locked.
 
@@ -103,37 +103,29 @@ Push this repository to GitHub. The included workflow `.github/workflows/build-a
 
 ---
 
-## 🗄️ MariaDB Asset Bundle Requirements
+## 🗄️ MariaDB Asset Bundle
+MariaDB is **not** a native ARM build. It ships as an ordinary **i386 Debian** build and
+runs under the same `qemu-i386` translator as the SA-MP server, using the glibc already
+present in `rootfs_i386`. There is no arm64 path and no on-device download: the bundle
+is built in CI, committed under `app/src/main/assets/`, and extracted at first boot.
 
-The embedded runtime extracts `app/src/main/assets/mariadb_arm64.tar(.gz)` into
-`filesDir/mariadb/`. For the database service to start, that archive **must** contain,
-for **arm64-v8a**:
+The runtime extracts `assets/mariadb_i386.tar(.gz)` into `filesDir/mariadb/`. The
+archive must be **self-contained**:
 
 ```
 bin/mariadbd
 bin/mariadb-install-db
-lib/            (server libraries; also used as LD_LIBRARY_PATH)
-share/mariadb/  (error messages, lc-messages-dir)
+lib/            all shared objects mariadbd needs but the rootfs lacks
+share/mariadb/  error messages (lc-messages-dir)
 ```
 
-If `bin/` is absent the runtime logs
-`The MariaDB asset bundle contains no bin/ directory.` and keeps the database
-service off — the SA-MP server itself still runs, since database support is optional
-for SQLite/file gamemodes. A bundle that ships only `share/` data is an incomplete
-build, not a runtime bug.
+`rootfs_i386` provides only `libc`, `libm`, `libz`, `libgcc_s` and `libstdc++`. The
+bundle must therefore carry the other eight entries of `mariadbd`'s `NEED` list:
+`libcrypto.so.3`, `libssl.so.3`, `libpcre2-8.so.0`, `libaio.so.1`, `libnuma.so.1`,
+`liburing.so.2`, `libsystemd.so.0`, `libcrypt.so.1`. The `MariaDB i386 Bundle` workflow
+fetches them from the Debian i386 index, packs them and refuses to publish a bundle
+when any `NEED` entry is missing.
 
-### Installing a bundle without rebuilding the APK
-
-The **Database** tab offers *Install a MariaDB bundle* when no daemon is present. It
-downloads over HTTPS, optionally verifies a SHA-256, and only accepts an archive that
-contains `bin/mariadbd` (plus `lib/`, `share/mariadb/` and
-`bin/mariadb-install-db`). A zip is also accepted if it holds a `lib/arm64-v8a/`
-tree.
-
-The bundle is unpacked into
-`filesDir/mariadb-native/arm64-v8a/`. That path is deliberate: since Android 10 the
-kernel refuses `exec()` on files under the app's data directory unless the location
-is a *private* directory that mirrors the package the way `nativeLibraryDir` does.
-Extracting into `filesDir/mariadb/` would download successfully and then fail to
-start. A distro package is still unusable at that point — it links against glibc,
-not Android's bionic `libc`.
+If the daemon is absent the runtime logs a specific reason and keeps the database
+service off. The SA-MP server still runs: database support is optional for
+SQLite/file gamemodes.

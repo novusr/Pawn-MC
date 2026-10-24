@@ -20,9 +20,11 @@ class AssetExtractor(private val context: Context) {
         private const val TAG = "AssetExtractor"
         private const val PREF_NAME = "pocketsamp_assets"
         private const val KEY_INSTALLED_VERSION = "assets_installed_version"
-        // Bumped when the asset set changes. 9 adds the i386 bundle and re-runs
-        // extraction on devices that already unpacked the share-only arm64 one.
-        private const val CURRENT_VERSION = 9
+        // Bumped when the asset set changes. 10 ships the complete i386 bundle
+        // (daemon + all 13 shared libraries) and drops the arm64 one.
+        private const val CURRENT_VERSION = 10
+        /** The only MariaDB bundle PocketSAMP ships. */
+        private const val BUNDLE_ASSET = "mariadb_i386"
 
         fun getServerDirectory(context: Context): File {
             return ServerDirectoryManager.getServerDirectory(context)
@@ -61,43 +63,36 @@ class AssetExtractor(private val context: Context) {
             defaultDir.mkdirs()
         }
 
-        // 3. Extract the MariaDB engine. Two bundles may be present:
-        //   mariadb_i386.tar.gz  - Debian i386 build, executed through qemu-i386. This
-        //                          is the real one: it links glibc, which is what a
-        //                          Linux build expects and what rootfs_i386 provides.
-        //   mariadb_arm64.tar.gz - a native arm64 bundle, used when no i386 one exists.
-        // Each is tried independently; a missing asset is not an error.
-        onProgress("Deploying MariaDB engine...")
+        // 3. Extract the MariaDB engine.
+        //
+        // Only the i386 bundle exists now: PocketSAMP runs MariaDB through the same
+        // qemu-i386 translator as the SA-MP server, so the binary is an ordinary
+        // Debian build that links the glibc already present in rootfs_i386. There is
+        // no native arm64 path any more, which also means no bespoke Android build is
+        // needed to keep the database working.
+        onProgress("Deploying MariaDB engine (i386 via QEMU)...")
         val mariadbDir = File(filesDir, "mariadb")
         if (!mariadbDir.exists()) mariadbDir.mkdirs()
 
-        val installedBundles = mutableListOf<String>()
-        for (base in listOf("mariadb_i386", "mariadb_arm64")) {
-            if (!assetExists(base)) continue
-            onProgress("Deploying $base...")
-            extractArchiveAsset(base, mariadbDir)
-            installedBundles += base
-        }
-        if (installedBundles.isEmpty()) {
-            onProgress("No MariaDB bundle in assets; SQL stays disabled.")
+        if (assetExists(BUNDLE_ASSET)) {
+            extractArchiveAsset(BUNDLE_ASSET, mariadbDir)
+        } else {
+            onProgress("No $BUNDLE_ASSET in assets; SQL stays disabled.")
         }
 
         // Ensure binaries have executable bit set if present
         File(mariadbDir, "bin/mariadbd").let { if (it.exists()) it.setExecutable(true, false) }
         File(mariadbDir, "bin/mariadb-install-db").let { if (it.exists()) it.setExecutable(true, false) }
 
-        // Verify the deployment instead of trusting the extraction loop. A bundle
-        // that ships only share/ data (as `mariadb_arm64.tar.gz` does until a full
-        // server build is packaged) used to print "Deploying..." and then fail later
-        // with a generic "binary not found" line, hiding which step was incomplete.
+        // Verify the deployment instead of trusting the extraction loop, and report the
+        // one prerequisite a bundle cannot satisfy on its own.
         val daemon = File(mariadbDir, "bin/mariadbd")
         if (!daemon.isFile || daemon.length() == 0L) {
             onProgress("MariaDB daemon missing from the asset bundle (bin/mariadbd); SQL stays disabled.")
         } else {
-            val kind = BinaryLauncher.kindOf(daemon)
-            onProgress("MariaDB daemon ready: ${daemon.length() / 1024} KB, ${kind.name}.")
-            if (BinaryLauncher.needsQemu(daemon) && BinaryLauncher.findQemu(context) == null) {
-                onProgress("Warning: the bundled daemon is ${kind.name} but libqemu-i386.so was not found; SQL will stay disabled.")
+            onProgress("MariaDB daemon ready: ${daemon.length() / 1024} KB, ${BinaryLauncher.kindOf(daemon).name}.")
+            if (BinaryLauncher.findQemu(context) == null) {
+                onProgress("Warning: libqemu-i386.so was not found; MariaDB cannot run without the translator.")
             }
         }
 

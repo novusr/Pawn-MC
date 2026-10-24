@@ -181,8 +181,7 @@ class PocketSampActivity : ComponentActivity() {
                             dbManager = dbManager,
                             isDbRunning = isDbRunning,
                             onOpenPhpMyAdmin = { isPhpMyAdminVisible = true },
-                            lang = lang,
-                            onBundleInstalled = { reinitializeDatabase() }
+                            lang = lang
                         )
                         AppTab.CRASHES -> CrashLogsScreen()
                         AppTab.CONFIG -> ConfigScreen()
@@ -245,20 +244,6 @@ class PocketSampActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    /**
-     * Asks the running service to pick up a freshly installed MariaDB bundle.
-     *
-     * Starting the service with [ServerForegroundService.ACTION_REINIT_DB] is safe in
-     * both states: if the service is already alive it handles the action in place, and
-     * if it is not, Android starts it and the action is handled on creation.
-     */
-    private fun reinitializeDatabase() {
-        val intent = Intent(this, ServerForegroundService::class.java).apply {
-            action = ServerForegroundService.ACTION_REINIT_DB
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent) else startService(intent)
     }
 
     private fun startServerService() {        if (!com.pocketsamp.server.config.ServerDirectoryManager.hasStoragePermission(this)) {
