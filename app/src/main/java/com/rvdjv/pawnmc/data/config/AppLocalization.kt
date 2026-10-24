@@ -67,6 +67,36 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         map
     }
 
+    /** Tagalog text -> English text. */
+    private val tlToEnMap: Map<String, String> by lazy {
+        val map = mutableMapOf<String, String>()
+        for ((k, v) in entries) {
+            if (k.endsWith(".tl")) {
+                val base = k.removeSuffix(".tl")
+                val enVal = entries["$base.en"]
+                if (enVal != null) {
+                    map[v.trim().lowercase()] = enVal
+                }
+            }
+        }
+        map
+    }
+
+    /** English text -> Tagalog text. */
+    private val enToTlMap: Map<String, String> by lazy {
+        val map = mutableMapOf<String, String>()
+        for ((k, v) in entries) {
+            if (k.endsWith(".en")) {
+                val base = k.removeSuffix(".en")
+                val tlVal = entries["$base.tl"]
+                if (tlVal != null) {
+                    map[v.trim().lowercase()] = tlVal
+                }
+            }
+        }
+        map
+    }
+
     /** Spanish (Argentina) text -> English text. */
     private val esToEnMap: Map<String, String> by lazy {
         val map = mutableMapOf<String, String>()
@@ -118,13 +148,21 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
                 enToRuMap[normalizedKey.lowercase()]?.let { return it }
                 enToRuMap[fallback.trim().lowercase()]?.let { return it }
             }
+            // Tagalog has no phrase table yet; the .tl entries in the TOML data cover it
+            // and the English fallback below remains the last resort.
+            CompilerConfig.AppLanguage.TL -> {
+                enToTlMap[normalizedKey.lowercase()]?.let { return it }
+                enToTlMap[fallback.trim().lowercase()]?.let { return it }
+            }
             CompilerConfig.AppLanguage.EN -> {
                 idToEnMap[normalizedKey.lowercase()]?.let { return it }
                 esToEnMap[normalizedKey.lowercase()]?.let { return it }
                 ruToEnMap[normalizedKey.lowercase()]?.let { return it }
+                tlToEnMap[normalizedKey.lowercase()]?.let { return it }
                 idToEnMap[fallback.trim().lowercase()]?.let { return it }
                 esToEnMap[fallback.trim().lowercase()]?.let { return it }
                 ruToEnMap[fallback.trim().lowercase()]?.let { return it }
+                tlToEnMap[fallback.trim().lowercase()]?.let { return it }
             }
         }
 

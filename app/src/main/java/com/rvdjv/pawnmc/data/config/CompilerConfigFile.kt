@@ -212,12 +212,17 @@ internal object CompilerConfigFile {
             }
         }
 
-        // 7. app_language: "id" | "en" | "es" | "ru" | "in" | "es-ar" | "es_ar" | "ru-ru" | "ru_ru" | null
+        // 7. app_language: "id" | "en" | "es" | "ru" | "tl" | "in" | "es-ar" | "es_ar"
+        //    | "ru-ru" | "ru_ru" | "fil" | "fil-ph" | "tagalog" | null
         if (root.has(CompilerConfig.KEY_APP_LANGUAGE)) {
             val value = root.opt(CompilerConfig.KEY_APP_LANGUAGE)
             if (value != null && value != JSONObject.NULL) {
                 val str = value as? String
-                val allowedLangs = setOf("id", "en", "es", "ru", "in", "es-ar", "es_ar", "ru-ru", "ru_ru")
+                val allowedLangs = setOf(
+                    "id", "en", "es", "ru", "tl",
+                    "in", "es-ar", "es_ar", "ru-ru", "ru_ru",
+                    "fil", "fil-ph", "fil_ph", "tagalog"
+                )
                 if (str == null || str.lowercase() !in allowedLangs) {
                     root.put(CompilerConfig.KEY_APP_LANGUAGE, JSONObject.NULL)
                     corrected = true

@@ -81,30 +81,44 @@ jobs:
           # PKG_CONFIG_LIBDIR at its .pc files instead of the host's.
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            meson ninja-build pkg-config python3-pip libffi-dev
-          pip3 install --break-system-packages meson
+            ninja-build pkg-config python3-pip python3-venv libffi-dev libpcre2-dev
+          # A pinned, recent meson in a venv: Ubuntu's 1.3.2 is old enough that some GLib
+          # checks fail, and pip on PATH would otherwise shadow the apt copy
+          # unpredictably. Both build steps below use this one.
+          python3 -m venv /opt/meson-venv
+          /opt/meson-venv/bin/pip install --quiet "meson>=1.3,<2"
+          echo "/opt/meson-venv/bin" >> "$GITHUB_PATH"
+          /opt/meson-venv/bin/meson --version
           git clone --depth 1 --branch "${GLIB_VERSION}" https://gitlab.gnome.org/GNOME/glib.git glib-src
           # A meson cross file needs a real file; it is written with printf rather than a
           # here-document because a column-0 "EOF" ends the YAML literal block for
           # `run:`, which invalidates the whole workflow.
+          #
+          # pkgconfig points at the NDK sysroot so the cross build never resolves a host
+          # .pc file, and needs_exe_wrapper tells meson not to try running target logic.
           printf '%s\n' \
             '[binaries]' \
-            "cc = '$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang'" \
             "c = '$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang'" \
-            'ar = "AR"' \
+            "ar = '$TOOLCHAIN/bin/llvm-ar'" \
+            "strip = '$TOOLCHAIN/bin/llvm-strip'" \
+            "pkgconfig = 'pkg-config'" \
+            '[properties]' \
+            'needs_exe_wrapper = true' \
             '[host_machine]' \
             "system = 'linux'" \
             "kernel = 'linux'" \
             "cpu_family = 'aarch64'" \
             "cpu = 'aarch64'" \
             "endian = 'little'" > glib-android.ini
-          sed -i "s|AR|$TOOLCHAIN/bin/llvm-ar|" glib-android.ini
+          export PKG_CONFIG_LIBDIR="$TOOLCHAIN/sysroot/usr/lib/pkgconfig:$TOOLCHAIN/sysroot/usr/share/pkgconfig"
           cat glib-android.ini
           meson setup glib-build glib-src \
             --cross-file glib-android.ini \
             -Dprefix=/opt/glib-android \
             -Ddefault_library=static \
-            -Dtests=false -Ddtrace=false -Dman-pages=disabled
+            -Dtests=false -Ddtrace=false -Dman-pages=disabled \
+            -Dlibmount=disabled -Dselinux=disabled \
+            -Dglib_debug=disabled -Dbuildtype=release
           meson compile -C glib-build
           meson install -C glib-build
           ls /opt/glib-android/lib/pkgconfig/
@@ -221,14 +235,23 @@ jobs:
           curl -fsSL "https://www.samba.org/ftp/talloc/talloc-${TALLOC_VERSION}.tar.gz" -o talloc.tgz
           tar xzf talloc.tgz
           cd "talloc-${TALLOC_VERSION}"
+          # --enable-talloc-compat1 is a boolean waf switch and takes no value:
+          # passing "=no" aborts configure with
+          #   waf: error: --enable-talloc-compat1 option does not take a value
+          # It is simply omitted; the compat1 shim is not needed.
           ./configure \
             --host=aarch64-linux-android \
             --prefix=/opt/talloc-android \
             --disable-python \
-            --enable-talloc-compat1=no \
+            --cross-compile \
+            --cross-answers=talloc-cross-answers.txt \
             CC="$CC" \
-            CFLAGS="" \
-            LDFLAGS="-static -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}"
+            CFLAGS="-fPIC" \
+            LDFLAGS="-static -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}" || { \
+              echo "::warning::waf configure needs interactivity for a cross build"; \
+              cat talloc-cross-answers.txt 2>/dev/null || true; \
+              exit 1; \
+            }
           make -j"$(nproc)"
           make install
           ls /opt/talloc-android/include /opt/talloc-android/lib

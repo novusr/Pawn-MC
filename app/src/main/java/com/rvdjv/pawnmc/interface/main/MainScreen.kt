@@ -345,6 +345,7 @@ fun MainScreen(
                 CompilerConfig.AppLanguage.ID -> Locales.Lang.ID
                 CompilerConfig.AppLanguage.ES -> Locales.Lang.ES
                 CompilerConfig.AppLanguage.RU -> Locales.Lang.RU
+                CompilerConfig.AppLanguage.TL -> Locales.Lang.TL
                 else -> Locales.Lang.EN
             }
         )

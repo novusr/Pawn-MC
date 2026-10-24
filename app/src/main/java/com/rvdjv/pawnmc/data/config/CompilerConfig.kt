@@ -372,6 +372,7 @@ class CompilerConfig private constructor(context: Context) {
             "id", "in" -> AppLanguage.ID
             "es" -> AppLanguage.ES
             "ru" -> AppLanguage.RU
+            "tl", "fil" -> AppLanguage.TL
             else -> AppLanguage.EN
         }
         prefs.edit(commit = true) {
@@ -537,13 +538,15 @@ class CompilerConfig private constructor(context: Context) {
         ID("id", "Indonesia", "Bahasa Indonesia"),
         EN("en", "English (EN/US)", "English language"),
         ES("es", "Espanol (AR)", "Espanol rioplatense (Argentina)"),
-        RU("ru", "Russkiy (RU)", "Russkiy yazyk");
+        RU("ru", "Russkiy (RU)", "Russkiy yazyk"),
+        TL("tl", "Tagalog (PH)", "Wikang Tagalog / Filipino");
 
         /** BCP-47 tag used when the Android context has to be localised. */
         fun localeTag(): String = when (this) {
             ID -> "id"
             ES -> "es-AR"
             RU -> "ru"
+            TL -> "fil"
             EN -> "en"
         }
 
@@ -552,6 +555,12 @@ class CompilerConfig private constructor(context: Context) {
                 value.equals("in", ignoreCase = true) -> ID
                 value.equals("es-ar", ignoreCase = true) || value.equals("es_ar", ignoreCase = true) -> ES
                 value.equals("ru-ru", ignoreCase = true) || value.equals("ru_ru", ignoreCase = true) -> RU
+                // Filipino is the national standard; Tagalog is the everyday name. Both
+                // spellings map to one entry so a config written by either resolves.
+                value.equals("fil", ignoreCase = true) ||
+                    value.equals("fil-ph", ignoreCase = true) ||
+                    value.equals("fil_ph", ignoreCase = true) ||
+                    value.equals("tagalog", ignoreCase = true) -> TL
                 else -> entries.find { it.value.equals(value, ignoreCase = true) } ?: ID
             }
         }

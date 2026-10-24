@@ -506,6 +506,7 @@ fun EditorScreen(
                 CompilerConfig.AppLanguage.ID -> "Informasi"
                 CompilerConfig.AppLanguage.ES -> "Informacion"
                 CompilerConfig.AppLanguage.RU -> "???????????"
+                CompilerConfig.AppLanguage.TL -> "Abiso"
                 CompilerConfig.AppLanguage.EN -> "Notice"
             }) },
             text = { Text(message) },
@@ -515,6 +516,7 @@ fun EditorScreen(
                         CompilerConfig.AppLanguage.ID -> "Tutup"
                         CompilerConfig.AppLanguage.ES -> "Cerrar"
                         CompilerConfig.AppLanguage.RU -> "???????"
+                        CompilerConfig.AppLanguage.TL -> "Isara"
                         CompilerConfig.AppLanguage.EN -> "Dismiss"
                     })
                 }
