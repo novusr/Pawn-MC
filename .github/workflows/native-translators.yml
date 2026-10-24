@@ -89,7 +89,16 @@ jobs:
           /opt/meson-venv/bin/pip install --quiet "meson>=1.3,<2"
           echo "/opt/meson-venv/bin" >> "$GITHUB_PATH"
           /opt/meson-venv/bin/meson --version
-          git clone --depth 1 --branch "${GLIB_VERSION}" https://gitlab.gnome.org/GNOME/glib.git glib-src
+          # Annotated tags make `--branch` emit "refs/tags/X is not a commit" and check
+          # out the peeled commit, which is fine but noisy. `git clone --branch` also
+          # cannot reach an annotated tag on a shallow mirror in some git versions, so
+          # the tag is fetched explicitly and checked out by name.
+          git init -q glib-src
+          cd glib-src
+          git remote add origin https://gitlab.gnome.org/GNOME/glib.git
+          git fetch -q --depth 1 origin "refs/tags/${GLIB_VERSION}:refs/tags/${GLIB_VERSION}"
+          git checkout -q "refs/tags/${GLIB_VERSION}"
+          cd ..
           # A meson cross file needs a real file; it is written with printf rather than a
           # here-document because a column-0 "EOF" ends the YAML literal block for
           # `run:`, which invalidates the whole workflow.
@@ -235,23 +244,37 @@ jobs:
           curl -fsSL "https://www.samba.org/ftp/talloc/talloc-${TALLOC_VERSION}.tar.gz" -o talloc.tgz
           tar xzf talloc.tgz
           cd "talloc-${TALLOC_VERSION}"
-          # --enable-talloc-compat1 is a boolean waf switch and takes no value:
-          # passing "=no" aborts configure with
-          #   waf: error: --enable-talloc-compat1 option does not take a value
-          # It is simply omitted; the compat1 shim is not needed.
+          # Samba refuses to configure without 64-bit off_t:
+          #   Samba requires large file support, but not available on this platform:
+          #   sizeof(off_t) < 8
+          # Bionic leaves off_t at 32 bits unless asked otherwise, and the target has no
+          # getconf, so waf cannot detect LFS on its own. _FILE_OFFSET_BITS=64 is the
+          # documented switch and bionic honours it for the file APIs talloc uses.
+          #
+          # The run of UNKNOWN answers (uname, rpath, getconf) is a separate symptom:
+          # waf tried to execute the target binary. --cross-answers supplies those
+          # values instead of probing.
+          printf '%s\n' \
+            'Checking uname sysname type: linux' \
+            'Checking uname machine type: aarch64' \
+            'Checking uname release type: 6.1.0' \
+            'Checking uname version type: 1' \
+            'Checking getconf LFS_CFLAGS: ' \
+            'Checking for large file support without additional flags: OK' \
+            'Checking for -D_FILE_OFFSET_BITS=64: OK' \
+            'Checking for -D_LARGE_FILES: NO' \
+            > ../talloc-cross-answers.txt
+          export CFLAGS="-fPIC -D_FILE_OFFSET_BITS=64"
+          export LDFLAGS="-static -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}"
+          # --enable-talloc-compat1 is a boolean waf switch and takes no value; passing
+          # "=no" aborts with "option does not take a value". Omitting it is correct.
           ./configure \
             --host=aarch64-linux-android \
             --prefix=/opt/talloc-android \
             --disable-python \
             --cross-compile \
-            --cross-answers=talloc-cross-answers.txt \
-            CC="$CC" \
-            CFLAGS="-fPIC" \
-            LDFLAGS="-static -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}" || { \
-              echo "::warning::waf configure needs interactivity for a cross build"; \
-              cat talloc-cross-answers.txt 2>/dev/null || true; \
-              exit 1; \
-            }
+            --cross-answers=../talloc-cross-answers.txt \
+            CC="$CC"
           make -j"$(nproc)"
           make install
           ls /opt/talloc-android/include /opt/talloc-android/lib
@@ -270,7 +293,7 @@ jobs:
             LD="$TOOLCHAIN/bin/ld.lld" \
             STRIP="$TOOLCHAIN/bin/llvm-strip" \
             PREFIX=/ \
-            CFLAGS="-I/opt/talloc-android/include" \
+            CFLAGS="-I/opt/talloc-android/include -D_FILE_OFFSET_BITS=64" \
             LDFLAGS="-static -s -L/opt/talloc-android/lib -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}" \
             PROOT_NO_SECCOMP=1
 
