@@ -50,7 +50,7 @@ import androidx.core.content.ContextCompat
 import com.pocketsamp.server.config.DirectoryManager
 import com.pocketsamp.server.db.DatabaseManager
 import com.pocketsamp.server.engine.Downloader
-import com.pocketsamp.server.service.Service
+import com.pocketsamp.server.service.RuntimeService
 import com.pocketsamp.server.service.Status
 import com.pocketsamp.server.ui.screens.ConfigScreen
 import com.pocketsamp.server.ui.screens.ConsoleScreen
@@ -171,7 +171,10 @@ class MainActivity : ComponentActivity() {
                 // permission the screen shows the grant prompt only, with no way past
                 // it, and the archives start downloading in the background the moment
                 // the permission is granted.
-                if (hasAllFilesAccess) {
+                // `by` is required here: a plain read of the MutableState reference
+                // yields the state object, not the Boolean, and Compose would not
+                // recompose when the permission is granted.
+                if (hasAllFilesAccess.value) {
                     MainAppLayout()
                 } else {
                     StorageGate(

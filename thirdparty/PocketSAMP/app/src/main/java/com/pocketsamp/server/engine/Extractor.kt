@@ -131,7 +131,7 @@ class Extractor(private val context: Context) {
         val stored = Downloader.archiveFile(context, baseName)
         if (stored.isFile && stored.length() > 0) {
             Log.i(TAG, "Unpacking ${stored.absolutePath} into ${outputDir.absolutePath}")
-            FileInputStream(stored).use { TarUnpacker.extract(it, outputDir) }
+            FileInputStream(stored).use { Unpacker.extract(it, outputDir) }
             return
         }
 

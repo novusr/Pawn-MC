@@ -254,6 +254,9 @@ jobs:
           # The run of UNKNOWN answers (uname, rpath, getconf) is a separate symptom:
           # waf tried to execute the target binary. --cross-answers supplies those
           # values instead of probing.
+          # waf aborts on the first probe it cannot answer, so every check the log
+          # reported as "not found" needs an explicit answer. They are answered from what
+          # bionic actually provides instead of being left to a guessed default.
           printf '%s\n' \
             'Checking uname sysname type: linux' \
             'Checking uname machine type: aarch64' \
@@ -263,6 +266,15 @@ jobs:
             'Checking for large file support without additional flags: OK' \
             'Checking for -D_FILE_OFFSET_BITS=64: OK' \
             'Checking for -D_LARGE_FILES: NO' \
+            'Checking for rpath library support: NO' \
+            'Checking for -Wl,--version-script support: NO' \
+            'Checking for working strptime: NO' \
+            'Checking C prototype for gettimeofday: OK' \
+            'Checking for C99 vsnprintf: OK' \
+            'Checking for HAVE_SHARED_MMAP: OK' \
+            'Checking for HAVE_MREMAP: NO' \
+            'Checking for HAVE_INCOHERENT_MMAP: NO' \
+            'Checking for HAVE_SECURE_MKSTEMP: NO' \
             > ../talloc-cross-answers.txt
           export CFLAGS="-fPIC -D_FILE_OFFSET_BITS=64"
           export LDFLAGS="-static -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}"
@@ -274,7 +286,11 @@ jobs:
             --disable-python \
             --cross-compile \
             --cross-answers=../talloc-cross-answers.txt \
-            CC="$CC"
+            CC="$CC" || { \
+              echo '::error::talloc configure failed; last 120 lines of config.log:'
+              tail -n 120 bin/config.log 2>/dev/null || true
+              exit 1
+            }
           make -j"$(nproc)"
           make install
           ls /opt/talloc-android/include /opt/talloc-android/lib

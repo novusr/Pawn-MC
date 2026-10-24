@@ -98,7 +98,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
-import com.pocketsamp.server.PocketSamp
+import com.pocketsamp.server.SampApp
 import com.pocketsamp.server.Locales
 import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserDialog
