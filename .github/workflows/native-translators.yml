@@ -68,6 +68,44 @@ jobs:
           TOOLCHAIN="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64"
           echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
           "$TOOLCHAIN/bin/clang" --version
+      - name: Build glib for arm64
+        run: |
+          set -euo pipefail
+          # QEMU's configure compares its idea of sizeof(size_t) with the value glib
+          # reports. Host glib says 8 (x86_64) and an Android build says 4 for a 32-bit
+          # target or 8 for arm64, and pkg-config picked the host .pc files:
+          #   ERROR: sizeof(size_t) doesn't match GLIB_SIZEOF_SIZE_T.
+          # The fix is a glib built for the same target, then pointing
+          # PKG_CONFIG_LIBDIR at its .pc files instead of the host's.
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            meson ninja-build pkg-config python3-pip libffi-dev
+          pip3 install --break-system-packages meson
+          git clone --depth 1 --branch 2.80.0 https://gitlab.gnome.org/GNOME/glib.git glib-src
+          # A meson cross file needs a real file; it is written with printf rather than a
+          # here-document because a column-0 "EOF" ends the YAML literal block for
+          # `run:`, which invalidates the whole workflow.
+          printf '%s\n' \
+            '[binaries]' \
+            "cc = '$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang'" \
+            "c = '$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang'" \
+            'ar = "AR"' \
+            '[host_machine]' \
+            "system = 'linux'" \
+            "kernel = 'linux'" \
+            "cpu_family = 'aarch64'" \
+            "cpu = 'aarch64'" \
+            "endian = 'little'" > glib-android.ini
+          sed -i "s|AR|$TOOLCHAIN/bin/llvm-ar|" glib-android.ini
+          cat glib-android.ini
+          meson setup glib-build glib-src \
+            --cross-file glib-android.ini \
+            -Dprefix=/opt/glib-android \
+            -Ddefault_library=static \
+            -Dtests=false -Ddtrace=false -Dman-pages=disabled
+          meson compile -C glib-build
+          meson install -C glib-build
+          ls /opt/glib-android/lib/pkgconfig/
 
       - name: Configure QEMU for aarch64 Linux user-mode
         run: |
@@ -82,6 +120,10 @@ jobs:
           # --static is the only usable mode: Android executes these from lib/<abi>/,
           # and a command-line program has no Java-side loadLibrary to resolve deps.
           cd qemu
+          # PKG_CONFIG_LIBDIR (not PKG_CONFIG_PATH) replaces the search list instead of
+          # appending to it, which is what the error message asks for: without it the
+          # host .pc files are still found first and the size_t check keeps failing.
+          export PKG_CONFIG_LIBDIR=/opt/glib-android/lib/pkgconfig
           ./configure \
             --target-list=i386-linux-user \
             --static \
@@ -90,8 +132,10 @@ jobs:
             --disable-tools \
             --disable-guest-agent \
             --disable-werror \
+            --disable-pixman \
             --cc="$CC" --host-cc="$CC" --cxx="$CXX" \
-            --extra-cflags="-D__ANDROID_API__=${API_LEVEL}"
+            --extra-cflags="-I/opt/glib-android/include/glib-2.0 -I/opt/glib-android/lib/glib-2.0/include" \
+            --extra-ldflags="-L/opt/glib-android/lib"
 
       - name: Build
         run: |
@@ -160,22 +204,46 @@ jobs:
           TOOLCHAIN="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64"
           echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
 
+      - name: Build talloc for arm64
+        run: |
+          set -euo pipefail
+          export CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang"
+          # libtalloc-dev from apt supplies x86_64 headers and a host .pc file. PRoot
+          # compiles with the NDK against the Android sysroot, so talloc.h was not found
+          # and the host archive could not be linked into a static aarch64 binary.
+          # talloc is a standalone Samba component with an autotools build; cross-build
+          # it once and install into a private prefix.
+          git clone --depth 1 --branch talloc-2.4.2 https://gitlab.com/samba-team/samba.git samba-src
+          cd samba-src/lib/talloc
+          ./autogen.sh
+          ./configure \
+            --host=aarch64-linux-android \
+            --prefix=/opt/talloc-android \
+            --disable-python \
+            --enable-talloc-compat1=no \
+            CC="$CC" \
+            CFLAGS="" \
+            LDFLAGS="-static -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}"
+          make -j"$(nproc)"
+          make install
+          ls /opt/talloc-android/include /opt/talloc-android/lib
       - name: Build
         run: |
           set -euo pipefail
           export CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang"
-          # talloc is resolved by pkg-config inside GNUmakefile. The host package only
-          # supplies the .pc file; the Android build links statically, so talloc itself
-          # is compiled from source below rather than borrowed from the host.
           echo "CC=$CC" >> "$GITHUB_ENV"
+          # Point the compiler and pkg-config at the cross-built talloc, not the host
+          # package: a host header would compile but link the wrong object format.
+          export PKG_CONFIG_PATH=/opt/talloc-android/lib/pkgconfig
+          export PKG_CONFIG_LIBDIR=/opt/talloc-android/lib/pkgconfig
           cd proot/src
           make -j"$(nproc)" \
             CC="$CC" \
             LD="$TOOLCHAIN/bin/ld.lld" \
             STRIP="$TOOLCHAIN/bin/llvm-strip" \
             PREFIX=/ \
-            CFLAGS="-I$TOOLCHAIN/sysroot/usr/include -D__ANDROID_API__=${API_LEVEL}" \
-            LDFLAGS="-static -s -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}" \
+            CFLAGS="-I/opt/talloc-android/include" \
+            LDFLAGS="-static -s -L/opt/talloc-android/lib -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}" \
             PROOT_NO_SECCOMP=1
 
       - name: Stage as an Android shared object
