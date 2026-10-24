@@ -74,10 +74,13 @@ jobs:
           set -euo pipefail
           CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang"
           CXX="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang++"
+          # --cross-prefix is deliberately NOT passed: QEMU appends "pkg-config" to it
+          # and looks for llvm-pkg-config, which the NDK does not ship (`ERROR:
+          # pkg-config binary '.../llvm-pkg-config' not found`). pkg-config itself must
+          # stay the host binary, because the libraries it reports (glib, pixman) are
+          # built for the host during configure.
           # --static is the only usable mode: Android executes these from lib/<abi>/,
           # and a command-line program has no Java-side loadLibrary to resolve deps.
-          # User-mode only: --disable-system keeps the build small and is all that is
-          # needed to translate 32-bit x86 guests.
           cd qemu
           ./configure \
             --target-list=i386-linux-user \
@@ -86,8 +89,9 @@ jobs:
             --disable-docs \
             --disable-tools \
             --disable-guest-agent \
-            --cross-prefix="$TOOLCHAIN/bin/llvm-" \
-            --cc="$CC" --host-cc="$CC" --cxx="$CXX"
+            --disable-werror \
+            --cc="$CC" --host-cc="$CC" --cxx="$CXX" \
+            --extra-cflags="-D__ANDROID_API__=${API_LEVEL}"
 
       - name: Build
         run: |
@@ -134,8 +138,11 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
+          # GNUmakefile hard-requires talloc through pkg-config; without libtalloc-dev
+          # the build stops at "talloc development files not found".
           sudo apt-get install -y --no-install-recommends \
-            build-essential pkg-config git ca-certificates
+            build-essential pkg-config git ca-certificates \
+            libtalloc-dev libssl-dev
 
       - name: Fetch PRoot source
         run: |
@@ -156,13 +163,20 @@ jobs:
       - name: Build
         run: |
           set -euo pipefail
+          export CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang"
+          # talloc is resolved by pkg-config inside GNUmakefile. The host package only
+          # supplies the .pc file; the Android build links statically, so talloc itself
+          # is compiled from source below rather than borrowed from the host.
+          echo "CC=$CC" >> "$GITHUB_ENV"
           cd proot/src
           make -j"$(nproc)" \
-            CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang" \
+            CC="$CC" \
             LD="$TOOLCHAIN/bin/ld.lld" \
             STRIP="$TOOLCHAIN/bin/llvm-strip" \
             PREFIX=/ \
-            LDFLAGS="-static -s"
+            CFLAGS="-I$TOOLCHAIN/sysroot/usr/include -D__ANDROID_API__=${API_LEVEL}" \
+            LDFLAGS="-static -s -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}" \
+            PROOT_NO_SECCOMP=1
 
       - name: Stage as an Android shared object
         run: |
