@@ -98,7 +98,31 @@ internal object Launcher {
                 if (dir.isDirectory) {
                     candidates.add(File(dir, "libqemu-i386.so"))
                     candidates.add(File(dir, "qemu-i386"))
+                    candidates.add(File(dir, "libproot.so"))
                 }
+            }
+        }
+        // proot is not a translator; return it only through [findProot].
+        return candidates.firstOrNull { isExecutableFile(it) && !it.name.startsWith("libproot") }
+    }
+
+    /**
+     * Locates the PRoot launcher, if one is packaged.
+     *
+     * The SA-MP guest resolves `/dev`, `/proc` and the server folder through PRoot when
+     * it is available; QEMU alone works for a self-contained rootfs, so this is
+     * optional and returning null is not an error.
+     */
+    fun findProot(context: Context): File? {
+        val nativeLibDir = context.applicationInfo.nativeLibraryDir
+        val candidates = mutableListOf(
+            File(nativeLibDir, "libproot.so"),
+            File(nativeLibDir, "proot"),
+            File(context.filesDir, "bin/proot")
+        )
+        runCatching {
+            File(nativeLibDir).parentFile?.listFiles()?.forEach { dir ->
+                if (dir.isDirectory) candidates.add(File(dir, "libproot.so"))
             }
         }
         return candidates.firstOrNull { isExecutableFile(it) }

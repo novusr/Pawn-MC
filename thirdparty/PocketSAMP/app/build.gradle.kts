@@ -36,6 +36,16 @@ android {
         noCompress += listOf("tar", "gz")
     }
 
+    sourceSets {
+        getByName("main") {
+            // The translator and PRoot are ordinary executables renamed to lib*.so so
+            // Android extracts them to nativeLibraryDir. Keeping them under
+            // jniLibs/arm64-v8a is what makes that directory exist: PackageManager
+            // only creates lib/<abi>/ for an ABI the APK declares.
+            jniLibs.srcDirs("src/main/jniLibs")
+        }
+    }
+
     packaging {
         jniLibs {
             useLegacyPackaging = true

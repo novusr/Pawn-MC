@@ -1,0 +1,180 @@
+name: Native Translators
+
+# Builds the two arm64 shared objects PocketSAMP cannot run without and publishes
+# them as artifacts, so they can be committed to
+# thirdparty/PocketSAMP/app/src/main/jniLibs/arm64-v8a/.
+#
+#   libqemu-i386.so  QEMU user-mode translator. Both guests are 32-bit x86:
+#                    samp03svr (closed source) and mariadbd (Debian i386 build).
+#                    Without it neither process starts.
+#   libproot.so      PRoot. Optional: it provides /dev, /proc and the gamemode
+#                    bind mount to the guest. QEMU works without it, so a failed
+#                    PRoot build does not fail the job.
+#
+# Both are ordinary Linux command-line programs. Android only executes shared
+# objects from the APK's lib/<abi>/ directory, hence the "lib*.so" names.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '.github/workflows/native-translators.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NDK_VERSION: '29.0.14206865'
+  API_LEVEL: '26'
+  QEMU_VERSION: '7.2.0'
+  QEMU_SHA256: ''
+  PRoot_COMMIT: 'master'
+
+jobs:
+  qemu:
+    name: libqemu-i386.so (arm64)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install build dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential ninja-build pkg-config python3 python3-venv \
+            flex bison libglib2.0-dev git
+
+      - name: Fetch QEMU source
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "v${QEMU_VERSION}" https://gitlab.com/qemu-project/qemu.git qemu
+          if [ -n "${QEMU_SHA256}" ]; then
+            echo "Pinning to a commit is done with --branch above; SHA256 is unused."
+          fi
+
+      - name: Install the Android NDK
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          # The hosted runner image ships cmdline-tools; install the NDK if missing.
+          if [ ! -d "$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}" ]; then
+            yes | "$SDKMANAGER" --licenses >/dev/null || true
+            "$SDKMANAGER" --install "ndk;${NDK_VERSION}"
+          fi
+          TOOLCHAIN="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64"
+          echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
+          "$TOOLCHAIN/bin/clang" --version
+
+      - name: Configure QEMU for aarch64 Linux user-mode
+        run: |
+          set -euo pipefail
+          CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang"
+          CXX="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang++"
+          # --static is the only usable mode: Android executes these from lib/<abi>/,
+          # and a command-line program has no Java-side loadLibrary to resolve deps.
+          # User-mode only: --disable-system keeps the build small and is all that is
+          # needed to translate 32-bit x86 guests.
+          cd qemu
+          ./configure \
+            --target-list=i386-linux-user \
+            --static \
+            --disable-system \
+            --disable-docs \
+            --disable-tools \
+            --disable-guest-agent \
+            --cross-prefix="$TOOLCHAIN/bin/llvm-" \
+            --cc="$CC" --host-cc="$CC" --cxx="$CXX"
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          make -j"$(nproc)"
+
+      - name: Stage as an Android shared object
+        run: |
+          set -euo pipefail
+          mkdir -p out/arm64-v8a
+          BIN=$(find . -type f -name 'qemu-i386' -perm -u+x | head -n1)
+          if [ -z "$BIN" ]; then
+            echo "::error::qemu-i386 was not produced by the build."
+            exit 1
+          fi
+          cp "$BIN" out/arm64-v8a/libqemu-i386.so
+          chmod 755 out/arm64-v8a/libqemu-i386.so
+          "$TOOLCHAIN/bin/llvm-readelf" -h out/arm64-v8a/libqemu-i386.so | head -20
+          # An aarch64 static ELF is required; a dynamically linked host build is
+          # unusable on Android.
+          if "$TOOLCHAIN/bin/llvm-readelf" -l out/arm64-v8a/libqemu-i386.so | grep -q INTERP; then
+            echo "::error::qemu-i386 is dynamically linked; rebuild with --static."
+            exit 1
+          fi
+          echo "static: ok"
+          ls -lh out/arm64-v8a/
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: libqemu-i386-arm64
+          path: out/arm64-v8a/libqemu-i386.so
+          retention-days: 30
+
+  proot:
+    name: libproot.so (arm64)
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Install build dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config git ca-certificates
+
+      - name: Fetch PRoot source
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch "$PRoot_COMMIT" https://github.com/proot-me/proot.git proot
+
+      - name: Install the Android NDK
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -d "$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}" ]; then
+            yes | "$SDKMANAGER" --licenses >/dev/null || true
+            "$SDKMANAGER" --install "ndk;${NDK_VERSION}"
+          fi
+          TOOLCHAIN="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64"
+          echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          set -euo pipefail
+          cd proot/src
+          make -j"$(nproc)" \
+            CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang" \
+            LD="$TOOLCHAIN/bin/ld.lld" \
+            STRIP="$TOOLCHAIN/bin/llvm-strip" \
+            PREFIX=/ \
+            LDFLAGS="-static -s"
+
+      - name: Stage as an Android shared object
+        run: |
+          set -euo pipefail
+          mkdir -p out/arm64-v8a
+          cp proot/src/proot out/arm64-v8a/libproot.so
+          chmod 755 out/arm64-v8a/libproot.so
+          ls -lh out/arm64-v8a/
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: libproot-arm64
+          path: out/arm64-v8a/libproot.so
+          retention-days: 30

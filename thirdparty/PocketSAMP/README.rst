@@ -104,6 +104,32 @@ Local build: open the PawnMC project in Android Studio, sync Gradle and build th
 ``app`` module. Continuous integration builds the debug APK in
 ``.github/workflows/ci.yml``.
 
+Native translators
+~~~~~~~~~~~~~~~~~~
+
+Two arm64 shared objects must be present in
+``thirdparty/PocketSAMP/app/src/main/jniLibs/arm64-v8a/`` before the runtime can start
+a guest. They are not in the repository; the ``Native Translators`` workflow builds
+them and publishes each as an artifact.
+
+``libqemu-i386.so``
+    Required. User-mode translator for 32-bit x86 guests. Both ``samp03svr`` and
+    ``mariadbd`` are i386, so without this file neither process starts.
+
+``libproot.so``
+    Optional. Provides ``/dev``, ``/proc`` and the gamemode bind mount to the guest.
+    The runtime works without it, so a failed PRoot build does not block a release.
+
+Both are command-line programs renamed to ``lib*.so``: Android only executes files
+from the APK's ``lib/<abi>/`` directory, and ``nativeLibraryDir`` is where the engines
+look. They must be statically linked; a dynamically linked build fails at startup with
+``error while loading shared libraries``.
+
+Trigger the workflow, download ``libqemu-i386-arm64`` and ``libproot-arm64``, and copy
+the two files into ``jniLibs/arm64-v8a/``. Verify with
+``llvm-readelf -h libqemu-i386.so`` that the machine is ``AArch64`` and
+``llvm-readelf -l`` shows no ``INTERP`` segment.
+
 Source layout
 -------------
 
