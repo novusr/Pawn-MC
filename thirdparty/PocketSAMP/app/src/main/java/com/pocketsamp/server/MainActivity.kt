@@ -309,7 +309,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun startServerService() {        if (!com.pocketsamp.server.config.DirectoryManager.hasStoragePermission(this)) {
+    private fun startServerService() {
+        if (!DirectoryManager.hasStoragePermission(this)) {
             android.widget.Toast.makeText(
                 this,
                 Locales.text(
@@ -319,7 +320,7 @@ class MainActivity : ComponentActivity() {
                 android.widget.Toast.LENGTH_LONG
             ).show()
             try {
-                startActivity(com.pocketsamp.server.config.DirectoryManager.getManageStorageIntent(this))
+                startActivity(DirectoryManager.getManageStorageIntent(this))
             } catch (ignored: Exception) {
             }
             return

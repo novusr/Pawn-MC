@@ -2,6 +2,7 @@ package com.pocketsamp.server.engine
 
 import android.content.Context
 import android.util.Log
+import com.pocketsamp.server.config.DirectoryManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -42,7 +43,7 @@ class Samp(private val context: Context) {
 
         val qemuBinary = findQemuBinary(context)
         val rootfsDir = File(filesDir, "rootfs_i386")
-        val sampDir = com.pocketsamp.server.config.DirectoryManager.getServerDirectory(context)
+        val sampDir = DirectoryManager.getServerDirectory(context)
         val serverBinary = File(filesDir, "bin/samp03svr").takeIf { it.exists() }
             ?: File(filesDir, "samp_server/samp03svr").takeIf { it.exists() }
             ?: File(sampDir, "samp03svr")

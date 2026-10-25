@@ -87,8 +87,12 @@ jobs:
           # unpredictably. Both build steps below use this one.
           python3 -m venv /opt/meson-venv
           /opt/meson-venv/bin/pip install --quiet "meson>=1.3,<2"
+          # $GITHUB_PATH only affects *subsequent* steps, so the venv is also exported
+          # for this one. Without the second line the run failed here with
+          #   meson: command not found
           echo "/opt/meson-venv/bin" >> "$GITHUB_PATH"
-          /opt/meson-venv/bin/meson --version
+          export PATH="/opt/meson-venv/bin:$PATH"
+          meson --version
           # Annotated tags make `--branch` emit "refs/tags/X is not a commit" and check
           # out the peeled commit, which is fine but noisy. `git clone --branch` also
           # cannot reach an annotated tag on a shallow mirror in some git versions, so

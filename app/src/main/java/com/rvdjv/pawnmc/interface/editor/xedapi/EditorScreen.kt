@@ -47,6 +47,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Redo
 import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ChevronRight
@@ -249,6 +250,9 @@ fun EditorScreen(
     var isExplorerVisible by remember { mutableStateOf(false) }
     var explorerOffset by remember { mutableStateOf(IntOffset.Zero) }
     var isPawnTerminalVisible by remember { mutableStateOf(false) }
+    // True while the download-all action is running, so the button shows its active
+    // state and a second tap cannot start a parallel transfer.
+    var isBulkDownloadRunning by remember { mutableStateOf(false) }
     // Landscape toggle: `true` forces landscape, `false` releases the lock back to
     // whatever orientation the activity reports by default (portrait).
     var isLandscapeForced by remember { mutableStateOf(false) }
@@ -1506,6 +1510,35 @@ fun EditorScreen(
                         }
                     },
                     modifier = Modifier.align(Alignment.TopStart)
+                )
+
+                // Download-all action, stacked under the compile button with the same
+                // floating affordance as the rest of the editor controls. It is
+                // reachable from any file, matching the "download everything" intent.
+                FloatingRoundAction(
+                    size = PANEL_BUTTON_SIZE,
+                    icon = Icons.Filled.ArrowDownward,
+                    contentDescription = "Download all files",
+                    testTag = "editor_download_all",
+                    isActive = isBulkDownloadRunning,
+                    // Sits directly above the compile button, so it reserves the
+                    // compile diameter plus one gap; anything less overlaps it.
+                    reservedBelow = COMPILE_BUTTON_SIZE + FLOAT_GAP,
+                    bubbleIndex = 5,
+                    onClick = {
+                        if (isBulkDownloadRunning) return@FloatingRoundAction
+                        BulkDownload.activeWorkspaceRoot =
+                            workspace.activeWorkspace?.root?.absolutePath
+                                ?: workspace.activeWorkspace?.let { activeDocument?.file?.parentFile?.absolutePath }
+                        scope.launch {
+                            isBulkDownloadRunning = true
+                            val result = withContext(Dispatchers.IO) {
+                                BulkDownload.downloadAll(context)
+                            }
+                            isBulkDownloadRunning = false
+                            Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
+                        }
+                    }
                 )
 
                 if (isPawnTerminalVisible) {

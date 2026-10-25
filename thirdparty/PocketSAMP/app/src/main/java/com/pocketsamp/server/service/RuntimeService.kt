@@ -93,7 +93,7 @@ class RuntimeService : Service() {
     private lateinit var mariaDbEngine: MariaDb
 
     inner class LocalBinder : Binder() {
-        fun getService(): Service = this@Service
+        fun getService(): Service = this@RuntimeService
     }
 
     private val binder = LocalBinder()
@@ -293,7 +293,7 @@ class RuntimeService : Service() {
                     val sw = StringWriter()
                     e.printStackTrace(PrintWriter(sw))
                     Manager.saveCrash(
-                        this@Service,
+                        this@RuntimeService,
                         Report(
                             id = UUID.randomUUID().toString().substring(0, 8),
                             timestamp = timestamp,
@@ -301,7 +301,7 @@ class RuntimeService : Service() {
                             exceptionClass = e.javaClass.name,
                             message = e.message,
                             threadName = Thread.currentThread().name,
-                            deviceInfo = Handler.getDeviceInfo(this@Service),
+                            deviceInfo = Handler.getDeviceInfo(this@RuntimeService),
                             stackTrace = sw.toString()
                         )
                     )
