@@ -260,10 +260,13 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                // Floating tab rail, like the floating toolbar in the Xed editor:
-                // a rounded card pinned to the trailing edge above the bottom
-                // margin instead of a full-width bar eating the bottom of the
-                // screen. Labels appear only on the active tab.
+                // Floating tab rail: a compact column of square buttons on the trailing
+                // edge. Icons only, deliberately.
+                //
+                // Showing the active label made the rail grow sideways whenever a tab
+                // with a long name was selected, so the whole stack shifted and the
+                // boxes stopped matching. Every entry is now a fixed 36 dp square, so
+                // the rail never changes width and the buttons read as one grid.
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -272,36 +275,27 @@ class MainActivity : ComponentActivity() {
                         .background(SampThemeColors.surface)
                         .border(1.dp, SampThemeColors.card, RoundedCornerShape(14.dp))
                         .padding(vertical = 4.dp, horizontal = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     // Hidden while phpMyAdmin is open so the browser is truly
                     // full-screen and the rail cannot overlap its pages.
                     if (!isPhpMyAdminVisible) AppTab.values().forEach { tab ->
                         val selected = tab == currentTab
-                        Row(
+                        Box(
                             modifier = Modifier
+                                .size(36.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(if (selected) SampThemeColors.card else Color.Transparent)
-                                .clickable { currentTab = tab }
-                                .padding(horizontal = if (selected) 10.dp else 8.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                .clickable { currentTab = tab },
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = tab.icon,
                                 contentDescription = t("tab.${tab.name.lowercase()}"),
                                 tint = if (selected) SampThemeColors.accent else SampThemeColors.textMuted,
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(20.dp)
                             )
-                            if (selected) {
-                                Text(
-                                    text = t("tab.${tab.name.lowercase()}"),
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = SampThemeColors.accent
-                                )
-                            }
                         }
                     }
                 }

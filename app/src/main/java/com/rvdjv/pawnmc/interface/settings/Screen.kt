@@ -50,6 +50,7 @@ import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Slider
@@ -362,6 +363,9 @@ fun SettingsScreen(
     // scaffold
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        // Bottom-start, matching the main interface: keeps the affordance clear of the
+        // trailing edge where the floating tool stacks live.
+        floatingActionButtonPosition = FabPosition.Start,
         floatingActionButton = {
             // Same cursor the main interface has: one tap at the top of a settings list
             // several pages long carries the reader to the bottom, and once the bottom

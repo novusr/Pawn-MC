@@ -137,7 +137,17 @@ jobs:
             -Ddefault_library=static \
             -Dtests=false -Ddtrace=false -Dman-pages=disabled \
             -Dlibmount=disabled -Dselinux=disabled \
-            -Dglib_debug=disabled -Dbuildtype=release
+            -Dglib_debug=disabled -Dbuildtype=release \
+            > meson-setup.log 2>&1 || { \
+              # Feature probes that fail are normal (bionic lacks getservbyname_r and
+              # _aligned_malloc), but they print a full compiler transcript each. The
+              # log is kept and only shown when setup actually fails.
+              echo '::error::meson setup failed; tail of log:'
+              tail -n 80 meson-setup.log
+              exit 1
+            }
+          # Surface the meaningful summary instead of every probe transcript.
+          grep -E 'Dependency|Message|Program|C compiler' meson-setup.log | tail -n 40 || true
           meson compile -C glib-build
           meson install -C glib-build
           ls /opt/glib-android/lib/pkgconfig/
