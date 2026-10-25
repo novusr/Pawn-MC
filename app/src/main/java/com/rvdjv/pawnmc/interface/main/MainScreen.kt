@@ -55,6 +55,7 @@ import androidx.compose.material.icons.filled.DirectionsBike
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.FabPosition
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.Button
@@ -376,6 +377,10 @@ fun MainScreen(
     val listState = rememberLazyListState()
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        // Bottom-start keeps the scroll affordance clear of the workspace panel and the
+        // editor's floating stack, which both live on the trailing edge. Previously it
+        // used the Scaffold default (bottom-end) and was covered by the panel.
+        floatingActionButtonPosition = FabPosition.Start,
         floatingActionButton = {
             // The cursor: a two-way jump affordance. At the top it sends the reader to
             // the settings guide at the bottom; once the bottom is reached it turns

@@ -1413,6 +1413,7 @@ fun EditorScreen(
                     icon = Icons.Filled.TouchApp,
                     contentDescription = "Open the Developer Portal",
                     testTag = "editor_terminal_toggle",
+                    tint = FLOAT_TINT_PORTAL,
                     isActive = isPawnTerminalVisible,
                     reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP,
                     bubbleIndex = 0,
@@ -1428,6 +1429,7 @@ fun EditorScreen(
                     icon = _Icons.ScreenRotation,
                     contentDescription = if (isLandscapeForced) "Switch to Portrait" else "Switch to Landscape",
                     testTag = "editor_orientation_toggle",
+                    tint = FLOAT_TINT_ORIENTATION,
                     isActive = isLandscapeForced,
                     alignRight = false,
                     bubbleIndex = 1,
@@ -1449,6 +1451,7 @@ fun EditorScreen(
                     icon = Icons.Filled.PanTool,
                     contentDescription = if (isExplorerVisible) "Hide workspace panel" else "Show workspace panel",
                     testTag = "editor_explorer_toggle",
+                    tint = FLOAT_TINT_NEUTRAL,
                     isActive = isExplorerVisible,
                     reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP,
                     bubbleIndex = 2,
@@ -1520,6 +1523,7 @@ fun EditorScreen(
                     icon = Icons.Filled.ArrowDownward,
                     contentDescription = "Download all files",
                     testTag = "editor_download_all",
+                    tint = FLOAT_TINT_DOWNLOAD,
                     isActive = isBulkDownloadRunning,
                     // Sits directly above the compile button, so it reserves the
                     // compile diameter plus one gap; anything less overlaps it.
@@ -1798,6 +1802,19 @@ private val COMPILE_BUTTON_SIZE = 58.dp
 
 /** Diameter of the floating workspace panel button. */
 private val PANEL_BUTTON_SIZE = 48.dp
+/**
+ * Icon colours for the floating actions.
+ *
+ * Each action gets a distinct hue so the stack can be read by function instead of
+ * by position. The values are fixed rather than theme-derived because they carry
+ * meaning, not emphasis: a grey panel icon, a cyan portal, a green compile. They are
+ * picked to stay legible on both the light and the dark surface ramp.
+ */
+private val FLOAT_TINT_NEUTRAL = Color(0xFF8A8A94)   // workspace panel: deliberately grey
+private val FLOAT_TINT_PORTAL = Color(0xFF4FC3F7)    // developer portal: light blue
+private val FLOAT_TINT_ACTION = Color(0xFF43A047)    // compile / search / folder / save: green
+private val FLOAT_TINT_DOWNLOAD = Color(0xFFFFA726)  // download all: amber
+private val FLOAT_TINT_ORIENTATION = Color(0xFFAB7DF6) // rotate: violet
 
 /** Width of the rectangle-style floating toolbar. */
 private val TOOLBAR_WIDTH = 52.dp
@@ -1939,6 +1956,7 @@ private fun FloatingRectToolbar(
                     contentDescription = "Search",
                     testTag = "editor_floating_search",
                     isActive = isSearchOpen,
+                    tint = FLOAT_TINT_ACTION,
                     onClick = onSearchClick
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -1947,6 +1965,7 @@ private fun FloatingRectToolbar(
                     icon = _Icons.FolderRect,
                     contentDescription = "Open workspace folder",
                     testTag = "editor_floating_open_workspace",
+                    tint = FLOAT_TINT_ACTION,
                     onClick = onOpenWorkspaceClick
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -1958,6 +1977,7 @@ private fun FloatingRectToolbar(
                     contentDescription = "Save file",
                     testTag = "editor_floating_save",
                     isActive = hasUnsavedChanges,
+                    tint = FLOAT_TINT_ACTION,
                     onClick = onSaveClick
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -1966,6 +1986,7 @@ private fun FloatingRectToolbar(
                     icon = Icons.Filled.TimerOff,
                     contentDescription = if (workspaceOpen) "Save All" else "Save As",
                     testTag = "editor_floating_save_all",
+                    tint = FLOAT_TINT_ACTION,
                     onClick = onSaveAllClick
                 )
             }
@@ -1980,7 +2001,9 @@ private fun ToolBarEntry(
     contentDescription: String,
     testTag: String,
     onClick: () -> Unit,
-    isActive: Boolean = false
+    isActive: Boolean = false,
+    /** Icon colour; the toolbar actions share the green action tint. */
+    tint: Color = Color.Unspecified
 ) {
     IconButton(
         onClick = onClick,
@@ -1991,10 +2014,10 @@ private fun ToolBarEntry(
         Icon(
             imageVector = icon,
             contentDescription = contentDescription,
-            tint = if (isActive) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
+            tint = when {
+                tint != Color.Unspecified -> tint
+                isActive -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
             },
             modifier = Modifier.size(22.dp)
         )
@@ -2016,6 +2039,8 @@ private fun FloatingRoundAction(
     reservedBelow: Dp = 0.dp,
     alignRight: Boolean = true,
     bubbleIndex: Int = 0,
+    /** Icon colour. Each action carries its own so the stack reads by function. */
+    tint: Color = Color.Unspecified,
     onClick: () -> Unit
 ) {
     val density = LocalDensity.current
@@ -2100,7 +2125,11 @@ private fun FloatingRoundAction(
                 Icon(
                     imageVector = icon,
                     contentDescription = contentDescription,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = if (tint != Color.Unspecified) {
+                        tint
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                     modifier = Modifier.size(24.dp)
                 )
             }

@@ -124,6 +124,12 @@ jobs:
             "cpu = 'aarch64'" \
             "endian = 'little'" > glib-android.ini
           export PKG_CONFIG_LIBDIR="$TOOLCHAIN/sysroot/usr/lib/pkgconfig:$TOOLCHAIN/sysroot/usr/share/pkgconfig"
+          # iconv is not a meson option in glib: the build probes
+          # cc.find_library('iconv') and falls back to its own implementation. Bionic
+          # keeps iconv_open in libc rather than a separate libiconv, so the probe fails
+          # and meson aborts with 'Dependency "iconv" not found'. A linker script that
+          # maps -liconv to libc satisfies the probe with no real dependency.
+          printf 'INPUT(-lc)\n' > "$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}/libiconv.a"
           cat glib-android.ini
           meson setup glib-build glib-src \
             --cross-file glib-android.ini \
@@ -131,8 +137,7 @@ jobs:
             -Ddefault_library=static \
             -Dtests=false -Ddtrace=false -Dman-pages=disabled \
             -Dlibmount=disabled -Dselinux=disabled \
-            -Dglib_debug=disabled -Dbuildtype=release \
-            -Diconv=builtin
+            -Dglib_debug=disabled -Dbuildtype=release
           meson compile -C glib-build
           meson install -C glib-build
           ls /opt/glib-android/lib/pkgconfig/
