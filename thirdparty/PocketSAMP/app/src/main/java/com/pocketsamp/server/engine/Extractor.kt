@@ -4,14 +4,8 @@ import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
-import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.util.zip.GZIPInputStream
 
 import com.pocketsamp.server.config.DirectoryManager
 
@@ -21,10 +15,10 @@ class Extractor(private val context: Context) {
         private const val TAG = "Extractor"
         private const val PREF_NAME = "pocketsamp_assets"
         private const val KEY_INSTALLED_VERSION = "assets_installed_version"
-        // Bumped when the asset set changes. 10 ships the complete i386 bundle
+        // Bumped when the runtime archive set changes. 10 ships the complete i386 bundle
         // (daemon + all 13 shared libraries) and drops the arm64 one.
         private const val CURRENT_VERSION = 10
-        /** The only MariaDB bundle PocketSAMP ships. */
+        /** The only MariaDB archive PocketSAMP uses. */
         private const val BUNDLE_ASSET = "mariadb_i386"
 
         fun getServerDirectory(context: Context): File {
@@ -39,7 +33,16 @@ class Extractor(private val context: Context) {
         val binDir = File(context.filesDir, "bin")
         val mariadbDir = File(context.filesDir, "mariadb")
 
-        installedVersion == CURRENT_VERSION && rootfsDir.exists() && binDir.exists() && mariadbDir.exists()
+        // Checking that the directories merely exist is not enough now that the
+        // archives are downloaded on demand: `extractAll` creates them before it has
+        // anything to put inside. Each tree must contain its key file, and the marker
+        // written at the end of a successful run proves the set was complete.
+        val marker = File(context.filesDir, "runtime.ready")
+        installedVersion == CURRENT_VERSION &&
+            marker.isFile &&
+            File(binDir, "samp03svr").isFile &&
+            File(rootfsDir, "lib").isDirectory &&
+            File(mariadbDir, "bin/mariadbd").isFile
     }
 
     suspend fun extractAll(onProgress: (String) -> Unit) = withContext(Dispatchers.IO) {
@@ -78,7 +81,7 @@ class Extractor(private val context: Context) {
         if (archiveExists(BUNDLE_ASSET)) {
             extractArchiveAsset(BUNDLE_ASSET, mariadbDir)
         } else {
-            onProgress("No $BUNDLE_ASSET in assets; SQL stays disabled.")
+            onProgress("$BUNDLE_ASSET.tar.gz was not downloaded; SQL stays disabled.")
         }
 
         // Ensure binaries have executable bit set if present
@@ -86,10 +89,11 @@ class Extractor(private val context: Context) {
         File(mariadbDir, "bin/mariadb-install-db").let { if (it.exists()) it.setExecutable(true, false) }
 
         // Verify the deployment instead of trusting the extraction loop, and report the
-        // one prerequisite a bundle cannot satisfy on its own.
+        // one prerequisite no archive can satisfy on its own.
         val daemon = File(mariadbDir, "bin/mariadbd")
-        if (!daemon.isFile || daemon.length() == 0L) {
-            onProgress("MariaDB daemon missing from the asset bundle (bin/mariadbd); SQL stays disabled.")
+        val mariadbComplete = daemon.isFile && daemon.length() > 0
+        if (!mariadbComplete) {
+            onProgress("MariaDB archive has no bin/mariadbd; SQL stays disabled.")
         } else {
             onProgress("MariaDB daemon ready: ${daemon.length() / 1024} KB, ${Launcher.kindOf(daemon).name}.")
             if (Launcher.findQemu(context) == null) {
@@ -111,114 +115,42 @@ class Extractor(private val context: Context) {
         // Save extraction state
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         prefs.edit().putInt(KEY_INSTALLED_VERSION, CURRENT_VERSION).apply()
-        onProgress("Initialization complete!")
+        // Written only when every archive was present AND unpacked. A partial run must
+        // not leave it behind: `isExtracted` treats the marker as proof of completeness,
+        // so writing it after skipping MariaDB would make the next launch believe the
+        // database was installed and never retry it once the download completed.
+        val allPresent = File(binDir, "samp03svr").isFile &&
+            File(rootfsDir, "lib").isDirectory &&
+            mariadbComplete
+        if (allPresent) {
+            File(filesDir, "runtime.ready").writeText(CURRENT_VERSION.toString())
+            onProgress("Initialization complete!")
+        } else {
+            File(filesDir, "runtime.ready").delete()
+            onProgress("Runtime is incomplete; the missing archives will be retried on the next start.")
+        }
     }
 
-    /** True when [baseName] can be obtained from storage or from assets. */
+    /** True when the archive for [baseName] has been downloaded into storage. */
     private fun archiveExists(baseName: String): Boolean =
-        Downloader.archiveFile(context, baseName).let { it.isFile && it.length() > 0 } ||
-            listOf("$baseName.tar.gz", "$baseName.tar", "$baseName.tgz", baseName)
-                .any { name -> runCatching { context.assets.open(name).close() }.isSuccess }
+        Downloader.archiveFile(context, baseName).let { it.isFile && it.length() > 0 }
 
     /**
-     * Unpacks `baseName` from shared storage, falling back to the APK assets.
+     * Unpacks one archive from `Documents/PawnMC/storage/` into [outputDir].
      *
-     * `Documents/PawnMC/storage/` is preferred because the archives are downloaded
-     * there (see [Downloader]) instead of being bundled; assets remain as a fallback
-     * for builds that still embed them.
+     * Each of the three archives is unpacked independently, into its own destination,
+     * so one missing or corrupt file cannot take the others down: the server can still
+     * start when only `samp_base` arrived. Extraction itself is [Unpacker], which
+     * handles gzip detection, symlinks and the executable bit.
      */
     private fun extractArchiveAsset(baseName: String, outputDir: File) {
         val stored = Downloader.archiveFile(context, baseName)
-        if (stored.isFile && stored.length() > 0) {
-            Log.i(TAG, "Unpacking ${stored.absolutePath} into ${outputDir.absolutePath}")
-            FileInputStream(stored).use { Unpacker.extract(it, outputDir) }
-            return
-        }
-
-        // AAPT sometimes strips .gz during APK packaging, leaving .tar
-        val candidates = listOf(
-            "$baseName.tar.gz",
-            "$baseName.tar",
-            "$baseName.tgz",
-            baseName
-        )
-
-        var openedStream: InputStream? = null
-        var matchedName: String? = null
-        for (candidate in candidates) {
-            try {
-                openedStream = context.assets.open(candidate)
-                matchedName = candidate
-                break
-            } catch (ignored: Exception) {
-            }
-        }
-
-        if (openedStream == null) {
+        if (!stored.isFile || stored.length() == 0L) {
             throw IllegalStateException(
-                "Archive $baseName is in neither ${stored.parent} nor the APK assets (checked: $candidates)"
+                "Archive $baseName has not been downloaded; expected ${stored.absolutePath}"
             )
         }
-
-        Log.i(TAG, "Unpacking asset: $matchedName into ${outputDir.absolutePath}")
-
-        openedStream.use { rawInput ->
-            val buffered = BufferedInputStream(rawInput)
-            buffered.mark(4)
-            val b1 = buffered.read()
-            val b2 = buffered.read()
-            buffered.reset()
-
-            // Check GZIP magic bytes: 0x1F, 0x8B
-            val isGzip = (b1 == 0x1f && b2 == 0x8b)
-            val tarStream: InputStream = if (isGzip) {
-                GZIPInputStream(buffered)
-            } else {
-                buffered
-            }
-
-            TarArchiveInputStream(tarStream).use { tarInput ->
-                var entry: TarArchiveEntry? = tarInput.nextEntry
-                val buffer = ByteArray(8192)
-                while (entry != null) {
-                    val outputFile = File(outputDir, entry.name)
-                    if (entry.isDirectory) {
-                        outputFile.mkdirs()
-                    } else {
-                        outputFile.parentFile?.mkdirs()
-                        if (entry.isSymbolicLink) {
-                            try {
-                                java.nio.file.Files.deleteIfExists(outputFile.toPath())
-                                java.nio.file.Files.createSymbolicLink(
-                                    outputFile.toPath(),
-                                    java.nio.file.Paths.get(entry.linkName)
-                                )
-                            } catch (e: Exception) {
-                                Log.w(TAG, "Symlink creation skipped: ${entry.name} -> ${entry.linkName}")
-                            }
-                        } else {
-                            FileOutputStream(outputFile).use { fos ->
-                                var count: Int
-                                while (tarInput.read(buffer).also { count = it } != -1) {
-                                    fos.write(buffer, 0, count)
-                                }
-                            }
-                            if ((entry.mode and 0x49) != 0) { // Executable bit (0111 octal)
-                                outputFile.setExecutable(true, false)
-                            }
-                        }
-                    }
-                    entry = tarInput.nextEntry
-                }
-            }
-        }
-    }
-
-    private fun copyAssetToFile(assetName: String, destination: File) {
-        context.assets.open(assetName).use { input ->
-            FileOutputStream(destination).use { output ->
-                input.copyTo(output)
-            }
-        }
+        Log.i(TAG, "Unpacking ${stored.absolutePath} into ${outputDir.absolutePath}")
+        FileInputStream(stored).use { Unpacker.extract(it, outputDir) }
     }
 }

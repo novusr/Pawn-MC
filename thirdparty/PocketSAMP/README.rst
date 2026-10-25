@@ -33,15 +33,16 @@ Memory footprint stays near 150 MB by running MariaDB with
 Runtime files
 -------------
 
-The archives are not packaged in the APK. They are downloaded once from the upstream
-repository into shared storage and unpacked from there::
+The archives are not packaged in the APK. They stay in the repository under
+``thirdparty/PocketSAMP/runtime/`` so that raw GitHub URLs exist for them, and the app
+downloads each one on demand into shared storage::
 
     /storage/emulated/0/Documents/PawnMC/storage/
         rootfs_i386.tar.gz
         samp_base.tar.gz
         mariadb_i386.tar.gz
-
-The unpacked trees live in the app's private storage::
+Each archive is unpacked independently into the app's private storage, so a missing or
+corrupt file only disables the part that needs it::
 
     filesDir/rootfs_i386/    i386 glibc sysroot for QEMU
     filesDir/bin/            samp03svr and announce

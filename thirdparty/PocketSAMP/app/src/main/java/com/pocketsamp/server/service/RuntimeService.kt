@@ -14,6 +14,8 @@ import androidx.core.app.NotificationCompat
 import com.pocketsamp.server.MainActivity
 import com.pocketsamp.server.R
 import com.pocketsamp.server.engine.Extractor
+import com.pocketsamp.server.engine.Downloader
+import com.pocketsamp.server.config.DirectoryManager
 import com.pocketsamp.server.engine.MariaDb
 import com.pocketsamp.server.engine.Samp
 import com.pocketsamp.server.crash.Handler
@@ -258,10 +260,35 @@ class RuntimeService : Service() {
 
         serviceScope.launch {
             try {
-                // 1. Ensure assets are unpacked
+                // 1. Download the runtime archives, then unpack each one.
+                //
+                // The archives are no longer bundled in the APK: they live in the
+                // repository under thirdparty/PocketSAMP/runtime and are fetched from
+                // raw GitHub into Documents/PawnMC/storage. Extraction runs after the
+                // download and is skipped entirely when every tree is already in place.
                 if (!assetExtractor.isExtracted()) {
                     _serverStatus.value = Status.INITIALIZING
-                    appendLog("[PocketSAMP] Initializing runtime assets for first boot...")
+                    appendLog("[PocketSAMP] Preparing runtime archives...")
+
+                    val downloader = Downloader(applicationContext)
+                    if (!Downloader.isComplete(applicationContext)) {
+                        if (!DirectoryManager.hasStoragePermission(applicationContext)) {
+                            // The gate in MainActivity normally prevents this; reaching
+                            // here means the permission was revoked while running.
+                            appendLog("[Setup] Storage access is required to download the runtime files.")
+                            _serverStatus.value = Status.STOPPED
+                            return@launch
+                        }
+                        downloader.sync { line -> appendLog("[Setup] $line") }
+                    }
+
+                    if (!Downloader.isComplete(applicationContext)) {
+                        appendLog("[Setup] Runtime archives could not be downloaded; check the connection and retry.")
+                        _serverStatus.value = Status.STOPPED
+                        return@launch
+                    }
+
+                    appendLog("[PocketSAMP] Extracting runtime archives...")
                     assetExtractor.extractAll { progress ->
                         appendLog("[Setup] $progress")
                         updateNotification("Setup: $progress")

@@ -37,8 +37,17 @@ class Downloader(private val context: Context) {
     companion object {
         private const val TAG = "Downloader"
 
+        /**
+         * Raw GitHub prefix for the runtime archives.
+         *
+         * The archives live in `thirdparty/PocketSAMP/runtime/` in the repository but are
+         * deliberately **not** packaged into the APK: they add about 19 MB to every
+         * install. The app downloads them once, into Documents/PawnMC/storage, and
+         * unpacks each one independently from there. Keeping them in the repo is what
+         * makes these raw URLs exist at all.
+         */
         private const val REPO_BASE =
-            "https://raw.githubusercontent.com/novusr/Pawn-MC/main/thirdparty/PocketSAMP/app/src/main/assets"
+            "https://raw.githubusercontent.com/novusr/Pawn-MC/main/thirdparty/PocketSAMP/runtime"
 
         private const val CONNECT_TIMEOUT = 20_000
         private const val READ_TIMEOUT = 60_000
