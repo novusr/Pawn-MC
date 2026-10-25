@@ -131,7 +131,8 @@ jobs:
             -Ddefault_library=static \
             -Dtests=false -Ddtrace=false -Dman-pages=disabled \
             -Dlibmount=disabled -Dselinux=disabled \
-            -Dglib_debug=disabled -Dbuildtype=release
+            -Dglib_debug=disabled -Dbuildtype=release \
+            -Diconv=builtin
           meson compile -C glib-build
           meson install -C glib-build
           ls /opt/glib-android/lib/pkgconfig/

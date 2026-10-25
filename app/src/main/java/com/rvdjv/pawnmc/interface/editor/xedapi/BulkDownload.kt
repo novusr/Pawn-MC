@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.interface.editor.xedapi
+package com.rvdjv.pawnmc.`interface`.editor.xedapi
 
 import android.content.ContentValues
 import android.content.Context
