@@ -68,9 +68,13 @@ dependencies {
     implementation(rootProject.libs.androidx.ui)
     implementation(rootProject.libs.androidx.ui.graphics)
     implementation(rootProject.libs.androidx.material3)
-    /* Only thirteen framework icons are used here (see the tabs and screens); */
-    /* the extended set ships thousands more and is a large part of the APK. */
-    implementation(rootProject.libs.androidx.material.icons.core)
+    /*
+     * extended, not core: the tabs and screens use BugReport, Storage, Terminal,
+     * Timer, ContentCopy, OpenInBrowser, PlayArrow, Stop, Refresh and CheckCircle.
+     * Only ArrowBack, Dashboard and Add are in material-icons-core, so switching to
+     * core breaks the build.
+     */
+    implementation(rootProject.libs.androidx.material.icons.extended)
 
     implementation(rootProject.libs.kotlinx.coroutines.android)
     implementation(rootProject.libs.mariadb.java.client)

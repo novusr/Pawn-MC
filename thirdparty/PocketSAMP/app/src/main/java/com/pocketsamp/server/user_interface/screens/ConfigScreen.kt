@@ -15,7 +15,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pocketsamp.server.configuration.Config
+import com.pocketsamp.server.configuration.ConfigurationReader
+import com.pocketsamp.server.configuration.ConfigurationWriter
 import com.pocketsamp.server.configuration.DirectoryManager
 import com.pocketsamp.server.user_interface.theme.*
 import java.io.File
