@@ -74,116 +74,31 @@ jobs:
           TOOLCHAIN="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64"
           echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
           "$TOOLCHAIN/bin/clang" --version
-      - name: Build glib for arm64
+      - name: No glib dependency
         run: |
           set -euo pipefail
-          # QEMU's configure compares its idea of sizeof(size_t) with the value glib
-          # reports. Host glib says 8 (x86_64) and an Android build says 4 for a 32-bit
-          # target or 8 for arm64, and pkg-config picked the host .pc files:
-          #   ERROR: sizeof(size_t) doesn't match GLIB_SIZEOF_SIZE_T.
-          # The fix is a glib built for the same target, then pointing
-          # PKG_CONFIG_LIBDIR at its .pc files instead of the host's.
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            ninja-build pkg-config python3-pip python3-venv libffi-dev libpcre2-dev
-          # A pinned, recent meson in a venv: Ubuntu's 1.3.2 is old enough that some GLib
-          # checks fail, and pip on PATH would otherwise shadow the apt copy
-          # unpredictably. Both build steps below use this one.
-          python3 -m venv /opt/meson-venv
-          # glib's meson.build:2422 requires the "packaging" module at configure time:
-          #   ERROR: python is missing modules: packaging
-          # It is a meson dependency, not a build tool, so it goes into the same venv.
-          /opt/meson-venv/bin/pip install --quiet "meson>=1.3,<2" packaging
-          # $GITHUB_PATH only affects *subsequent* steps, so the venv is also exported
-          # for this one. Without the second line the run failed here with
-          #   meson: command not found
-          echo "/opt/meson-venv/bin" >> "$GITHUB_PATH"
-          export PATH="/opt/meson-venv/bin:$PATH"
-          meson --version
-          # Annotated tags make `--branch` emit "refs/tags/X is not a commit" and check
-          # out the peeled commit, which is fine but noisy. `git clone --branch` also
-          # cannot reach an annotated tag on a shallow mirror in some git versions, so
-          # the tag is fetched explicitly and checked out by name.
-          git init -q glib-src
-          cd glib-src
-          git remote add origin https://gitlab.gnome.org/GNOME/glib.git
-          git fetch -q --depth 1 origin "refs/tags/${GLIB_VERSION}:refs/tags/${GLIB_VERSION}"
-          git checkout -q "refs/tags/${GLIB_VERSION}"
-          cd ..
-          # A meson cross file needs a real file; it is written with printf rather than a
-          # here-document because a column-0 "EOF" ends the YAML literal block for
-          # `run:`, which invalidates the whole workflow.
-          #
-          # pkgconfig points at the NDK sysroot so the cross build never resolves a host
-          # .pc file, and needs_exe_wrapper tells meson not to try running target logic.
-          printf '%s\n' \
-            '[binaries]' \
-            "c = '$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang'" \
-            "ar = '$TOOLCHAIN/bin/llvm-ar'" \
-            "strip = '$TOOLCHAIN/bin/llvm-strip'" \
-            "pkgconfig = 'pkg-config'" \
-            '[properties]' \
-            'needs_exe_wrapper = true' \
-            '[host_machine]' \
-            "system = 'linux'" \
-            "kernel = 'linux'" \
-            "cpu_family = 'aarch64'" \
-            "cpu = 'aarch64'" \
-            "endian = 'little'" > glib-android.ini
-          export PKG_CONFIG_LIBDIR="$TOOLCHAIN/sysroot/usr/lib/pkgconfig:$TOOLCHAIN/sysroot/usr/share/pkgconfig"
-          # iconv needs two separate fixes and only the second was in place.
-          #
-          # 1. Link: bionic keeps iconv_open in libc, not libiconv, so
-          #    cc.find_library('iconv') fails and meson aborts. A linker script that
-          #    maps -liconv to libc satisfies the probe.
-          #
-          # 2. Compile: bionic's <iconv.h> only declares iconv_open/iconv/iconv_close
-          #    when LIBICONV_PLUG is NOT defined - the header expects a libiconv
-          #    installation. Without the define, gconvert.c fails with "call to
-          #    undeclared function 'iconv_open'". Defining it makes the header expose
-          #    the prototypes, which is exactly the configuration glib needs.
-          printf 'INPUT(-lc)\n' > "$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}/libiconv.a"
-          export CFLAGS="-DLIBICONV_PLUG"
-          export CXXFLAGS="-DLIBICONV_PLUG"
-          cat glib-android.ini
-          meson setup glib-build glib-src \
-            --cross-file glib-android.ini \
-            -Dprefix=/opt/glib-android \
-            -Ddefault_library=static \
-            -Dtests=false -Ddtrace=false -Dman-pages=disabled \
-            -Dlibmount=disabled -Dselinux=disabled \
-            -Dglib_debug=disabled -Dbuildtype=release \
-            > meson-setup.log 2>&1 || { \
-              # Feature probes that fail are normal (bionic lacks getservbyname_r and
-              # _aligned_malloc), but they print a full compiler transcript each. The
-              # log is kept and only shown when setup actually fails.
-              echo '::error::meson setup failed; tail of log:'
-              tail -n 80 meson-setup.log
-              exit 1
-            }
-          # Surface the meaningful summary instead of every probe transcript.
-          grep -E 'Dependency|Message|Program|C compiler' meson-setup.log | tail -n 40 || true
-          meson compile -C glib-build
-          meson install -C glib-build
-          ls /opt/glib-android/lib/pkgconfig/
-
+          # Nothing to build here any more. glib was being cross-compiled for
+          # arm64 so that QEMU configure could read its size_t, but glib is only
+          # needed by QEMU host tools, which --disable-tools already removes.
+          # Building it meant patching bionic gaps one at a time (iconv
+          # prototypes, size_t agreement, talloc, python modules); each fix moved
+          # the failure to the next file. --disable-glib removes the whole class.
+          echo "QEMU is configured without glib; see the next step."
       - name: Configure QEMU for aarch64 Linux user-mode
         run: |
           set -euo pipefail
           CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang"
           CXX="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang++"
-          # --cross-prefix is deliberately NOT passed: QEMU appends "pkg-config" to it
-          # and looks for llvm-pkg-config, which the NDK does not ship (`ERROR:
-          # pkg-config binary '.../llvm-pkg-config' not found`). pkg-config itself must
-          # stay the host binary, because the libraries it reports (glib, pixman) are
-          # built for the host during configure.
-          # --static is the only usable mode: Android executes these from lib/<abi>/,
-          # and a command-line program has no Java-side loadLibrary to resolve deps.
+          # --cross-prefix is deliberately NOT passed: QEMU appends "pkg-config" to
+          # it and looks for llvm-pkg-config, which the NDK does not ship.
+          #
+          # --disable-glib: glib is only used by QEMU host tools, and --disable-tools
+          # already removes those. Cross-building glib for Android meant patching
+          # bionic gaps one file at a time; dropping it removes the whole class.
+          #
+          # --static is the only usable mode: Android executes these from
+          # lib/<abi>/, and a command-line program has no loadLibrary fallback.
           cd qemu
-          # PKG_CONFIG_LIBDIR (not PKG_CONFIG_PATH) replaces the search list instead of
-          # appending to it, which is what the error message asks for: without it the
-          # host .pc files are still found first and the size_t check keeps failing.
-          export PKG_CONFIG_LIBDIR=/opt/glib-android/lib/pkgconfig
           ./configure \
             --target-list=i386-linux-user \
             --static \
@@ -191,11 +106,10 @@ jobs:
             --disable-docs \
             --disable-tools \
             --disable-guest-agent \
-            --disable-werror \
+            --disable-glib \
             --disable-pixman \
-            --cc="$CC" --host-cc="$CC" --cxx="$CXX" \
-            --extra-cflags="-I/opt/glib-android/include/glib-2.0 -I/opt/glib-android/lib/glib-2.0/include" \
-            --extra-ldflags="-L/opt/glib-android/lib"
+            --disable-werror \
+            --cc="$CC" --host-cc="$CC" --cxx="$CXX"
 
       - name: Build
         run: |
@@ -206,7 +120,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p out/arm64-v8a
-          BIN=$(find . -type f -name 'qemu-i386' -perm -u+x | head -n1)
+          BIN=$(find . -type f -name "qemu-i386" -perm -u+x | head -n1)
           if [ -z "$BIN" ]; then
             echo "::error::qemu-i386 was not produced by the build."
             exit 1

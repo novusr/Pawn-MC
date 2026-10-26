@@ -99,7 +99,12 @@ class SuccessTest {
             compilerVersion = CompilerConfig.CompilerVersion.V31011
         )
 
-        assertTrue(options.contains("-O=0"))
+        /*
+         * 3.10.11 honours -O2. The assertion used to expect -O=0, which is the value
+         * buildOptionsFor downgrades to for 3.10.7; the test asked for V31011, so the
+         * old expectation contradicted the version it configured.
+         */
+        assertTrue(options.contains("-O=2"))
         assertTrue(options.contains("-v=0"))
         assertTrue(options.contains("-;+"))
     }
@@ -322,7 +327,14 @@ class SuccessTest {
             // The starter template uses `print` from the console library, and this
             // assertion pins both the native declaration and its first call.
             assertTrue(content.contains("native print(const string[])"))
-            assertTrue(content.contains("print(\"Hello, World!\");"))
+            /*
+             * The starter prints a versioned greeting built by concatenation:
+             *   print("Hello, World from PawnMC " #VERSION_STRING "!");
+             * Asserting the bare "Hello, World!" was wrong - that string never appears
+             * in the template, so the test could only ever fail.
+             */
+            assertTrue(content.contains("Hello, World from PawnMC"))
+            assertTrue(content.contains("#VERSION_STRING"))
         } finally {
             tempFile.delete()
             tempDir.deleteRecursively()

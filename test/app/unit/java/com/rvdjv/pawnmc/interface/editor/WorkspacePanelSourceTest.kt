@@ -8,7 +8,11 @@ class WorkspacePanelSourceTest {
         val root = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
             .firstOrNull { File(it, "app/src/main").isDirectory }
             ?: File(System.getProperty("user.dir"))
-        val source = File(root, "app/src/main/java/com/rvdjv/pawnmc/interface/editor/Workspace/Panel.kt").readText()
+        /*
+         * The package folder was renamed to lower case; the old path no longer exists
+         * and the read threw FileNotFoundException rather than failing an assertion.
+         */
+        val source = File(root, "app/src/main/java/com/rvdjv/pawnmc/interface/editor/workspace/Panel.kt").readText()
 
         assertTrue(source.contains(".verticalScroll(outputScrollState)"))
         assertTrue(source.contains(".horizontalScroll(outputHorizontalScrollState)"))

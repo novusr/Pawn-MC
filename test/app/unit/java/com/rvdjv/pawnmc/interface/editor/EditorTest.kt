@@ -422,7 +422,12 @@ class EditorTest {
         assertEquals(listOf("help"), PortalCommandParser.suggestions("h", "mode.pwn"))
         assertEquals(listOf("pawncc \"mode.pwn\""), PortalCommandParser.suggestions("pawncc ", "mode.pwn"))
         assertEquals(listOf("clear"), PortalCommandParser.suggestions("cle", "mode.pwn"))
-        assertEquals(listOf("celar"), PortalCommandParser.suggestions("cel", "mode.pwn"))
+        /*
+         * `celar` is a typo alias kept for users who hit it, not a suggestion: it is
+         * accepted when dispatched but no longer offered in the grid, so typing `cel`
+         * suggests `clear` only.
+         */
+        assertEquals(listOf("clear"), PortalCommandParser.suggestions("cel", "mode.pwn"))
         assertEquals(
             listOf("switch 3.10.7", "switch 3.10.11"),
             PortalCommandParser.suggestions("switch 3", "mode.pwn")
@@ -454,6 +459,8 @@ class EditorTest {
         assertFalse(PortalCommandParser.isKnownCommand("lsfoo"))
         assertTrue("lss should point at ls", "ls" in PortalCommandParser.nearMisses("lss"))
         assertTrue("hep should point at help", "help" in PortalCommandParser.nearMisses("hep"))
+        /* Still dispatched, even though it is not suggested. */
+        assertTrue(PortalCommandParser.isKnownCommand("celar"))
     }
 
     @Test
