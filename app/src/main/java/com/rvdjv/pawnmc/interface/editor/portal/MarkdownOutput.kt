@@ -49,7 +49,7 @@ internal fun MarkdownOutput(markdown: String) {
                     )
                 }
                 line.startsWith("#") -> Text(
-                    text = line.trimStart('#', '),
+                    text = line.trimStart('#', ' '),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
