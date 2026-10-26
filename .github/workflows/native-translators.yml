@@ -16,10 +16,14 @@ name: Native Translators
 
 on:
   workflow_dispatch:
+  # No `paths:` filter.
+  #
+  # With one, the job only ran when this file itself changed, so any commit that
+  # touched only Kotlin or assets left it out of the run list entirely and it looked
+  # as if the workflow had been deleted. Building the translators is the only way the
+  # runtime can start, so it is worth running on every push to the main line.
   push:
     branches: [ main, develop ]
-    paths:
-      - '.github/workflows/native-translators.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
