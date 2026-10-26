@@ -250,9 +250,6 @@ fun EditorScreen(
     var isExplorerVisible by remember { mutableStateOf(false) }
     var explorerOffset by remember { mutableStateOf(IntOffset.Zero) }
     var isPawnTerminalVisible by remember { mutableStateOf(false) }
-    // True while the download-all action is running, so the button shows its active
-    // state and a second tap cannot start a parallel transfer.
-    var isBulkDownloadRunning by remember { mutableStateOf(false) }
     // Landscape toggle: `true` forces landscape, `false` releases the lock back to
     // whatever orientation the activity reports by default (portrait).
     var isLandscapeForced by remember { mutableStateOf(false) }
@@ -1481,45 +1478,7 @@ fun EditorScreen(
                     }
                 )
 
-                /*
-                 * The round compile FAB that used to sit here is gone.
-                 *
-                 * It was a freely draggable circle that drifted over the code, the
-                 * workspace panel and the floating column, and it duplicated the
-                 * compile entry the toolbar already offers. Compiling is still
-                 * reachable from the toolbar and from the menu, so nothing was lost by
-                 * removing it.
-                 */
-                FloatingRoundAction(
-                    size = PANEL_BUTTON_SIZE,
-                    icon = Icons.Filled.ArrowDownward,
-                    contentDescription = "Download all files",
-                    testTag = "editor_download_all",
-                    tint = FLOAT_TINT_DOWNLOAD,
-                    isActive = isBulkDownloadRunning,
-                    /*
-                     * The compile FAB that used to sit below this one is gone, so the
-                     * download action now rests on the toolbar rather than on another
-                     * circle. One gap keeps it clear of the toolbar without leaving the
-                     * hole the removed button used to fill.
-                     */
-                    reservedBelow = FLOAT_GAP,
-                    bubbleIndex = 5,
-                    onClick = {
-                        if (isBulkDownloadRunning) return@FloatingRoundAction
-                        BulkDownload.activeWorkspaceRoot =
-                            workspace.activeWorkspace?.root?.absolutePath
-                                ?: workspace.activeWorkspace?.let { activeDocument?.file?.parentFile?.absolutePath }
-                        scope.launch {
-                            isBulkDownloadRunning = true
-                            val result = withContext(Dispatchers.IO) {
-                                BulkDownload.downloadAll(context)
-                            }
-                            isBulkDownloadRunning = false
-                            Toast.makeText(context, result.message, Toast.LENGTH_LONG).show()
-                        }
-                    }
-                )
+
 
                 if (isPawnTerminalVisible) {
                     val terminalSource = if (workspace.isWorkspaceOpen) {
@@ -1789,7 +1748,7 @@ private val PANEL_BUTTON_SIZE = 48.dp
 private val FLOAT_TINT_NEUTRAL = Color(0xFF8A8A94)   // workspace panel: deliberately grey
 private val FLOAT_TINT_PORTAL = Color(0xFF4FC3F7)    // developer portal: light blue
 private val FLOAT_TINT_ACTION = Color(0xFF43A047)    // compile / search / folder / save: green
-private val FLOAT_TINT_DOWNLOAD = Color(0xFFFFA726)  // download all: amber
+
 private val FLOAT_TINT_ORIENTATION = Color(0xFFAB7DF6) // rotate: violet
 
 /** Width of the rectangle-style floating toolbar. */
