@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.`interface`.editor.Workspace
+package com.rvdjv.pawnmc.`interface`.editor.workspace
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File

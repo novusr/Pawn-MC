@@ -491,7 +491,9 @@ object Locales {
             Lang.ES to "Información del dispositivo",
             Lang.RU to "Информация об устройстве",
         ),
-        // --- strings that used to be hardcoded in Indonesian on the dashboard ------
+        /*
+         * --- strings that used to be hardcoded in Indonesian on the dashboard ------
+         */
         "folder.changed" to mapOf(
             Lang.ID to "Folder gamemode sekarang",
             Lang.EN to "Gamemode folder is now",

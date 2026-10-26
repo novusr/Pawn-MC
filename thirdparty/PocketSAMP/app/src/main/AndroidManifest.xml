@@ -34,13 +34,13 @@
             android:theme="@style/Theme.PocketSAMP" />
 
         <activity
-            android:name=".crash.CrashDialog"
+            android:name=".crash_handler.CrashDialog"
             android:exported="false"
             android:process=":crash"
             android:theme="@style/Theme.PocketSAMP" />
 
         <service
-            android:name=".service.RuntimeService"
+            android:name=".service_handler.RuntimeService"
             android:enabled="true"
             android:exported="false"
             android:stopWithTask="false"

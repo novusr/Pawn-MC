@@ -376,48 +376,18 @@ fun MainScreen(
 
     val listState = rememberLazyListState()
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        // Bottom-start keeps the scroll affordance clear of the workspace panel and the
-        // editor's floating stack, which both live on the trailing edge. Previously it
-        // used the Scaffold default (bottom-end) and was covered by the panel.
-        floatingActionButtonPosition = FabPosition.Start,
-        floatingActionButton = {
-            // The cursor: a two-way jump affordance. At the top it sends the reader to
-            // the settings guide at the bottom; once the bottom is reached it turns
-            // around and carries them back to the top, exactly like the settings screen.
-            val fabScope = rememberCoroutineScope()
-            val atBottom = listState.isScrollInProgress.not() &&
-                listState.canScrollForward.not()
-            SmallFloatingActionButton(
-                onClick = {
-                    fabScope.launch {
-                        if (atBottom) {
-                            listState.animateScrollToItem(0)
-                        } else {
-                            listState.animateScrollToItem(Int.MAX_VALUE)
-                        }
-                    }
-                },
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ) {
-                if (atBottom) {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowUpward,
-                        contentDescription = "Scroll to top",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(24.dp)
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Filled.ArrowDownward,
-                        contentDescription = "Scroll to bottom",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
+        containerColor = MaterialTheme.colorScheme.background
+        /*
+         * No floating scroll button.
+         *
+         * It was a Scaffold FAB that floated above the whole main screen, which meant
+         * it also floated above the Xed editor when that screen was open, where it sat
+         * on top of the workspace panel and the editor's own floating stack. It was a
+         * separate control with no owner: grep showed no reference from the editor, so
+         * it was never part of the editor's design. Removing it here removes it from
+         * every screen at once. Scrolling remains a plain drag gesture; the settings
+         * screen keeps its own button because there it belongs to that screen.
+         */
     ) { innerPadding ->
         LazyColumn(
             state = listState,

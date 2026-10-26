@@ -230,9 +230,20 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
         val cursor = host.cursor
         val leftLine = cursor.leftLine
         val rightLine = cursor.rightLine
+        val leftColumn = cursor.leftColumn
+        val rightColumn = cursor.rightColumn
+        /*
+         * A plain caret is reported as a collapsed range: left == right on both axes.
+         * The first branch used to win for that case, so the gutter showed the column
+         * where the selection starts instead of where the caret actually sits - one
+         * character behind. Compare the two ends explicitly instead of relying on
+         * branch order.
+         */
         return when {
-            line == leftLine -> cursor.leftColumn + 1
-            line == rightLine -> cursor.rightColumn + 1
+            leftLine == rightLine ->
+                if (leftColumn == rightColumn) leftColumn + 1 else rightColumn + 1
+            line == rightLine -> rightColumn + 1
+            line == leftLine -> leftColumn + 1
             line in leftLine until rightLine -> 1
             else -> null
         }

@@ -137,16 +137,16 @@ import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.syntax.PawnRegistry
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.MAX_OPEN_WORKSPACES
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.OpenDocument
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspaceSession
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspaceSearchHit
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFolderPickerIntent
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFilePickerIntent
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveDocumentToFile
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveTreeToFile
+import com.rvdjv.pawnmc.`interface`.editor.workspace.MAX_OPEN_WORKSPACES
+import com.rvdjv.pawnmc.`interface`.editor.workspace.OpenDocument
+import com.rvdjv.pawnmc.`interface`.editor.workspace.WorkspaceSession
+import com.rvdjv.pawnmc.`interface`.editor.workspace.WorkspaceSearchHit
+import com.rvdjv.pawnmc.`interface`.editor.workspace.buildFolderPickerIntent
+import com.rvdjv.pawnmc.`interface`.editor.workspace.buildFilePickerIntent
+import com.rvdjv.pawnmc.`interface`.editor.workspace.resolveDocumentToFile
+import com.rvdjv.pawnmc.`interface`.editor.workspace.resolveTreeToFile
 import com.rvdjv.pawnmc.`interface`.editor.syntax.PawnLanguage
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspacePanel
+import com.rvdjv.pawnmc.`interface`.editor.workspace.WorkspacePanel
 import com.rvdjv.pawnmc.`interface`.editor.portal.DeveloperPortal
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
@@ -1410,7 +1410,7 @@ fun EditorScreen(
                 }
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
-                    icon = Icons.Filled.TouchApp,
+                    icon = _Icons.WavingHand,
                     contentDescription = "Open the Developer Portal",
                     testTag = "editor_terminal_toggle",
                     tint = FLOAT_TINT_PORTAL,
@@ -1448,7 +1448,7 @@ fun EditorScreen(
                 // while the explorer panel is open.
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
-                    icon = Icons.Filled.PanTool,
+                    icon = _Icons.Flower,
                     contentDescription = if (isExplorerVisible) "Hide workspace panel" else "Show workspace panel",
                     testTag = "editor_explorer_toggle",
                     tint = FLOAT_TINT_NEUTRAL,
@@ -2515,14 +2515,17 @@ private fun QuickSymbolBar(
     onSymbolClick: (String) -> Unit,
     onTabClick: () -> Unit
 ) {
-    // The [TAB] key is a structural key, not a character, so it is rendered as
-    // its own button ahead of the symbol keys instead of being the last entry of
-    // a horizontally scrolling row, where it was easy to miss.
+    /*
+     * The bar shows the digits by default and keeps the symbol row hidden until it
+     * is asked for. A permanent symbol row plus a digits row took two stack lines out
+     * of the editor viewport for keys most edits never touch.
+     */
     val symbols = listOf(
         "{", "}", "(", ")", "[", "]", ";", ":", ",", "\"", "'", "#", "=", ">", "<", "!", "&", "|"
     )
     val digits = listOf("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 
+    var symbolsVisible by rememberSaveable { mutableStateOf(false) }
     val symbolScroll = rememberScrollState()
 
     Surface(
@@ -2530,34 +2533,75 @@ private fun QuickSymbolBar(
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(vertical = 4.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(symbolScroll)
-                    .padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                QuickSymbolKey(
-                    label = "TAB",
-                    onClick = onTabClick,
-                    modifier = Modifier.testTag("editor_tab_button")
-                )
-
-                symbols.forEach { sym ->
+            if (symbolsVisible) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(symbolScroll)
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
                     QuickSymbolKey(
-                        label = sym,
-                        onClick = { onSymbolClick(sym) },
-                        modifier = if (sym == "{") Modifier.testTag("editor_symbol_brace_open") else Modifier
+                        label = "TAB",
+                        onClick = onTabClick,
+                        modifier = Modifier.testTag("editor_tab_button")
                     )
+
+                    symbols.forEach { sym ->
+                        QuickSymbolKey(
+                            label = sym,
+                            onClick = { onSymbolClick(sym) },
+                            modifier = if (sym == "{") Modifier.testTag("editor_symbol_brace_open") else Modifier
+                        )
+                    }
                 }
             }
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 8.dp, end = 8.dp, top = 6.dp),
+                    .padding(start = 8.dp, end = 8.dp, top = if (symbolsVisible) 6.dp else 0.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
+                /*
+                 * The toggle sits ahead of the digits, at the same weight, so it never
+                 * shifts the row when the symbol line appears or disappears.
+                 */
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = if (symbolsVisible) {
+                        MaterialTheme.colorScheme.primaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerLowest
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { symbolsVisible = !symbolsVisible }
+                        .testTag("editor_symbols_toggle")
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (symbolsVisible) {
+                                Icons.Filled.KeyboardArrowDown
+                            } else {
+                                Icons.Filled.KeyboardArrowUp
+                            },
+                            contentDescription = if (symbolsVisible) {
+                                "Hide the extra keys"
+                            } else {
+                                "Show the extra keys"
+                            },
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .padding(vertical = 6.dp)
+                                .size(14.dp)
+                        )
+                    }
+                }
+
                 digits.forEach { d ->
                     Surface(
                         shape = RoundedCornerShape(6.dp),

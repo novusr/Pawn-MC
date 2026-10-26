@@ -459,26 +459,33 @@ object _Icons {
                 lineTo(14.2f, 8.0f)
                 close()
             }
-            // Braces: the Pawn signature.
+            /*
+             * Diagonal stroke of the P. Drawn first so the bowl can close over it
+             * without a seam showing at the join.
+             */
             path(
                 stroke = SolidColor(Color.Black),
-                strokeLineWidth = 1.4f,
-                strokeLineCap = StrokeCap.Round,
-                strokeLineJoin = StrokeJoin.Round
+                strokeLineWidth = 2.2f,
+                strokeLineCap = StrokeCap.Round
             ) {
-                moveTo(10.2f, 11.2f)
-                lineTo(8.9f, 13.6f)
-                lineTo(10.2f, 16.0f)
+                moveTo(8.6f, 18.4f)
+                lineTo(13.0f, 10.4f)
             }
+            /*
+             * Bowl of the P: a closed loop sitting on the diagonal, sized to read at
+             * tab-strip height where the previous brace pair turned to mush.
+             */
             path(
                 stroke = SolidColor(Color.Black),
-                strokeLineWidth = 1.4f,
-                strokeLineCap = StrokeCap.Round,
+                strokeLineWidth = 2.0f,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                moveTo(13.8f, 11.2f)
-                lineTo(15.1f, 13.6f)
-                lineTo(13.8f, 16.0f)
+                moveTo(10.4f, 10.4f)
+                lineTo(14.4f, 10.4f)
+                lineTo(15.6f, 13.0f)
+                lineTo(13.6f, 15.2f)
+                lineTo(11.4f, 14.0f)
+                close()
             }
         }.build()
     }

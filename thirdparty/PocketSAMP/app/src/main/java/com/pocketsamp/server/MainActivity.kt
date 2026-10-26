@@ -47,18 +47,18 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.content.ContextCompat
-import com.pocketsamp.server.config.DirectoryManager
-import com.pocketsamp.server.db.DatabaseManager
-import com.pocketsamp.server.engine.Downloader
-import com.pocketsamp.server.service.RuntimeService
-import com.pocketsamp.server.service.Status
-import com.pocketsamp.server.ui.screens.ConfigScreen
-import com.pocketsamp.server.ui.screens.ConsoleScreen
-import com.pocketsamp.server.ui.screens.CrashLogsScreen
-import com.pocketsamp.server.ui.screens.DashboardScreen
-import com.pocketsamp.server.ui.screens.DatabaseScreen
-import com.pocketsamp.server.ui.screens.PhpMyAdminScreen
-import com.pocketsamp.server.ui.theme.*
+import com.pocketsamp.server.configuration.DirectoryManager
+import com.pocketsamp.server.database_handler.DatabaseManager
+import com.pocketsamp.server.engine_handler.Downloader
+import com.pocketsamp.server.service_handler.RuntimeService
+import com.pocketsamp.server.service_handler.Status
+import com.pocketsamp.server.user_interface.screens.ConfigScreen
+import com.pocketsamp.server.user_interface.screens.ConsoleScreen
+import com.pocketsamp.server.user_interface.screens.CrashLogsScreen
+import com.pocketsamp.server.user_interface.screens.DashboardScreen
+import com.pocketsamp.server.user_interface.screens.DatabaseScreen
+import com.pocketsamp.server.user_interface.screens.PhpMyAdminScreen
+import com.pocketsamp.server.user_interface.theme.*
 
 enum class AppTab(val label: String, val icon: ImageVector) {
     DASHBOARD("Dashboard", Icons.Default.Dashboard),
@@ -123,21 +123,27 @@ class MainActivity : ComponentActivity() {
 
     private val requestNotificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { _ ->
-            // Handled
+            /*
+             * Handled
+             */
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(permissionObserver)
         hasAllFilesAccess.value = DirectoryManager.hasStoragePermission(this)
-        // Request notification permission on Android 13+
+        /*
+         * Request notification permission on Android 13+
+         */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
 
-        // Prevent accidental server termination when pressing Back button/gesture
+        /*
+         * Prevent accidental server termination when pressing Back button/gesture
+         */
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val isRunning = RuntimeService.serverStatus.value == Status.RUNNING ||
@@ -145,8 +151,10 @@ class MainActivity : ComponentActivity() {
                 if (isRunning) {
                     moveTaskToBack(true)
                 } else {
-                    // No server running: leave this activity and land back on the
-                    // PawnMC main interface (the host task stays in the stack below).
+                    /*
+                     * No server running: leave this activity and land back on the
+                     * PawnMC main interface (the host task stays in the stack below).
+                     */
                     val callback = onNavigateBack
                     if (callback != null) callback() else finish()
                 }
@@ -166,14 +174,16 @@ class MainActivity : ComponentActivity() {
                     window.statusBarColor = statusBarBackground.toArgb()
                     WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDark
                 }
-                // Storage access is a hard prerequisite: the runtime archives live in
-                // Documents/PawnMC/storage and are unpacked from there. Without the
-                // permission the screen shows the grant prompt only, with no way past
-                // it, and the archives start downloading in the background the moment
-                // the permission is granted.
-                // `by` is required here: a plain read of the MutableState reference
-                // yields the state object, not the Boolean, and Compose would not
-                // recompose when the permission is granted.
+                /*
+                 * Storage access is a hard prerequisite: the runtime archives live in
+                 * Documents/PawnMC/storage and are unpacked from there. Without the
+                 * permission the screen shows the grant prompt only, with no way past
+                 * it, and the archives start downloading in the background the moment
+                 * the permission is granted.
+                 * `by` is required here: a plain read of the MutableState reference
+                 * yields the state object, not the Boolean, and Compose would not
+                 * recompose when the permission is granted.
+                 */
                 if (hasAllFilesAccess.value) {
                     MainAppLayout()
                 } else {
@@ -190,12 +200,16 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun MainAppLayout() {
         var currentTab by remember { mutableStateOf(AppTab.DASHBOARD) }
-        // phpMyAdmin is a full-screen surface above the tab content rather than a
-        // sixth tab: it is a transient view of the database server, and closing it
-        // must land back on whichever tab opened it.
+        /*
+         * phpMyAdmin is a full-screen surface above the tab content rather than a
+         * sixth tab: it is a transient view of the database server, and closing it
+         * must land back on whichever tab opened it.
+         */
         var isPhpMyAdminVisible by remember { mutableStateOf(false) }
-        // The whole embedded UI follows the language configured in the PawnMC main
-        // interface (Settings → Language); the host set it before launching.
+        /*
+         * The whole embedded UI follows the language configured in the PawnMC main
+         * interface (Settings → Language); the host set it before launching.
+         */
         val lang = Locales.current
         fun t(key: String): String = Locales.text(lang, key)
 
@@ -206,10 +220,12 @@ class MainActivity : ComponentActivity() {
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            // The floating rail is an overlay, not part of the scaffold: no bottom
-            // inset is reserved for it. Screens add their own bottom room instead,
-            // which keeps the pages from getting a double bottom gap. Only the
-            // system bars stay inset-aware so nothing slides under the status bar.
+            /*
+             * The floating rail is an overlay, not part of the scaffold: no bottom
+             * inset is reserved for it. Screens add their own bottom room instead,
+             * which keeps the pages from getting a double bottom gap. Only the
+             * system bars stay inset-aware so nothing slides under the status bar.
+             */
             contentWindowInsets = WindowInsets.systemBars
         ) { paddingValues ->
             Box(
@@ -251,7 +267,9 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Full-screen phpMyAdmin over the tab content.
+                /*
+                 * Full-screen phpMyAdmin over the tab content.
+                 */
                 if (isPhpMyAdminVisible) {
                     PhpMyAdminScreen(
                         isDbRunning = isDbRunning,
@@ -260,13 +278,15 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                // Floating tab rail: a compact column of square buttons on the trailing
-                // edge. Icons only, deliberately.
-                //
-                // Showing the active label made the rail grow sideways whenever a tab
-                // with a long name was selected, so the whole stack shifted and the
-                // boxes stopped matching. Every entry is now a fixed 36 dp square, so
-                // the rail never changes width and the buttons read as one grid.
+                /*
+                 * Floating tab rail: a compact column of square buttons on the trailing
+                 * edge. Icons only, deliberately.
+                 *
+                 * Showing the active label made the rail grow sideways whenever a tab
+                 * with a long name was selected, so the whole stack shifted and the
+                 * boxes stopped matching. Every entry is now a fixed 36 dp square, so
+                 * the rail never changes width and the buttons read as one grid.
+                 */
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
@@ -278,8 +298,10 @@ class MainActivity : ComponentActivity() {
                     verticalArrangement = Arrangement.spacedBy(3.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Hidden while phpMyAdmin is open so the browser is truly
-                    // full-screen and the rail cannot overlap its pages.
+                    /*
+                     * Hidden while phpMyAdmin is open so the browser is truly
+                     * full-screen and the rail cannot overlap its pages.
+                     */
                     if (!isPhpMyAdminVisible) AppTab.values().forEach { tab ->
                         val selected = tab == currentTab
                         Box(

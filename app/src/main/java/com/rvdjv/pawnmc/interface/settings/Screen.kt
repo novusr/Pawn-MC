@@ -96,8 +96,8 @@ import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.data.update.UpdateStatus
 import com.rvdjv.pawnmc.`interface`.main.SettingsTarget
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFolderPickerIntent
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveTreeToFile
+import com.rvdjv.pawnmc.`interface`.editor.workspace.buildFolderPickerIntent
+import com.rvdjv.pawnmc.`interface`.editor.workspace.resolveTreeToFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext

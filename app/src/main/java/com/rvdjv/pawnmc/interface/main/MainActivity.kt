@@ -29,11 +29,11 @@ import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.AppStorage
 import com.rvdjv.pawnmc.data.syntax.InternDat
 import com.rvdjv.pawnmc.data.update.UpdateManager
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFolderPickerIntent
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.buildFilePickerIntent
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveDocumentToFile
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.resolveTreeToFile
-import com.rvdjv.pawnmc.`interface`.editor.Workspace.WorkspaceSession
+import com.rvdjv.pawnmc.`interface`.editor.workspace.buildFolderPickerIntent
+import com.rvdjv.pawnmc.`interface`.editor.workspace.buildFilePickerIntent
+import com.rvdjv.pawnmc.`interface`.editor.workspace.resolveDocumentToFile
+import com.rvdjv.pawnmc.`interface`.editor.workspace.resolveTreeToFile
+import com.rvdjv.pawnmc.`interface`.editor.workspace.WorkspaceSession
 import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorScreen
 import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorViewModel
 import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorViewModelFactoryForActivity

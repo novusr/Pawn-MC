@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import com.pocketsamp.server.crash.Handler
+import com.pocketsamp.server.crash_handler.Handler
 
 /**
  * Entry point PawnMC uses to embed PocketSAMP.

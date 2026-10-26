@@ -68,7 +68,9 @@ dependencies {
     implementation(rootProject.libs.androidx.ui)
     implementation(rootProject.libs.androidx.ui.graphics)
     implementation(rootProject.libs.androidx.material3)
-    implementation(rootProject.libs.androidx.material.icons.extended)
+    /* Only thirteen framework icons are used here (see the tabs and screens); */
+    /* the extended set ships thousands more and is a large part of the APK. */
+    implementation(rootProject.libs.androidx.material.icons.core)
 
     implementation(rootProject.libs.kotlinx.coroutines.android)
     implementation(rootProject.libs.mariadb.java.client)

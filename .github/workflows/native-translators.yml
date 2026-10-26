@@ -86,7 +86,10 @@ jobs:
           # checks fail, and pip on PATH would otherwise shadow the apt copy
           # unpredictably. Both build steps below use this one.
           python3 -m venv /opt/meson-venv
-          /opt/meson-venv/bin/pip install --quiet "meson>=1.3,<2"
+          # glib's meson.build:2422 requires the "packaging" module at configure time:
+          #   ERROR: python is missing modules: packaging
+          # It is a meson dependency, not a build tool, so it goes into the same venv.
+          /opt/meson-venv/bin/pip install --quiet "meson>=1.3,<2" packaging
           # $GITHUB_PATH only affects *subsequent* steps, so the venv is also exported
           # for this one. Without the second line the run failed here with
           #   meson: command not found
