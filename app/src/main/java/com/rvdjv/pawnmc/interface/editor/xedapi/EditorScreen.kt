@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -1480,6 +1481,58 @@ fun EditorScreen(
 
 
 
+                /**
+                 * Quick-compile hotspot at the bottom of the floating stack.
+                 *
+                 * It was removed by mistake together with the download action: they
+                 * were different buttons and this one is the fastest path to a build.
+                 * The toolbar and the menu can compile too, but this is one tap and
+                 * always where the thumb already is.
+                 */
+                FloatingCompileButton(
+                    enabled = if (workspace.isWorkspaceOpen) {
+                        activeDocument != null
+                    } else {
+                        viewModel.filePath.isNotBlank()
+                    },
+                    onClick = {
+                        val target = if (workspace.isWorkspaceOpen) {
+                            activeDocument?.file?.path.orEmpty()
+                        } else {
+                            viewModel.filePath
+                        }
+                        if (target.isBlank()) {
+                            Toast.makeText(context, "Open a file first", Toast.LENGTH_SHORT).show()
+                        } else {
+                            /*
+                             * Unsaved buffers are written first so the compiler
+                             * sees exactly what is on screen.
+                             */
+                            scope.launch {
+                                var allSaved = true
+                                if (activeDocument == null && viewModel.hasUnsavedChanges) {
+                                    allSaved = viewModel.saveFileSync(editorRef?.text?.toString() ?: "")
+                                }
+                                workspace.openWorkspaces.forEach { openWorkspace ->
+                                    val dirty = openWorkspace.documents.count { it.isDirty }
+                                    if (workspace.saveAll(openWorkspace) != dirty) allSaved = false
+                                }
+                                if (allSaved) {
+                                    onCompileRequest(target)
+                                    isExplorerVisible = true
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Compilation cancelled because a file could not be saved.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier.align(Alignment.TopStart)
+                )
+
                 if (isPawnTerminalVisible) {
                     val terminalSource = if (workspace.isWorkspaceOpen) {
                         activeDocument?.file
@@ -2489,3 +2542,78 @@ private fun QuickSymbolBar(
     }
 }
 
+@Composable
+private fun FloatingCompileButton(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val n_density = LocalDensity.current
+    val n_diameter: Dp = COMPILE_BUTTON_SIZE
+
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val n_maxWidth = with(n_density) { maxWidth.toPx() }
+        val n_maxHeight = with(n_density) { maxHeight.toPx() }
+        val n_diameterPx = with(n_density) { n_diameter.toPx() }
+
+        // `null` means "not dragged yet", so the button starts in the bottom end
+        // corner and follows the panel whenever it has not been moved.
+        var n_draggedOffset by remember { mutableStateOf<IntOffset?>(null) }
+        val n_restOffset = IntOffset(
+            x = (n_maxWidth - n_diameterPx - with(n_density) { 16.dp.toPx() })
+                .coerceAtLeast(0f)
+                .roundToInt(),
+            y = (n_maxHeight - n_diameterPx - with(n_density) { 16.dp.toPx() })
+                .coerceAtLeast(0f)
+                .roundToInt()
+        )
+        val n_offset = n_draggedOffset ?: n_restOffset
+
+        Surface(
+            onClick = onClick,
+            enabled = enabled,
+            shape = CircleShape,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.primaryContainer
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerHighest
+            },
+            contentColor = if (enabled) {
+                MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            shadowElevation = 6.dp,
+            modifier = Modifier
+                .offset { n_offset }
+                .size(n_diameter)
+                .pointerInput(enabled) {
+                    detectDragGestures(
+                        onDragEnd = { },
+                        onDragCancel = { },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            val n_current = n_draggedOffset ?: n_restOffset
+                            val n_newX = (n_current.x + dragAmount.x)
+                                .coerceIn(0f, (n_maxWidth - n_diameterPx).coerceAtLeast(0f))
+                            val n_newY = (n_current.y + dragAmount.y)
+                                .coerceIn(0f, (n_maxHeight - n_diameterPx).coerceAtLeast(0f))
+                            n_draggedOffset = IntOffset(n_newX.roundToInt(), n_newY.roundToInt())
+                        }
+                    )
+                }
+                .testTag("editor_compile_fab")
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = _Icons.WifiSignal,
+                    contentDescription = "Compile active file",
+                    modifier = Modifier.size(30.dp)
+                )
+            }
+        }
+    }
+}

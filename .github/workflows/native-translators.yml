@@ -131,12 +131,20 @@ jobs:
             "cpu = 'aarch64'" \
             "endian = 'little'" > glib-android.ini
           export PKG_CONFIG_LIBDIR="$TOOLCHAIN/sysroot/usr/lib/pkgconfig:$TOOLCHAIN/sysroot/usr/share/pkgconfig"
-          # iconv is not a meson option in glib: the build probes
-          # cc.find_library('iconv') and falls back to its own implementation. Bionic
-          # keeps iconv_open in libc rather than a separate libiconv, so the probe fails
-          # and meson aborts with 'Dependency "iconv" not found'. A linker script that
-          # maps -liconv to libc satisfies the probe with no real dependency.
+          # iconv needs two separate fixes and only the second was in place.
+          #
+          # 1. Link: bionic keeps iconv_open in libc, not libiconv, so
+          #    cc.find_library('iconv') fails and meson aborts. A linker script that
+          #    maps -liconv to libc satisfies the probe.
+          #
+          # 2. Compile: bionic's <iconv.h> only declares iconv_open/iconv/iconv_close
+          #    when LIBICONV_PLUG is NOT defined - the header expects a libiconv
+          #    installation. Without the define, gconvert.c fails with "call to
+          #    undeclared function 'iconv_open'". Defining it makes the header expose
+          #    the prototypes, which is exactly the configuration glib needs.
           printf 'INPUT(-lc)\n' > "$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}/libiconv.a"
+          export CFLAGS="-DLIBICONV_PLUG"
+          export CXXFLAGS="-DLIBICONV_PLUG"
           cat glib-android.ini
           meson setup glib-build glib-src \
             --cross-file glib-android.ini \
