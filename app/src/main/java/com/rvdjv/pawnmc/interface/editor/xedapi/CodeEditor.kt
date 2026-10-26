@@ -182,9 +182,16 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
         val textHeight = metrics.descent - metrics.ascent
         val y = (top + bottom) / 2f - textHeight / 2f - metrics.ascent
 
-        // Both the gutter chip and the status bar go through
-        // `cursorPositionLabel`, so the two readouts can never disagree by a row.
-        val label = cursorPositionLabel(line, column)
+        /*
+         * The label is built here rather than through `cursorPositionLabel`.
+         *
+         * `columnLabelFor` already returns a 1-based column, and the last branch
+         * returns a literal 1 for a line the selection spans. Passing that through
+         * `cursorPositionLabel` applied the one-based conversion a second time, which
+         * is where the doubled columns in the gutter came from. The status bar still
+         * uses the helper, because there it converts a raw 0-based caret.
+         */
+        val label = "${line + 1}$LINE_COLUMN_SEPARATOR$column"
         chipPaint.textSize = host.textSizePx * 0.82f
         chipPaint.typeface = host.typefaceLineNumber
         val textWidth = chipPaint.measureText(label)
@@ -217,12 +224,18 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
     }
 
     /**
-     * Returns the 1-based column to display for [line], or `null` when the line
-     * does not take part in the current selection.
+     * Returns the 1-based column to display for [line], or `null` when [line] carries
+     * no column label.
+     *
+     * Only two kinds of line get one: the line the caret sits on, and each line that
+     * a multi-line selection starts or ends on. Every other line in the gutter shows
+     * the plain number.
      */
     private fun columnLabelFor(line: Int, row: Int): Int? {
-        // With word wrap a line spans several rows; only the leading row carries
-        // the label, otherwise it would repeat down the whole line.
+        /*
+         * With word wrap a line spans several rows; only the leading row carries the
+         * label, otherwise it would repeat down the whole line.
+         */
         val layout = host.layout ?: return null
         val rowInfo = layout.getRowAt(row)
         if (!rowInfo.isLeadingRow || rowInfo.lineIndex != line) return null
@@ -232,16 +245,19 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
         val rightLine = cursor.rightLine
         val leftColumn = cursor.leftColumn
         val rightColumn = cursor.rightColumn
+
         /*
-         * A plain caret is reported as a collapsed range: left == right on both axes.
-         * The first branch used to win for that case, so the gutter showed the column
-         * where the selection starts instead of where the caret actually sits - one
-         * character behind. Compare the two ends explicitly instead of relying on
-         * branch order.
+         * A plain caret is a collapsed range: leftLine == rightLine. An earlier
+         * version tested that equality first and returned rightColumn + 1, which is
+         * correct for the caret's own line but was evaluated for every line in the
+         * document, so the whole gutter sprouted a column. The caret case has to be
+         * gated on `line` being that line.
          */
+        if (leftLine == rightLine) {
+            return if (line == leftLine) rightColumn + 1 else null
+        }
+
         return when {
-            leftLine == rightLine ->
-                if (leftColumn == rightColumn) leftColumn + 1 else rightColumn + 1
             line == rightLine -> rightColumn + 1
             line == leftLine -> leftColumn + 1
             line in leftLine until rightLine -> 1

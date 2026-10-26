@@ -38,7 +38,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.shape.CircleShape
+
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -1481,43 +1481,15 @@ fun EditorScreen(
                     }
                 )
 
-                FloatingCompileButton(
-                    enabled = if (workspace.isWorkspaceOpen) activeDocument != null else viewModel.filePath.isNotBlank(),
-                    onClick = {
-                        val n_target = if (workspace.isWorkspaceOpen) activeDocument?.file?.path.orEmpty() else viewModel.filePath
-                        if (n_target.isBlank()) {
-                            Toast.makeText(context, "Open a file first", Toast.LENGTH_SHORT).show()
-                        } else {
-                            // Unsaved buffers are written first so the compiler
-                            // sees exactly what is on screen.
-                            scope.launch {
-                                var allSaved = true
-                                if (activeDocument == null && viewModel.hasUnsavedChanges) {
-                                    allSaved = viewModel.saveFileSync(editorRef?.text?.toString() ?: "")
-                                }
-                                workspace.openWorkspaces.forEach { n_ws ->
-                                    val dirtyCount = n_ws.documents.count { it.isDirty }
-                                    if (workspace.saveAll(n_ws) != dirtyCount) allSaved = false
-                                }
-                                if (allSaved) {
-                                    onCompileRequest(n_target)
-                                    isExplorerVisible = true
-                                } else {
-                                    Toast.makeText(
-                                        context,
-                                        "Compilation cancelled because a file could not be saved.",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                            }
-                        }
-                    },
-                    modifier = Modifier.align(Alignment.TopStart)
-                )
-
-                // Download-all action, stacked under the compile button with the same
-                // floating affordance as the rest of the editor controls. It is
-                // reachable from any file, matching the "download everything" intent.
+                /*
+                 * The round compile FAB that used to sit here is gone.
+                 *
+                 * It was a freely draggable circle that drifted over the code, the
+                 * workspace panel and the floating column, and it duplicated the
+                 * compile entry the toolbar already offers. Compiling is still
+                 * reachable from the toolbar and from the menu, so nothing was lost by
+                 * removing it.
+                 */
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
                     icon = Icons.Filled.ArrowDownward,
@@ -1525,9 +1497,13 @@ fun EditorScreen(
                     testTag = "editor_download_all",
                     tint = FLOAT_TINT_DOWNLOAD,
                     isActive = isBulkDownloadRunning,
-                    // Sits directly above the compile button, so it reserves the
-                    // compile diameter plus one gap; anything less overlaps it.
-                    reservedBelow = COMPILE_BUTTON_SIZE + FLOAT_GAP,
+                    /*
+                     * The compile FAB that used to sit below this one is gone, so the
+                     * download action now rests on the toolbar rather than on another
+                     * circle. One gap keeps it clear of the toolbar without leaving the
+                     * hole the removed button used to fill.
+                     */
+                    reservedBelow = FLOAT_GAP,
                     bubbleIndex = 5,
                     onClick = {
                         if (isBulkDownloadRunning) return@FloatingRoundAction
@@ -2145,81 +2121,6 @@ private fun FloatingRoundAction(
  * offset is remembered in pixels, so it survives recomposition and theme changes.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun FloatingCompileButton(
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val n_density = LocalDensity.current
-    val n_diameter: Dp = COMPILE_BUTTON_SIZE
-
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val n_maxWidth = with(n_density) { maxWidth.toPx() }
-        val n_maxHeight = with(n_density) { maxHeight.toPx() }
-        val n_diameterPx = with(n_density) { n_diameter.toPx() }
-
-        // `null` means "not dragged yet", so the button starts in the bottom end
-        // corner and follows the panel whenever it has not been moved.
-        var n_draggedOffset by remember { mutableStateOf<IntOffset?>(null) }
-        val n_restOffset = IntOffset(
-            x = (n_maxWidth - n_diameterPx - with(n_density) { 16.dp.toPx() })
-                .coerceAtLeast(0f)
-                .roundToInt(),
-            y = (n_maxHeight - n_diameterPx - with(n_density) { 16.dp.toPx() })
-                .coerceAtLeast(0f)
-                .roundToInt()
-        )
-        val n_offset = n_draggedOffset ?: n_restOffset
-
-        Surface(
-            onClick = onClick,
-            enabled = enabled,
-            shape = CircleShape,
-            color = if (enabled) {
-                MaterialTheme.colorScheme.primaryContainer
-            } else {
-                MaterialTheme.colorScheme.surfaceContainerHighest
-            },
-            contentColor = if (enabled) {
-                MaterialTheme.colorScheme.onPrimaryContainer
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
-            shadowElevation = 6.dp,
-            modifier = Modifier
-                .offset { n_offset }
-                .size(n_diameter)
-                .pointerInput(enabled) {
-                    detectDragGestures(
-                        onDragEnd = { },
-                        onDragCancel = { },
-                        onDrag = { change, dragAmount ->
-                            change.consume()
-                            val n_current = n_draggedOffset ?: n_restOffset
-                            val n_newX = (n_current.x + dragAmount.x)
-                                .coerceIn(0f, (n_maxWidth - n_diameterPx).coerceAtLeast(0f))
-                            val n_newY = (n_current.y + dragAmount.y)
-                                .coerceIn(0f, (n_maxHeight - n_diameterPx).coerceAtLeast(0f))
-                            n_draggedOffset = IntOffset(n_newX.roundToInt(), n_newY.roundToInt())
-                        }
-                    )
-                }
-                .testTag("editor_compile_fab")
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = _Icons.WifiSignal,
-                    contentDescription = "Compile active file",
-                    modifier = Modifier.size(30.dp)
-                )
-            }
-        }
-    }
-}
 
 /** Narrowest width the workspace panel may be dragged to. */
 private const val MIN_EXPLORER_WIDTH = 200f

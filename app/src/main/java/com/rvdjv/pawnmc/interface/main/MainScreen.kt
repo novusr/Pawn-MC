@@ -376,18 +376,50 @@ fun MainScreen(
 
     val listState = rememberLazyListState()
     Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = MaterialTheme.colorScheme.background,
         /*
-         * No floating scroll button.
+         * Bottom-start: this button belongs to the main screen, and the main screen's
+         * panels live on the trailing edge.
          *
-         * It was a Scaffold FAB that floated above the whole main screen, which meant
-         * it also floated above the Xed editor when that screen was open, where it sat
-         * on top of the workspace panel and the editor's own floating stack. It was a
-         * separate control with no owner: grep showed no reference from the editor, so
-         * it was never part of the editor's design. Removing it here removes it from
-         * every screen at once. Scrolling remains a plain drag gesture; the settings
-         * screen keeps its own button because there it belongs to that screen.
+         * An earlier change removed it outright while chasing a floating button that
+         * overlapped the Xed editor. That was the wrong control: the editor has its
+         * own floating actions and never used this one, so deleting it here only took
+         * the affordance away from the screen that does use it.
          */
+        floatingActionButtonPosition = FabPosition.Start,
+        floatingActionButton = {
+            /**
+             * Two-way jump: from the top it carries the reader to the settings guide,
+             * from the bottom it turns around and comes back.
+             */
+            val fabScope = rememberCoroutineScope()
+            val atBottom = listState.isScrollInProgress.not() &&
+                listState.canScrollForward.not()
+            SmallFloatingActionButton(
+                onClick = {
+                    fabScope.launch {
+                        if (atBottom) {
+                            listState.animateScrollToItem(0)
+                        } else {
+                            listState.animateScrollToItem(Int.MAX_VALUE)
+                        }
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ) {
+                Icon(
+                    imageVector = if (atBottom) {
+                        Icons.Filled.ArrowUpward
+                    } else {
+                        Icons.Filled.ArrowDownward
+                    },
+                    contentDescription = if (atBottom) "Scroll to top" else "Scroll to bottom",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
     ) { innerPadding ->
         LazyColumn(
             state = listState,
