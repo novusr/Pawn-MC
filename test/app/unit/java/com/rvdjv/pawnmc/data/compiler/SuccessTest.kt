@@ -66,7 +66,7 @@ class SuccessTest {
         val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-compiler-detection-${System.nanoTime()}")
         val pawnoDir = File(root, "pawno")
         val compilerFile = File(pawnoDir, "pawncc.exe")
-        val sourceFile = File(root, "gamemode.pwn")
+        val sourceFile = File(root, "Server.pwn")
         val compilerBytes = ByteArray(18_944)
         CompilerConfig.STR_V31011.toByteArray(Charsets.UTF_16LE).copyInto(compilerBytes)
 

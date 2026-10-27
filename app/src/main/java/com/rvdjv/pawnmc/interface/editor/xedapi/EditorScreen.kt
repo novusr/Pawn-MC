@@ -456,7 +456,7 @@ fun EditorScreen(
                     value = newFileName,
                     onValueChange = { newFileName = it },
                     label = { Text("File name") },
-                    placeholder = { Text("gamemode.pwn") },
+                    placeholder = { Text("Server.pwn") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
                 )

@@ -51,7 +51,7 @@ private fun CompileActionCardEmptyPreview() {
 private fun CompileActionCardCompilingPreview() {
     PawnMCTheme {
         CompileActionCard(
-            selectedFileName = "gamemode.pwn",
+            selectedFileName = "Server.pwn",
             selectedFileSize = "48.2 KB",
             isCompiling = true,
             onChangeFileClick = {},
