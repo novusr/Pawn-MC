@@ -15,6 +15,14 @@ jobs:
   build:
     name: Build & Lint
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - flavor: legacy
+            label: android-7-8
+          - flavor: modern
+            label: android-8-15
     
     steps:
       - name: Checkout repository
@@ -51,19 +59,19 @@ jobs:
 
       - name: Run Lint
         shell: bash
-        run: ./gradlew lint --console=rich --no-daemon
+        run: ./gradlew lint${{ matrix.flavor == 'legacy' && 'Legacy' || 'Modern' }}Debug --console=rich --no-daemon
 
       - name: Build Debug APK
         shell: bash
-        run: ./gradlew assembleDebug --console=rich --no-daemon
+        run: ./gradlew assemble${{ matrix.flavor == 'legacy' && 'Legacy' || 'Modern' }}Debug --console=rich --no-daemon
 
       - name: Upload Debug APK
         if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/**/*.apk
+          name: app-${{ matrix.label }}-debug
+          path: app/build/outputs/apk/${{ matrix.flavor }}/debug/*.apk
           if-no-files-found: warn
           retention-days: 90
 
@@ -72,7 +80,7 @@ jobs:
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
-          name: lint-report
+          name: lint-report-${{ matrix.label }}
           path: app/build/reports
           if-no-files-found: ignore
           retention-days: 90

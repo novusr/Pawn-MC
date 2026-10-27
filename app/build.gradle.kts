@@ -42,6 +42,12 @@ android {
             // and ships as an asset, so nothing else in the app duplicates it.
             assets.srcDir(rootProject.file("data"))
         }
+        create("legacy") {
+            java.srcDir("src/legacy/java")
+        }
+        create("modern") {
+            java.srcDir("src/modern/java")
+        }
         getByName("test") {
             java.srcDir(rootProject.file("test/app/unit"))
         }
@@ -50,11 +56,28 @@ android {
         }
     }
 
+    flavorDimensions += "androidApi"
+
+    productFlavors {
+        create("legacy") {
+            dimension = "androidApi"
+            // Android 7.0/API 24 baseline. Older devices remain supported via minSdk;
+            // both variants target current Android policy requirements.
+            minSdk = 24
+            targetSdk = 36
+            applicationIdSuffix = ".legacy"
+            versionNameSuffix = "-legacy"
+        }
+        create("modern") {
+            dimension = "androidApi"
+            minSdk = 26
+            targetSdk = 36
+        }
+    }
+
     defaultConfig {
         applicationId = "com.rvdjv.pawnmc"
-        // Aligned with the embedded PocketSAMP runtime (its QEMU/MariaDB engine was
-        // written for API 26+). SDK-int checks cover the older paths for everything else.
-        minSdk = 26
+        // Both flavors target current Android while minSdk controls older-device support.
         targetSdk = 36
         versionCode = 6
         versionName = "1.5.1"
@@ -63,7 +86,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            // abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            // Pawn compiler native libraries support these ABIs. PocketSAMP's
+            // translator assets currently ship only for arm64 and stay flavor-scoped.
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
     }
@@ -154,8 +178,8 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.sora.editor)
 
-    // PocketSAMP runtime, adopted from thirdparty/PocketSAMP: the SA-MP server +
-    // MariaDB console opened from the header button that used to run self-tests.
+    // PocketSAMP is compiled as part of both flavors. Legacy retains its public
+    // runtime entry point and assets, but uses the API-24-compatible fallback behavior.
     implementation(project(":pocketsamp"))
 
     debugImplementation(libs.androidx.ui.tooling)

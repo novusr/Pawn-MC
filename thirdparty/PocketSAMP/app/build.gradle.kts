@@ -15,7 +15,9 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        minSdk = 26
+        // The legacy PawnMC flavor consumes the API-24-compatible fallback path;
+        // modern builds still include the full runtime on API 26+.
+        minSdk = 24
         consumerProguardFiles("proguard-rules.pro")
     }
 

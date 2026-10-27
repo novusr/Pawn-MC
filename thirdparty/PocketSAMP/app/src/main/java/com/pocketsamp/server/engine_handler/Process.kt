@@ -86,7 +86,13 @@ class ProcessRun(
                  */
                 Thread.sleep(300)
                 if (it.isAlive) {
-                    it.destroyForcibly()
+                    // destroyForcibly was added in API 26. On API 24/25,
+                    // destroy() is the available termination path.
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        it.destroyForcibly()
+                    } else {
+                        it.destroy()
+                    }
                 }
             } catch (ignored: Exception) {
             }
