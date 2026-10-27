@@ -92,7 +92,6 @@ jobs:
             --disable-docs \
             --disable-tools \
             --disable-guest-agent \
-            --disable-pixman \
             --disable-werror \
             --cc="$CC" --host-cc="$CC" --cxx="$CXX"
 
