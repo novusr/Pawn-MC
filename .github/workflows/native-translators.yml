@@ -74,16 +74,6 @@ jobs:
           TOOLCHAIN="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64"
           echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
           "$TOOLCHAIN/bin/clang" --version
-      - name: No glib dependency
-        run: |
-          set -euo pipefail
-          # Nothing to build here any more. glib was being cross-compiled for
-          # arm64 so that QEMU configure could read its size_t, but glib is only
-          # needed by QEMU host tools, which --disable-tools already removes.
-          # Building it meant patching bionic gaps one at a time (iconv
-          # prototypes, size_t agreement, talloc, python modules); each fix moved
-          # the failure to the next file. --disable-glib removes the whole class.
-          echo "QEMU is configured without glib; see the next step."
       - name: Configure QEMU for aarch64 Linux user-mode
         run: |
           set -euo pipefail
@@ -91,13 +81,9 @@ jobs:
           CXX="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang++"
           # --cross-prefix is deliberately NOT passed: QEMU appends "pkg-config" to
           # it and looks for llvm-pkg-config, which the NDK does not ship.
-          #
-          # --disable-glib: glib is only used by QEMU host tools, and --disable-tools
-          # already removes those. Cross-building glib for Android meant patching
-          # bionic gaps one file at a time; dropping it removes the whole class.
-          #
-          # --static is the only usable mode: Android executes these from
-          # lib/<abi>/, and a command-line program has no loadLibrary fallback.
+          # QEMU 7.2 requires glib; provide the runner's native glib pkg-config
+          # metadata to configure, while compiling the target with the Android NDK.
+          # --static keeps the command-line program self-contained for Android.
           cd qemu
           ./configure \
             --target-list=i386-linux-user \
@@ -106,7 +92,6 @@ jobs:
             --disable-docs \
             --disable-tools \
             --disable-guest-agent \
-            --disable-glib \
             --disable-pixman \
             --disable-werror \
             --cc="$CC" --host-cc="$CC" --cxx="$CXX"
