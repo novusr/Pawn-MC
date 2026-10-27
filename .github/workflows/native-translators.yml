@@ -37,6 +37,7 @@ env:
   PRoot_COMMIT: 'master'
   TALLOC_VERSION: '2.4.2'
   GLIB_VERSION: '2.80.0'
+  LIBICONV_VERSION: '1.17'
 
 jobs:
   qemu:
@@ -51,7 +52,7 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            build-essential ninja-build pkg-config python3 python3-venv \
+            build-essential ninja-build meson pkg-config python3 python3-venv \
             flex bison libglib2.0-dev git
 
       - name: Fetch QEMU source
@@ -74,6 +75,92 @@ jobs:
           TOOLCHAIN="$ANDROID_SDK_ROOT/ndk/${NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64"
           echo "TOOLCHAIN=$TOOLCHAIN" >> "$GITHUB_ENV"
           "$TOOLCHAIN/bin/clang" --version
+
+      - name: Build glib for arm64
+        run: |
+          set -euo pipefail
+          CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang"
+          CXX="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang++"
+          mkdir -p /opt/glib-android
+
+          # Bionic only provides iconv from API 28 onward, and this build targets
+          # API 26, while glib hard-requires iconv (it runs dependency('iconv'),
+          # which is not optional). Build GNU libiconv into the target prefix so
+          # glib's meson setup can find iconv_open in -liconv.
+          curl -fsSL "https://ftp.gnu.org/gnu/libiconv/libiconv-${LIBICONV_VERSION}.tar.gz" -o libiconv.tgz
+          tar xzf libiconv.tgz
+          cd "libiconv-${LIBICONV_VERSION}"
+          ./configure \
+            --host=aarch64-linux-android \
+            --prefix=/opt/glib-android \
+            --enable-static --disable-shared \
+            CC="$CC"
+          make -j"$(nproc)"
+          make install
+          cd ..
+
+          # Meson's dependency('iconv') probes only "builtin" (libc) and
+          # "system" (the compiler's default search paths); project
+          # c_args/c_link_args are NOT applied to that lookup, so
+          # /opt/glib-android stays invisible to it ("tried builtin and system").
+          # Copying the header and static archive into the NDK sysroot puts them
+          # on the default include/lib path. It also guarantees the final QEMU
+          # static link resolves -liconv without extra flags.
+          cp /opt/glib-android/include/iconv.h \
+            "$TOOLCHAIN/sysroot/usr/include/iconv.h"
+          cp /opt/glib-android/lib/libiconv.a \
+            "$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}/libiconv.a"
+
+          # QEMU 7.2's configure compiles AND links a glib test program using
+          # whatever pkg-config reports. With the host's x86_64 glib .pc files,
+          # the aarch64 link fails and QEMU reports it as the misleading
+          # "sizeof(size_t) doesn't match GLIB_SIZEOF_SIZE_T" error. The only
+          # real fix is a glib built for aarch64/Android, then setting
+          # PKG_CONFIG_LIBDIR to it in the configure step below.
+          #
+          # glib's required third-party pieces (pcre2, libffi, zlib) come from
+          # glib's own meson subprojects via --wrap-mode=forcefallback, so they
+          # are built for the same target with the same compiler.
+          git clone --depth 1 --branch "${GLIB_VERSION}" https://github.com/GNOME/glib.git glib-src
+          printf '%s\n' \
+            '[binaries]' \
+            "c = '$CC'" \
+            "cpp = '$CXX'" \
+            "ar = '$TOOLCHAIN/bin/llvm-ar'" \
+            "strip = '$TOOLCHAIN/bin/llvm-strip'" \
+            "pkg-config = 'pkg-config'" \
+            '' \
+            '[host_machine]' \
+            "system = 'linux'" \
+            "cpu_family = 'aarch64'" \
+            "cpu = 'aarch64'" \
+            "endian = 'little'" \
+            '' \
+            '[properties]' \
+            'needs_exe_wrapper = true' \
+            > cross-aarch64-android.ini
+          export PKG_CONFIG_LIBDIR=/opt/glib-android/lib/pkgconfig
+          cd glib-src
+          meson setup build-android \
+            --cross-file ../cross-aarch64-android.ini \
+            --prefix=/opt/glib-android \
+            --default-library=static \
+            --wrap-mode=forcefallback \
+            -Dc_args=-I/opt/glib-android/include \
+            -Dc_link_args=-L/opt/glib-android/lib \
+            -Dtests=false \
+            -Dintrospection=disabled \
+            -Dlibmount=disabled \
+            -Dselinux=disabled \
+            -Dxattr=false \
+            -Dman-pages=disabled \
+            -Dglib_debug=disabled
+          ninja -C build-android
+          ninja -C build-android install
+          # Every .pc QEMU may ask for (glib, gobject, gthread, gio, gmodule,
+          # pcre2, ffi, iconv) must live in this directory.
+          ls /opt/glib-android/lib/pkgconfig
+
       - name: Configure QEMU for aarch64 Linux user-mode
         run: |
           set -euo pipefail
@@ -81,9 +168,13 @@ jobs:
           CXX="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang++"
           # --cross-prefix is deliberately NOT passed: QEMU appends "pkg-config" to
           # it and looks for llvm-pkg-config, which the NDK does not ship.
-          # QEMU 7.2 requires glib; provide the runner's native glib pkg-config
-          # metadata to configure, while compiling the target with the Android NDK.
+          #
+          # QEMU 7.2 requires glib and sanity-checks it by compiling AND linking a
+          # test program with the target compiler. pkg-config must therefore
+          # resolve to the aarch64 glib built in the previous step, never to the
+          # runner's x86_64 glib.
           # --static keeps the command-line program self-contained for Android.
+          export PKG_CONFIG_LIBDIR=/opt/glib-android/lib/pkgconfig
           cd qemu
           ./configure \
             --target-list=i386-linux-user \
@@ -144,7 +235,7 @@ jobs:
           # the build stops at "talloc development files not found".
           sudo apt-get install -y --no-install-recommends \
             build-essential pkg-config git ca-certificates \
-            libtalloc-dev libssl-dev
+            libtalloc-dev libssl-dev qemu-user-static
 
       - name: Fetch PRoot source
         run: |
@@ -177,37 +268,35 @@ jobs:
           curl -fsSL "https://www.samba.org/ftp/talloc/talloc-${TALLOC_VERSION}.tar.gz" -o talloc.tgz
           tar xzf talloc.tgz
           cd "talloc-${TALLOC_VERSION}"
-          # Samba refuses to configure without 64-bit off_t:
-          #   Samba requires large file support, but not available on this platform:
-          #   sizeof(off_t) < 8
-          # Bionic leaves off_t at 32 bits unless asked otherwise, and the target has no
-          # getconf, so waf cannot detect LFS on its own. _FILE_OFFSET_BITS=64 is the
-          # documented switch and bionic honours it for the file APIs talloc uses.
+          # waf cannot execute the target binaries, so every test that must be
+          # run goes through buildtools/wafsamba/samba_cross.py:
+          #   - the question is looked up in the cross-answers file by exact
+          #     string match ("question: answer");
+          #   - a missing answer is appended as "UNKNOWN" and, once the run
+          #     finishes, configure aborts with "Cross answers file ... is
+          #     incomplete".
+          # Seeding every question by hand cannot work: fixing one batch only
+          # lets waf proceed to the next batch of run checks (the previous
+          # failure at HAVE_SECURE_MKSTEMP was a seeded answer being applied
+          # correctly; the abort came from later questions). Instead,
+          # --cross-execute=qemu-aarch64-static lets waf run each test binary
+          # under qemu-user and record genuine answers for bionic.
           #
-          # The run of UNKNOWN answers (uname, rpath, getconf) is a separate symptom:
-          # waf tried to execute the target binary. --cross-answers supplies those
-          # values instead of probing.
-          # waf aborts on the first probe it cannot answer, so every check the log
-          # reported as "not found" needs an explicit answer. They are answered from what
-          # bionic actually provides instead of being left to a guessed default.
+          # Only the checks qemu gets wrong stay seeded. qemu-user passes the
+          # host uname through, so the machine type would come back as x86_64;
+          # getconf LFS_CFLAGS is probed through the host getconf, not the
+          # target. aarch64 is LP64, so an empty LFS_CFLAGS is the truth.
+          #
+          # Answer format matters (cross_answer parser): bare OK/NO/YES/FAIL
+          # map to exit codes, but any other value MUST be a quoted string;
+          # a bare word ("linux") or an empty value hits
+          # "Bad answer format '...'" and aborts configure immediately.
           printf '%s\n' \
-            'Checking uname sysname type: linux' \
-            'Checking uname machine type: aarch64' \
-            'Checking uname release type: 6.1.0' \
-            'Checking uname version type: 1' \
-            'Checking getconf LFS_CFLAGS: ' \
-            'Checking for large file support without additional flags: OK' \
-            'Checking for -D_FILE_OFFSET_BITS=64: OK' \
-            'Checking for -D_LARGE_FILES: NO' \
-            'Checking for rpath library support: NO' \
-            'Checking for -Wl,--version-script support: NO' \
-            'Checking for working strptime: NO' \
-            'Checking C prototype for gettimeofday: OK' \
-            'Checking for C99 vsnprintf: OK' \
-            'Checking for HAVE_SHARED_MMAP: OK' \
-            'Checking for HAVE_MREMAP: NO' \
-            'Checking for HAVE_INCOHERENT_MMAP: NO' \
-            'Checking for HAVE_SECURE_MKSTEMP: NO' \
+            'Checking uname sysname type: "Linux"' \
+            'Checking uname machine type: "aarch64"' \
+            'Checking uname release type: "6.1.0"' \
+            'Checking uname version type: "1"' \
+            'Checking getconf LFS_CFLAGS: ""' \
             > ../talloc-cross-answers.txt
           export CFLAGS="-fPIC -D_FILE_OFFSET_BITS=64"
           export LDFLAGS="-static -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}"
@@ -218,6 +307,7 @@ jobs:
             --prefix=/opt/talloc-android \
             --disable-python \
             --cross-compile \
+            --cross-execute=qemu-aarch64-static \
             --cross-answers=../talloc-cross-answers.txt \
             CC="$CC" || { \
               echo '::error::talloc configure failed; last 120 lines of config.log:'
@@ -227,6 +317,7 @@ jobs:
           make -j"$(nproc)"
           make install
           ls /opt/talloc-android/include /opt/talloc-android/lib
+
       - name: Build
         run: |
           set -euo pipefail
