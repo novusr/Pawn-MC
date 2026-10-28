@@ -118,9 +118,16 @@ jobs:
           # real fix is a glib built for aarch64/Android, then setting
           # PKG_CONFIG_LIBDIR to it in the configure step below.
           #
-          # glib's required third-party pieces (pcre2, libffi, zlib) come from
-          # glib's own meson subprojects via --wrap-mode=forcefallback, so they
-          # are built for the same target with the same compiler.
+          # Avoid GLib's stale WrapDB zlib 1.2.11 hash: build a pinned current
+          # zlib release for Android and have Meson use this target dependency.
+          ZLIB_VERSION=1.3.1
+          curl -fsSL "https://zlib.net/fossils/zlib-${ZLIB_VERSION}.tar.gz" -o zlib.tgz
+          tar xzf zlib.tgz
+          cd "zlib-${ZLIB_VERSION}"
+          CC="$CC" ./configure --static --prefix=/opt/glib-android
+          make -j"$(nproc)"
+          make install
+          cd ..
           git clone --depth 1 --branch "${GLIB_VERSION}" https://github.com/GNOME/glib.git glib-src
           printf '%s\n' \
             '[binaries]' \
@@ -139,10 +146,21 @@ jobs:
             '[properties]' \
             'needs_exe_wrapper = true' \
             > cross-aarch64-android.ini
+          # Cross-file compiler definitions apply to Meson's target machine. Meson
+          # otherwise treats the x86_64 runner as the host compiler environment and
+          # can try to execute the arm64 sanity-check binary as a native executable.
+          printf '%s\n' \
+            '[binaries]' \
+            "c = 'cc'" \
+            "cpp = 'c++'" \
+            "ar = 'ar'" \
+            "strip = 'strip'" \
+            > cross-native.ini
           export PKG_CONFIG_LIBDIR=/opt/glib-android/lib/pkgconfig
           cd glib-src
           meson setup build-android \
             --cross-file ../cross-aarch64-android.ini \
+            --native-file ../cross-native.ini \
             --prefix=/opt/glib-android \
             --default-library=static \
             --wrap-mode=forcefallback \
@@ -166,31 +184,57 @@ jobs:
           set -euo pipefail
           CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang"
           CXX="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang++"
-          # --cross-prefix is deliberately NOT passed: QEMU appends "pkg-config" to
-          # it and looks for llvm-pkg-config, which the NDK does not ship.
-          #
-          # QEMU 7.2 requires glib and sanity-checks it by compiling AND linking a
-          # test program with the target compiler. pkg-config must therefore
-          # resolve to the aarch64 glib built in the previous step, never to the
-          # runner's x86_64 glib.
-          # --static keeps the command-line program self-contained for Android.
+          # Keep build output on the runner architecture, and select Android only
+          # for QEMU's target compiler. The NDK clang driver handles target/sysroot.
           export PKG_CONFIG_LIBDIR=/opt/glib-android/lib/pkgconfig
           cd qemu
+          set +e
           ./configure \
             --target-list=i386-linux-user \
+            --cross-prefix="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-" \
             --static \
             --disable-system \
             --disable-docs \
             --disable-tools \
             --disable-guest-agent \
             --disable-werror \
-            --cc="$CC" --host-cc="$CC" --cxx="$CXX"
+            --cc="$TOOLCHAIN/bin/clang" --host-cc=clang --cxx="$TOOLCHAIN/bin/clang++"
+          configure_status=$?
+          set -e
+          if [ "$configure_status" -ne 0 ]; then
+            echo '::group::QEMU configure diagnostics'
+            if [ -f build/meson-logs/meson-log.txt ]; then
+              cat build/meson-logs/meson-log.txt
+            fi
+            if [ -f build/meson-logs/meson-log.json ]; then
+              cat build/meson-logs/meson-log.json
+            fi
+            if [ -f config.log ]; then
+              echo '--- QEMU config.log (tail) ---'
+              tail -n 200 config.log
+            fi
+            echo '::endgroup::'
+            exit "$configure_status"
+          fi
 
       - name: Build
         run: |
           set -euo pipefail
+          set +e
           make -j"$(nproc)"
-
+          build_status=$?
+          set -e
+          if [ "$build_status" -ne 0 ]; then
+            echo '::group::QEMU build diagnostics'
+            if [ -f build/meson-logs/meson-log.txt ]; then
+              cat build/meson-logs/meson-log.txt
+            fi
+            if [ -f build/meson-logs/meson-log.json ]; then
+              cat build/meson-logs/meson-log.json
+            fi
+            echo '::endgroup::'
+            exit "$build_status"
+          fi
       - name: Stage as an Android shared object
         run: |
           set -euo pipefail
@@ -300,6 +344,11 @@ jobs:
             > ../talloc-cross-answers.txt
           export CFLAGS="-fPIC -D_FILE_OFFSET_BITS=64"
           export LDFLAGS="-static -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}"
+          export LINK_CC="$CC"
+          # Avoid Waf's default -shared version script, which names glibc-only
+          # linker boundary symbols (_end, __bss_start, _edata) unavailable on Android.
+          export SHLD="$CC"
+          export SHLD_FLAGS="-static"
           # --enable-talloc-compat1 is a boolean waf switch and takes no value; passing
           # "=no" aborts with "option does not take a value". Omitting it is correct.
           ./configure \
@@ -314,8 +363,13 @@ jobs:
               tail -n 120 bin/config.log 2>/dev/null || true
               exit 1
             }
-          make -j"$(nproc)"
-          make install
+          # The default Waf target runs host tests and links a shared library,
+          # which fails on Android's linker/version-script differences. Build only
+          # the talloc library target, then stage its generated static archive.
+          ./buildtools/bin/waf build --targets=talloc
+          install -D -m 644 bin/default/libtalloc.a /opt/talloc-android/libtalloc.a
+          install -D -m 644 talloc.h /opt/talloc-android/include/talloc.h
+          install -D -m 644 bin/default/talloc.pc /opt/talloc-android/lib/pkgconfig/talloc.pc
           ls /opt/talloc-android/include /opt/talloc-android/lib
 
       - name: Build
