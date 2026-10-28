@@ -15,6 +15,9 @@
 -keep class com.rvdjv.pawnmc.data.config.CompilerConfig$CompilerVersion { *; }
 -keep class com.rvdjv.pawnmc.data.config.CompilerConfig$DebugLevel { *; }
 
+# Material Icons Extended generates one ImageVector getter per icon. Do not add
+# package-wide keep rules: unreachable generated getters must remain shrinkable.
+
 # Preserve line numbers for crash reports
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile

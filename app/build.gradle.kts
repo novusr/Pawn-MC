@@ -174,6 +174,9 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    // Extended icons are shared with PocketSAMP's UI through the same Compose
+    // version catalog; R8 removes every generated ImageVector not referenced here
+    // or by the embedded runtime.
     implementation(libs.androidx.material.icons.core)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.sora.editor)

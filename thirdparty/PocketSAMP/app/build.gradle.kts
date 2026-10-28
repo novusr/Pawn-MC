@@ -18,7 +18,6 @@ android {
         // The legacy PawnMC flavor consumes the API-24-compatible fallback path;
         // modern builds still include the full runtime on API 26+.
         minSdk = 24
-        consumerProguardFiles("proguard-rules.pro")
     }
 
     compileOptions {
@@ -70,12 +69,8 @@ dependencies {
     implementation(rootProject.libs.androidx.ui)
     implementation(rootProject.libs.androidx.ui.graphics)
     implementation(rootProject.libs.androidx.material3)
-    /*
-     * extended, not core: the tabs and screens use BugReport, Storage, Terminal,
-     * Timer, ContentCopy, OpenInBrowser, PlayArrow, Stop, Refresh and CheckCircle.
-     * Only ArrowBack, Dashboard and Add are in material-icons-core, so switching to
-     * core breaks the build.
-     */
+    // This library shares the host app's Material icon artifacts and version.
+    // Only explicitly referenced icon ImageVectors are packaged after R8 shrinking.
     implementation(rootProject.libs.androidx.material.icons.extended)
 
     implementation(rootProject.libs.kotlinx.coroutines.android)
