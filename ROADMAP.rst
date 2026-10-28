@@ -32,7 +32,7 @@ From a review of the repository, the current project focuses on:
      - Check GitHub releases and prepare update/install flow
 
 
-Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.pawnmc``, ``versionCode`` 6, ``versionName`` 1.5.1, ``minSdk`` 24, ``compileSdk``/``targetSdk`` 36, NDK 29.0.14206865, CMake 3.22.1, ABIs ``arm64-v8a``, ``armeabi-v7a``, ``x86_64``.
+Current app metadata (``app/build.gradle.kts``): ``applicationId`` ``com.rvdjv.pawnmc``, ``versionCode`` 6, ``versionName`` 1.5.2, ``minSdk`` 24, ``compileSdk``/``targetSdk`` 36, NDK 29.0.14206865, CMake 3.22.1, ABIs ``arm64-v8a``, ``armeabi-v7a``, ``x86_64``.
 
 
 

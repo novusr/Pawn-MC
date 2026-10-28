@@ -251,7 +251,7 @@ internal fun DeveloperPortal(
                                 context.packageManager.getPackageInfo(context.packageName, 0)
                             }
                         }.getOrNull()
-                        val versionName = packageInfo?.versionName ?: "1.5.1"
+                        val versionName = packageInfo?.versionName ?: "1.5.2"
                         output = "PawnMC v$versionName (compiler: ${selectedVersion.value})"
                         markdown = false
                     }

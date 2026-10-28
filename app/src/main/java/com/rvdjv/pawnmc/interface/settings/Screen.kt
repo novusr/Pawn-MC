@@ -920,7 +920,7 @@ fun SettingsScreen(
                             text = localizer.get(
                                 "settings.include.paths.notice.desc",
                                 appLanguage,
-                                "PawnMC v1.5.1 introduces a new system. " +
+                                "PawnMC v1.5.2 introduces a new system. " +
                                     "You no longer need to manually add an include path if you use 'pawno/include'. " +
                                     "The system will automatically apply 'pawno/include' and 'gamemodes' when you select or " +
                                     "browse a file for compilation. " +

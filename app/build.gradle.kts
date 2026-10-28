@@ -80,7 +80,7 @@ android {
         // Both flavors target current Android while minSdk controls older-device support.
         targetSdk = 36
         versionCode = 6
-        versionName = "1.5.1"
+        versionName = "1.5.2"
 
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
