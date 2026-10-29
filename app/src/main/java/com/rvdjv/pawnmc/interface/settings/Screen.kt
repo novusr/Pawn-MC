@@ -189,6 +189,7 @@ fun SettingsScreen(
     focusTarget: SettingsTarget? = null
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
     val settingsScrollState = rememberScrollState()
 
     // Y offset of each section, filled in by `onGloballyPositioned` as the screen is laid
@@ -204,7 +205,7 @@ fun SettingsScreen(
         val top = sectionOffsets[section] ?: return@LaunchedEffect
         // Preserve the intro/header when opening the shared General section so the
         // clicked setting's description remains visible below the collapsing app bar.
-        val offset = (top - with(LocalDensity.current) { 96.dp.roundToPx() }).coerceAtLeast(0)
+        val offset = (top - with(density) { 96.dp.roundToPx() }).coerceAtLeast(0)
         settingsScrollState.scrollTo(offset.coerceAtMost(settingsScrollState.maxValue))
     }
     val updateManager = remember { UpdateManager(context) }
@@ -260,11 +261,12 @@ fun SettingsScreen(
         }
     }
 
+    val refreshUpdateStatusState = rememberUpdatedState<() -> Unit>({})
     DisposableEffect(context, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME && updateCheckOnResume) {
                 updateCheckOnResume = false
-                refreshUpdateStatus()
+                refreshUpdateStatusState.value()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -328,6 +330,8 @@ fun SettingsScreen(
             }
         }
     }
+
+    refreshUpdateStatusState.value = { refreshUpdateStatus() }
 
     // loadinfo version
     LaunchedEffect(Unit) {
