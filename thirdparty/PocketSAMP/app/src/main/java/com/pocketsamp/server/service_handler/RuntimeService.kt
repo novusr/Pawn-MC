@@ -21,7 +21,6 @@ import com.pocketsamp.server.engine_handler.Samp
 import com.pocketsamp.server.crash_handler.Handler
 import com.pocketsamp.server.crash_handler.Manager
 import com.pocketsamp.server.crash_handler.Report
-import com.rvdjv.pawnmc.data.log.CompileLogStore
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,7 +48,11 @@ class RuntimeService : Service() {
 
         const val ACTION_START = "com.pocketsamp.server.ACTION_START"
         const val ACTION_STOP = "com.pocketsamp.server.ACTION_STOP"
-        @Volatile private var appContext: Context? = null
+        @Volatile private var logWriter: ((String) -> Unit)? = null
+        /** Install the host app's shared SQLite logger before PocketSAMP starts. */
+        fun installLogWriter(writer: (String) -> Unit) {
+            logWriter = writer
+        }
 
         /** True while the service (and therefore the engine) is alive. */
         @Volatile
@@ -70,8 +73,8 @@ class RuntimeService : Service() {
         private val logLock = Any()
 
         fun appendLog(line: String) {
-            // Persist PocketSAMP output through PawnMC's shared compiler-log SQLite.
-            appContext?.let { CompileLogStore.recordPocketSampLine(it, line) }
+            // Logging failures must not interrupt server startup or console updates.
+            runCatching { logWriter?.invoke(line) }
             synchronized(logLock) {
                 val current = _logFeed.value.toMutableList()
                 if (current.size > 500) {
@@ -112,7 +115,6 @@ class RuntimeService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        appContext = applicationContext
         isServiceRunning = true
         createNotificationChannel()
 
