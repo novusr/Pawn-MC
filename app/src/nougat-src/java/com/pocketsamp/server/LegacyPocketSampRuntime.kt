@@ -2,7 +2,7 @@ package com.pocketsamp.server
 import android.content.Context
 import android.os.Build
 import android.widget.Toast
-/** Android 7 compatibility entry point; Android 8+ uses the embedded PocketSAMP runtime. */
+/** Android Nougat compatibility entry point; Android 8+ uses the embedded PocketSAMP runtime. */
 object SampApp {
     fun install(context: Context) = Unit
     fun launch(context: Context) {

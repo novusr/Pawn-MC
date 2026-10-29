@@ -127,6 +127,23 @@ object CompileLogStore {
         }
     }
 
+    /** Records one PocketSAMP console line using the same SQLite schema and retention policy. */
+    fun recordPocketSampLine(context: Context, line: String) {
+        val now = System.currentTimeMillis()
+        record(
+            context,
+            Entry(
+                timestamp = now,
+                sourcePath = "pocketsamp://console",
+                sourceName = "PocketSAMP Console",
+                exitCode = 0,
+                durationMs = 0L,
+                compilerVersion = "PocketSAMP",
+                output = line
+            )
+        )
+    }
+
     /** Total number of logged compiles; used for the "total file logging" readout. */
     fun totalEntries(context: Context): Int {
         val store = helperFor(context) ?: return 0

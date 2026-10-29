@@ -36,12 +36,12 @@ class UpdateManagerTest {
 
         val release = parseGitHubRelease(json)
 
-        assertEquals("https://example.com/app-android-7-8-debug.zip", release.legacyArchiveUrl)
-        assertEquals("https://example.com/app-android-8-15-debug.zip", release.modernArchiveUrl)
-        assertEquals("https://example.com/app-android-7-8-debug.zip", release.archiveUrl(isLegacyBuild = true))
-        assertEquals("https://example.com/app-android-8-15-debug.zip", release.archiveUrl(isLegacyBuild = false))
-        assertEquals(null, release.copy(legacyArchiveUrl = null).archiveUrl(isLegacyBuild = true))
-        assertEquals(null, release.copy(modernArchiveUrl = null).archiveUrl(isLegacyBuild = false))
+        assertEquals("https://example.com/app-android-7-8-debug.zip", release.nougatArchiveUrl)
+        assertEquals("https://example.com/app-android-8-15-debug.zip", release.newerArchiveUrl)
+        assertEquals("https://example.com/app-android-7-8-debug.zip", release.archiveUrl(isNougatBuild = true))
+        assertEquals("https://example.com/app-android-8-15-debug.zip", release.archiveUrl(isNougatBuild = false))
+        assertEquals(null, release.copy(nougatArchiveUrl = null).archiveUrl(isNougatBuild = true))
+        assertEquals(null, release.copy(newerArchiveUrl = null).archiveUrl(isNougatBuild = false))
     }
 
     @Test
@@ -62,8 +62,8 @@ class UpdateManagerTest {
 
         val release = parseGitHubRelease(json)
 
-        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isLegacyBuild = true))
-        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isLegacyBuild = false))
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isNougatBuild = true))
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isNougatBuild = false))
     }
 
     @Test
@@ -87,10 +87,10 @@ class UpdateManagerTest {
         val release = parseGitHubRelease(json)
 
         assertEquals("v1.5.100", release.version)
-        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.legacyArchiveUrl)
-        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.modernArchiveUrl)
-        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isLegacyBuild = true))
-        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isLegacyBuild = false))
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.nougatArchiveUrl)
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.newerArchiveUrl)
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isNougatBuild = true))
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isNougatBuild = false))
         assertTrue(release.bodyMarkdown.contains("fixed ????????"))
         assertTrue(release.bodyMarkdown.contains("important"))
     }

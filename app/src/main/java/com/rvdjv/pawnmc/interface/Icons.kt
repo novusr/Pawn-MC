@@ -266,7 +266,7 @@ object _Icons {
      * Flower icon: six round petals around a punched-out centre.
      *
      * Kept for the self-test/decorative surfaces; the floating compile button of the
-     * Xed editor uses [WifiSignal] instead.
+     * Xed editor uses [Hotspot] instead.
      *
      * Each petal is a circle drawn with four cubic curves and every circle shares
      * one even-odd path, so the six petals read as a single silhouette while the
@@ -305,9 +305,9 @@ object _Icons {
      * it — the tethering / hotspot glyph. Each arc is a stroked ring segment, so
      * the icon stays light in weight next to the filled Material glyphs.
      */
-    val WifiSignal: ImageVector by lazy {
+    val Hotspot: ImageVector by lazy {
         ImageVector.Builder(
-            name = "_Icons.WifiSignal",
+            name = "_Icons.Hotspot",
             defaultWidth = 24.dp,
             defaultHeight = 24.dp,
             viewportWidth = 24f,

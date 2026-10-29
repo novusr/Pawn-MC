@@ -42,11 +42,13 @@ android {
             // and ships as an asset, so nothing else in the app duplicates it.
             assets.srcDir(rootProject.file("data"))
         }
-        create("legacy") {
-            java.srcDir("src/legacy/java")
+        create("nougat") {
+            java.srcDir("src/nougat-src/java")
+            res.srcDir("src/nougat-src/res")
         }
-        create("modern") {
-            java.srcDir("src/modern/java")
+        create("newer") {
+            java.srcDir("src/newer-src/java")
+            res.srcDir("src/newer-src/res")
         }
         getByName("test") {
             java.srcDir(rootProject.file("test/app/unit"))
@@ -59,15 +61,16 @@ android {
     flavorDimensions += "androidApi"
 
     productFlavors {
-        create("legacy") {
+        create("nougat") {
             dimension = "androidApi"
-            // Keep the legacy package ID stable so Android can update existing Android 7/8 installations in place.
+            // Preserve the established package suffix for in-place updates.
             minSdk = 24
             targetSdk = 36
+            // Kept stable so Android can update installed Nougat packages in place.
             applicationIdSuffix = ".legacy"
-            versionNameSuffix = "-legacy"
+            versionNameSuffix = "-nougat"
         }
-        create("modern") {
+        create("newer") {
             dimension = "androidApi"
             minSdk = 26
             targetSdk = 36
@@ -99,6 +102,8 @@ android {
             }
             isMinifyEnabled = true
             isShrinkResources = true
+            // CI release artifacts remain installable without a private signing secret.
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -180,8 +185,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.sora.editor)
 
-    // PocketSAMP is compiled as part of both flavors. Legacy retains its public
-    // runtime entry point and assets, but uses the API-24-compatible fallback behavior.
+    // PocketSAMP is compiled as part of both flavors. Nougat uses the API-24-compatible fallback behavior.
     implementation(project(":pocketsamp"))
 
     debugImplementation(libs.androidx.ui.tooling)

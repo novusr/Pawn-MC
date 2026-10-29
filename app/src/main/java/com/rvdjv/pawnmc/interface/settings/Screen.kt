@@ -200,8 +200,12 @@ fun SettingsScreen(
     // Clamping keeps a target whose section is shorter than the viewport from trying to
     // scroll past the end.
     LaunchedEffect(focusTarget, sectionOffsets.size) {
-        val offset = focusTarget?.sectionKey?.let { sectionOffsets[it] } ?: return@LaunchedEffect
-        settingsScrollState.animateScrollTo(offset.coerceAtMost(settingsScrollState.maxValue))
+        val section = focusTarget?.sectionKey ?: return@LaunchedEffect
+        val top = sectionOffsets[section] ?: return@LaunchedEffect
+        // Preserve the intro/header when opening the shared General section so the
+        // clicked setting's description remains visible below the collapsing app bar.
+        val offset = (top - with(LocalDensity.current) { 96.dp.roundToPx() }).coerceAtLeast(0)
+        settingsScrollState.scrollTo(offset.coerceAtMost(settingsScrollState.maxValue))
     }
     val updateManager = remember { UpdateManager(context) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -289,7 +293,7 @@ fun SettingsScreen(
                         throw IllegalStateException("No compatible Android package exists in the latest release.")
                     }
                     val hasValidApk = downloaded != null && downloaded.isFile && downloaded.length() > 0L
-                    val packageLabel = if (updateManager.isLegacyBuild()) "Android 7/8" else "Android 8–15"
+                    val packageLabel = if (updateManager.isNougatBuild()) "Nougat (Android 7/8)" else "Newer (Android 8–15)"
                     updateStatus = if (hasValidApk) "Update available: $latestVersion ($packageLabel)" else "Update available, but no compatible package is attached"
                     lastReleaseInfo = release?.releaseUrl
                     releaseNotesMarkdown = release?.bodyMarkdown.orEmpty().ifBlank { "No release notes provided." }
@@ -770,6 +774,7 @@ fun SettingsScreen(
                     )
 
                     SwitchRow(
+                        modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.Filesystem),
                         title = localizer.get("settings.option.ignorecase", appLanguage, "Filesystem"),
                         description = localizer.get("settings.option.ignorecase.desc", appLanguage, "Backs the folder up as \"folder.backup\", then lowercases every file name except the one you selected and rewrites every #include reference to lowercase. It runs once per folder because Android storage is case sensitive."),
                         checked = viewModel.n_ignore_case,
@@ -782,6 +787,7 @@ fun SettingsScreen(
                     )
 
                     SwitchRow(
+                        modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.Explanations),
                         title = localizer.get("settings.option.explain", appLanguage, "Explain Output"),
                         description = localizer.get("settings.option.explain.desc", appLanguage, "Add human-readable explanations next to warnings, errors, and fatal messages extracted from the compiler log."),
                         checked = viewModel.n_explain_output,
@@ -1969,10 +1975,13 @@ private fun hexToArgb(hex: String): Int =
 private val SettingsTarget.sectionKey: SettingsTarget
     get() = when (this) {
         SettingsTarget.Language,
+        SettingsTarget.Theme,
         SettingsTarget.CompilerVersion,
         SettingsTarget.General -> SettingsTarget.General
 
         SettingsTarget.CompilerOptions -> SettingsTarget.CompilerOptions
+        SettingsTarget.Filesystem,
+        SettingsTarget.Explanations -> SettingsTarget.CompilerOptions
         SettingsTarget.IncludePaths -> SettingsTarget.IncludePaths
         SettingsTarget.EditorAppearance -> SettingsTarget.EditorAppearance
         SettingsTarget.Updates -> SettingsTarget.Updates

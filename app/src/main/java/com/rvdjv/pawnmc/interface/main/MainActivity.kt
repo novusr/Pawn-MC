@@ -146,6 +146,7 @@ class MainActivity : ComponentActivity() {
                         onEditorClick = {
                             isEditorOpen = true
                         },
+
                         onSettingsClick = {
                             startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
                         },

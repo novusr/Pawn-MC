@@ -58,7 +58,7 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.HourglassEmpty
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.PanTool
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.TimerOff
@@ -969,7 +969,7 @@ fun EditorScreen(
                                 text = { Text(if (isExplorerVisible) "Hide Workspace Panel" else "Show Workspace Panel") },
                                 leadingIcon = {
                                     Icon(
-                                        imageVector = if (isExplorerVisible) Icons.Filled.ChevronRight else Icons.Filled.Palette,
+                                        imageVector = if (isExplorerVisible) Icons.Filled.ChevronRight else Icons.Filled.Explore,
                                         contentDescription = null
                                     )
                                 },
@@ -1446,7 +1446,7 @@ fun EditorScreen(
                 // while the explorer panel is open.
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
-                    icon = _Icons.Flower,
+                    icon = Icons.Filled.Explore,
                     contentDescription = if (isExplorerVisible) "Hide workspace panel" else "Show workspace panel",
                     testTag = "editor_explorer_toggle",
                     tint = FLOAT_TINT_NEUTRAL,
@@ -1765,7 +1765,7 @@ private fun EmptyWorkspaceView(
             Spacer(modifier = Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 FilledTonalButton(onClick = onBrowseExplorer) {
-                    Icon(Icons.Filled.Palette, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Filled.Explore, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Explorer")
                 }
@@ -2254,7 +2254,7 @@ private fun EditorTabStrip(
                     .testTag("editor_tab_explorer_toggle")
             ) {
                 Icon(
-                    imageVector = Icons.Filled.Palette,
+                    imageVector = Icons.Filled.Explore,
                     contentDescription = "Toggle workspace panel",
                     modifier = Modifier.size(18.dp)
                 )
@@ -2609,7 +2609,7 @@ private fun FloatingCompileButton(
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = _Icons.WifiSignal,
+                    imageVector = _Icons.Hotspot,
                     contentDescription = "Compile active file",
                     modifier = Modifier.size(30.dp)
                 )

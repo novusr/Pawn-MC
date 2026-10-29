@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,10 +31,12 @@ fun ConsoleScreen(
     /*
      * Auto scroll to bottom when new logs arrive
      */
-    LaunchedEffect(logs.size) {
-        if (logs.isNotEmpty()) {
-            listState.animateScrollToItem(logs.size - 1)
-        }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.totalItemsCount }
+            .distinctUntilChanged()
+            .collectLatest { count ->
+                if (count > 0) listState.scrollToItem(count - 1)
+            }
     }
 
         Column(
@@ -107,7 +112,7 @@ fun ConsoleScreen(
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    items(logs) { line ->
+                    items(logs, key = { it.hashCode().toString() + it.length }) { line ->
                         val lineColor = when {
                             line.contains("error", ignoreCase = true) || line.contains("failed", ignoreCase = true) -> SampThemeColors.danger
                             line.contains("loaded", ignoreCase = true) || line.contains("success", ignoreCase = true) -> SampThemeColors.success

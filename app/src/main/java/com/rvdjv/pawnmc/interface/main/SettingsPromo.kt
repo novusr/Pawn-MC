@@ -49,8 +49,11 @@ enum class SettingsTarget {
     /** Top of the screen; the general section. */
     General,
     Language,
+    Theme,
     CompilerVersion,
     CompilerOptions,
+    Filesystem,
+    Explanations,
     IncludePaths,
     EditorAppearance,
     Updates,
@@ -125,7 +128,7 @@ internal fun SettingsPromoCard(
                 "main.promo.ignorecase.desc",
                 "Back a folder up and lowercase its names and #include references once, for projects written on Windows."
             ),
-            target = SettingsTarget.CompilerOptions
+            target = SettingsTarget.Filesystem
         ),
         SettingsPromoEntry(
             title = text("main.promo.explain.title", "Explain output"),
@@ -133,7 +136,7 @@ internal fun SettingsPromoCard(
                 "main.promo.explain.desc",
                 "Annotate every warning, error and fatal message with a plain-language explanation."
             ),
-            target = SettingsTarget.CompilerOptions
+            target = SettingsTarget.Explanations
         ),
         SettingsPromoEntry(
             title = text("main.promo.editor.title", "Editor appearance"),
@@ -157,7 +160,7 @@ internal fun SettingsPromoCard(
                 "main.promo.theme.desc",
                 "Follow the Android system theme, or pin PawnMC to light or dark."
             ),
-            target = SettingsTarget.General
+            target = SettingsTarget.Theme
         ),
         SettingsPromoEntry(
             title = text("main.promo.about.title", "About and diagnostics"),

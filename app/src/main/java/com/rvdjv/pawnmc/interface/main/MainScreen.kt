@@ -50,8 +50,8 @@ import androidx.compose.material.icons.filled.HourglassTop
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Pinch
-import androidx.compose.material.icons.filled.SatelliteAlt
 import androidx.compose.material.icons.filled.DirectionsBike
+import androidx.compose.material.icons.filled.Helicopter
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -176,6 +176,7 @@ fun MainScreen(
     viewModel: MainViewModel,
     onSettingsClick: () -> Unit,
     onEditorClick: () -> Unit,
+    onPocketSampClick: () -> Unit = {},
     initialUri: Uri? = null,
     workspaceAvailable: Boolean = false,
     /**
@@ -744,9 +745,9 @@ internal fun ScreenHeader(
                         icon = {
                             // PocketSAMP runtime: the SA-MP server console adopted from
                             // thirdparty/PocketSAMP now lives behind this button. The
-                            // satellite reads as "launch a server".
+                            // helicopter reads as "launch a server".
                             Icon(
-                                imageVector = Icons.Filled.SatelliteAlt,
+                                imageVector = Icons.Filled.Helicopter,
                                 contentDescription = localizer?.get("main.header.pocketsamp", appLanguage, "PocketSAMP server") ?: "PocketSAMP server",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )

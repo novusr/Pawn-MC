@@ -32,28 +32,29 @@ private const val MAX_UPDATE_DOWNLOAD_BYTES = MAX_UPDATE_ARCHIVE_BYTES
 private const val PACKAGE_ARCHIVE_MIME_TYPE = "application/vnd.android.package-archive"
 private const val LATEST_APK_FILE_NAME = "pawnmc-latest.apk"
 private const val UNKNOWN_APP_SOURCES_PACKAGE_PREFIX = "package:"
-private const val LEGACY_PACKAGE_SUFFIX = ".legacy"
-private const val LEGACY_VERSION_SUFFIX = "-legacy"
-private const val LEGACY_ASSET_NAME = "app-android-7-8-debug.zip"
-private const val MODERN_ASSET_NAME = "app-android-8-15-debug.zip"
+private const val NOUGAT_PACKAGE_SUFFIX = ".legacy"
+private const val NOUGAT_VERSION_SUFFIX = "-nougat"
+private const val PREVIOUS_LEGACY_VERSION_SUFFIX = "-legacy"
+private const val NOUGAT_ASSET_NAME = "app-android-7-8-nougat.zip"
+private const val NEWER_ASSET_NAME = "app-android-8-15-newer.zip"
 
 private const val _MC_LATEST = GITHUB_API_RELEASES_URL
 
 data class GitHubRelease(
     val version: String,
-    val legacyArchiveUrl: String?,
-    val modernArchiveUrl: String?,
+    val nougatArchiveUrl: String?,
+    val newerArchiveUrl: String?,
     val releaseUrl: String,
     val bodyMarkdown: String = ""
 ) {
     /** The package common to older releases, when one was published. */
     val apkUrl: String?
-        get() = legacyArchiveUrl.takeIf { it?.endsWith(APK_FILE_EXTENSION, ignoreCase = true) == true }
-            ?: modernArchiveUrl?.takeIf { it.endsWith(APK_FILE_EXTENSION, ignoreCase = true) }
-    fun archiveUrl(isLegacyBuild: Boolean): String? = if (isLegacyBuild) {
-        legacyArchiveUrl ?: modernArchiveUrl
+        get() = nougatArchiveUrl.takeIf { it?.endsWith(APK_FILE_EXTENSION, ignoreCase = true) == true }
+            ?: newerArchiveUrl?.takeIf { it.endsWith(APK_FILE_EXTENSION, ignoreCase = true) }
+    fun archiveUrl(isNougatBuild: Boolean): String? = if (isNougatBuild) {
+        nougatArchiveUrl ?: newerArchiveUrl
     } else {
-        modernArchiveUrl ?: legacyArchiveUrl
+        newerArchiveUrl ?: nougatArchiveUrl
     }
 }
 
@@ -64,8 +65,8 @@ internal fun parseGitHubRelease(releaseJson: JSONObject): GitHubRelease {
         GITHUB_LATEST_RELEASE_URL
     )
 
-    var legacyArchiveUrl: String? = null
-    var modernArchiveUrl: String? = null
+    var nougatArchiveUrl: String? = null
+    var newerArchiveUrl: String? = null
     var fallbackApkUrl: String? = null
     val assets = releaseJson.optJSONArray("assets")
     if (assets != null) {
@@ -74,11 +75,11 @@ internal fun parseGitHubRelease(releaseJson: JSONObject): GitHubRelease {
             val filename = asset.optString("name", "").lowercase(Locale.US)
             val downloadUrl = asset.optString("browser_download_url", "").takeIf { it.isNotBlank() }
             when {
-                filename == LEGACY_ASSET_NAME ||
+                filename == NOUGAT_ASSET_NAME || filename == "app-android-7-8-debug.zip" ||
                     (filename.startsWith("pawnmc-") && filename.endsWith(ZIP_FILE_EXTENSION)) -> {
-                    if (legacyArchiveUrl == null) legacyArchiveUrl = downloadUrl
+                    if (nougatArchiveUrl == null) nougatArchiveUrl = downloadUrl
                 }
-                filename == MODERN_ASSET_NAME -> modernArchiveUrl = downloadUrl
+                filename == NEWER_ASSET_NAME || filename == "app-android-8-15-debug.zip" -> newerArchiveUrl = downloadUrl
                 filename.endsWith(APK_FILE_EXTENSION) &&
                     !filename.endsWith("-7-8.apk") &&
                     !filename.endsWith("-8-15.apk") && fallbackApkUrl == null -> fallbackApkUrl = downloadUrl
@@ -88,8 +89,8 @@ internal fun parseGitHubRelease(releaseJson: JSONObject): GitHubRelease {
 
     return GitHubRelease(
         version = version,
-        legacyArchiveUrl = legacyArchiveUrl ?: fallbackApkUrl,
-        modernArchiveUrl = modernArchiveUrl ?: legacyArchiveUrl ?: fallbackApkUrl,
+        nougatArchiveUrl = nougatArchiveUrl ?: fallbackApkUrl,
+        newerArchiveUrl = newerArchiveUrl ?: nougatArchiveUrl ?: fallbackApkUrl,
         releaseUrl = releaseUrl,
         bodyMarkdown = releaseJson.optString("body", "").trim()
     )
@@ -164,7 +165,9 @@ class UpdateManager(private val context: Context) {
         }
     }
 
-    fun getCurrentVersion(): String = BuildConfig.VERSION_NAME.trim().removeSuffix(LEGACY_VERSION_SUFFIX)
+    fun getCurrentVersion(): String = BuildConfig.VERSION_NAME.trim()
+        .removeSuffix(NOUGAT_VERSION_SUFFIX)
+        .removeSuffix(PREVIOUS_LEGACY_VERSION_SUFFIX)
 
     fun storeCurrentVersion(version: String = getCurrentVersion()) {
         val trimmedVersion = version.trim()
@@ -206,7 +209,8 @@ class UpdateManager(private val context: Context) {
     fun checkForUpdate(): UpdateCheckResult {
         val currentVersion = getCurrentVersion()
         val storedVersion = readStoredVersion()
-            ?.removeSuffix(LEGACY_VERSION_SUFFIX)
+            ?.removeSuffix(NOUGAT_VERSION_SUFFIX)
+            ?.removeSuffix(PREVIOUS_LEGACY_VERSION_SUFFIX)
             ?.takeIf { it.isNotBlank() }
             ?: currentVersion
         ensureVersionFileWritten()
@@ -220,11 +224,11 @@ class UpdateManager(private val context: Context) {
 
         val comparison = compareVersions(storedVersion, release.version)
         val installComparison = compareVersions(currentVersion, release.version)
-        val latestVersionIsNewer = installComparison < 0 || (isLegacyBuild() && comparison < 0)
-        val isLegacy = isLegacyBuild()
-        val hasPackage = latestVersionIsNewer && release.archiveUrl(isLegacy) != null
+        val isNougat = isNougatBuild()
+        val latestVersionIsNewer = installComparison < 0 || (isNougat && comparison < 0)
+        val hasPackage = latestVersionIsNewer && release.archiveUrl(isNougat) != null
         val status = when {
-            (installComparison < 0 || (isLegacy && comparison < 0)) && hasPackage -> UpdateStatus.UPDATE_AVAILABLE
+            (installComparison < 0 || (isNougat && comparison < 0)) && hasPackage -> UpdateStatus.UPDATE_AVAILABLE
             latestVersionIsNewer -> UpdateStatus.ERROR
             else -> UpdateStatus.UP_TO_DATE
         }
@@ -264,11 +268,16 @@ class UpdateManager(private val context: Context) {
         }
     }
 
-    /** Whether this installation uses the Android 7/API 24 legacy package. */
-    fun isLegacyBuild(): Boolean = context.packageName.endsWith(LEGACY_PACKAGE_SUFFIX)
+    /** Whether this installation uses the Android 7/API 24 Nougat package. */
+    fun isNougatBuild(): Boolean = BuildConfig.FLAVOR.equals("nougat", ignoreCase = true) ||
+        context.packageName.endsWith(NOUGAT_PACKAGE_SUFFIX)
+
+    /** Compatibility alias for update logic from earlier app revisions. */
+    @Deprecated("Use isNougatBuild")
+    fun isLegacyBuild(): Boolean = isNougatBuild()
 
     /** The archive published for this exact flavor; never silently install the other flavor. */
-    fun selectedArchiveUrl(release: GitHubRelease): String? = release.archiveUrl(isLegacyBuild())
+    fun selectedArchiveUrl(release: GitHubRelease): String? = release.archiveUrl(isNougatBuild())
 
     /** Download the selected ZIP (or legacy APK fallback) into Documents/Pawn-MC. */
     fun downloadLatestApk(release: GitHubRelease): File {
@@ -288,11 +297,12 @@ class UpdateManager(private val context: Context) {
             ?: if (isZip) "pawnmc-${release.version}-update.zip" else LATEST_APK_FILE_NAME
         require(assetName.matches(Regex("[A-Za-z0-9._-]+"))) { "Invalid update package filename." }
         val safeVersion = release.version.replace(Regex("[^A-Za-z0-9._-]"), "_")
-        val legacyBuild = isLegacyBuild()
-        val packageLabel = if (legacyBuild) "android-7-8" else "android-8-15"
-        val releasePackageName = "app-$packageLabel-debug.zip"
-        val isLegacySharedPackage = legacyBuild && assetName.startsWith("pawnmc-")
-        require(!isZip || isLegacySharedPackage || assetName.equals(releasePackageName, ignoreCase = true)) {
+        val nougatBuild = isNougatBuild()
+        val packageLabel = if (nougatBuild) "android-7-8-nougat" else "android-8-15-newer"
+        val releasePackageName = "app-$packageLabel.zip"
+        val isNougatSharedPackage = nougatBuild && assetName.startsWith("pawnmc-")
+        require(!isZip || isNougatSharedPackage || assetName.equals(releasePackageName, ignoreCase = true) ||
+            assetName == "app-android-7-8-debug.zip" || assetName == "app-android-8-15-debug.zip") {
             "Release archive does not match the installed PawnMC Android flavor."
         }
         val safeAssetName = if (isZip) assetName else "pawnmc-$safeVersion-$packageLabel-update.apk"
