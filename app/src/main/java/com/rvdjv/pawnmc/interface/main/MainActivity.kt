@@ -119,6 +119,9 @@ class MainActivity : ComponentActivity() {
         // installed before the runtime UI can be opened. Idempotent, so calling it on
         // every launch is safe.
         com.pocketsamp.server.SampApp.install(applicationContext)
+        com.pocketsamp.server.service_handler.RuntimeService.installLogWriter { line ->
+            com.rvdjv.pawnmc.data.log.CompileLogStore.recordPocketSampLine(applicationContext, line)
+        }
         // The ongoing session notification is a nicety, not a requirement, so the prompt
         // is fired once and a refusal only means the shade stays empty.
         requestNotificationPermissionIfNeeded()

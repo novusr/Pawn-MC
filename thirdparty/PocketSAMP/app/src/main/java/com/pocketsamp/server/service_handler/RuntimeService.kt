@@ -49,7 +49,7 @@ class RuntimeService : Service() {
         const val ACTION_START = "com.pocketsamp.server.ACTION_START"
         const val ACTION_STOP = "com.pocketsamp.server.ACTION_STOP"
         @Volatile private var logWriter: ((String) -> Unit)? = null
-        /** Install the host app's shared SQLite logger before PocketSAMP starts. */
+        /** Installs PawnMC's SQLite logger without coupling this library to the host package. */
         fun installLogWriter(writer: (String) -> Unit) {
             logWriter = writer
         }

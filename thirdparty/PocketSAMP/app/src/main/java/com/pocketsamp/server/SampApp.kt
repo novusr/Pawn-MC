@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Build
 import com.pocketsamp.server.crash_handler.Handler
 import com.pocketsamp.server.service_handler.RuntimeService
-import com.rvdjv.pawnmc.data.log.CompileLogStore
 
 /**
  * Entry point PawnMC uses to embed PocketSAMP.
@@ -32,9 +31,6 @@ object SampApp {
     fun install(context: Context) {
         val app = context.applicationContext as? Application ?: return
         Handler.install(app)
-        RuntimeService.installLogWriter { line ->
-            CompileLogStore.recordPocketSampLine(app, line)
-        }
     }
 
     /**
