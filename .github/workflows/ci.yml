@@ -61,20 +61,6 @@ jobs:
         shell: bash
         run: ./gradlew lint${{ matrix.flavor == 'nougat' && 'Nougat' || 'Newer' }}Release assemble${{ matrix.flavor == 'nougat' && 'Nougat' || 'Newer' }}Release --console=rich --no-daemon
 
-      - name: Build Release APK
-        shell: bash
-        run: ./gradlew assemble${{ matrix.flavor == 'nougat' && 'Nougat' || 'Newer' }}Release --console=rich --no-daemon
-
-      - name: Upload Release APK
-        if: always()
-        continue-on-error: true
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-${{ matrix.label }}-release
-          path: app/build/outputs/apk/${{ matrix.flavor }}/release/*.apk
-          if-no-files-found: warn
-          retention-days: 90
-
       - name: Upload Release APK
         if: always()
         uses: actions/upload-artifact@v4

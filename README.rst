@@ -81,6 +81,9 @@ Official Community: https://discord.gg/2YqkmDvTch
 Documentation
 -------------
 
+See ``SUPPORT.rst`` for our request on how to credit PawnMC assets and help others discover
+our work.
+
 See the `configuration folder <//github.com/novusr/Pawn-MC/tree/main/configuration>`_ for
 documentation and guides on how to use this application and set up your mobile workspace.
 
@@ -151,4 +154,5 @@ submodules.
 
    git clone --recursive https://github.com/novusr/Pawn-MC.git
    cd Pawn-MC
-   ./gradlew assembleDebug
+   ./gradlew assembleNougatRelease
+   ./gradlew assembleNewerRelease

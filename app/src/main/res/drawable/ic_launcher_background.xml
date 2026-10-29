@@ -2,9 +2,8 @@
 <!--
   Adaptive icon background layer.
 
-  Solid black, matching the field of `ic_launcher-playstore.png` behind the white glyph.
-  The previous green (#3DDC84) grid artwork is gone: it belonged to the old chess-pawn
-  icon and clashed with the new monochrome one.
+  Solid black behind the vector launcher glyph. The prior green grid artwork belonged to
+  an older icon and is no longer part of the launcher identity.
 -->
 <vector
     android:height="108dp"
