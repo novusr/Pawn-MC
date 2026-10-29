@@ -61,8 +61,7 @@ android {
     productFlavors {
         create("legacy") {
             dimension = "androidApi"
-            // Android 7.0/API 24 baseline. Older devices remain supported via minSdk;
-            // both variants target current Android policy requirements.
+            // Keep the legacy package ID stable so Android can update existing Android 7/8 installations in place.
             minSdk = 24
             targetSdk = 36
             applicationIdSuffix = ".legacy"

@@ -1,0 +1,60 @@
+name: "Feature request / Usulan fitur"
+description: "Suggest a PawnMC improvement / Usulkan peningkatan untuk PawnMC."
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **English:** Describe the need you want to address. Specific suggestions focused on PawnMC workflows are easier to evaluate.
+
+        **Bahasa Indonesia:** Jelaskan kebutuhan yang ingin dipenuhi. Usulan spesifik yang berfokus pada workflow PawnMC lebih mudah dievaluasi.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Problem or need / Masalah atau kebutuhan"
+      description: "What is difficult or not currently possible? / Apa yang sulit atau belum bisa dilakukan?"
+      placeholder: "As a PawnMC user, I find it difficult to ... / Sebagai pengguna PawnMC, saya kesulitan untuk ..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Proposed solution / Solusi yang diinginkan"
+      description: "Explain how you would like this feature to work / Jelaskan bagaimana fitur ini sebaiknya bekerja."
+      placeholder: "I would like PawnMC to ... / Saya ingin PawnMC ..."
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: "Related area / Area terkait"
+      options:
+        - "Editor / workspace"
+        - "Pawn compilation / Kompilasi Pawn"
+        - "Settings / compiler configuration / Pengaturan / konfigurasi compiler"
+        - "Files and storage access / File dan akses penyimpanan"
+        - "Developer Portal"
+        - "PocketSAMP / database"
+        - "Localization / accessibility / Lokalisasi / aksesibilitas"
+        - "Other / Lainnya"
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives considered / Alternatif yang sudah dicoba"
+      description: "Are you currently using a workaround or another solution? / Apakah Anda saat ini menggunakan workaround atau solusi lain?"
+  - type: textarea
+    id: context
+    attributes:
+      label: "Additional context / Konteks tambahan"
+      description: "Mockups, usage examples, or any other helpful information / Mockup, contoh penggunaan, atau informasi lain yang membantu."
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Checks / Pemeriksaan"
+      options:
+        - label: "I searched for similar feature requests / Saya sudah mencari usulan fitur yang serupa."
+          required: true

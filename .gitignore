@@ -20,7 +20,6 @@ release-key.jks
 /-Z+bugs
 RELEASE_NOTES_DRAFT.md
 TODO.txt
-INTERNAL.txt
 .env
 
 # --- Build / debug output that must never be committed -------------------------

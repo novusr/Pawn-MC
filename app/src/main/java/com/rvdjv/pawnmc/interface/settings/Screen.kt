@@ -61,6 +61,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -92,6 +93,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.data.update.UpdateStatus
@@ -200,10 +204,7 @@ fun SettingsScreen(
         settingsScrollState.animateScrollTo(offset.coerceAtMost(settingsScrollState.maxValue))
     }
     val updateManager = remember { UpdateManager(context) }
-    val installLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { }
-
+    val lifecycleOwner = LocalLifecycleOwner.current
     var showVersionDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
@@ -221,9 +222,50 @@ fun SettingsScreen(
     var releaseNotesMarkdown by remember { mutableStateOf("") }
     var showReleaseNotesDialog by remember { mutableStateOf(false) }
     var pendingReleaseVersion by remember { mutableStateOf<String?>(null) }
+    var pendingInstallAfterPermission by remember { mutableStateOf(false) }
 
     var appVersion by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
+    var updateCheckOnResume by remember { mutableStateOf(false) }
+    val installLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        if (pendingInstallAfterPermission) {
+            pendingInstallAfterPermission = false
+            if (updateManager.canRequestUnknownSources()) {
+                coroutineScope.launch {
+                    runCatching {
+                        val packageFile = downloadedApk ?: return@launch
+                        val installedApk = withContext(Dispatchers.IO) {
+                            updateManager.extractUpdateApk(packageFile)
+                        }
+                        installLauncher.launch(updateManager.buildInstallIntent(installedApk))
+                    }.onFailure { error ->
+                        if (error is kotlinx.coroutines.CancellationException) throw error
+                        updateStatus = error.localizedMessage?.let { "Update failed: $it" } ?: "Unable to prepare update"
+                        updateReady = false
+                    }
+                }
+            } else {
+                updateCheckOnResume = false
+                Toast.makeText(context, "Install permission was not granted", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    DisposableEffect(context, lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && updateCheckOnResume) {
+                updateCheckOnResume = false
+                refreshUpdateStatus()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     fun refreshUpdateStatus() {
         if (isCheckingUpdates) return
@@ -243,27 +285,39 @@ fun SettingsScreen(
                         withContext(Dispatchers.IO) { updateManager.downloadLatestApk(release) }
                     } else null
 
-                    val hasValidApk = downloaded != null && downloaded.exists()
-                    updateStatus = if (hasValidApk) "Update available: $latestVersion" else "Update available, but no APK is attached"
+                    if (release != null && downloaded == null) {
+                        throw IllegalStateException("No compatible Android package exists in the latest release.")
+                    }
+                    val hasValidApk = downloaded != null && downloaded.isFile && downloaded.length() > 0L
+                    val packageLabel = if (updateManager.isLegacyBuild()) "Android 7/8" else "Android 8–15"
+                    updateStatus = if (hasValidApk) "Update available: $latestVersion ($packageLabel)" else "Update available, but no compatible package is attached"
                     lastReleaseInfo = release?.releaseUrl
                     releaseNotesMarkdown = release?.bodyMarkdown.orEmpty().ifBlank { "No release notes provided." }
                     pendingReleaseVersion = latestVersion
                     downloadedApk = downloaded
                     updateReady = hasValidApk
+                    if (!hasValidApk) {
+                        releaseNotesMarkdown = ""
+                    }
                 } else if (status == UpdateStatus.UP_TO_DATE) {
                     updateStatus = "You're on the latest version"
                     lastReleaseInfo = result.release?.releaseUrl
                     releaseNotesMarkdown = ""
                     pendingReleaseVersion = null
+                    downloadedApk = null
                     updateReady = false
                 } else {
                     updateStatus = "Unable to check for updates"
                     releaseNotesMarkdown = ""
                     pendingReleaseVersion = null
+                    downloadedApk = null
                     updateReady = false
                 }
-            } catch (_: Exception) {
-                updateStatus = "Unable to check for updates"
+            } catch (error: Exception) {
+                if (error is kotlinx.coroutines.CancellationException) throw error
+                updateStatus = error.localizedMessage?.let { "Update failed: $it" } ?: "Unable to check for updates"
+                downloadedApk = null
+                pendingReleaseVersion = null
                 updateReady = false
             } finally {
                 isCheckingUpdates = false
@@ -820,15 +874,31 @@ fun SettingsScreen(
                                     return@TextButton
                                 }
 
+                                if (downloadedApk == null || downloadedApk?.isFile != true) {
+                                    refreshUpdateStatus()
+                                    return@TextButton
+                                }
                                 if (!updateManager.canRequestUnknownSources()) {
+                                    pendingInstallAfterPermission = true
+                                    updateCheckOnResume = true
                                     val unknownSources = updateManager.buildUnknownSourcesIntent()
-                                    ContextCompat.startActivity(context, unknownSources, null)
+                                    permissionLauncher.launch(unknownSources)
                                     return@TextButton
                                 }
 
-                                val apkFile = downloadedApk ?: return@TextButton
-                                val installIntent = updateManager.buildInstallIntent(apkFile)
-                                installLauncher.launch(installIntent)
+                                val packageFile = downloadedApk ?: return@TextButton
+                                coroutineScope.launch {
+                                    runCatching {
+                                        val apkFile = withContext(Dispatchers.IO) {
+                                            updateManager.extractUpdateApk(packageFile)
+                                        }
+                                        installLauncher.launch(updateManager.buildInstallIntent(apkFile))
+                                    }.onFailure { error ->
+                                        if (error is kotlinx.coroutines.CancellationException) throw error
+                                        updateStatus = error.localizedMessage?.let { "Update failed: $it" } ?: "Unable to prepare update"
+                                        updateReady = false
+                                    }
+                                }
                                 return@TextButton
                             }
 
@@ -1132,15 +1202,31 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         showReleaseNotesDialog = false
+                        if (downloadedApk == null || downloadedApk?.isFile != true) {
+                            refreshUpdateStatus()
+                            return@TextButton
+                        }
                         if (!updateManager.canRequestUnknownSources()) {
+                            pendingInstallAfterPermission = true
+                            updateCheckOnResume = true
                             val unknownSources = updateManager.buildUnknownSourcesIntent()
-                            ContextCompat.startActivity(context, unknownSources, null)
+                            permissionLauncher.launch(unknownSources)
                             return@TextButton
                         }
 
-                        val apkFile = downloadedApk ?: return@TextButton
-                        val installIntent = updateManager.buildInstallIntent(apkFile)
-                        installLauncher.launch(installIntent)
+                        val packageFile = downloadedApk ?: return@TextButton
+                        coroutineScope.launch {
+                            runCatching {
+                                val apkFile = withContext(Dispatchers.IO) {
+                                    updateManager.extractUpdateApk(packageFile)
+                                }
+                                installLauncher.launch(updateManager.buildInstallIntent(apkFile))
+                            }.onFailure { error ->
+                                if (error is kotlinx.coroutines.CancellationException) throw error
+                                updateStatus = error.localizedMessage?.let { "Update failed: $it" } ?: "Unable to prepare update"
+                                updateReady = false
+                            }
+                        }
                     }
                 ) {
                     Text("Install")

@@ -1,0 +1,97 @@
+name: "Bug report / Laporan bug"
+description: "Report a PawnMC problem / Laporkan masalah di PawnMC."
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **English:** Thanks for helping improve PawnMC! Please search for a similar issue before submitting.
+
+        **Bahasa Indonesia:** Terima kasih sudah membantu meningkatkan PawnMC! Sebelum mengirim, pastikan masalah belum dilaporkan.
+
+  - type: input
+    id: app-version
+    attributes:
+      label: "PawnMC version / Versi PawnMC"
+      description: "App version shown in Settings > About / Versi aplikasi di Pengaturan > Tentang."
+      placeholder: "1.5.2"
+    validations:
+      required: true
+  - type: input
+    id: android-version
+    attributes:
+      label: "Android version / Versi Android"
+      description: "Android version running on your device / Versi Android perangkat Anda."
+      placeholder: "Android 15"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: "Device / Perangkat"
+      description: "Device brand and model, if known / Merek dan model perangkat (jika diketahui)."
+      placeholder: "Google Pixel 8"
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: "Affected area / Area terdampak"
+      options:
+        - "Pawn compilation / Kompilasi Pawn"
+        - "Editor / workspace"
+        - "Settings / compiler configuration / Pengaturan / konfigurasi compiler"
+        - "Files and storage access / File dan akses penyimpanan"
+        - "App updates / Pembaruan aplikasi"
+        - "PocketSAMP / database"
+        - "Other / Lainnya"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: "What happened? / Apa yang terjadi?"
+      description: "Describe the problem and include any error message / Jelaskan masalah dan sertakan pesan error jika ada."
+      placeholder: "Describe the bug / Jelaskan bug secara singkat dan jelas."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to reproduce / Langkah untuk mereproduksi"
+      description: "Steps that reliably reproduce the problem / Langkah yang bisa diikuti agar masalah muncul."
+      placeholder: |
+        1. Open ... / Buka ...
+        2. Select ... / Pilih ...
+        3. Tap ... / Tekan ...
+        4. See the error / Lihat error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected behavior / Perilaku yang diharapkan"
+      placeholder: "What should happen? / Apa yang seharusnya terjadi?"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Error messages or logs / Pesan error atau log"
+      description: "Paste relevant compiler output or logs. Remove personal information first / Tempelkan output compiler atau log yang relevan. Hapus informasi pribadi sebelum mengirim."
+      render: text
+  - type: textarea
+    id: sample
+    attributes:
+      label: "Sample file / configuration / Contoh file / konfigurasi"
+      description: "If relevant, provide a minimal Pawn snippet or compiler configuration / Jika relevan, sertakan potongan Pawn minimal atau konfigurasi compiler."
+      render: pawn
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Checks / Pemeriksaan"
+      options:
+        - label: "I searched for similar issues / Saya sudah mencari issue yang serupa."
+          required: true
+        - label: "I removed personal information from logs and attachments / Saya sudah menghapus informasi pribadi dari log dan lampiran."
+          required: true

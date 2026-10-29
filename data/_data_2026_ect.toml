@@ -429,7 +429,7 @@ ru = "Создаёт резервную копию папки (\"folder.backup\"
 es = "Crea una copia de seguridad de la carpeta (\"carpeta.backup\"), luego pasa a minusculas todos los nombres de archivo salvo el que seleccionaste y reescribe en minusculas cada referencia #include. Se ejecuta una vez por carpeta porque el almacenamiento de Android distingue mayusculas de minusculas."
 
 [settings.option.explain]
-id = "Jelaskan Output"
+id = "Lihat Penjelasan"
 en = "Explain Output"
 tl = "Ipaliwanag ang Output"
 ru = "Объяснять вывод"
@@ -478,11 +478,11 @@ ru = "Обновления"
 es = "Actualizaciones"
 
 [settings.updates.desc]
-id = "Memeriksa rilis baru di GitHub dan mengunduh APK bila tersedia. Pembaruan dipasang lewat dialog sistem Android."
-en = "Checks GitHub for a newer release and downloads the APK when one is attached. Updates are installed through the standard Android system dialog."
-tl = "Naghahanap sa GitHub ng mas bagong release at inihintong i-download ang APK kung may naka-attach. Ini-install ang update sa karaniwang dialog ng Android."
-ru = "Проверяет GitHub на наличие более нового выпуска и скачивает APK, если он прикреплён. Обновления устанавливаются через стандартный системный диалог Android."
-es = "Busca una version mas nueva en GitHub y descarga el APK cuando hay uno adjunto. Las actualizaciones se instalan mediante el dialogo estandar de Android."
+id = "Memeriksa rilis baru di GitHub dan mengunduh paket yang sesuai dengan varian Android PawnMC ke Documents/Pawn-MC. Setelah ZIP diekstrak, pemasangan atau pembaruan dilakukan lewat dialog sistem Android; aplikasi lama tidak dihapus otomatis."
+en = "Checks GitHub for a newer release and downloads the Android-flavor package to Documents/Pawn-MC. After extracting the ZIP, installation or updating is handled by Android's system installer; the existing app is never uninstalled automatically."
+tl = "Tinitingnan ang GitHub para sa mas bagong release at dina-download ang package na angkop sa Android flavor ng PawnMC papunta sa Documents/Pawn-MC. Pagkatapos i-extract ang ZIP, ang system installer ng Android ang bahala sa pag-install o pag-update; hindi awtomatikong ia-uninstall ang kasalukuyang app."
+ru = "Проверяет GitHub на наличие новой версии и загружает пакет для соответствующего варианта Android в Documents/Pawn-MC. После распаковки ZIP установкой или обновлением занимается системный установщик Android; приложение не удаляется автоматически."
+es = "Busca una version nueva en GitHub y descarga el paquete para la variante de Android correspondiente a Documents/Pawn-MC. Tras extraer el ZIP, el instalador del sistema Android se encarga de instalar o actualizar la app; la aplicacion existente nunca se desinstala automaticamente."
 
 [settings.about]
 id = "Tentang"
@@ -709,11 +709,11 @@ ru = "Примечание"
 es = "Nota"
 
 [settings.include.paths.notice.desc]
-id = "Saat file dipilih, PawnMC memilih satu folder include dengan urutan 'pawno/include', 'qawno/include', lalu 'includes'. Jika semuanya tidak tersedia, 'include/' tetap ditambahkan sebagai fallback. Folder 'gamemodes/' tidak ditambahkan otomatis. Ekstensi .pawn, .pwn, .p, dan .inc dihapus otomatis dari path include."
-en = "When a file is selected, PawnMC chooses one include folder in this order: 'pawno/include', 'qawno/include', then 'includes'. If none exists, 'include/' is still added as a fallback. 'gamemodes/' is not added automatically. The .pawn, .pwn, .p, and .inc extensions are removed automatically from include paths."
-tl = "Kapag may napiling file, pumipili ang PawnMC ng isang include folder sa ganitong ayos: 'pawno/include', 'qawno/include', tapos 'includes'. Kung wala ang mga ito, idinaragdag pa rin ang 'include/' bilang fallback. Hindi awtomatikong idinaragdag ang 'gamemodes/'. Awtomatikong tinatanggal ang .pawn, .pwn, .p, at .inc mula sa include path."
-ru = "При выборе файла PawnMC выбирает одну папку include в таком порядке: 'pawno/include', 'qawno/include', затем 'includes'. Если ни одной нет, всё равно добавляется 'include/' как запасной вариант. 'gamemodes/' автоматически не добавляется. Расширения .pawn, .pwn, .p и .inc автоматически удаляются из путей include."
-es = "Cuando se elige un archivo, PawnMC selecciona una carpeta de include en este orden: 'pawno/include', 'qawno/include' y luego 'includes'. Si no existe ninguna, igual se agrega 'include/' como alternativa. 'gamemodes/' no se agrega automaticamente. Las extensiones .pawn, .pwn, .p y .inc se eliminan automaticamente de las rutas de include."
+id = "Saat file dipilih, PawnMC memilih satu folder include dengan urutan 'pawno/include', 'qawno/include', lalu 'includes'."
+en = "When a file is selected, PawnMC chooses one include folder in this order: 'pawno/include', 'qawno/include', then 'includes'."
+tl = "Kapag may napiling file, pumipili ang PawnMC ng isang include folder sa ganitong ayos: 'pawno/include', 'qawno/include', tapos 'includes'."
+ru = "При выборе файла PawnMC выбирает одну папку include в таком порядке: 'pawno/include', 'qawno/include', затем 'includes'."
+es = "Cuando se elige un archivo, PawnMC selecciona una carpeta de include en este orden: 'pawno/include', 'qawno/include' y luego 'includes'."
 
 [settings.include.extension.stripped]
 id = "Ekstensi script (.pawn, .pwn, .p, .inc) dihapus otomatis dan path disimpan sebagai:"
@@ -1389,7 +1389,7 @@ ru = "Сделайте резервную копию папки и один ра
 es = "Haz una copia de seguridad de una carpeta y pasa sus nombres y referencias #include a minusculas una sola vez, para proyectos escritos en Windows."
 
 [main.promo.explain.title]
-id = "Jelaskan output"
+id = "Lihat Penjelasan"
 en = "Explain output"
 tl = "Ipaliwanag ang output"
 ru = "Объяснение вывода"

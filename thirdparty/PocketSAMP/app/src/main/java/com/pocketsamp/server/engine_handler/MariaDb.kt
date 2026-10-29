@@ -95,7 +95,7 @@ class MariaDb(private val context: Context) {
 
     suspend fun initializeIfNeeded(scope: CoroutineScope): Boolean = withContext(Dispatchers.IO) {
         /*
-         * A downloaded bundle lives outside mariadb/, so its data directory, my.cnf
+         * A downloaded bundle lives outside mariadb/, so its data directory, mysql_list.cnf
          * template and share/ tree are resolved from the install the daemon came from.
          */
         val installed = mariadbInstallRoot()
@@ -208,7 +208,7 @@ class MariaDb(private val context: Context) {
         val mariadbDir = File(context.filesDir, "mariadb")
         val runtimeHome = File(mariadbDir, "runtime-home").apply { mkdirs() }
         val mariadbdBinary = findMariadbdBinary(context, installed)
-        val cnfFile = File(mariadbDir, "my.cnf")
+        val cnfFile = File(mariadbDir, "mysql_list.cnf")
         val dataDir = File(mariadbDir, "data").apply { mkdirs() }
         val tmpDir = File(mariadbDir, "tmp").apply { mkdirs() }
         val shareDir = File(installed, "share/mariadb")

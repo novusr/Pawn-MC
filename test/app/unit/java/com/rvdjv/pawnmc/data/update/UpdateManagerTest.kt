@@ -15,6 +15,58 @@ class UpdateManagerTest {
     }
 
     @Test
+    fun parseGitHubRelease_selectsSeparateAndroidFlavorArchives() {
+        val json = JSONObject(
+            """
+            {
+              "tag_name": "v1.5.100",
+              "assets": [
+                {
+                  "name": "app-android-7-8-debug.zip",
+                  "browser_download_url": "https://example.com/app-android-7-8-debug.zip"
+                },
+                {
+                  "name": "app-android-8-15-debug.zip",
+                  "browser_download_url": "https://example.com/app-android-8-15-debug.zip"
+                }
+              ]
+            }
+            "".trimIndent()
+        )
+
+        val release = parseGitHubRelease(json)
+
+        assertEquals("https://example.com/app-android-7-8-debug.zip", release.legacyArchiveUrl)
+        assertEquals("https://example.com/app-android-8-15-debug.zip", release.modernArchiveUrl)
+        assertEquals("https://example.com/app-android-7-8-debug.zip", release.archiveUrl(isLegacyBuild = true))
+        assertEquals("https://example.com/app-android-8-15-debug.zip", release.archiveUrl(isLegacyBuild = false))
+        assertEquals(null, release.copy(legacyArchiveUrl = null).archiveUrl(isLegacyBuild = true))
+        assertEquals(null, release.copy(modernArchiveUrl = null).archiveUrl(isLegacyBuild = false))
+    }
+
+    @Test
+    fun parseGitHubRelease_fallsBackToApkForOlderReleases() {
+        val json = JSONObject(
+            """
+            {
+              "tag_name": "v1.5.100",
+              "assets": [
+                {
+                  "name": "pawnmc-1.5.100-debug.apk",
+                  "browser_download_url": "https://example.com/pawnmc-1.5.100-debug.apk"
+                }
+              ]
+            }
+            "".trimIndent()
+        )
+
+        val release = parseGitHubRelease(json)
+
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isLegacyBuild = true))
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isLegacyBuild = false))
+    }
+
+    @Test
     fun parseGitHubRelease_readsReleaseNotesAndApkAsset() {
         val json = JSONObject(
             """
@@ -35,7 +87,10 @@ class UpdateManagerTest {
         val release = parseGitHubRelease(json)
 
         assertEquals("v1.5.100", release.version)
-        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.apkUrl)
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.legacyArchiveUrl)
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.modernArchiveUrl)
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isLegacyBuild = true))
+        assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isLegacyBuild = false))
         assertTrue(release.bodyMarkdown.contains("fixed ????????"))
         assertTrue(release.bodyMarkdown.contains("important"))
     }

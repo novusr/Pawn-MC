@@ -41,7 +41,7 @@ PawnMC Basic Usage
 Open a (``.pawn`` - ``.pwn`` - ``.p``) script within the application and you are ready to
 compile.
 
-.. image:: https://raw.githubusercontent.com/machijine/mc-content/refs/heads/main/content/PAWNMC.png
+.. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/content/PAWNMC.png
    :alt: A Pawn script open in PawnMC
 
 Custom Flags

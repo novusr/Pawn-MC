@@ -126,8 +126,8 @@ class Extractor(private val context: Context) {
          * hard-coded an application id, and that id was never PawnMC's.
          */
         onProgress("Configuring low-memory database...")
-        val mariadbConfig = File(mariadbDir, "my.cnf")
-        val renderedConfig = context.assets.open("my.cnf").bufferedReader().use { it.readText() }
+        val mariadbConfig = File(mariadbDir, "mysql_list.cnf")
+        val renderedConfig = context.assets.open("mysql_list.cnf").bufferedReader().use { it.readText() }
         mariadbConfig.writeText(renderedConfig)
 
         /*
