@@ -48,10 +48,10 @@ class RuntimeService : Service() {
 
         const val ACTION_START = "com.pocketsamp.server.ACTION_START"
         const val ACTION_STOP = "com.pocketsamp.server.ACTION_STOP"
-        @Volatile private var logWriter: ((String) -> Unit)? = null
-        /** Installs PawnMC's SQLite logger without coupling this library to the host package. */
-        fun installLogWriter(writer: (String) -> Unit) {
-            logWriter = writer
+        @Volatile private var consoleLogSink: ((String) -> Unit)? = null
+        /** Sets the PocketSAMP console persistence callback provided by the host app. */
+        fun setConsoleLogSink(sink: (String) -> Unit) {
+            consoleLogSink = sink
         }
 
         /** True while the service (and therefore the engine) is alive. */
@@ -74,7 +74,7 @@ class RuntimeService : Service() {
 
         fun appendLog(line: String) {
             // Logging failures must not interrupt server startup or console updates.
-            runCatching { logWriter?.invoke(line) }
+            runCatching { consoleLogSink?.invoke(line) }
             synchronized(logLock) {
                 val current = _logFeed.value.toMutableList()
                 if (current.size > 500) {

@@ -174,7 +174,7 @@ internal object AppStorage {
     /**
      * Folder holding the unified compile-log SQLite database, `PawnMC/logs`.
      *
-     * One single `compile_logs.db` in `Android/data/<pkg>/files/PawnMC/logs/`
+     * One single `compiler_logging.db` in `Android/data/<pkg>/files/PawnMC/logs/`
      * replaces the per-source `.log` files the compiler used to scatter next to
      * every script: one open handle for the whole app, one row (cell) per
      * compile, and the whole history browsable from any file manager or a PC.

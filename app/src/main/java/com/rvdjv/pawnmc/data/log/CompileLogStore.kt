@@ -40,8 +40,8 @@ object CompileLogStore {
         val output: String
     )
 
-    private const val DB_NAME = "compile_logs.db"
-    private const val TABLE = "compile_logs"
+    private const val DB_NAME = "compiler_logging.db"
+    private const val TABLE = "_compiler_logging_"
 
     /** Cell names, kept in one place so the schema and the reads never drift. */
     private const val C_ID = "_id"
@@ -127,22 +127,7 @@ object CompileLogStore {
         }
     }
 
-    /** Records one PocketSAMP console line using the same SQLite schema and retention policy. */
-    fun recordPocketSampLine(context: Context, line: String) {
-        val now = System.currentTimeMillis()
-        record(
-            context,
-            Entry(
-                timestamp = now,
-                sourcePath = "pocketsamp://console",
-                sourceName = "PocketSAMP Console",
-                exitCode = 0,
-                durationMs = 0L,
-                compilerVersion = "PocketSAMP",
-                output = line
-            )
-        )
-    }
+
 
     /** Total number of logged compiles; used for the "total file logging" readout. */
     fun totalEntries(context: Context): Int {
