@@ -1745,7 +1745,7 @@ private fun EmptyWorkspaceView(
             modifier = Modifier.padding(24.dp)
         ) {
             Icon(
-                imageVector = Icons.Filled.Palette,
+                imageVector = Icons.Filled.Explore,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(40.dp)

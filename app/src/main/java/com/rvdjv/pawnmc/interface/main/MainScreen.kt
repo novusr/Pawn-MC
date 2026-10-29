@@ -176,7 +176,6 @@ fun MainScreen(
     viewModel: MainViewModel,
     onSettingsClick: () -> Unit,
     onEditorClick: () -> Unit,
-    onPocketSampClick: () -> Unit = {},
     initialUri: Uri? = null,
     workspaceAvailable: Boolean = false,
     /**
