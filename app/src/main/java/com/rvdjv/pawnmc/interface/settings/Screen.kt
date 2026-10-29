@@ -66,6 +66,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -332,7 +333,9 @@ fun SettingsScreen(
         }
     }
 
-    refreshUpdateStatusState.value = { refreshUpdateStatus() }
+    SideEffect {
+        refreshUpdateStatusState.value = { refreshUpdateStatus() }
+    }
 
     // loadinfo version
     LaunchedEffect(Unit) {
