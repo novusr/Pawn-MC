@@ -65,8 +65,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -250,26 +248,10 @@ fun SettingsScreen(
         }
     }
 
-    val refreshUpdateStatusState = rememberUpdatedState<() -> Unit>({})
-    DisposableEffect(context, lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME && updateCheckOnResume) {
-                updateCheckOnResume = false
-                /*
-                 * The holder is only replaced from a SideEffect, after composition,
-                 * so the resume observer always runs the latest lambda.
-                 */
-                refreshUpdateStatusState.value()
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-
     /*
-     * Declared before the resume observer (which runs the inner lambda through
-     * `refreshUpdateStatusState`) so the observer never refers to a variable that is
-     * not initialised yet, which the compiler rejects with "'val' cannot be reassigned".
+     * Declared before the resume observer so the observer can call it directly:
+     * the observer must never reference a variable that is not initialised yet, and
+     * the update state itself (`State<T>`) cannot be written back to.
      */
     val refreshUpdateStatus: () -> Unit = refresh@{
         if (isCheckingUpdates) return@refresh
@@ -327,10 +309,22 @@ fun SettingsScreen(
                 isCheckingUpdates = false
             }
         }
+        Unit
     }
 
-    SideEffect {
-        refreshUpdateStatusState.value = refreshUpdateStatus
+    /*
+     * Retry the update check when the screen comes back from the unknown-sources
+     * setting; the flag is only set by the install path above.
+     */
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && updateCheckOnResume) {
+                updateCheckOnResume = false
+                refreshUpdateStatus()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     // loadinfo version
