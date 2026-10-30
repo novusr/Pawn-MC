@@ -182,32 +182,49 @@ jobs:
       - name: Configure QEMU for aarch64 Linux user-mode
         run: |
           set -euo pipefail
-          # QEMU runs `${cross_prefix}pkg-config`: with the cross prefix below that is
-          # aarch64-linux-android26-pkg-config, which the NDK does not ship, so the
-          # configure step stopped at `pkg-config binary ... not found`. Provide that
-          # exact name (targeted wrapper, so .pc flags stay Android ones) and leave
-          # the plain pkg-config on PATH for the build machine.
-          PKG_CONFIG_DIR=$(mktemp -d)
-          ln -s "$(command -v pkg-config)" "$PKG_CONFIG_DIR/aarch64-linux-android${API_LEVEL}-pkg-config"
-          export PATH="$PKG_CONFIG_DIR:$PATH"
-          # Meson picks its pkg-config per machine; without this it also prefixes the
-          # name for the build machine, where no such wrapper exists.
+          # QEMU derives every helper from --cross-prefix by appending a plain tool
+          # name (ar, ranlib, strip, pkg-config, ...). The NDK only ships the
+          # API-qualified driver name, aarch64-linux-android${API_LEVEL}-*, so the
+          # prefix must stop at the triple and the API level is passed through
+          # ANDROID_API_LEVEL instead. A temporary shim directory then satisfies
+          # the two names QEMU asks for that the triple alone would not resolve.
+          CROSS_PREFIX="$TOOLCHAIN/bin/aarch64-linux-android-"
+          SHIM_DIR=$(mktemp -d)
+          API_TOOL="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}"
+          link_tool() { ln -sf "$1" "$SHIM_DIR/aarch64-linux-android-$2"; }
+          link_tool "${API_TOOL}-clang"   cc
+          link_tool "${API_TOOL}-clang++" c++
+          link_tool "$TOOLCHAIN/bin/llvm-ar"      ar
+          link_tool "$TOOLCHAIN/bin/llvm-ranlib"  ranlib
+          link_tool "$TOOLCHAIN/bin/llvm-strip"   strip
+          link_tool "$TOOLCHAIN/bin/llvm-nm"      nm
+          link_tool "$TOOLCHAIN/bin/llvm-objcopy" objcopy
+          link_tool "$TOOLCHAIN/bin/llvm-objdump" objdump
+          link_tool "$TOOLCHAIN/bin/ld.lld"       ld
+          # pkg-config has to answer for the target, not the runner.
+          printf '%s\n' '#!/bin/sh' \
+            'PKG_CONFIG_LIBDIR=/opt/glib-android/lib/pkgconfig:/opt/glib-android/share/pkgconfig' \
+            'PKG_CONFIG_SYSROOT_DIR=' \
+            'export PKG_CONFIG_LIBDIR PKG_CONFIG_SYSROOT_DIR' \
+            'exec pkg-config "$@"' > "$SHIM_DIR/aarch64-linux-android-pkg-config"
+          chmod +x "$SHIM_DIR/aarch64-linux-android-pkg-config"
+          export PATH="$SHIM_DIR:$PATH"
+          export ANDROID_API_LEVEL="$API_LEVEL"
+          ls -1 "$SHIM_DIR"
+          # Meson resolves pkg-config per machine; pin the build machine to the host
+          # binary so it is never prefixed with the cross tool name.
           export PKG_CONFIG="$(command -v pkg-config)"
           export PKG_CONFIG_LIBDIR=/opt/glib-android/lib/pkgconfig
-          # Keep the target compiler and the target OS identical to what QEMU derives
-          # from --cross-prefix (android for *_android targets, linux otherwise);
-          # a mismatch changes GLib's size_t through the NDK driver defaults.
+          # The target compiler, target OS and GLib sizes must agree: QEMU infers
+          # `android` from the aarch64-linux-android- prefix, so the NDK driver is
+          # the only compiler that may be used for the target.
           export TARGET_CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang"
           export TARGET_CXX="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang++"
-          # glib's .pc files carry the glib-only pkg-config directories; zlib, pcre2
-          # and libffi were installed into the same prefix but only some of them
-          # write a .pc, so the directories are added explicitly.
-          export PKG_CONFIG_PATH=/opt/glib-android/lib/pkgconfig:/opt/glib-android/share/pkgconfig
           cd qemu
           set +e
           ./configure \
             --target-list=i386-linux-user \
-            --cross-prefix="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-" \
+            --cross-prefix="$CROSS_PREFIX" \
             --cpu=aarch64 \
             --cc="$TARGET_CC" \
             --cxx="$TARGET_CXX" \

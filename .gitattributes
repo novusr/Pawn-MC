@@ -1,0 +1,17 @@
+# Keep source text byte-for-byte identical on every platform: CRLF conversion and
+# the ANSI fallback of Windows PowerShell both damaged non-ASCII strings before.
+* text=auto eol=lf
+*.kt   text eol=lf
+*.kts  text eol=lf
+*.toml text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.rst  text eol=lf
+*.md   text eol=lf
+*.ps1  text eol=crlf
+
+# Binary assets
+*.png  binary
+*.jpg  binary
+*.so   binary
+*.gz   binary

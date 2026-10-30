@@ -99,7 +99,7 @@ class RuntimeService : Service() {
 
     private lateinit var assetExtractor: ThirdExtractor
     private lateinit var serverEngine: Server
-    private lateinit var mariaDbEngine: MariaDB
+    private lateinit var mariaDbEngine: ThirdMariaDb
 
     inner class LocalBinder : Binder() {
         fun getService(): Service = this@RuntimeService

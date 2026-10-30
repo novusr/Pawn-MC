@@ -94,9 +94,9 @@ class MainActivity : ComponentActivity() {
         if (downloadStarted) return
         downloadStarted = true
         lifecycleScope.launch {
-            val ThirdRuntime = ThirdRuntime(applicationContext)
+            val runtime = ThirdRuntime(applicationContext)
             if (ThirdRuntime.isComplete(applicationContext)) return@launch
-            ThirdRuntime.sync { line -> android.util.Log.i("RuntimeDownload", line) }
+            runtime.sync { line -> android.util.Log.i("RuntimeDownload", line) }
         }
     }
 
