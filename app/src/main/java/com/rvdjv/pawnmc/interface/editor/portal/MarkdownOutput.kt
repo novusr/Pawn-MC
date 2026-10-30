@@ -21,11 +21,6 @@ import androidx.compose.ui.unit.sp
 
 /**
  * Renders the small markdown subset the `docs` page uses.
- *
- * This is not a general parser. It understands headings, fenced code blocks,
- * bullets, `**bold**` and `` `code` `` - the only constructs the shipped
- * documentation contains. Pulling a markdown library in for that would cost more APK
- * than the whole portal.
  */
 @Composable
 internal fun MarkdownOutput(markdown: String) {

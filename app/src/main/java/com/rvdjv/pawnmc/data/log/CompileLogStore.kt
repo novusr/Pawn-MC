@@ -8,24 +8,7 @@ import com.rvdjv.pawnmc.data.config.AppStorage
 import java.io.File
 
 /**
- * One unified SQLite compile-log for the whole app, replacing the old
- * `<source>.log` file that used to be dropped next to every compiled script.
- *
- * Why a single database in `Android/data/<pkg>/files/PawnMC/logs/` instead of
- * per-file logs:
- *
- *  - one file handle / WAL, opened lazily once per process — cheap even when a
- *    workspace compiles dozens of scripts in a row (not wasteful of resources);
- *  - every compile is stored as a *row* (a "cell"), so the log is queryable:
- *    total count, per-source history, exit codes and durations can be read back
- *    without re-parsing free-form text;
- *  - the folder lives on shared (external files) storage next to the settings
- *    mirror and the workspace, so a file manager or a PC can inspect the whole
- *    compile history of the ecosystem from one place.
- *
- * The database is the framework `SQLiteDatabase` (no extra dependency) with WAL
- * journalling, a covering index on `(timestamp DESC)` and an index on the source
- * path, so both "recent rows" and "history of this file" stay O(log n) reads.
+ * One unified SQLite compile-log for the whole app, one row per compile.
  */
 object CompileLogStore {
 
@@ -53,10 +36,7 @@ object CompileLogStore {
     private const val C_COMPILER_VERSION = "compiler_version"
     private const val C_OUTPUT = "output"
 
-    /**
-     * How many rows are kept. Old compiles are pruned after each write so the
-     * database stays small on low-storage devices without the user noticing.
-     */
+    /** Row cap; old compiles are pruned after each write. */
     private const val MAX_ROWS = 500
 
     private class Helper(context: Context, dir: File) :

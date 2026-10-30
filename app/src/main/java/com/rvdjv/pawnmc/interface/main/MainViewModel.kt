@@ -87,19 +87,7 @@ class MainViewModel(
             }
         """.trimIndent()
 
-        /**
-         * Creates the starter script in the user-visible app workspace.
-         *
-         * The file used to be written to `files/TMP/unit.pwn`, i.e. inside the app's
-         * private data: invisible to a file manager, deleted by an uninstall, and
-         * impossible to edit with anything but PawnMC. It now lives in
-         * [com.rvdjv.pawnmc.data.config.AppStorage.workspaceRoot] — the `PawnMC/workspace`
-         * folder on the app's shared directory — so the example project is a real,
-         * editable, copyable workspace the user owns.
-         *
-         * [baseDir] is kept as the parameter name so existing callers (including the unit
-         * tests) can pass any root; production callers pass the app data root.
-         */
+        /** Creates the starter script in the user-visible app workspace. */
         fun createTemporaryPawnFile(baseDir: File): File {
             val directory = if (baseDir.name == WORKSPACE_DIR_NAME) baseDir else File(baseDir, WORKSPACE_DIR_NAME)
             if (!directory.exists()) {
@@ -116,13 +104,7 @@ class MainViewModel(
         /** Folder the starter script is written to, under the app data root. */
         const val WORKSPACE_DIR_NAME = "workspace"
 
-        /**
-         * Where the starter script used to live, `files/TMP`.
-         *
-         * Only read from: a stored "last file" pointing at it has to be recognised as
-         * the starter (and therefore not restored) so the upgrade does not resurrect a
-         * dead path for a user who never left the temporary file.
-         */
+        /** Where the starter script used to live, `files/TMP`. */
         const val LEGACY_TEMP_DIR_NAME = "TMP"
     }
 
@@ -184,14 +166,7 @@ class MainViewModel(
         config.registerExternalConfigListener(configPreferenceListener)
     }
 
-    /**
-     * Include folders this process already created, so the auto-detection launch does not
-     * repeat an `exists()` probe on every scan.
-     *
-     * Deliberately scoped to the view model rather than to the process: a folder can
-     * disappear (unmounted SD card, deleted project) while the app is alive, and the probe
-     * has to be allowed to recreate it.
-     */
+    /** Include folders this view model already created. */
     private val validIncludePathCache = java.util.Collections.synchronizedSet(mutableSetOf<String>())
 
     fun refreshTheme() {
@@ -202,12 +177,7 @@ class MainViewModel(
         n_app_language = config.n_app_language
     }
 
-    /**
-     * Re-reads the editor background preference.
-     *
-     * Settings lives in its own activity, so the editor has to pick the value up
-     * when the main activity resumes after the user changes it.
-     */
+    /** Re-reads the editor background preference. */
     fun refreshEditorBackgroundColor() {
         n_editor_background_color = config.n_editor_background_color
     }
@@ -221,16 +191,11 @@ class MainViewModel(
         if (!isTemporaryStarter && lastPath != null && File(lastPath).exists()) {
             selectFile(lastPath, isStartupLoad = true)
         } else if (isTemporaryStarter && File(lastPath!!).exists()) {
-            // The starter the editor created is a real, compilable Pawn file: coming
-            // back from the editor must keep it selected so Compile stays usable on
-            // the main interface, instead of silently dropping the selection.
             selectFile(lastPath, isStartupLoad = true)
         } else {
             selectedFilePath = null
             config.n_last_selected_file_path = null
             temporaryFileNotice = null
-            // Nothing to restore means the startup path still has to settle the compiler
-            // mode, which is filesystem work and belongs off the main thread.
             warmUpCompilerDetection(null)
         }
     }

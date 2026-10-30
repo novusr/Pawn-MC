@@ -3,30 +3,16 @@ package com.rvdjv.pawnmc.`interface`.editor.portal
 import java.io.File
 
 /**
- * A resolved `pawncc` call: the source file plus the flags to pass through.
- *
- * [source] is already canonical and known to live inside the workspace root, so the
- * caller never has to re-validate the path before compiling.
+ * A resolved `pawncc` call inside the workspace root.
  */
 internal data class PawnccInvocation(val source: File, val options: List<String>)
 
 /**
  * Parses what the user types into the Developer Portal.
- *
- * The portal has no shell: it tokenizes, resolves a named Pawn file inside the
- * workspace, and rejects anything that would be a shell construct elsewhere. Keeping
- * that grammar in one object means the suggestion grid, the typo hints and the
- * compiler hand-off can never disagree about which commands exist.
  */
 internal object PortalCommandParser {
 
-    /**
-     * Every command the portal actually dispatches.
-     *
-     * The suggestion grid, the typo hints and the unknown-command notice all read from
-     * this one list, so a new command cannot be advertised as missing the moment it is
-     * wired into the dispatch.
-     */
+    /** Every command the portal dispatches. */
     val commandNames = listOf(
         "help", "docs", "pawncc", "switch", "clear", "ls",
         "whoami", "time", "date", "which", "deviceinfo", "version", "github"
@@ -36,12 +22,7 @@ internal object PortalCommandParser {
     private val argumentlessCommands =
         commandNames.filterNot { it == "which" || it == "switch" || it == "pawncc" }
 
-    /**
-     * Splits [command] on whitespace, honouring single and double quotes.
-     *
-     * Returns null for an unterminated quote: half a path is worse than an error,
-     * because it would silently compile the wrong file.
-     */
+    /** Splits [command] on whitespace, honouring quotes; null on an unterminated quote. */
     fun tokenize(command: String): List<String>? {
         val tokens = mutableListOf<String>()
         val token = StringBuilder()
@@ -75,13 +56,7 @@ internal object PortalCommandParser {
         return tokens
     }
 
-    /**
-     * Resolves `pawncc <file> [flags]` against [workspaceRoot].
-     *
-     * The canonical path check is what keeps the portal from compiling anything
-     * outside the workspace: a relative `../../../etc` is rejected after resolution,
-     * not by string inspection, so symlinks cannot escape either.
-     */
+    /** Resolves `pawncc <file> [flags]` against [workspaceRoot]. */
     fun pawnccInvocation(arguments: List<String>, workspaceRoot: File): PawnccInvocation? {
         val sourceArgument = arguments.firstOrNull()?.takeUnless { it.startsWith("-") } ?: return null
         val requested = File(sourceArgument)
@@ -102,12 +77,7 @@ internal object PortalCommandParser {
         return PawnccInvocation(canonicalSource, options)
     }
 
-    /**
-     * Inline suggestions for the text typed so far.
-     *
-     * Whole-command prefixes first, then the argument forms that have a fixed set of
-     * values (`switch`, `which`) so the user does not have to remember them.
-     */
+    /** Inline suggestions for the text typed so far. */
     fun suggestions(input: String, activeSourceName: String?): List<String> {
         val trimmed = input.trimStart()
         if (!trimmed.contains(' ')) {

@@ -59,11 +59,7 @@ data class WorkspaceNode(
 }
 
 /**
- * A folder opened in the PawnMC editor.
- *
- * Every workspace keeps its own tree, its own opened editors and its own search
- * results, so up to [MAX_OPEN_WORKSPACES] folders can stay open side by side and
- * each one behaves like an independent Visual Studio solution explorer.
+ * A folder opened in the PawnMC editor, with its own tree, editors and search.
  */
 class Workspace(val root: File) {
 
@@ -152,10 +148,7 @@ class Workspace(val root: File) {
 }
 
 /**
- * A file opened in an editor.
- *
- * The buffer is kept here (rather than only inside the editor widget) so several
- * files can stay open at once and `Save All` knows which ones are modified.
+ * A file opened in an editor, with its buffer and save state.
  */
 class OpenDocument(val file: File) {
     var content by mutableStateOf("")
@@ -194,15 +187,7 @@ data class WorkspaceSearchHit(
 )
 
 /**
- * Holds the workspaces opened in the PawnMC editor: up to [MAX_OPEN_WORKSPACES] folders
- * with their trees and opened editors, plus the replace/search operations that
- * span the files of the workspace that is in front.
- *
- * When a [Context] is supplied the open workspace folders are written to
- * [CompilerConfig] and restored on the next launch, so a folder chosen in the
- * editor is not lost when the app is closed. The main screen only ever picks a
- * single file and treats it as temporary; a workspace folder is a deliberate
- * choice, so it is remembered on its own.
+ * Holds the workspaces opened in the PawnMC editor and the search across them.
  */
 class WorkspaceSession(context: Context? = null) : ViewModel() {
 
@@ -246,21 +231,12 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         restoreRememberedWorkspaces()
     }
 
-    /**
-     * Re-opens the workspace folders stored by a previous run.
-     *
-     * Paths that no longer point at a folder are dropped from the store as well, so
-     * an SD card that is absent right now does not leave a permanently broken entry
-     * behind. The first folder in the stored order comes back in front, matching
-     * the order they were opened in.
-     */
+    /** Re-opens the workspace folders stored by a previous run. */
     private fun restoreRememberedWorkspaces() {
         val store = config ?: return
         val stored = store.n_workspace_folders
         if (stored.isEmpty()) return
 
-        // Duplicates are dropped but the order is kept: the first folder has to come
-        // back in front, exactly as it was in front when the app was left.
         val requested = stored.distinct()
         val surviving = requested.filter { File(it).isDirectory }
         if (surviving.size != requested.size) {
@@ -274,10 +250,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         }
     }
 
-    /**
-     * Opens [dir] as a workspace, closing the file that was open in single-file
-     * mode and bringing the new workspace to the front.
-     */
+    /** Opens [dir] as a workspace and brings it to the front. */
     fun openWorkspace(dir: File) {
         if (!dir.isDirectory) {
             statusMessage = "Not a folder: ${dir.name}"
@@ -319,14 +292,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         }
     }
 
-    /**
-     * Registers a file the user opened outside the workspace panel, i.e. from the
-     * main screen or the file browser.
-     *
-     * The folder of the file becomes a workspace (so the tab strip, the explorer and
-     * `Save All` all work from the first file), and the file itself is added as a tab.
-     * Calling it twice for the same file is a no-op.
-     */
+    /** Registers a file opened from outside the workspace panel as a tab. */
     fun registerExternalFile(file: File) {
         if (!file.isFile) return
         val dir = file.parentFile ?: return
@@ -351,27 +317,12 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         return created
     }
 
-    /**
-     * Writes the open workspace folders to the config so they survive the process.
-     *
-     * A `null` config means the view model was built without a context (unit tests),
-     * and persistence is then simply skipped.
-     */
+    /** Writes the open workspace folders to the config so they survive the process. */
     private fun persistWorkspaceFolders() {
-        // The list order mirrors the open order so the front workspace is restored
-        // in front, and duplicates are collapsed so closing and reopening a folder
-        // cannot leave the same path stored twice.
         config?.n_workspace_folders = workspaces.map { it.root.absolutePath }.distinct()
     }
 
-    /**
-     * Closes the workspace folder in front and drops its opened editors.
-     *
-     * The folder only disappears from the list, so a folder that is deleted or
-     * unmounted outside the app can be cleared with the same call.
-     *
-     * @return true when a workspace was closed.
-     */
+    /** Closes the workspace folder in front; false when none was open. */
     fun closeActiveWorkspace(): Boolean {
         val closing = activeWorkspace ?: return false
         closeWorkspace(closing)
@@ -453,18 +404,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         }
     }
 
-    /**
-     * Builds the watcher for one workspace folder.
-     *
-     * `FileObserver(String, Int)` is deprecated, but its replacement — the
-     * `FileObserver(File, Int)` overload — only exists from API 29 while this app still
-     * supports API 24. Using `File` unconditionally would turn a deprecation warning into
-     * a crash on older devices, so the version decides which overload is constructed and
-     * the deprecated one is suppressed for the API 24..28 branch only.
-     *
-     * A `File` cannot be handled directly by the constructor of the branch that takes a
-     * path, which is why the path is passed alongside the directory.
-     */
+    /** Builds the watcher for one workspace folder; API 29+ takes a File. */
     @Suppress("DEPRECATION")
     private fun createObserver(
         directory: File,
@@ -514,14 +454,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     // Files
     // ------------------------------------------------------------------
 
-    /**
-     * Registers [file] as open and makes it the active editor.
-     *
-     * The disk read is kicked off immediately, before the editor even asks for the
-     * buffer, so tapping a file in the explorer fills the editor in one step instead
-     * of waiting for a second round trip. A document that was already open is only
-     * activated, never re-read, so its unsaved buffer survives the tap.
-     */
+    /** Registers [file] as open and makes it the active editor. */
     fun openFile(file: File, workspace: Workspace? = activeWorkspace) {
         val target = workspace ?: return
         val existing = target.documentFor(file)
@@ -579,12 +512,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         }
     }
 
-    /**
-     * Drops every file of the workspace that is not a folder, and closes the
-     * workspaces that are not folders on disk any more.
-     *
-     * Used by the editor when a workspace folder was closed or unmounted externally.
-     */
+    /** Closes the workspaces whose folder no longer exists on disk. */
     fun closeMissingWorkspaces(): Int {
         val missing = workspaces.filter { !it.root.isDirectory }
         missing.forEach { workspace ->
@@ -595,7 +523,6 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         if (activeWorkspace != null && activeWorkspace !in workspaces) {
             activeWorkspace = workspaces.lastOrNull()
         }
-        // A folder that vanished is not worth remembering, so the store follows.
         persistWorkspaceFolders()
         return missing.size
     }
@@ -632,11 +559,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         }
     }
 
-    /**
-     * Saves every modified document.
-     *
-     * @param workspace the workspace to save, the front one when omitted.
-     */
+    /** Saves every modified document of [workspace]; returns how many were written. */
     suspend fun saveAll(workspace: Workspace? = activeWorkspace): Int {
         val target = workspace ?: return 0
         val dirty = target.documents.filter { it.isDirty }
@@ -657,11 +580,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     // Replace / search
     // ------------------------------------------------------------------
 
-    /**
-     * Replaces [find] with [replace] inside [file], on disk.
-     *
-     * @return the number of replacements made.
-     */
+    /** Replaces [find] with [replace] inside [file] on disk; 1 when changed. */
     suspend fun replaceInFile(
         file: File,
         find: String,
@@ -695,14 +614,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         }
     }
 
-    /**
-     * Replaces [find] with [replace] in every text file of a workspace.
-     *
-     * Open buffers are refreshed from disk afterwards so the editor never shows
-     * content that the replace has already changed.
-     *
-     * @return the number of files that were modified.
-     */
+    /** Replaces [find] with [replace] in every text file of a workspace. */
     suspend fun replaceInAllFiles(
         find: String,
         replace: String,
@@ -721,7 +633,6 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
                         touched++
                     }
                 } catch (_: Exception) {
-                    // Unreadable file: skip it instead of aborting the whole sweep.
                 }
             }
         }
@@ -731,7 +642,6 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
                     document.updateContent(document.file.readText())
                     document.markSaved()
                 } catch (_: Exception) {
-                    // Keep the in-memory buffer if the file cannot be read back.
                 }
             }
         }
@@ -759,13 +669,13 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
                             }
                         }
                     } catch (_: Exception) {
-                        // Skip files that cannot be read as text.
                     }
                 }
                 found
             }
             target.applySearch(query, hits)
-            if (hits.isEmpty() && target.searchQuery == query) {                statusMessage = "No matches in ${target.name}"
+            if (hits.isEmpty() && target.searchQuery == query) {
+                statusMessage = "No matches in ${target.name}"
             }
         }
     }

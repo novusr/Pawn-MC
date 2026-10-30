@@ -18,11 +18,7 @@ object Runner {
     private var IS_INITIALIZED = false
     private var FALL_MUTATION = false
 
-    /**
-     * Consecutive failed compiles of this session. Drives the automatic
-     * "Explain output" switch-on after [AUTO_EXPLAIN_FAILURE_THRESHOLD] failures
-     * in a row; a successful compile resets it.
-     */
+    /** Consecutive failed compiles of this session; a success resets it. */
     @Volatile
     private var CONSECUTIVE_FAILURES = 0
 
@@ -36,11 +32,7 @@ object Runner {
     private val EXIT_CODE_REGEX = """^Exit code: (-?\d+)""".toRegex()
     private val ERROR_COUNT_REGEX = """(?i)(\d+)\s+errors?\.?""".toRegex()
 
-    /**
-     * Checks whether forced mode is enabled by the user.
-     *
-     * @return true if auto-detection and fallback switching are disabled
-     */
+    /** True when auto-detection and fallback switching are disabled by the user. */
     fun isForcedModeEnabled(): Boolean {
         return CompilerConfig.getInstanceOrNull()?.n_forced_compiler_mode == true
     }
@@ -52,32 +44,13 @@ object Runner {
     ): CompilerConfig.CompilerVersion =
         if (forcedMode) selectedVersion else detectedVersion ?: CompilerConfig.CompilerVersion.V3107
 
-    /**
-     * Resets the current compile fallback mutation state for this session.
-     */
+    /** Resets the compile fallback state for this session. */
     fun resetSessionState() {
         FALL_MUTATION = false
         CONSECUTIVE_FAILURES = 0
     }
 
-    /**
-     * Reacts to a finished compile with the automatic assist toggles.
-     *
-     * Two automations live here, both purely additive: they only turn a Settings
-     * switch on, never change anything the user set deliberately.
-     *
-     *  - After [AUTO_EXPLAIN_FAILURE_THRESHOLD] failures in a row the
-     *    "Explain output" switch is enabled, so the next output is annotated with
-     *    the plain-language hints. A switch-on driven by this automation is
-     *    one-shot: the compile that runs with it consumes [n_explain_auto] and
-     *    the switch is dropped again afterwards, so a user-set "Explain output"
-     *    stays on while an automatic one behaves like a temporary instruction.
-     *  - When the failure reads `cannot read from file "path/..."` (a long path,
-     *    i.e. an include reference with `/` or `\` in it), the "Ignore case"
-     *    filesystem conversion is enabled for the next attempt. The one-shot
-     *    `n_ignore_case_auto` flag marks it as automatic, so the *next* compile
-     *    turns it back off again — exactly like a temporary instruction.
-     */
+    /** Enables the one-shot assist toggles after a failed compile. */
     private fun applyAutomaticFailureToggles(exitCode: Int, output: String) {
         val n_config = CompilerConfig.getInstanceOrNull() ?: return
 
@@ -100,12 +73,7 @@ object Runner {
         }
     }
 
-    /**
-     * Loads the selected native compiler library once per session.
-     *
-     * @param version selected compiler version
-     * @return true when load succeeds, otherwise false
-     */
+    /** Loads the selected native compiler library once per session. */
     private fun ensureInitialized(version: CompilerConfig.CompilerVersion): Boolean {
         if (IS_INITIALIZED) {
             if (INITIALIZED_VER != version) {
@@ -128,54 +96,27 @@ object Runner {
         }
     }
 
-    /**
-     * Gets the currently loaded Native compiler version.
-     *
-     * @return loaded compiler version, or null if nothing has been initialized yet
-     */
+    /** Loaded native compiler version, or null before the first compile. */
     fun getLoadedVersion(): CompilerConfig.CompilerVersion? = INITIALIZED_VER
 
-    /**
-     * Checks if the app must restart after version switching.
-     *
-     * @param requestedVersion target compiler version
-     * @return true when a restart is needed due to a different loaded library
-     */
+    /** True when switching to [requestedVersion] needs an app restart. */
     fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean {
         return IS_INITIALIZED && INITIALIZED_VER != requestedVersion
     }
 
-    /**
-     * Decides whether compiler fallback should happen based on the detected error count.
-     *
-     * @param output compiler output text
-     * @param threshold required number of errors before fallback happens
-     * @return true when the threshold is reached
-     */
+    /** True when the error count in [output] reaches the fallback [threshold]. */
     internal fun shouldRetryWithFallback(output: String, threshold: Int = AUTO_FALLBACK_ERROR_THRESHOLD): Boolean {
         return extractErrorCount(output) >= threshold
     }
 
-    /**
-     * Counts the highest error total found in compiler output.
-     *
-     * @param output compiler output text
-     * @return highest error count from the log
-     */
+    /** Highest error total found in compiler output. */
     internal fun extractErrorCount(output: String): Int {
         return ERROR_COUNT_REGEX.findAll(output)
             .map { it.groupValues[1].toIntOrNull() ?: 0 }
             .maxOrNull() ?: 0
     }
 
-    /**
-     * Starts the native Pawn compiler job for the selected source file.
-     *
-     * @param sourceFile path of the Pawn source file
-     * @param options compiler flags to pass through
-     * @param version compiler version to execute
-     * @return exit code and captured output text
-     */
+    /** Starts the native Pawn compiler job for the selected source file. */
     fun compile(
         sourceFile: String,
         options: List<String> = emptyList(),
@@ -270,14 +211,7 @@ object Runner {
         addAll(compilerOptionsForVersion(options, version))
     }
 
-    /**
-     * Runs the selected compiler version with the provided arguments.
-     *
-     * @param sourceFile Pawn source file path
-     * @param options compiler options list
-     * @param version compiler version to use
-     * @return exit code and captured output text
-     */
+    /** Runs the selected compiler version with the provided arguments. */
     private fun compileWithVersion(
         sourceFile: String,
         options: List<String>,
@@ -290,13 +224,7 @@ object Runner {
 
         Log.d("Compiler", "Compiling with: ${INITIALIZED_VER?.label}")
 
-        // One-shot "Ignore case": if the previous failure turned it on
-        // automatically, this compile is the one it was meant to help, so the
-        // conversion runs and the switch is dropped again afterwards.
-        // One-shot "Explain output": if the previous failure turned it on
-        // automatically, this compile is the one it was meant to help, so the
-        // annotation runs and the switch is dropped again afterwards — the
-        // mirrored `n_explain_output` keeps whatever the user set in Settings.
+        // Automatic assists last exactly one compile.
         val n_config = CompilerConfig.getInstanceOrNull()
         if (n_config?.n_explain_auto == true) {
             Log.i("Compiler", "Auto-assist: dropping the temporary Explain output instruction")
@@ -320,8 +248,6 @@ object Runner {
         val n_duration = System.currentTimeMillis() - n_startTime
         val n_parsedResult = parseCompilerOutput(n_output)
 
-        // Unified logging: one row (cell) in the single SQLite database under
-        // Android/data/.../PawnMC/logs, replacing the per-source `.log` files.
         runCatching {
             val n_source = File(sourceFile)
             CompileLogStore.record(
@@ -343,12 +269,7 @@ object Runner {
         return n_parsedResult
     }
 
-    /**
-     * Parses the compiler exit code and the text output produced by the native runner.
-     *
-     * @param output raw compiler output text
-     * @return exit code and trimmed human readable output
-     */
+    /** Parses the compiler exit code and the text output produced by the native runner. */
     private fun parseCompilerOutput(output: String): Pair<Int, String> {
         val n_match = EXIT_CODE_REGEX.find(output)
 
@@ -358,18 +279,10 @@ object Runner {
         return n_exitCode to n_actualOutput
     }
 
-    /**
-     * Returns the last captured compiler output from the native layer.
-     *
-     * @return output string or empty when not initialized
-     */
+    /** Last captured compiler output, or empty when not initialized. */
     fun getCapturedOutput(): String = if (IS_INITIALIZED) getOutput() else ""
 
-    /**
-     * Returns the last captured compiler errors from the native layer.
-     *
-     * @return error string or empty when not initialized
-     */
+    /** Last captured compiler errors, or empty when not initialized. */
     fun getCapturedErrors(): String = if (IS_INITIALIZED) getErrors() else ""
 
     private external fun compile(args: Array<String>): String

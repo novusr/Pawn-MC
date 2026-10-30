@@ -11,28 +11,10 @@ import androidx.compose.ui.unit.dp
 
 /**
  * Hand drawn vector icons for PawnMC.
- *
- * Both glyphs are built as a single even-odd filled path: the outer silhouette
- * is a solid shape and every inner detail (label slot, save arrow, chevron
- * pair, text baseline) is a *hole* punched through it. Even-odd fill is what
- * makes that possible without a second colour, so each icon stays legible when
- * the `Icon` component applies a single tint, while still reading as a detailed
- * glyph rather than the flat Material boilerplate.
- *
- * The [CodeEdit] glyph replaces the generic `Icons.Filled.Code` that the Xed
- * entry point used to share with unrelated toolbar actions, so the button reads
- * as "edit this text file" instead of "some code feature".
  */
 object _Icons {
 
-    /**
-     * Save icon: a storage device with a notched top-right corner, a label slot
-     * across the top, and a downward save arrow cut into the body.
-     *
-     * Geometry is centred in the 24x24 viewport and kept within a 3..21 box so
-     * the optical weight matches the Material icons it sits beside in the editor
-     * top bar.
-     */
+    /** Save icon: a storage device with a label slot and a save arrow. */
     val Save: ImageVector by lazy {
         ImageVector.Builder(
             name = "_Icons.Save",
@@ -73,14 +55,7 @@ object _Icons {
         }.build()
     }
 
-    /**
-     * Code editing icon: a document sheet with a folded corner and a `</>`
-     * chevron pair plus a text baseline punched out of it.
-     *
-     * The folded corner is cut away from the sheet silhouette itself rather than
-     * drawn as a separate flap, which keeps the whole icon to a single path and
-     * avoids a seam between two same-coloured shapes at 24dp.
-     */
+    /** Code editing icon: a document sheet with a `</>` mark. */
     val CodeEdit: ImageVector by lazy {
         ImageVector.Builder(
             name = "_Icons.CodeEdit",
@@ -144,14 +119,7 @@ object _Icons {
     }
 
     /**
-     * Workspace icon: an outlined editor frame with an inset sidebar, i.e. the
-     * "project open in a panel" cue.
-     *
-     * The explorer glyphs below are deliberately drawn as *outlines* with one accent
-     * block, the way the Visual Studio Code icon set reads at 16dp, instead of as
-     * solid silhouettes. The PawnMC identity is kept in the shape of that block: the
-     * workspace shows a short script line rather than a generic document corner, so
-     * every workspace surface still looks like PawnMC rather than like a stock editor.
+     * Workspace icon: an outlined editor frame with an inset sidebar.
      */
     val Workspace: ImageVector by lazy {
         ImageVector.Builder(
@@ -205,18 +173,7 @@ object _Icons {
     }
 
     /**
-     * Settings icon: a dinner plate and a fork, used for the editor options menu.
-     *
-     * Replaces the gear, whose eight square teeth read as a jagged, rough glyph at
-     * toolbar size. The plate-and-fork pair (the "table setting" cue, as in the
-     * 🍽 emoji) still means "options / place settings" while sitting far more
-     * calmly next to the editor's line-art icons.
-     *
-     * Drawn as one even-odd path, like the other filled glyphs: the plate is an
-     * outer circle (rim), a punched inner circle (the rim ring) and a re-filled
-     * inner circle (the plate face); the fork is a head whose tines are separated
-     * by punched gaps above a tapered handle. One colour throughout — the `Icon`
-     * component tints it like every other glyph.
+     * Settings icon: a dinner plate and a fork.
      */
     val Settings: ImageVector by lazy {
         ImageVector.Builder(
@@ -264,13 +221,6 @@ object _Icons {
 
     /**
      * Flower icon: six round petals around a punched-out centre.
-     *
-     * Kept for the self-test/decorative surfaces; the floating compile button of the
-     * Xed editor uses [Hotspot] instead.
-     *
-     * Each petal is a circle drawn with four cubic curves and every circle shares
-     * one even-odd path, so the six petals read as a single silhouette while the
-     * centre stays a hole.
      */
     val Flower: ImageVector by lazy {
         ImageVector.Builder(
@@ -300,10 +250,6 @@ object _Icons {
 
     /**
      * Hotspot icon used by the floating compile button of the editor.
-     *
-     * A solid dot in the middle with two concentric stroked arcs wrapping around
-     * it — the tethering / hotspot glyph. Each arc is a stroked ring segment, so
-     * the icon stays light in weight next to the filled Material glyphs.
      */
     val Hotspot: ImageVector by lazy {
         ImageVector.Builder(
@@ -335,14 +281,6 @@ object _Icons {
 
     /**
      * Closed-folder glyph for the workspace explorer.
-     *
-     * Redrawn as an outline with a filled tab, which is what makes the Visual Studio
-     * Code explorer read as light and modern: at 18dp a solid silhouette turns into a
-     * lump, while a 1.6dp stroke keeps the tab, the body and the fold separable.
-     *
-     * The PawnMC cue is the tab itself: it is drawn as a short slanted wedge, the same
-     * angle as the fuel of the app's `{}` files, so a folder in this explorer cannot be
-     * mistaken for the generic Material folder.
      */
     val FolderRect: ImageVector by lazy {
         ImageVector.Builder(
@@ -376,11 +314,7 @@ object _Icons {
     }
 
     /**
-     * Open-folder glyph, used while a directory in the workspace explorer is expanded.
-     *
-     * The front plate is skewed left and the outline is left open at the top of that
-     * plate, so the "flap is lifted" reading survives without any fill: the same trick
-     * the platform folder glyphs use, kept as line art to match [FolderRect].
+     * Open-folder glyph, used while a directory is expanded.
      */
     val FolderRectOpen: ImageVector by lazy {
         ImageVector.Builder(
@@ -424,14 +358,7 @@ object _Icons {
         }.build()
     }
 
-    /**
-     * Document glyph of a Pawn source file.
-     *
-     * A plain sheet outline with the `{}` pair the editor already uses for Pawn files,
-     * so the explorer, the tab strip and the completion list all speak the same visual
-     * language. The fold is drawn as a filled triangle instead of being punched out,
-     * which is what keeps the shape legible once the outline is only 1.5dp wide.
-     */
+    /** Document glyph of a Pawn source file. */
     val FileRect: ImageVector by lazy {
         ImageVector.Builder(
             name = "_Icons.FileRect",
@@ -490,12 +417,7 @@ object _Icons {
         }.build()
     }
 
-    /**
-     * Include-file glyph: [FileRect] with a `+` in the body instead of the braces.
-     *
-     * `#include` documents are the one file kind the explorer has to tell apart at a
-     * glance, and a single extra stroke does that without reading the name.
-     */
+    /** Include-file glyph: [FileRect] with a `+` in the body. */
     val IncludeRect: ImageVector by lazy {
         ImageVector.Builder(
             name = "_Icons.IncludeRect",
@@ -542,10 +464,7 @@ object _Icons {
         }.build()
     }
 
-    /**
-     * Save-all icon: the [Save] body with a second, smaller sheet tucked behind the
-     * lower-right corner, i.e. "write every open document".
-     */
+    /** Save-all icon: the [Save] body with a second sheet behind it. */
     val SaveAll: ImageVector by lazy {
         ImageVector.Builder(
             name = "_Icons.SaveAll",
@@ -595,15 +514,7 @@ object _Icons {
         }.build()
     }
 
-    /**
-     * Waving hand icon for the site preview button.
-     *
-     * An open palm with four fingers, a thumb and three motion arcs on the right
-     * side, so the glyph reads as "a hand waving hello" at 24dp. Drawn as filled
-     * paths only, which keeps it compatible with every Compose icon version in
-     * use (the Material `WavingHand` glyph is not available in the pinned
-     * `material-icons-extended` release).
-     */
+    /** Waving hand icon for the site preview button. */
     val WavingHand: ImageVector by lazy {
         ImageVector.Builder(
             name = "_Icons.WavingHand",
@@ -658,14 +569,7 @@ object _Icons {
         }.build()
     }
 
-    /**
-     * Workspace-panel icon: an outlined frame with a filled sidebar, matching the
-     * explorer glyphs above.
-     *
-     * Drawn at the same stroke weight as [Workspace] so the floating panel button, the
-     * tab-strip toggle and the menu entry all read as one family instead of mixing a
-     * solid card with line-art folders.
-     */
+    /** Workspace-panel icon: an outlined frame with a filled sidebar. */
     val PanelRect: ImageVector by lazy {
         ImageVector.Builder(
             name = "_Icons.PanelRect",
@@ -709,15 +613,7 @@ object _Icons {
         }.build()
     }
 
-    /**
-     * Screen-rotation glyph for the Portrait / Landscape toggle button.
-     *
-     * A phone outline drawn in portrait with a curved rotation arrow around its
-     * top, so the single glyph reads as "rotate the screen orientation" instead
-     * of "reload this file" (which the plain refresh arrow suggests). Drawn as
-     * line art at the same 1.6dp stroke weight as [FolderRect] and [PanelRect],
-     * so it matches the rest of the floating button family.
-     */
+    /** Screen-rotation glyph for the portrait / landscape toggle. */
     val ScreenRotation: ImageVector by lazy {
         ImageVector.Builder(
             name = "_Icons.ScreenRotation",

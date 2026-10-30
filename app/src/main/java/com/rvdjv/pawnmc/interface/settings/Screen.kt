@@ -181,32 +181,19 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateBack: () -> Unit,
     onRestartRequested: () -> Unit,
-    /**
-     * Section the screen should scroll to on open, or `null` for the top.
-     *
-     * The settings guide card on the main screen passes this, so tapping "Include paths"
-     * lands on the include-path list instead of at the top of a screen that is several
-     * pages long. An unknown target is ignored and the screen opens normally.
-     */
+    /** Section the screen should scroll to on open, or `null` for the top. */
     focusTarget: SettingsTarget? = null
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
     val settingsScrollState = rememberScrollState()
 
-    // Y offset of each section, filled in by `onGloballyPositioned` as the screen is laid
-    // out. A plain map rather than one state per section: the screen only ever scrolls to
-    // one target, and a single map keeps the bookkeeping in one place.
+    // Section offsets, filled during layout; the deep link runs afterwards.
     val sectionOffsets = remember { mutableMapOf<SettingsTarget, Int>() }
 
-    // The deep link runs after layout, so the offsets are populated by the time it fires.
-    // Clamping keeps a target whose section is shorter than the viewport from trying to
-    // scroll past the end.
     LaunchedEffect(focusTarget, sectionOffsets.size) {
         val section = focusTarget?.sectionKey ?: return@LaunchedEffect
         val top = sectionOffsets[section] ?: return@LaunchedEffect
-        // Preserve the intro/header when opening the shared General section so the
-        // clicked setting's description remains visible below the collapsing app bar.
         val offset = (top - with(density) { 96.dp.roundToPx() }).coerceAtLeast(0)
         settingsScrollState.scrollTo(offset.coerceAtMost(settingsScrollState.maxValue))
     }
@@ -268,6 +255,10 @@ fun SettingsScreen(
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME && updateCheckOnResume) {
                 updateCheckOnResume = false
+                /*
+                 * The holder is only replaced from a SideEffect, after composition,
+                 * so the resume observer always runs the latest lambda.
+                 */
                 refreshUpdateStatusState.value()
             }
         }
@@ -275,8 +266,13 @@ fun SettingsScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    fun refreshUpdateStatus() {
-        if (isCheckingUpdates) return
+    /*
+     * Held in a value holder: the refresh below is a local function, so the resume
+     * observer cannot name it directly, and the holder keeps every reference to the
+     * latest closure instead of the one captured at first composition.
+     */
+    val refreshUpdateStatus: () -> Unit = refresh@{
+        if (isCheckingUpdates) return@refresh
 
         coroutineScope.launch {
             isCheckingUpdates = true
@@ -334,7 +330,7 @@ fun SettingsScreen(
     }
 
     SideEffect {
-        refreshUpdateStatusState.value = { refreshUpdateStatus() }
+        refreshUpdateStatusState.value = refreshUpdateStatus
     }
 
     // loadinfo version
@@ -784,7 +780,7 @@ fun SettingsScreen(
                     SwitchRow(
                         modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.Filesystem),
                         title = localizer.get("settings.option.ignorecase", appLanguage, "Filesystem"),
-                        description = localizer.get("settings.option.ignorecase.desc", appLanguage, "Backs the folder up as \"folder.backup\", then lowercases every file name except the one you selected and rewrites every #include reference to lowercase. It runs once per folder because Android storage is case sensitive."),
+                        description = localizer.get("settings.option.ignorecase.desc", appLanguage, "Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."),
                         checked = viewModel.n_ignore_case,
                         onCheckedChange = { viewModel.updateIgnoreCase(it) }
                     )

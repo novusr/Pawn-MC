@@ -9,32 +9,11 @@ import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
 /**
- * High-performance asynchronous background syntax analyzer for Pawn scripts.
- *
- * The analyzer is split into a thin adapter ([analyze]) and a private
- * [PawnLexer] that walks the source once. Splitting responsibilities keeps
- * the hot loop tidy: each token kind owns its own helper function, so
- * [PawnLexer.run] is just a `when` dispatch on the current character — no
- * giant index loop with deeply nested `if/continue` branches.
- *
- * Highlighting is not list-only. Registry lookups (keywords, directives,
- * types, constants, known natives and forwards) are the first pass, but a
- * contextual rule runs afterwards: any identifier directly followed by `(`
- * is a function call site, so `halodunia()` paints the name as a function
- * while the `()` themselves stay uncoloured. Operators are matched as whole
- * tokens from [PawnRegistry.LONG_OPERATORS], so `>>>=` is a single span
- * instead of three.
+ * Asynchronous background syntax analyzer for Pawn scripts.
  */
 class PawnManager : SimpleAnalyzeManager<Any?>() {
 
-    /**
-     * Tokenizes [text] and paints the result.
-     *
-     * The delegate parameter is written with the outer type arguments, because
-     * `Delegate` is an *inner* class of the generic manager: Kotlin resolves
-     * `SimpleAnalyzeManager<Any?>.Delegate<Any?>` to the `Delegate<V>` the abstract
-     * `analyze` declares, which is what makes the override match.
-     */
+    /** Tokenizes [text] and paints the result. */
     override fun analyze(text: StringBuilder, delegate: SimpleAnalyzeManager<Any?>.Delegate<Any?>): Styles {
         val styles = Styles()
         val builder = MappedSpans.Builder()
@@ -358,12 +337,7 @@ class PawnManager : SimpleAnalyzeManager<Any?>() {
             return true
         }
 
-        /**
-         * Pawn block comments are opened with a lone `*` on its own line, but
-         * the language spells the delimiters `*begin`, `*end` and `*then` in
-         * its keyword table, so the registry entries would otherwise be dead
-         * weight. Match them here and emit a single keyword span.
-         */
+        /** Emits `*begin`, `*end` and `*then` as keyword spans. */
         private fun tryEmitBlockCommentKeyword(): Boolean {
             for (keyword in BlockCommentKeywords) {
                 if (!matchesAt(index, keyword)) continue

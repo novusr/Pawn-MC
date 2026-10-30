@@ -25,38 +25,19 @@ class CompilerConfig private constructor(context: Context) {
         if (!suppressMirror) refreshPropertiesFromPreferences()
     }
 
-    /**
-     * True while [restoreFromFile] / [mirrorToFile] are writing through the setters.
-     *
-     * The recovery path drives itself by assigning to these same properties, so without
-     * the flag it would mirror on every single assignment and restore its own restore.
-     */
+    /** True while the mirror is being written through the setters. */
     @Volatile
     private var suppressMirror: Boolean = false
 
     init {
-        // The mirror runs while the prefs object is already usable but before any
-        // getter has been called, so `attachBaseContext` still sees the restored
-        // language on the very first launch after a reinstall.
         restoreFromFile()
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
-        // On a truly fresh install (no JSON anywhere) this seeds the mirror file
-        // immediately with the defaults, so the file the next reinstall will
-        // read back always exists from the very first run — it is not written
-        // only after the user happens to change a setting.
         if (!CompilerConfigFile.exists(appContext)) {
             mirrorToFile()
         }
     }
 
-    /**
-     * Repopulates the prefs from the JSON mirror.
-     *
-     * This is the path that makes a manual reinstall behave like an update: Android
-     * wipes SharedPreferences, the app starts with defaults, and this reads the file
-     * back out of `filesDir` — which the installer leaves alone — and assigns every
-     * value through the normal setters.
-     */
+    /** Repopulates the prefs from the JSON mirror after a reinstall. */
     fun restoreFromFile() {
         if (!CompilerConfigFile.restore(appContext, prefs)) return
 
@@ -74,9 +55,6 @@ class CompilerConfig private constructor(context: Context) {
             n_app_theme = n_app_theme
             n_app_language = n_app_language
             n_editor_background_color = n_editor_background_color
-            // Workspace layout and the last-opened locations are part of the same
-            // restore pass: without reassigning them here the setters (and the
-            // mirror they trigger) would never see the restored values.
             n_workspace_folders = n_workspace_folders
             n_last_selected_file_path = n_last_selected_file_path
             n_last_opened_dir_path = n_last_opened_dir_path
@@ -113,12 +91,7 @@ class CompilerConfig private constructor(context: Context) {
         n_last_opened_dir_path = n_last_opened_dir_path
     }
 
-    /**
-     * Rewrites the JSON file from the current prefs.
-     *
-     * Called after every settings change, which is why it only serialises a dozen
-     * scalars: cheap enough to stay synchronous with the write that triggered it.
-     */
+    /** Rewrites the JSON file from the current prefs. */
     fun mirrorToFile() {
         if (suppressMirror) return
         CompilerConfigFile.mirror(appContext, prefs)
@@ -297,26 +270,8 @@ class CompilerConfig private constructor(context: Context) {
     /**
      * Settles the compiler version for [sourcePath] before a compile.
      *
-     * This exists because the two compiler modes used to deadlock each other:
-     *
-     *  - The auto-detection path writes `n_compiler_version` whenever it recognises the
-     *    `pawncc` next to the file.
-     *  - Detection is disabled while forced mode is on, and forced mode is what the user
-     *    turns on to stop the app overriding their choice.
-     *
-     * The result was that a project shipping its own `pawno/pawncc.exe` kept compiling
-     * with the bundled library, and the only way out was to switch forced mode off and
-     * hope detection ran before the compile did. Detection now also runs here, on the
-     * path that is guaranteed to happen before the arguments are built, and the two
-     * modes are stated explicitly:
-     *
-     *  - forced on  -> the selected version is kept, detection is not consulted at all;
-     *  - forced off -> a recognised nearby compiler wins, and the bundled default is
-     *    used only when there is nothing to recognise.
-     *
-     * @param sourcePath file that is about to be compiled, or `null` on a bare launch
-     * @param detectedVersion already-resolved detection result, to avoid hashing twice
-     * @return the version the compile should actually use
+     * Forced mode keeps the selected version; otherwise a recognised nearby
+     * compiler wins over the bundled default.
      */
     fun repinCompilerModeFor(
         sourcePath: String?,
@@ -346,21 +301,7 @@ class CompilerConfig private constructor(context: Context) {
             mirrorToFile()
         }
 
-    /**
-     * Detects the Android device locale and sets the app language from it.
-     *
-     * This runs exactly once, on the very first launch of a fresh install
-     * ([KEY_APP_LANGUAGE_SET] is unset): the device's primary locale decides the
-     * starting language — an `id`/`in` locale starts in Indonesian, `es` in
-     * Spanish, `ru` in Russian, everything else in English — so the app is
-     * already in the user's language from the very first frame rather than only
-     * after a restart. A language the user picked in Settings is never touched:
-     * the marker is written even when the detected language matches the default,
-     * so every later launch keeps whatever the settings hold.
-     *
-     * Purely a convenience on top of Settings: nothing in the settings screen is
-     * removed or replaced by this, and the user can switch at any time.
-     */
+    /** Sets the app language from the device locale once, on a fresh install. */
     fun applyDeviceLocaleOnFirstLaunch(context: Context) {
         if (prefs.getBoolean(KEY_APP_LANGUAGE_SET, false)) return
         val deviceLocale = try {
@@ -382,15 +323,7 @@ class CompilerConfig private constructor(context: Context) {
         mirrorToFile()
     }
 
-    /**
-     * Records that the language is now user-chosen (or device-detected), so the
-     * first-launch auto-detection never runs again on this install.
-     *
-     * The settings screen calls this on every explicit language change so the
-     * marker also reaches a fresh install through the JSON mirror: without it a
-     * reinstall would run the device-locale detection again and overwrite the
-     * language the mirror had just restored.
-     */
+    /** Records that the language is user-chosen, so detection never runs again. */
     fun markAppLanguageSet() {
         prefs.edit { putBoolean(KEY_APP_LANGUAGE_SET, true) }
         mirrorToFile()
@@ -400,19 +333,7 @@ class CompilerConfig private constructor(context: Context) {
     // [workspace]
     //
 
-    /**
-     * Workspace folders the editor keeps open between runs, in the order they
-     * were opened; the first one comes back in front.
-     *
-     * The main screen cannot pick a folder, only a single file, and a file picked
-     * there is treated as temporary. Storing the folders here is what makes a
-     * workspace folder chosen inside the editor itself survive leaving the
-     * editor, restarting the app or a reboot, instead of being thrown away with the
-     * temporary single-file selection.
-     *
-     * Stored as one `;` separated string rather than a string set, because a set has
-     * no order and would come back in an arbitrary one.
-     */
+    /** Workspace folders kept open between runs, in open order. */
     var n_workspace_folders: List<String>
         get() = (prefs.getString(KEY_WORKSPACE_FOLDERS, "") ?: "")
             .split(';')
@@ -434,14 +355,7 @@ class CompilerConfig private constructor(context: Context) {
     // [editor appearance]
     //
 
-    /**
-     * Custom editor canvas colour as `#RRGGBB`, or `null` when the editor
-     * should follow the app theme (the default behaviour).
-     *
-     * Stored as a string because SharedPreferences has no colour type, and the
-     * value is validated on read so a hand-edited or stale preference can never
-     * hand an invalid colour to the editor.
-     */
+    /** Custom editor canvas colour as `#RRGGBB`, or `null` to follow the theme. */
     var n_editor_background_color: String?
         get() = prefs.getString(KEY_EDITOR_BG_COLOR, null)?.let(::normalizeEditorBackgroundColor)
         set(value) {
@@ -452,15 +366,7 @@ class CompilerConfig private constructor(context: Context) {
             mirrorToFile()
         }
 
-    /**
-     * Normalises a user supplied editor background colour to uppercase `#RRGGBB`.
-     *
-     * Returns `null` for anything that is not exactly six hexadecimal digits, so
-     * both the writer and the reader treat an invalid value as "no custom colour"
-     * instead of propagating a broken value into the editor scheme. A blank
-     * string means "clear the override", which is why it is distinct from a
-     * malformed value here but collapses to the same stored result.
-     */
+    /** Normalises a background colour to uppercase `#RRGGBB`, or null when invalid. */
     fun normalizeEditorBackgroundColor(raw: String?): String? {
         if (raw == null) return null
         val digits = raw.trim().removePrefix("#")
@@ -638,14 +544,7 @@ class CompilerConfig private constructor(context: Context) {
     }
 
     companion object {
-        /**
-         * Version strings for the two bundled Pawn compilers.
-         *
-         * Every place that mentions a Pawn release refers to these constants
-         * instead of repeating the literal, so a version bump only has to happen
-         * here and the enum, the settings label and the library name can never
-         * drift apart.
-         */
+        /** Version strings for the two bundled Pawn compilers. */
         const val STR_V3107 = "3.10.7"
         const val STR_V31011 = "3.10.11"
 
@@ -660,21 +559,11 @@ class CompilerConfig private constructor(context: Context) {
         //
         // Preference keys
         //
-        // `internal`, not `private`: the JSON mirror cannot live in this class without
-        // turning every getter into a size-probe, so it lives in `CompilerConfigFile`
-        // and reads and writes these very keys. Keeping the literals here, next to the
-        // getters that use them, is what stops the prefs and the mirror from drifting
-        // apart. The non-mirrored keys below stay private because nothing outside reads
-        // them.
-        //
         internal const val KEY_DEBUG            = "debug_level"
         internal const val KEY_OPTIMIZATION      = "optimization_level"
         internal const val KEY_IGNORE_CASE       = "ignore_case"
         internal const val KEY_EXPLAIN_OUTPUT    = "explain_output"
         private const val PREFS_NAME           = "compiler_config"
-        // internal: the JSON mirror has to carry these across a reinstall — the last
-        // opened file/folder and workspace layout are what the editor reopens on
-        // launch, so a mirror that skipped them would feel like starting from zero.
         internal const val KEY_LAST_DIR         = "last_open_dir"
         internal const val KEY_LAST_FILE        = "last_sel_file"
         private const val KEY_CASE_BACKUP_DIR  = "case_insensitive_backup_dir"
@@ -689,13 +578,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_DETECTED_SIZE_BYTES = "detected_compiler_size_bytes"
         private const val KEY_DETECTED_MD5 = "detected_compiler_md5"
 
-        /**
-         * Compiler version handling, mirrored like the other preferences.
-         *
-         * `forced` means "use the version picked in Settings and nothing else"; when it
-         * is off the app keeps whichever version the user last picked but re-pins it to
-         * the metadata of the file it is about to compile ([repinCompilerModeFor]).
-         */
+        /** Compiler version handling, mirrored like the other preferences. */
         internal const val KEY_FORCED_MODE = "forced_compiler_mode"
         internal const val KEY_FORCED_INCLUDE_PATH_AUTO = "forced_include_path_auto"
         internal const val KEY_APP_THEME = "app_theme"
@@ -824,32 +707,17 @@ class CompilerConfig private constructor(context: Context) {
 
         fun normalizeIncludePath(path: String): String = normalPath(path)
 
-        /**
-         * Source extensions PawnMC accepts. Only these four are treated as script
-         * extensions, so folders that legitimately contain a dot (for example
-         * `my.project/include`) keep working untouched.
-         */
+        /** Source extensions PawnMC accepts. */
         private val SCRIPT_EXTENSIONS = listOf(".pawn", ".pwn", ".p", ".inc")
 
-        /**
-         * True when [path] ends with one of [SCRIPT_EXTENSIONS].
-         *
-         * The check is anchored to the end of the whole path, so only a real file
-         * extension counts and never a dot that belongs to a parent folder.
-         */
+        /** True when [path] ends with one of [SCRIPT_EXTENSIONS]. */
         fun hasScriptExtension(path: String): Boolean {
             val lowered = path.trim().replace('\\', '/').trimEnd('/').lowercase()
             if (lowered.isEmpty()) return false
             return SCRIPT_EXTENSIONS.any { lowered.endsWith(it) && lowered.length > it.length }
         }
 
-        /**
-         * Removes a trailing script extension from [path].
-         *
-         * `.../gamemodes/main.pwn` becomes `.../gamemodes/main`, while
-         * `.../my.project/include` is returned unchanged because `.project` is not a
-         * script extension.
-         */
+        /** Removes a trailing script extension from [path]. */
         fun stripScriptExtension(path: String): String {
             val original = path.trim()
             val withoutTrailingSlash = original.replace('\\', '/').trimEnd('/')
@@ -860,21 +728,10 @@ class CompilerConfig private constructor(context: Context) {
             return withoutTrailingSlash.dropLast(extension.length)
         }
 
-        /**
-         * Normalises an include path exactly like [normalPath], then removes a trailing
-         * script extension so a path typed as `.../gamemodes/main.pwn` is stored as the
-         * folder `.../gamemodes/main` instead of being rejected as a non-existent path.
-         */
+        /** Normalises an include path and strips a trailing script extension. */
         fun normalizeIncludePathInput(path: String): String = normalPath(stripScriptExtension(path))
 
-        /**
-         * Resolves the file handed to the compiler.
-         *
-         * When the selected path still points at a real file it is kept as-is, because
-         * the compiler needs the extension to recognise the source. Only when it does not
-         * exist (a mistyped selection, or a path carrying an extension) is the script
-         * extension removed, and the compilation is never cancelled by this cleanup.
-         */
+        /** Resolves the file handed to the compiler, keeping an existing file as-is. */
         fun resolveCompilePath(path: String): String {
             val trimmed = path.trim()
             if (trimmed.isEmpty()) return trimmed
@@ -884,13 +741,7 @@ class CompilerConfig private constructor(context: Context) {
             return stripScriptExtension(trimmed)
         }
 
-        /**
-         * Case-insensitive, separator-normalised key used to decide whether two include
-         * paths point at the same folder.
-         *
-         * This is a pure string operation: it never touches the filesystem, so it stays
-         * cheap enough to run on every incoming candidate before any real work happens.
-         */
+        /** Case-insensitive key used to compare two include paths. */
         fun includePathKey(path: String): String = normalPath(normalizePathSegments(path)).lowercase()
 
         private fun normalizePathSegments(path: String): String {
@@ -918,15 +769,7 @@ class CompilerConfig private constructor(context: Context) {
             return prefix + stack.joinToString("/")
         }
 
-        /**
-         * Cheap duplicate check used by every include path entry point (Settings manual
-         * add/edit, folder picker, and [Compiler] auto-discovery).
-         *
-         * Returns true when [candidate] resolves to a folder already present in
-         * [existing] (same path, different case, or same canonical location through a
-         * symlink/relative alias), meaning the caller should skip it entirely instead of
-         * re-scanning and re-filtering the whole list.
-         */
+        /** True when [candidate] already resolves to a folder in [existing]. */
         fun containsIncludePath(existing: Iterable<String>, candidate: String): Boolean {
             val key = includePathKey(candidate)
             if (key.isBlank() || key == "/") return false
@@ -935,8 +778,6 @@ class CompilerConfig private constructor(context: Context) {
                 if (includePathKey(path) == key) return true
             }
 
-            // Second pass: only pay for canonicalisation when the cheap comparison
-            // failed. This keeps the common "new path" case filesystem-free.
             val candidateFile = java.io.File(normalPath(candidate))
             if (!candidateFile.exists()) return false
 
@@ -955,14 +796,7 @@ class CompilerConfig private constructor(context: Context) {
             return false
         }
 
-        /**
-         * Drops stored include paths whose folder no longer exists, except the stable
-         * root `include` fallback which must remain available even before it is created.
-         * Also re-dedupes, guarding against a list that went stale through a manual edit
-         * of the stored value.
-         *
-         * @return the surviving paths, already normalised and unique
-         */
+        /** Drops include paths whose folder no longer exists, then re-dedupes. */
         fun pruneMissingIncludePaths(existing: Iterable<String>): List<String> {
             val survivors = mutableListOf<String>()
 

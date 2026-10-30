@@ -31,11 +31,7 @@ data class _item(
 }
 
 /**
- * Dedicated Pawn language registry holding official Pawn specifications,
- * keywords, preprocessor directives, types, constants, operators, SA-MP
- * callbacks and native functions. Stored in the data layer separately from
- * the UI, and used by both the syntax highlighter and the autocompletion
- * popup so the two can never drift apart.
+ * Pawn language registry shared by the highlighter and the completion popup.
  */
 object PawnRegistry {
 
@@ -62,13 +58,7 @@ object PawnRegistry {
         }
     }
 
-    /**
-     * Include symbols that are not already described by [NATIVES]/[CALLBACKS].
-     *
-     * They are synthesised from [PawnIndex] so autocompletion offers the
-     * complete SA-MP surface, while the curated lists keep their richer
-     * descriptions for the symbols they already own.
-     */
+    /** Include symbols not already described by [NATIVES]/[CALLBACKS]. */
     private fun includeItems(): List<_item> = buildList {
         val natives = PawnIndex.INCLUDES.flatMap { it.natives }
             .filterNot { it.name in nativeSet || it.name in keywordSet }
@@ -95,10 +85,7 @@ object PawnRegistry {
         PawnIndex.INCLUDES.flatMap { it.forwards }.map { it.name }.toSet()
     }
 
-    /**
-     * Multi-character operators, longest first so the lexer can consume a
-     * greedy match without leaving a dangling suffix behind.
-     */
+    /** Multi-character operators, longest first for greedy lexing. */
     val LONG_OPERATORS: List<String> by lazy {
         OPERATORS.map { it.name }.filter { it.length > 1 }.sortedByDescending { it.length }
     }
@@ -134,10 +121,7 @@ object PawnRegistry {
     fun isConstant(word: String): Boolean = word in constantSet
     fun containsSymbol(name: String): Boolean = allItems.any { it.name.equals(name, ignoreCase = true) }
 
-    /**
-     * True for every known callable symbol, including the natives and forwards
-     * that only come from the include table.
-     */
+    /** True for every callable symbol, including include-derived ones. */
     fun isFunction(word: String): Boolean =
         word in nativeSet || word in callbackSet || word in includeNativeSet || word in includeForwardSet
 

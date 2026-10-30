@@ -8,8 +8,7 @@ import com.rvdjv.pawnmc.data.config.CompilerConfig
 import java.io.File
 
 /**
- * Discovery of a native Pawn compiler that sits next to the opened source and of
- * the include folder that belongs to it.
+ * Discovery of a native Pawn compiler next to the opened source.
  */
 object Detection {
 
@@ -30,12 +29,7 @@ object Detection {
         val md5: String?
     )
 
-    /**
-     * Detects a nearby Pawn compiler and maps it to the supported PawnMC version when metadata matches.
-     *
-     * @param sourceFile selected pawn source file path
-     * @return matched compiler version or null when forced mode or no valid match is found
-     */
+    /** Nearby compiler version mapped to a supported PawnMC version, or null. */
     fun detectCompilerVersionForFile(sourceFile: String): CompilerConfig.CompilerVersion? {
         val n_config = CompilerConfig.getInstanceOrNull()
         if (n_config?.n_forced_compiler_mode == true) {
@@ -51,12 +45,7 @@ object Detection {
         return n_match.version
     }
 
-    /**
-     * Scans nearby folders for a Pawn compiler executable and returns the best detected match.
-     *
-     * @param sourceFile selected Pawn file path
-     * @return compiler match information or null if not found
-     */
+    /** Best nearby compiler match for [sourceFile], or null. */
     fun detectNearbyCompiler(sourceFile: String): NearbyCompilerMatch? {
         val source = File(sourceFile)
         if (!source.exists() || source.extension.isBlank()) return null
@@ -136,12 +125,7 @@ object Detection {
         return if (key.isBlank() || key == "/" || key in known) emptyList() else listOf(normalizedPath)
     }
 
-    /**
-     * Reads metadata from a detected pawncc binary, including product version, size, and MD5 hash.
-     *
-     * @param file compiler executable file
-     * @return extracted metadata wrapper
-     */
+    /** Reads product version, size and MD5 from a detected pawncc binary. */
     private fun readCompilerMetadata(file: File): CompilerMetadata {
         val n_bytes = runCatching { file.readBytes() }.getOrElse { byteArrayOf() }
         val n_utf16Text = runCatching { String(n_bytes, Charsets.UTF_16LE) }.getOrElse { "" }

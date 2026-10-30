@@ -79,12 +79,7 @@ private data class PortalEntry(
     val command: String,
     val output: String,
     val markdown: Boolean = false,
-    /**
-     * Whether the `% command` line is echoed above the output.
-     *
-     * The automatic `docs` entry on first open is a welcome document rather than
-     * something the user asked for, so it is shown without a prompt.
-     */
+    /** Whether the `% command` line is echoed above the output. */
     val showPrompt: Boolean = true
 )
 
@@ -106,22 +101,13 @@ internal fun DeveloperPortal(
     val entries = remember { mutableStateListOf<PortalEntry>() }
     var input by remember { mutableStateOf("") }
     var isRunning by remember { mutableStateOf(false) }
-    // Whether the dots button has unfolded the floating input. Defaulting to visible
-    // keeps the field discoverable; the dots collapse it for an immersive read-only
-    // transcript and bring it back with one tap.
     var inputImmersive by remember { mutableStateOf(true) }
     var dragOffset by remember { mutableStateOf(IntOffset.Zero) }
     val currentDragOffset = rememberUpdatedState(dragOffset)
 
     fun text(key: String) = PortalText.get(context, key, language)
 
-    /**
-     * Runs [commandLine] as if it had been typed in the console.
-     *
-     * Used both by the input field and by the automatic `docs` run on first open,
-     * so the welcome content goes through exactly the same command path as a
-     * manually typed command and can never drift from it.
-     */
+    /** Runs [commandLine] as if it had been typed in the console. */
     fun submit(commandLine: String = input.trim(), isAutomatic: Boolean = false) {
         if (commandLine.isEmpty() || isRunning) return
         input = ""

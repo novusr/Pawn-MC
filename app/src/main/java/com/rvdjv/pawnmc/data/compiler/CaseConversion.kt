@@ -7,10 +7,6 @@ import java.io.File
 
 /**
  * "Ignore case" filesystem conversion of a project folder.
- *
- * Backs the folder up as `<folder>.backup`, lowercases every entry name and
- * rewrites every static `#include` reference so a case sensitive filesystem
- * resolves the same names the NTFS-authored scripts used.
  */
 object CaseConversion {
 
@@ -41,12 +37,7 @@ object CaseConversion {
         val rewrittenIncludes: Int = 0
     )
 
-    /**
-     * Lowercases every `#include "..."` / `#include '...'` reference of a source.
-     *
-     * The conversion is unconditional: Android storage is case sensitive while the
-     * NTFS-authored scripts are not, so `Aaaa` becomes `aaa` without exception.
-     */
+    /** Lowercases every static `#include` reference of a source. */
     fun lowercaseIncludeReferences(content: String): String =
         INCLUDE_DIRECTIVE_REGEX.replace(content) { match ->
             val n_original_value = match.groupValues[1]
@@ -93,14 +84,7 @@ object CaseConversion {
         }
     }
 
-    /**
-     * Decides whether the conversion has to run for [workingDir].
-     *
-     * Once `<folder>.backup` exists the folder has already been converted, so the
-     * instructions are skipped even while "Ignore case" stays enabled. The key
-     * stored in the configuration only has to agree with the filesystem; if the
-     * folder was deleted the instructions run again.
-     */
+    /** True when [workingDir] still has to be converted. */
     fun needsConversion(workingDir: File, rememberedBackupDir: String? = null): Boolean {
         val n_backup = backupDirFor(workingDir)
         if (n_backup.isDirectory) return false
@@ -112,16 +96,7 @@ object CaseConversion {
         return hasConvertibleEntry(workingDir)
     }
 
-    /**
-     * Backs up the folder of the browsed file and rewrites it for a case sensitive
-     * filesystem.
-     *
-     * The whole folder holding the selected file is copied to `<folder>.backup`
-     * first, so the original names are always recoverable. The working folder is
-     * then modified in place: every file and folder name is lowercased (the name of
-     * the selected file is kept as-is) and every static include reference in the
-     * folder is lowercased too.
-     */
+    /** Backs up the folder of the browsed file and lowercases it in place. */
     fun convertFolderToLowerCase(
         selectedFilePath: String,
         rememberedBackupDir: String? = null

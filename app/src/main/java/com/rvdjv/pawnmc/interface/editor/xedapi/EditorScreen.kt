@@ -360,20 +360,12 @@ fun EditorScreen(
         workspace.search(toolFind)
     }
 
-    /**
-     * Replaces inside the file currently open.
-     *
-     * In single-file mode the editor's own searcher is used so the change lands in
-     * the undo history; in workspace mode the file is rewritten on disk and the
-     * editor buffer is refreshed from it.
-     */
+    /** Replaces inside the file currently open. */
     val runReplacePerFile: (Boolean) -> Unit = { allOccurrences ->
         if (toolFind.isNotEmpty()) {
             val editor = editorRef
             val document = workspace.activeDocument
             if (document == null) {
-                // Single-file mode: go through the editor searcher so the change
-                // stays in the undo history.
                 editor?.searcher?.apply {
                     search(toolFind, EditorSearcher.SearchOptions(false, false))
                     if (allOccurrences) replaceAll(toolReplace) else replaceThis(toolReplace)
@@ -1728,8 +1720,7 @@ private fun EditorAboutDialog(
 }
 
 /**
- * Shown when a workspace has no open document at all: either reopen the explorer or
- * pick another folder.
+ * Shown when a workspace has no open document at all.
  */
 @Composable
 private fun EmptyWorkspaceView(
@@ -1790,50 +1781,27 @@ private val COMPILE_BUTTON_SIZE = 58.dp
 
 /** Diameter of the floating workspace panel button. */
 private val PANEL_BUTTON_SIZE = 48.dp
-/**
- * Icon colours for the floating actions.
- *
- * Each action gets a distinct hue so the stack can be read by function instead of
- * by position. The values are fixed rather than theme-derived because they carry
- * meaning, not emphasis: a grey panel icon, a cyan portal, a green compile. They are
- * picked to stay legible on both the light and the dark surface ramp.
- */
-private val FLOAT_TINT_NEUTRAL = Color(0xFF8A8A94)   // workspace panel: deliberately grey
-private val FLOAT_TINT_PORTAL = Color(0xFF4FC3F7)    // developer portal: light blue
-private val FLOAT_TINT_ACTION = Color(0xFF43A047)    // compile / search / folder / save: green
 
-private val FLOAT_TINT_ORIENTATION = Color(0xFFAB7DF6) // rotate: violet
+/** Icon colours for the floating actions. */
+private val FLOAT_TINT_NEUTRAL = Color(0xFF8A8A94)
+private val FLOAT_TINT_PORTAL = Color(0xFF4FC3F7)
+private val FLOAT_TINT_ACTION = Color(0xFF43A047)
+private val FLOAT_TINT_ORIENTATION = Color(0xFFAB7DF6)
 
 /** Width of the rectangle-style floating toolbar. */
 private val TOOLBAR_WIDTH = 52.dp
 
-/**
- * Height fraction of the canvas the floating workspace panel occupies.
- *
- * Deliberately below `1f`: the panel is a free-floating card, so it needs spare
- * vertical room inside the canvas to be dragged around instead of filling the
- * whole height and being pinned to the top edge.
- */
+/** Height fraction of the canvas the floating workspace panel occupies. */
 private const val EXPLORER_HEIGHT_FRACTION = 0.7f
 
-/**
- * Gap kept between the floating workspace panel and the canvas edges.
- *
- * The drag range of the panel is derived from it, so the card can travel across the
- * whole canvas without ever being clipped by the editor bounds.
- */
+/** Gap kept between the floating workspace panel and the canvas edges. */
 private val EXPLORER_EDGE_MARGIN = 10.dp
 
 /** Height of the rectangle-style floating toolbar (drag handle + four entries). */
 private val TOOLBAR_HEIGHT = 232.dp
 
 /**
- * Rest position of a floating control, given the compile button it stacks above.
- *
- * Controls are centred on the compile button horizontally. [reservedBelow] lets a
- * control stack above another floating control without changing the shared anchor.
- * [alignRight] `false` mirrors the whole rest position to the *left* canvas edge,
- * so an extra control gets its own column instead of stacking onto the right one.
+ * Rest position of a floating control above the compile button.
  */
 internal fun restOffsetAbove(
     controlWidth: Dp,

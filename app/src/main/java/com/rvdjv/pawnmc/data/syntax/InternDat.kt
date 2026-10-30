@@ -40,22 +40,11 @@ internal object InternDat {
     @Volatile
     private var cached: InternDatset? = null
 
-    /**
-     * Application context of the first [load] call, or `null` before it.
-     *
-     * Kept so [dataset] can finish the load on whatever thread happens to need the
-     * symbols first, without the caller having to pass a context around.
-     */
+    /** Context of the first [load] call, so [dataset] can finish the load. */
     @Volatile
     private var appContext: Context? = null
 
-    /**
-     * Reads, parses and caches the symbol table from the packaged asset.
-     *
-     * The caller is expected to be off the main thread: this file is the largest of
-     * the packaged tables and the parse builds one tiny map per symbol, so the app
-     * warms it up in the background instead of during `MainActivity.onCreate`.
-     */
+    /** Reads, parses and caches the symbol table; call off the main thread. */
     fun load(context: Context) {
         val n_context = context.applicationContext ?: context
         appContext = n_context
@@ -65,12 +54,7 @@ internal object InternDat {
         cached = parse(assetData ?: readFromFileSystem().orEmpty())
     }
 
-    /**
-     * The parsed table, loaded on demand when the background warm-up has not finished.
-     *
-     * Deriving the table here keeps an early editor caller correct instead of handing
-     * it empty symbols; once loaded the check is a single volatile read.
-     */
+    /** The parsed table, loaded on demand if the background warm-up has not run. */
     fun dataset(): InternDatset = cached ?: synchronized(this) {
         cached ?: run {
             val n_context = appContext
@@ -83,15 +67,7 @@ internal object InternDat {
         }
     }
 
-    /**
-     * Parses the TOML symbol table.
-     *
-     * The old `0x01:item|KIND|name:0x02:...` rows are now real tables:
-     * `[item.KEYWORD]`, `[native."a_samp.inc"]` and `[forward."a_samp.inc"]`,
-     * with the symbol name as the key and `{ en = "...", id = "..." }` as the
-     * value, so the kind and the include are read from the table name instead of
-     * being encoded in a numeric marker.
-     */
+    /** Parses the TOML symbol table. */
     internal fun parse(raw: String): InternDatset {
         if (raw.isBlank()) return InternDatset(emptyList(), emptyList())
 
@@ -144,19 +120,7 @@ internal object InternDat {
             .mapNotNull { file -> runCatching { file.takeIf(File::isFile)?.readText() }.getOrNull() }
             .firstOrNull { it.isNotBlank() }
 
-    /**
-     * Symbols mined from the file the user has open, merged after the shipped table.
-     *
-     * A project can declare its own natives and forwards (`native my_ext();`,
-     * `forward OnCustomHook();`); highlighting those as plain identifiers made the
-     * editor look like it did not understand the file it was showing. The scan is a
-     * line-based regex pass, not a parser: it never has to be perfect, it only has to
-     * be cheap enough to run on every load and conservative enough to never invent a
-     * symbol the compiler would not accept.
-     *
-     * @param sourceText the buffer as shown in the editor
-     * @return one symbol per declaration, in file order
-     */
+    /** Symbols mined from the open file, merged after the shipped table. */
     internal fun symbolsFromSource(sourceText: String): List<PawnInternalSymbol> {
         if (sourceText.isBlank()) return emptyList()
 

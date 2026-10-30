@@ -19,11 +19,7 @@ class EditorViewModel(
     context: Context? = null
 ) : ViewModel() {
 
-    /**
-     * Single file opened from the app, i.e. the file that was active outside any
-     * workspace. Mutable so the host can attach another file without recreating
-     * the view model, which would drop the open workspaces.
-     */
+    /** Single file opened from the app, outside any workspace. */
     var filePath by mutableStateOf(initialFilePath)
         private set
 
@@ -34,13 +30,7 @@ class EditorViewModel(
     private var loadedFilePath: String? = null
     private var latestEditorContent: String = ""
 
-    /**
-     * Workspace opened from the editor. Empty until the user picks a folder, so
-     * the single-file flow keeps working exactly as before.
-     *
-     * The context is handed over so the folders picked here survive a restart: the
-     * view model writes them to the config and re-opens them on the next launch.
-     */
+    /** Workspace opened from the editor; empty until the user picks a folder. */
     val workspace = WorkspaceSession(context)
 
     var isLoading by mutableStateOf(true)
@@ -65,23 +55,14 @@ class EditorViewModel(
         private set
 
     init {
-        // A restored workspace owns the initial editor. Do not preload the remembered
-        // main-screen file (often the temporary unit.pwn) behind an empty workspace.
         if (filePath.isNotBlank() && !workspace.isWorkspaceOpen) loadFile()
         else isLoading = false
     }
 
-    /**
-     * Points the editor at [path], which is the file the main screen has selected.
-     *
-     * The workspace list is deliberately left untouched: the workspaces and their
-     * opened files have to survive closing and reopening the editor.
-     */
+    /** Points the editor at [path], the file the main screen has selected. */
     fun attachFile(path: String) {
         if (path.isBlank() || (path == filePath && loadedFilePath == path)) return
         filePath = path
-        // Preserve the main-screen selection as a fallback if the workspace is closed,
-        // but do not load it into or add it to an active workspace.
         if (!workspace.isWorkspaceOpen) loadFile()
     }
 
@@ -94,11 +75,7 @@ class EditorViewModel(
         loadedFilePath = n_path
         isLoading = true
         loadError = null
-        // Snapshot of what the editor held when the load began. If the user (or a
-        // test driving the view model synchronously) edits while the async read is
-        // in flight, those edits are newer than the file and must never be
-        // clobbered by the read completing later — applying it blindly used to
-        // discard unsaved changes.
+        // Edits made while the read is in flight are newer than the file.
         val contentAtLoadStart = latestEditorContent
         viewModelScope.launch {
             try {
@@ -187,25 +164,16 @@ class EditorViewModelFactory(private val filePath: String) : ViewModelProvider.F
     }
 }
 /**
- * Builds the editor view model for the whole activity.
- *
- * The instance is created once and reused, so the workspaces opened in the
- * editor survive the editor being closed (for example after a compile) and are
- * still there the next time it is opened.
+ * Builds the editor view model once for the whole activity.
  */
 class EditorViewModelFactoryForActivity(context: Context) : ViewModelProvider.Factory {
 
-    /** Kept as a property so the reference is never lost to shadowing. */
     private val appContext: Context = context.applicationContext ?: context
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(EditorViewModel::class.java)) {
             val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(appContext)
             val path = config.n_last_selected_file_path.orEmpty()
-            // The context lets the view model persist the workspace folders, so
-            // a folder picked in the editor is still open on the next launch.
-            // `Class.cast` performs the check generics cannot, so no unchecked warning
-            // is needed: a mismatched model class fails here rather than at the caller.
             return modelClass.cast(EditorViewModel(path, appContext))
                 ?: throw IllegalArgumentException("Unknown ViewModel class")
         }

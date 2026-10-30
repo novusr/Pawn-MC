@@ -9,14 +9,8 @@ import java.io.File
 /**
  * Loader of the external compiler explanation table.
  *
- * `data/_data_2026_exp.toml` provides the bundled defaults. An optional override at
- * `Documents/PawnMC/config/_data_2026_exp.toml` takes precedence. The selected table
- * is read once per process and cached.
- *
- * The file is TOML: one `[explain."<code>"]` table per message code and the
- * languages as leaves, which replaces the old `0x01:<code>:0x02:<explanation>`
- * markers. When a code is listed twice the last entry wins, exactly like the
- * previous in-memory map.
+ * `data/_data_2026_exp.toml` holds the defaults; an override in
+ * `Documents/PawnMC/config/` wins. The table is read once per process.
  */
 object Explanations {
 
@@ -32,28 +26,15 @@ object Explanations {
     @Volatile
     private var cached: Map<String, String>? = null
 
-    /**
-     * Application context of the first [load] call, or `null` before it.
-     *
-     * Kept so [ensureLoaded] can finish the load on whatever thread happens to need
-     * the table first, without the caller having to pass a context around.
-     */
+    /** Context of the first [load] call, so [ensureLoaded] can finish the load. */
     @Volatile
     private var appContext: Context? = null
 
-    /**
-     * Reads and caches the table from the packaged asset.
-     *
-     * The caller is expected to be off the main thread: the asset is read, parsed and
-     * indexed in one go, which is why the app defers this load instead of doing it
-     * during `MainActivity.onCreate`.
-     */
+    /** Reads and caches the table; call off the main thread. */
     @Synchronized
     fun load(context: Context) {
         val n_context = context.applicationContext ?: context
         appContext = n_context
-        // Explicit reloads (e.g. Settings → reload localization) must also refresh
-        // the external override instead of keeping a stale per-process copy.
         cached = null
         val overrideData = runCatching {
             File(AppStorage.dataRoot(n_context), PUBLIC_OVERRIDE_PATH)
