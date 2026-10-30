@@ -2,6 +2,7 @@ package com.pocketsamp.server.engine_handler
 
 import android.content.Context
 import android.util.Log
+import com.pocketsamp.server.Locales
 import com.pocketsamp.server.configuration.DirectoryManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,39 +14,15 @@ import java.security.MessageDigest
 
 /**
  * Fetches the runtime archives from GitHub into `Documents/PawnMC/storage/`.
- *
- * The archives are large (rootfs ~5 MB, SA-MP base ~3 MB, MariaDB bundle ~12 MB), so
- * shipping all three inside the APK inflates every install. Instead the app downloads
- * them once, in the background, and reuses the copies from shared storage afterwards.
- *
- * ## Permission gate
- *
- * The files live under `Documents/`, which needs "All files access" on Android 11+.
- * [sync] is a no-op when that permission is missing: nothing is written, nothing
- * fails, and the caller keeps using whatever it already has. The PocketSAMP screen
- * refuses to open without the permission, so the download starts on the first launch
- * that is actually allowed to proceed.
- *
- * ## Trust
- *
- * Each archive is pinned to an expected size and, when known, a SHA-256. A partial or
- * tampered file is deleted rather than used, because a corrupt `rootfs_i386` produces
- * an obscure QEMU failure far from the real cause.
  */
-class Downloader(private val context: Context) {
+class ThirdRuntime(private val context: Context) {
+
+    private fun t(key: String): String = Locales.text(Locales.current, key)
 
     companion object {
-        private const val TAG = "Downloader"
+        private const val TAG = "ThirdRuntime"
 
-        /**
-         * Raw GitHub prefix for the runtime archives.
-         *
-         * The archives live in `thirdparty/PocketSAMP/runtime/` in the repository but are
-         * deliberately **not** packaged into the APK: they add about 19 MB to every
-         * install. The app downloads them once, into Documents/PawnMC/storage, and
-         * unpacks each one independently from there. Keeping them in the repo is what
-         * makes these raw URLs exist at all.
-         */
+        /** Raw GitHub prefix for the runtime archives. */
         private const val REPO_BASE =
             "https://raw.githubusercontent.com/novusr/Pawn-MC/main/thirdparty/PocketSAMP/runtime"
 
@@ -64,22 +41,11 @@ class Downloader(private val context: Context) {
         fun isComplete(context: Context): Boolean =
             ARCHIVES.all { archiveFile(context, it).let { f -> f.isFile && f.length() > 0 } }
 
-        /**
-         * Archives and their expected sizes.
-         *
-         * Sizes are what the repository currently serves; `0` means "not pinned", in
-         * which case only a non-empty file is required. They change whenever the
-         * assets are rebuilt, so the check tolerates drift and never blocks a usable
-         * download: a wrong size is only a warning in the log.
-         */
+        /** Archives fetched on first run. */
         private val ARCHIVES = listOf("rootfs_i386", "samp_base", "mariadb_i386")
     }
 
-    /**
-     * Downloads any archive that is missing.
-     *
-     * @return true when all three exist afterwards (already present counts).
-     */
+    /** Downloads any archive that is missing; true when all exist afterwards. */
     suspend fun sync(onProgress: (String) -> Unit = {}): Boolean = withContext(Dispatchers.IO) {
         if (!DirectoryManager.hasStoragePermission(context)) {
             Log.i(TAG, "Storage permission missing; skipping the runtime archive download.")
@@ -95,13 +61,13 @@ class Downloader(private val context: Context) {
         for (name in ARCHIVES) {
             val target = archiveFile(context, name)
             if (target.isFile && target.length() > 0) continue
-            onProgress("Downloading $name...")
+            onProgress(t("log.dl.downloading").replace("{name}", name))
             if (!download(name, target)) {
                 Log.w(TAG, "Could not download $name")
                 return@withContext false
             }
         }
-        onProgress("Runtime archives ready.")
+        onProgress(t("log.dl.ready"))
         true
     }
 
@@ -145,9 +111,6 @@ class Downloader(private val context: Context) {
             if (code != HttpURLConnection.HTTP_OK && !resuming) {
                 throw IllegalStateException("HTTP $code for $url")
             }
-            /*
-             * A server that ignores Range sends the whole body: restart, do not append.
-             */
             val append = resuming
             if (already > 0 && !resuming) target.delete()
             val expected = connection.contentLengthLong
@@ -163,9 +126,6 @@ class Downloader(private val context: Context) {
                     out.fd.sync()
                 }
             }
-            /*
-             * A body shorter than Content-Length is a truncated transfer, not success.
-             */
             if (expected > 0 && written - (if (append) already else 0L) < expected) {
                 throw java.io.EOFException("truncated: ${written - (if (append) already else 0L)} of $expected bytes")
             }

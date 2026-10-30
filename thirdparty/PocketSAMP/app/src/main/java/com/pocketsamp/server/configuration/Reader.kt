@@ -4,13 +4,8 @@ import java.io.File
 
 /**
  * Reads a `server.cfg` into a [Configuration].
- *
- * The parser is deliberately forgiving. A real SA-MP config is hand-edited, so it
- * contains comments, blank lines, `echo` banners and keys this app does not model.
- * Anything it cannot interpret is skipped rather than rejected: losing a setting is
- * recoverable, refusing to open the server is not.
  */
-object ConfigurationReader {
+object Reader {
 
     /** Keys the editor owns. Everything else in the file is left untouched. */
     private val knownKeys = setOf(

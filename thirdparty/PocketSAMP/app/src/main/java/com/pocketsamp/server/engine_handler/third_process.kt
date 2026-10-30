@@ -10,7 +10,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStreamReader
 
-class ProcessRun(
+class ThirdProcess(
     private val tag: String,
     var onExit: ((exitCode: Int) -> Unit)? = null
 ) {

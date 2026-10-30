@@ -5,20 +5,9 @@ import java.io.File
 import java.io.RandomAccessFile
 
 /**
- * Decides how a Linux binary is executed on this device.
- *
- * PocketSAMP has two very different execution paths and they used to be hard-wired
- * per engine: `samp03svr` always went through QEMU, `mariadbd` was assumed to be
- * native ARM64. That split is an accident of how each engine was written, not a
- * requirement — MariaDB ships an i386 build too, and running it under the QEMU
- * translator lets the app use an ordinary Linux package instead of a bespoke Android
- * build.
- *
- * The decision is made from the ELF header of the file itself (`EI_CLASS` and
- * `e_machine`), never from the file name, so a bundle can contain either build and
- * still be launched correctly.
+ * Decides how a Linux binary is executed on this device, from its ELF header.
  */
-internal object Launcher {
+internal object ThirdLauncher {
 
     /** ELF `e_machine` values this launcher distinguishes. */
     private const val EM_386 = 3
@@ -80,7 +69,7 @@ internal object Launcher {
     /**
      * Locates the QEMU user-mode translator.
      *
-     * Shared with [Samp] so both engines look in the same places: the copies
+     * Shared with [Server] so both engines look in the same places: the copies
      * Android extracts from `jniLibs` first (the only ones guaranteed executable),
      * then the loose binaries a rootfs may carry.
      */

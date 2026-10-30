@@ -4,14 +4,8 @@ import java.io.File
 
 /**
  * Writes a [Configuration] back to `server.cfg`.
- *
- * The key order matches the file SA-MP ships with, and the keys this app does not
- * edit (`ackslimit`, `stream_rate`, the rate limits) are emitted with their stock
- * values. Writing them explicitly keeps the file complete: a server started from a
- * minimal config would otherwise fall back to different defaults than a user
- * expects after opening the editor once.
  */
-object ConfigurationWriter {
+object Writer {
 
     fun write(configuration: Configuration, file: File) {
         val content = buildString {

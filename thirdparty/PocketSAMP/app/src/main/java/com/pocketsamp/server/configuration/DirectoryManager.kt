@@ -8,7 +8,7 @@ import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.Settings
 import androidx.core.content.ContextCompat
-import com.pocketsamp.server.engine_handler.Downloader
+import com.pocketsamp.server.engine_handler.ThirdRuntime
 import java.io.File
 
 object DirectoryManager {
@@ -24,13 +24,7 @@ object DirectoryManager {
         }
     }
 
-    /**
-     * `Documents/PawnMC`, the app's own folder on shared storage.
-     *
-     * Runtime archives are kept in `Documents/PawnMC/storage/` (see [Downloader]) so
-     * they survive reinstalls and can be inspected outside the app, instead of being
-     * unpacked from every APK.
-     */
+    /** `Documents/PawnMC`, the app's own folder on shared storage. */
     fun getDocumentsPawnMcDir(): File {
         val extStorage = Environment.getExternalStorageDirectory()
             ?: return File("/storage/emulated/0/Documents/PawnMC")
@@ -103,11 +97,7 @@ object DirectoryManager {
         }
     }
 
-    /**
-     * Converts a DocumentTree Uri from ActivityResultContracts.OpenDocumentTree()
-     * into a standard POSIX File path.
-     * e.g. content: /* .../tree/primary%3ADownload%2FServer -> /storage/emulated/0/Download/Server */
-     */
+    /** Converts a DocumentTree Uri from OpenDocumentTree() into a real File path. */
     fun parseTreeUriToFile(uri: Uri): File? {
         val docId = try {
             DocumentsContract.getTreeDocumentId(uri)

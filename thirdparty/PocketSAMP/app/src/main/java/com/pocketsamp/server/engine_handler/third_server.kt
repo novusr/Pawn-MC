@@ -2,6 +2,7 @@ package com.pocketsamp.server.engine_handler
 
 import android.content.Context
 import android.util.Log
+import com.pocketsamp.server.Locales
 import com.pocketsamp.server.configuration.DirectoryManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -10,15 +11,17 @@ import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 import java.io.RandomAccessFile
 
-class Samp(private val context: Context) {
+class Server(private val context: Context) {
 
     companion object {
-        private const val TAG = "Samp"
+        private const val TAG = "Server"
     }
 
     var onExit: ((exitCode: Int) -> Unit)? = null
 
-    private val processRunner = ProcessRun("SA-MP") { exitCode ->
+    private fun t(key: String): String = Locales.text(Locales.current, key)
+
+    private val processRunner = ThirdProcess("SA-MP") { exitCode ->
         onExit?.invoke(exitCode)
     }
     private var logPollingJob: Job? = null
@@ -33,7 +36,7 @@ class Samp(private val context: Context) {
     val isRunning: Boolean
         get() = processRunner.isRunning
 
-    private fun findQemuBinary(context: Context): File? = Launcher.findQemu(context)
+    private fun findQemuBinary(context: Context): File? = ThirdLauncher.findQemu(context)
 
     fun start(scope: CoroutineScope) {
         if (isRunning) return
@@ -60,15 +63,15 @@ class Samp(private val context: Context) {
 
         if (qemuBinary == null && !useNativeX86) {
             scope.launch {
-                _serverLogs.emit("[SA-MP Error] QEMU binary (libqemu-i386.so) not found in $nativeLibDir.")
-                _serverLogs.emit("[SA-MP Info] PocketSAMP requires QEMU translator to run 32-bit x86 SA-MP server on ARM64.")
+                _serverLogs.emit(t("log.qemu.missing").replace("{dir}", nativeLibDir))
+                _serverLogs.emit(t("log.qemu.required"))
             }
             return
         }
 
         if (!serverBinary.exists()) {
             scope.launch {
-                _serverLogs.emit("[SA-MP Error] samp03svr binary not found in ${serverBinary.parent}")
+                _serverLogs.emit(t("log.binary.missing").replace("{dir}", serverBinary.parent.orEmpty()))
             }
             return
         }
@@ -76,36 +79,29 @@ class Samp(private val context: Context) {
         val cfgFile = File(sampDir, "server.cfg")
         if (!cfgFile.exists()) {
             scope.launch {
-                _serverLogs.emit("[SA-MP Error] server.cfg tidak ditemukan di: ${sampDir.absolutePath}")
-                _serverLogs.emit("[SA-MP Info] Pastikan folder berisi gamemode SA-MP yang valid atau atur konfigurasi di tab Config.")
+                _serverLogs.emit(t("log.cfg.missing").replace("{dir}", sampDir.absolutePath))
+                _serverLogs.emit(t("log.cfg.hint"))
             }
             return
         }
 
-        /*
-         * Auto-tune mobile networking in server.cfg to eliminate query drops & high ping
-         */
+        // Auto-tune mobile networking in server.cfg to avoid query drops and high ping.
         try {
             var cfgContent = cfgFile.readText()
             var modified = false
 
-            /*
-             * 1. Ensure lanmode 1: 'lanmode 0' triggers SA-MP's aggressive anti-flood query throttle, causing mobile launchers to report 'Offline (999ms)'
-             */
             if (cfgContent.contains(Regex("""(?i)^\s*lanmode\s+0""", RegexOption.MULTILINE))) {
                 cfgContent = cfgContent.replace(Regex("""(?i)^\s*lanmode\s+0""", RegexOption.MULTILINE), "lanmode 1")
                 modified = true
                 scope.launch {
-                    _serverLogs.emit("[Network Tuning] 'lanmode 1' diaktifkan untuk mencegah query drop pada launcher mobile.")
+                    _serverLogs.emit(t("log.tuning.lanmode"))
                 }
             } else if (!cfgContent.contains(Regex("""(?i)^\s*lanmode""", RegexOption.MULTILINE))) {
                 cfgContent = "lanmode 1\n$cfgContent"
                 modified = true
             }
 
-            /*
-             * 2. Ensure query 1: allows client launchers to query ping and player info
-             */
+            // query 1 lets launchers read ping and player info.
             if (cfgContent.contains(Regex("""(?i)^\s*query\s+0""", RegexOption.MULTILINE))) {
                 cfgContent = cfgContent.replace(Regex("""(?i)^\s*query\s+0""", RegexOption.MULTILINE), "query 1")
                 modified = true
@@ -114,9 +110,7 @@ class Samp(private val context: Context) {
                 modified = true
             }
 
-            /*
-             * 3. Ensure sleep 1: default sleep 5-10ms causes 300+ms ping in emulated loop; sleep 1 gives 10-20ms responsiveness
-             */
+            // sleep 1 keeps the emulated loop responsive.
             if (cfgContent.contains(Regex("""(?i)^\s*sleep\s+([3-9]|\d{2,})""", RegexOption.MULTILINE))) {
                 cfgContent = cfgContent.replace(Regex("""(?i)^\s*sleep\s+([3-9]|\d{2,})""", RegexOption.MULTILINE), "sleep 1")
                 modified = true
@@ -125,17 +119,13 @@ class Samp(private val context: Context) {
                 modified = true
             }
 
-            /*
-             * 4. Ensure ackslimit 3000 to prevent mobile packet burst drops
-             */
+            // ackslimit 3000 absorbs mobile packet bursts.
             if (!cfgContent.contains(Regex("""(?i)^\s*ackslimit""", RegexOption.MULTILINE))) {
                 cfgContent += "\nackslimit 3000\n"
                 modified = true
             }
 
-            /*
-             * 5. Ensure bind is removed so server listens on both loopback (127.0.0.1) and LAN
-             */
+            // No bind line, so the server listens on loopback and LAN.
             if (cfgContent.contains(Regex("""(?i)^\s*bind\s+""", RegexOption.MULTILINE))) {
                 cfgContent = cfgContent.replace(Regex("""(?i)^\s*bind\s+.*$""", RegexOption.MULTILINE), "# bind removed for localhost+LAN support")
                 modified = true

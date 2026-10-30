@@ -1,6 +1,7 @@
 package com.pocketsamp.server.engine_handler
 
 import android.util.Log
+import com.pocketsamp.server.Locales
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import java.io.BufferedInputStream
@@ -11,24 +12,14 @@ import java.util.zip.GZIPInputStream
 
 /**
  * Unpacks a `.tar.gz` / `.tar` stream into a directory.
- *
- * Used by [Extractor] for the bundled MariaDB and SA-MP archives. The rules it
- * enforces: directories are created, symlinks are recreated without following escaping
- * targets, the executable bit from the tar header is applied, and a partially written
- * file can never be mistaken for a complete one because every entry is written to
- * `.part` and renamed on success.
  */
-internal object Unpacker {
+internal object ThirdUnpacker {
 
     private const val TAG = "Unpacker"
 
-    /**
-     * @param source        raw archive bytes; gzip is detected from the magic number,
-     *                      not from the file name (AAPT strips `.gz` at packaging).
-     * @param outputDir     destination directory.
-     * @param onProgress    called with the byte count processed so far.
-     * @return the number of files written.
-     */
+    private fun t(key: String): String = Locales.text(Locales.current, key)
+
+    /** Unpacks [source] into [outputDir]; returns the number of files written. */
     fun extract(source: InputStream, outputDir: File, onProgress: (Long) -> Unit = {}): Int {
         var written = 0
         var processed = 0L
@@ -41,7 +32,7 @@ internal object Unpacker {
             buffered.reset()
             val isGzip = b1 == 0x1f && b2 == 0x8b
             if (b1 == -1 && b2 == -1) {
-                throw IllegalArgumentException("Archive file is empty (0 bytes).")
+                throw IllegalArgumentException(t("log.unpack.empty"))
             }
 
             val tarStream: InputStream = if (isGzip) GZIPInputStream(buffered, 64 * 1024) else buffered
@@ -53,9 +44,6 @@ internal object Unpacker {
                         val name = entry.name.removePrefix("./")
                         if (name.isNotBlank()) {
                             val target = File(outputDir, name).canonicalFile
-                            /*
-                             * Refuse entries that would escape the destination.
-                             */
                             val inside = target.path.startsWith(outputDir.canonicalPath + File.separator) ||
                                 target.path == outputDir.canonicalPath
                             if (!inside) {
@@ -80,10 +68,6 @@ internal object Unpacker {
                                         processed += count
                                     }
                                 }
-                                /*
-                                 * Rename last: a killed download/extraction leaves the
-                                 * ".part" name behind, which the engine ignores.
-                                 */
                                 if (!partial.renameTo(target)) {
                                     target.delete()
                                     partial.renameTo(target)
@@ -99,30 +83,24 @@ internal object Unpacker {
                     }
                 }
             } catch (eof: java.io.EOFException) {
-                /*
-                 * The gzip/tar reader reached the end of a file that ended before its
-                 * trailer: the archive is truncated, not merely unsupported.
-                 */
                 throw IllegalStateException(
-                    "Archive is incomplete: the transfer ended early " +
-                        "(${eof.message ?: "unexpected end of stream"}). Re-download the bundle.",
+                    t("log.unpack.incomplete").replace(
+                        "{reason}",
+                        eof.message ?: "unexpected end of stream"
+                    ),
                     eof
                 )
             } catch (e: java.io.IOException) {
-                /*
-                 * Commons Compress reports a short read as a plain IOException with
-                 * "Unexpected end of stream"; keep that wording recognisable.
-                 */
                 val raw = e.message.orEmpty()
                 if (raw.contains("end of stream", ignoreCase = true) ||
                     raw.contains("truncated", ignoreCase = true)
                 ) {
                     throw IllegalStateException(
-                        "Archive is incomplete: the transfer ended early ($raw). Re-download the bundle.",
+                        t("log.unpack.incomplete").replace("{reason}", raw),
                         e
                     )
                 }
-                throw IllegalStateException("Archive is corrupt: $raw", e)
+                throw IllegalStateException(t("log.unpack.corrupt").replace("{reason}", raw), e)
             }
         }
         return written

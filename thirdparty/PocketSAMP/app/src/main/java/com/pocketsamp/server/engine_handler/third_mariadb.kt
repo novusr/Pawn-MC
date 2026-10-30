@@ -2,19 +2,22 @@ package com.pocketsamp.server.engine_handler
 
 import android.content.Context
 import android.util.Log
+import com.pocketsamp.server.Locales
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 
-class MariaDb(private val context: Context) {
+class ThirdMariaDb(private val context: Context) {
+
+    private fun t(key: String): String = Locales.text(Locales.current, key)
 
     companion object {
         private const val TAG = "MariaDb"
     }
 
-    private val processRunner = ProcessRun("MariaDB")
+    private val processRunner = ThirdProcess("MariaDB")
 
     private val _dbLogs = MutableSharedFlow<String>(
         replay = 50,
@@ -32,9 +35,6 @@ class MariaDb(private val context: Context) {
             File(mariadbDir, "bin/mysqld"),
             File(context.filesDir, "bin/mariadbd"),
             File(context.filesDir, "bin/mysqld"),
-            /*
-             * i386 build inside the shared rootfs: executed through QEMU.
-             */
             File(context.filesDir, "rootfs_i386/usr/sbin/mariadbd"),
             File(context.filesDir, "rootfs_i386/usr/sbin/mysqld"),
             File(context.filesDir, "rootfs_i386/usr/bin/mariadbd")
@@ -42,62 +42,31 @@ class MariaDb(private val context: Context) {
         return firstRunnable(candidates)
     }
 
-    /**
-     * First candidate that is executable *and* runnable here.
-     *
-     * The daemon is i386 now, so "runnable" means the QEMU translator was found; an
-     * x86-64 native copy on the device would not be.
-     */
+    /** First candidate that is an executable and runnable on this device. */
     private fun firstRunnable(candidates: List<File>): File? =
         candidates.firstOrNull { isUsableBinary(it) && isRunnableOnThisDevice(it) }
 
-    /**
-     * True when [file] is a real executable, not just an existing path.
-     *
-     * The old check was `it.exists() && (it.canExecute() || it.setExecutable(true))`.
-     * A *directory* named `mariadbd` passes both (`File.canExecute()` is true for a
-     * directory you own), so the daemon "was found" and the engine then tried to
-     * execute a folder. Requiring a regular file and a non-zero length is what makes
-     * a missing or truncated deployment report itself honestly instead.
-     */
-    private fun isUsableBinary(file: File): Boolean = Launcher.isExecutableFile(file)
+    /** True when [file] is a regular, non-empty executable. */
+    private fun isUsableBinary(file: File): Boolean = ThirdLauncher.isExecutableFile(file)
 
-    /**
-     * Whether the host can execute [binary].
-     *
-     * The daemon is i386, so this reduces to "was the QEMU translator found". A native
-     * ARM64 or ARM binary is only accepted when the device actually reports that ABI.
-     */
+    /** Whether the host can execute [binary]. */
     private fun isRunnableOnThisDevice(binary: File): Boolean {
-        if (Launcher.needsQemu(binary)) return Launcher.findQemu(context) != null
-        val kind = Launcher.kindOf(binary)
+        if (ThirdLauncher.needsQemu(binary)) return ThirdLauncher.findQemu(context) != null
+        val kind = ThirdLauncher.kindOf(binary)
         return when (kind) {
-            Launcher.Kind.AARCH64 -> android.os.Build.SUPPORTED_ABIS.any { it == "arm64-v8a" }
-            Launcher.Kind.ARM -> android.os.Build.SUPPORTED_ABIS.any { it.startsWith("armeabi") }
-            /*
-             * A non-ELF or unrecognised file: let the exec attempt decide.
-             */
+            ThirdLauncher.Kind.AARCH64 -> android.os.Build.SUPPORTED_ABIS.any { it == "arm64-v8a" }
+            ThirdLauncher.Kind.ARM -> android.os.Build.SUPPORTED_ABIS.any { it.startsWith("armeabi") }
             else -> true
         }
     }
 
-    /** i386 sysroot that QEMU uses with `-L`, shared with [Samp]. */
+    /** i386 sysroot that QEMU uses with `-L`. */
     private fun rootfsDir(): File = File(context.filesDir, "rootfs_i386")
 
-    /**
-     * The install tree the daemon is resolved from.
-     *
-     * There is exactly one now: the i386 bundle extracted from assets into
-     * `filesDir/mariadb`. Its `bin/`, `lib/` and `share/mariadb/` are all that QEMU
-     * needs, so the data directory next to it is used unchanged.
-     */
+    /** The install tree the daemon is resolved from, `filesDir/mariadb`. */
     private fun mariadbInstallRoot(): File = File(context.filesDir, "mariadb")
 
     suspend fun initializeIfNeeded(scope: CoroutineScope): Boolean = withContext(Dispatchers.IO) {
-        /*
-         * A downloaded bundle lives outside mariadb/, so its data directory, mysql_list.cnf
-         * template and share/ tree are resolved from the install the daemon came from.
-         */
         val installed = mariadbInstallRoot()
         val mariadbDir = File(context.filesDir, "mariadb")
         val dataDir = File(mariadbDir, "data")
@@ -113,26 +82,17 @@ class MariaDb(private val context: Context) {
             if (mariadbd == null) {
                 val binDir = File(mariadbDir, "bin")
                 if (!binDir.isDirectory) {
-                    _dbLogs.emit("[MariaDB Info] The MariaDB bundle contains no bin/ directory.")
-                    _dbLogs.emit("[MariaDB Info] It must hold bin/mariadbd, lib/ and share/mariadb/ for i386.")
+                    _dbLogs.emit(_dbLogs.emit("log.mdb.nobin"))
+                    _dbLogs.emit(_dbLogs.emit("log.mdb.nobin.note"))
                 } else {
-                    _dbLogs.emit("[MariaDB Info] bin/mariadbd not found in ${binDir.absolutePath}.")
+                    _dbLogs.emit(_dbLogs.emit("log.mdb.daemon.notfound".replace("{dir}", binDir.absolutePath)))
                 }
-                _dbLogs.emit("[MariaDB Info] Database service is optional for SQLite/file gamemodes.")
+                _dbLogs.emit(_dbLogs.emit("log.mdb.optional"))
                 return@withContext false
             }
 
             val runtimeHome = File(mariadbDir, "runtime-home").apply { mkdirs() }
-            /*
-             * `mariadbd --initialize-insecure` is the only initializer used.
-             *
-             * The bundle also carries bin/mariadb-install-db, but that is a shell
-             * script that shells out to `my_print_defaults`, a helper living in the
-             * separate mariadb-client package. Running it produced
-             * "FATAL ERROR: Could not find my_print_defaults" and a half-initialized
-             * data directory. The daemon's own flag needs no external helper and is
-             * what a packaged server uses anyway.
-             */
+            // `--initialize-insecure` needs no external helper, unlike the install script.
             val installerBinary = mariadbd
             val installerArgs = listOf(
                 "--initialize-insecure",
@@ -144,15 +104,15 @@ class MariaDb(private val context: Context) {
                 File(installed, "lib").absolutePath,
                 File(installed, "lib/plugin").absolutePath
             ).joinToString(":")
-            val installerCommand = Launcher.command(
+            val installerCommand = ThirdLauncher.command(
                 binary = installerBinary,
                 arguments = installerArgs,
-                qemu = Launcher.findQemu(context),
+                qemu = ThirdLauncher.findQemu(context),
                 rootfsDir = rootfsDir(),
                 guestLibraryPath = guestLibs
             )
             if (installerCommand == null) {
-                _dbLogs.emit("[MariaDB Info] ${installerBinary.name} is a 32-bit x86 binary but QEMU was not found; cannot initialize the data directory.")
+                _dbLogs.emit(_dbLogs.emit("log.mdb.init.noqemu".replace("{name}", installerBinary.name)))
                 return@withContext false
             }
             val installBuilder = ProcessBuilder(installerCommand)
@@ -160,10 +120,7 @@ class MariaDb(private val context: Context) {
                 .redirectErrorStream(true)
             installBuilder.environment()["HOME"] = runtimeHome.absolutePath
             installBuilder.environment()["TMPDIR"] = tmpDir.absolutePath
-            installBuilder.environment()["LD_LIBRARY_PATH"] = if (Launcher.needsQemu(installerBinary)) {
-                /*
-                 * Guest libs travel through `-E`; the host only needs its own libs.
-                 */
+            installBuilder.environment()["LD_LIBRARY_PATH"] = if (ThirdLauncher.needsQemu(installerBinary)) {
                 context.applicationInfo.nativeLibraryDir
             } else {
                 listOf(
@@ -178,26 +135,20 @@ class MariaDb(private val context: Context) {
                 result.inputStream.bufferedReader().use { it.readText() }
             }
             val exitCode = withContext(Dispatchers.IO) { result.waitFor() }
-            /*
-             * MariaDB creates `mysql/global_priv.MAD` (new auth tables) or, on older
-             * builds, `mysql/db.opt`. Any of the classic system tables proves the
-             * datadir was really initialized; testing only those two file names
-             * reported a successful install as a failure on other server versions.
-             */
             val systemDb = File(dataDir, "mysql")
             val initialized = File(dataDir, "mysql/global_priv.MAD").exists() ||
                 File(dataDir, "mysql/db.opt").exists() ||
                 File(dataDir, "mysql/user.MYD").exists() ||
                 File(systemDb, "user.frm").exists()
             if (exitCode != 0 || !initialized) {
-                _dbLogs.emit("[MariaDB Error] Database initialization failed (exit $exitCode): ${output.takeLast(2000)}")
+                _dbLogs.emit(_dbLogs.emit("log.mdb.init.failed".replace("{code}", exitCode.toString()).replace("{output}", output.takeLast(2000))))
                 return@withContext false
             }
             markerFile.writeText("initialized")
             if (output.isNotBlank()) _dbLogs.emit(output.takeLast(2000))
         }
 
-        _dbLogs.emit("[MariaDB] Local database initialized.")
+        _dbLogs.emit(_dbLogs.emit("log.mdb.initialized"))
         true
     }
 
@@ -215,7 +166,7 @@ class MariaDb(private val context: Context) {
 
         if (mariadbdBinary == null) {
             scope.launch {
-                _dbLogs.emit("[MariaDB Info] MariaDB daemon not found in ${installed.absolutePath}/bin.")
+                _dbLogs.emit(_dbLogs.emit("log.mdb.daemon.missing".replace("{dir}", installed.absolutePath)))
                 /*
                  * A daemon that exists but cannot be made executable is almost always
                  * the Android 10+ W^X rule: the file is in app storage and not marked
@@ -223,7 +174,7 @@ class MariaDb(private val context: Context) {
                  */
                 val blocked = File(installed, "bin/mariadbd").takeIf { it.isFile && it.length() > 0 }
                 if (blocked != null) {
-                    _dbLogs.emit("[MariaDB Info] Found ${blocked.absolutePath} but it is not executable.")
+                    _dbLogs.emit(_dbLogs.emit("log.mdb.notexecutable".replace("{path}", blocked.absolutePath)))
                 }
             }
             return
@@ -232,12 +183,7 @@ class MariaDb(private val context: Context) {
         val socketFile = File(tmpDir, "mysql.sock")
         val pidFile = File(tmpDir, "mysql.pid")
 
-        /*
-         * An i386 MariaDB build is a first-class option, not a fallback: it lets the
-         * app run an ordinary Linux package that already links glibc, instead of a
-         * bespoke Android build. The translator is shared with Samp.
-         */
-        val qemu = Launcher.findQemu(context)
+        val qemu = ThirdLauncher.findQemu(context)
         val guestLibs = listOf(
             File(installed, "lib").absolutePath,
             File(installed, "lib/plugin").absolutePath
@@ -256,7 +202,7 @@ class MariaDb(private val context: Context) {
             "--user=${android.os.Process.myUid()}"
         )
 
-        val command = Launcher.command(
+        val command = ThirdLauncher.command(
             binary = mariadbdBinary,
             arguments = daemonArgs,
             qemu = qemu,
@@ -265,24 +211,24 @@ class MariaDb(private val context: Context) {
         )
         if (command == null) {
             scope.launch {
-                _dbLogs.emit("[MariaDB Info] ${mariadbdBinary.name} is a 32-bit x86 binary but no QEMU translator was found, so it cannot start.")
-                _dbLogs.emit("[MariaDB Info] Ensure libqemu-i386.so is packaged in jniLibs/arm64-v8a; the SA-MP server needs it too.")
+                _dbLogs.emit(_dbLogs.emit("log.mdb.start.noqemu".replace("{name}", mariadbdBinary.name)))
+                _dbLogs.emit(_dbLogs.emit("log.mdb.start.noqemu.note"))
             }
             return
         }
 
         scope.launch {
-            _dbLogs.emit("[MariaDB] Launching ${mariadbdBinary.name} (${Launcher.kindOf(mariadbdBinary)}) via ${if (Launcher.needsQemu(mariadbdBinary)) "QEMU" else "native exec"}.")
+            _dbLogs.emit(
+                t("log.mdb.launching")
+                    .replace("{name}", mariadbdBinary.name)
+                    .replace("{kind}", ThirdLauncher.kindOf(mariadbdBinary).name)
+                    .replace("{mode}", if (ThirdLauncher.needsQemu(mariadbdBinary)) "QEMU" else "native exec")
+            )
         }
 
-        val usesQemu = Launcher.needsQemu(mariadbdBinary)
+        val usesQemu = ThirdLauncher.needsQemu(mariadbdBinary)
         val env = mapOf(
-            /*
-             * `LD_LIBRARY_PATH` here belongs to the *host* process. For a QEMU launch
-             * the guest path is passed with `-E` inside the command instead, so the
-             * arm64 bundle libs must not be offered to the translator (it would try
-             * to load x86 objects as ARM).
-             */
+            // The host needs its own libs only; guest libs travel through `-E`.
             "LD_LIBRARY_PATH" to if (usesQemu) {
                 context.applicationInfo.nativeLibraryDir
             } else {
@@ -301,11 +247,6 @@ class MariaDb(private val context: Context) {
 
         processRunner.start(
             command = command,
-            /*
-             * The daemon's own directory: a downloaded bundle keeps its data files
-             * next to bin/ and lib/, so a relative lookup must not fall through to
-             * the asset tree.
-             */
             workingDir = installed,
             environment = env,
             scope = scope
