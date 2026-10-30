@@ -185,8 +185,10 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.sora.editor)
 
-    // PocketSAMP is compiled as part of both flavors. Nougat uses the API-24-compatible fallback behavior.
-    implementation(project(":pocketsamp"))
+    // PocketSAMP is compiled into the modern flavor only. The Nougat flavor provides its
+    // own `com.pocketsamp.server.ServerApp` stub (src/nougat-src), so depending on the
+    // module there as well would define that class twice and break R8.
+    "newerImplementation"(project(":pocketsamp"))
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

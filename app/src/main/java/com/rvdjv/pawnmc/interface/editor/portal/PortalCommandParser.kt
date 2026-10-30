@@ -117,15 +117,7 @@ internal object PortalCommandParser {
      * `pawncc` template takes the last cell.
      */
     fun commandGrid(activeSourceName: String?): List<String> = listOf(
-        "docs",
-        "help",
-        "ls",
-        "clear",
-        "whoami",
-        "time",
-        "date",
-        "version",
-        "deviceinfo"
+        "docs", "help", "ls", "clear", "whoami", "time", "date", "version", "deviceinfo"
     ).let { names ->
         if (activeSourceName.isNullOrBlank()) names
         else names.dropLast(1) + "pawncc \"$activeSourceName\""

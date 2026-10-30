@@ -47,17 +47,17 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import androidx.core.content.ContextCompat
-import com.pocketsamp.server.configuration.DirectoryManager
+import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.database_handler.DatabaseManager
 import com.pocketsamp.server.engine_handler.ThirdRuntime
 import com.pocketsamp.server.service_handler.RuntimeService
 import com.pocketsamp.server.service_handler.Status
-import com.pocketsamp.server.user_interface.screens.ConfigScreen
-import com.pocketsamp.server.user_interface.screens.ConsoleScreen
-import com.pocketsamp.server.user_interface.screens.CrashLogsScreen
-import com.pocketsamp.server.user_interface.screens.DashboardScreen
-import com.pocketsamp.server.user_interface.screens.DatabaseScreen
-import com.pocketsamp.server.user_interface.screens.PhpMyAdminScreen
+import com.pocketsamp.server.user_interface.screens._Config
+import com.pocketsamp.server.user_interface.screens._Console
+import com.pocketsamp.server.user_interface.screens._CrashInfo
+import com.pocketsamp.server.user_interface.screens._Dashboard
+import com.pocketsamp.server.user_interface.screens._Database
+import com.pocketsamp.server.user_interface.screens._PhpMyAdmin
 import com.pocketsamp.server.user_interface.theme.*
 
 enum class AppTab(val label: String, val icon: ImageVector) {
@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
     /** Keeps [hasAllFilesAccess] in sync while the user is in system settings. */
     private val permissionObserver = androidx.lifecycle.LifecycleEventObserver { _, event ->
         if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-            val granted = DirectoryManager.hasStoragePermission(this)
+            val granted = _DirectoryManager.hasStoragePermission(this)
             hasAllFilesAccess.value = granted
             if (granted) startRuntimeDownload()
         }
@@ -110,7 +110,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycle.addObserver(permissionObserver)
-        hasAllFilesAccess.value = DirectoryManager.hasStoragePermission(this)
+        hasAllFilesAccess.value = _DirectoryManager.hasStoragePermission(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -148,7 +148,7 @@ class MainActivity : ComponentActivity() {
                 } else {
                     StorageGate(
                         onRequestAccess = {
-                            runCatching { startActivity(DirectoryManager.getManageStorageIntent(this)) }
+                            runCatching { startActivity(_DirectoryManager.getManageStorageIntent(this)) }
                         }
                     )
                 }
@@ -183,7 +183,7 @@ class MainActivity : ComponentActivity() {
  color = SampThemeColors.bg
                 ) {
                     when (currentTab) {
-                        AppTab.DASHBOARD -> DashboardScreen(
+                        AppTab.DASHBOARD -> _Dashboard(
                             status = serverStatus,
                             isDbRunning = isDbRunning,
                             lanIp = lanIp,
@@ -196,23 +196,23 @@ class MainActivity : ComponentActivity() {
                                 if (callback != null) callback() else finish()
                             }
                         )
-                        AppTab.CONSOLE -> ConsoleScreen(
+                        AppTab.CONSOLE -> _Console(
                             logs = logs,
                             onClearLogs = { RuntimeService.clearLogs() }
                         )
-                        AppTab.DATABASE -> DatabaseScreen(
+                        AppTab.DATABASE -> _Database(
                             dbManager = dbManager,
                             isDbRunning = isDbRunning,
                             onOpenPhpMyAdmin = { isPhpMyAdminVisible = true },
                             lang = lang
                         )
-                        AppTab.CRASHES -> CrashLogsScreen()
-                        AppTab.CONFIG -> ConfigScreen()
+                        AppTab.CRASHES -> _CrashInfo()
+                        AppTab.CONFIG -> _Config()
                     }
                 }
 
                 if (isPhpMyAdminVisible) {
-                    PhpMyAdminScreen(
+                    _PhpMyAdmin(
                         isDbRunning = isDbRunning,
                         onClose = { isPhpMyAdminVisible = false },
                         lang = lang
@@ -255,7 +255,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startServerService() {
-        if (!DirectoryManager.hasStoragePermission(this)) {
+        if (!_DirectoryManager.hasStoragePermission(this)) {
             android.widget.Toast.makeText(
                 this,
                 Locales.text(
@@ -265,7 +265,7 @@ class MainActivity : ComponentActivity() {
                 android.widget.Toast.LENGTH_LONG
             ).show()
             try {
-                startActivity(DirectoryManager.getManageStorageIntent(this))
+                startActivity(_DirectoryManager.getManageStorageIntent(this))
             } catch (ignored: Exception) {
             }
             return

@@ -8,7 +8,7 @@ import java.io.File
 import java.io.FileInputStream
 
 import com.pocketsamp.server.Locales
-import com.pocketsamp.server.configuration.DirectoryManager
+import com.pocketsamp.server.configuration._DirectoryManager
 
 class ThirdExtractor(private val context: Context) {
 
@@ -22,7 +22,7 @@ class ThirdExtractor(private val context: Context) {
         private const val BUNDLE_ASSET = "mariadb_i386"
 
         fun getServerDirectory(context: Context): File {
-            return DirectoryManager.getServerDirectory(context)
+            return _DirectoryManager.getServerDirectory(context)
         }
     }
 
@@ -57,7 +57,7 @@ class ThirdExtractor(private val context: Context) {
         File(binDir, "samp03svr").setExecutable(true, false)
         File(binDir, "announce").setExecutable(true, false)
 
-        val defaultDir = DirectoryManager.getDefaultServerDirectory()
+        val defaultDir = _DirectoryManager.getDefaultServerDirectory()
         if (!defaultDir.exists()) {
             defaultDir.mkdirs()
         }

@@ -1,0 +1,225 @@
+name: MariaDB i386 Bundle
+
+# Assembles a self-contained MariaDB bundle that PocketSAMP runs through qemu-i386.
+#
+# Why i386: the SA-MP server is already i386, rootfs_i386 carries a real glibc, and
+# the bundled translator (qemu-i386) runs 32-bit x86. A native arm64 MariaDB would
+# need a bionic build, which MariaDB cannot do (nsswitch, getpwent, glibc dlopen).
+#
+# Why Debian and not Ubuntu: Ubuntu 24.04 builds MariaDB for amd64/arm64/armhf/
+# ppc64el/riscv64/s390x only - no i386 package exists, which is why
+# `mariadb-server-core:10.11` resolved to nothing. Debian still ships i386.
+#
+# The bundle must be SELF-CONTAINED. `mariadbd` lists these NEEDED entries, and the
+# rootfs only provides the six marked "(rootfs)":
+#
+#   libc.so.6        (rootfs)   libaio.so.1     <- fetched
+#   libm.so.6        (rootfs)   libnuma.so.1    <- fetched
+#   libz.so.1        (rootfs)   liburing.so.2   <- fetched
+#   libgcc_s.so.1    (rootfs)   libsystemd.so.0 <- fetched
+#   libstdc++.so.6   (rootfs)   libcrypt.so.1   <- fetched
+#                               libssl.so.3     <- fetched
+#                               libcrypto.so.3  <- fetched
+#                               libpcre2-8.so.0 <- fetched
+#
+# Shipping the daemon without those eight produces
+# "error while loading shared libraries" at startup on the device.
+
+on:
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Debian suite to take i386 packages from'
+        required: false
+        default: 'bookworm'
+        type: choice
+        options:
+          - bookworm
+          - trixie
+          - sid
+  # No `paths:` filter on purpose. With one, a push that touches anything else (an
+  # asset, a commit made through the web UI, a merge) never starts this job, so it
+  # silently disappears from the run list while the unfiltered Build & Lint job still
+  # runs. Building the bundle is cheap enough to do on every push to the main line.
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+  # Keyed by event as well as ref: a manual run must not be cancelled by a push that
+  # lands while it is downloading packages.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' }}
+
+jobs:
+  build-bundle:
+    name: Assemble mariadb_i386.tar.gz
+    runs-on: ubuntu-24.04
+    env:
+      # `github.event.inputs.suite` is empty for push/PR runs (there is no input), and
+      # `||` does not help there: an empty string is falsy but the object path itself
+      # is undefined. `env.SUITE_FALLBACK` is a plain literal, so the job-level env
+      # always ends up with a real suite name.
+      SUITE: ${{ github.event.inputs.suite != '' && github.event.inputs.suite || 'bookworm' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Resolve every package URL from the Debian index
+        run: |
+          set -euo pipefail
+          echo "Suite: $SUITE"
+          mkdir -p debs meta
+
+          BASE="https://deb.debian.org/debian/dists/$SUITE/main/binary-i386"
+          if curl -fsSL "$BASE/Packages.xz" -o meta/Packages.xz; then
+            xz -dkf meta/Packages.xz
+          else
+            curl -fsSL "$BASE/Packages.gz" | gunzip > meta/Packages
+          fi
+          echo "index entries: $(grep -c '^Package: ' meta/Packages || true)"
+
+          # Line-oriented lookup. (An earlier version used RS="" and anchored
+          # ^Package: x$ against $0; awk keeps the separating blank line inside the
+          # record, so the anchor never matched and every package looked missing.)
+          filename_for() {
+            awk -v pkg="$1" '
+              { sub(/\r$/, "") }
+              /^Package: / { matching = (substr($0, 10) == pkg); next }
+              matching && /^Filename: / { print substr($0, 11); exit }
+            ' meta/Packages
+          }
+
+          # The daemon and its helper.
+          #   mariadb-server-core : usr/sbin/mariadbd
+          #   mariadb-client-core : usr/bin/mariadb-install-db
+          # Every NEEDED library the rootfs does not already carry.
+          PKGS="mariadb-server-core mariadb-client-core \
+                libssl3 libpcre2-8-0 libaio1 libnuma1 liburing2 libsystemd0 libcrypt1"
+
+          : > meta/urls.txt
+          for pkg in $PKGS; do
+            f=$(filename_for "$pkg" || true)
+            if [ -z "${f:-}" ]; then
+              echo "::warning::package $pkg not found in $SUITE/main/binary-i386"
+              continue
+            fi
+            echo "https://deb.debian.org/debian/${f#./}" >> meta/urls.txt
+            echo "resolved $pkg -> ${f#./}"
+          done
+
+          if ! grep -q 'mariadb-server-core' meta/urls.txt; then
+            echo "::error::mariadb-server-core was not resolved; refusing to build an empty bundle."
+            exit 1
+          fi
+          echo "--- urls ---"; cat meta/urls.txt
+
+          ( cd debs && xargs -n1 -a ../meta/urls.txt curl -fsSLO )
+          ls -la debs
+
+      - name: Unpack packages
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          for f in debs/*.deb; do
+            [ -e "$f" ] || continue
+            dpkg-deb -x "$f" out
+          done
+          echo "--- daemon ---"
+          find out -type f \( -name mariadbd -o -name mysqld -o -name mariadb-install-db \) -print
+          echo "--- libraries found in packages ---"
+          find out -type f -name '*.so*' | sort
+
+      - name: Assemble self-contained bundle
+        run: |
+          set -euo pipefail
+          BUNDLE=bundle
+          rm -rf "$BUNDLE"
+          mkdir -p "$BUNDLE/bin" "$BUNDLE/lib" "$BUNDLE/share/mariadb"
+
+          DAEMON=$(find out -type f \( -name mariadbd -o -name mysqld \) | head -n1)
+          if [ -z "$DAEMON" ]; then
+            echo "::error::No mariadbd in the unpacked packages."
+            find out -maxdepth 4 -type d | sort | head -40
+            exit 1
+          fi
+          cp "$DAEMON" "$BUNDLE/bin/mariadbd"
+
+          INSTALL_DB=$(find out -type f \( -name mariadb-install-db -o -name mysql_install_db \) | head -n1)
+          if [ -n "$INSTALL_DB" ]; then
+            cp "$INSTALL_DB" "$BUNDLE/bin/mariadb-install-db"
+          else
+            echo "::warning::mariadb-install-db missing; the engine falls back to mariadbd --initialize-insecure"
+          fi
+
+          # Flatten every lib*/ subtree into lib/. `cp -a` preserves the soname
+          # symlinks (libssl.so.3 -> libssl.so.3.x) the loader resolves.
+          for libdir in $(find out -type d \( -name 'i386-linux-gnu' -o -name 'lib' \) | sort -u); do
+            find "$libdir" -maxdepth 1 \( -type f -o -type l \) -name '*.so*' -exec cp -av {} "$BUNDLE/lib/" \; 2>/dev/null || true
+          done
+
+          # Error messages (--lc-messages-dir).
+          if [ -d out/usr/share/mysql ]; then
+            cp -a out/usr/share/mysql/. "$BUNDLE/share/mariadb/"
+          elif [ -d out/usr/share/mariadb ]; then
+            cp -a out/usr/share/mariadb/. "$BUNDLE/share/mariadb/"
+          fi
+
+          chmod +x "$BUNDLE/bin/"* 2>/dev/null || true
+
+          echo "--- bundle ---"
+          find "$BUNDLE" -maxdepth 2 | sort | head -50
+          echo "--- library count: $(find "$BUNDLE/lib" -type f -o -type l | wc -l) ---"
+          file "$BUNDLE/bin/mariadbd"
+
+      - name: Verify ABI and dependencies
+        run: |
+          set -euo pipefail
+          BUNDLE=bundle
+
+          if ! file "$BUNDLE/bin/mariadbd" | grep -q 'ELF 32-bit LSB.*Intel 80386'; then
+            echo "::error::mariadbd is not an i386 ELF."
+            exit 1
+          fi
+
+          # Every NEEDED entry must be satisfied by the rootfs or by lib/.
+          # The list is a plain shell variable, NOT a heredoc: a `<<'EOF'` block whose
+          # body sits at column 0 terminates the YAML literal block for `run: |`, so
+          # GitHub read "libaio.so.1", "libc.so.6" ... as top-level workflow keys and
+          # rejected the whole file (which is why no run ever appeared).
+          ROOTFS_PROVIDED="libc.so.6 libm.so.6 libz.so.1 libgcc_s.so.1 libstdc++.so.6"
+          NEEDED="libaio.so.1 libc.so.6 libcrypt.so.1 libcrypto.so.3 libgcc_s.so.1 libm.so.6 libnuma.so.1 libpcre2-8.so.0 libssl.so.3 libstdc++.so.6 libsystemd.so.0 liburing.so.2 libz.so.1"
+
+          MISSING=0
+          for so in $NEEDED; do
+            if echo " $ROOTFS_PROVIDED " | grep -q " $so "; then
+              echo "ok (rootfs)  $so"
+            elif [ -e "$BUNDLE/lib/$so" ]; then
+              echo "ok (bundle)  $so"
+            else
+              echo "::error::missing $so"
+              MISSING=1
+            fi
+          done
+
+          if [ "$MISSING" -ne 0 ]; then
+            echo "::error::Bundle is incomplete; refusing to publish it."
+            exit 1
+          fi
+
+      - name: Package and checksum
+        run: |
+          set -euo pipefail
+          tar -C bundle -czf mariadb_i386.tar.gz bin lib share
+          sha256sum mariadb_i386.tar.gz | tee mariadb_i386.tar.gz.sha256
+          ls -lh mariadb_i386.tar.gz
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: mariadb_i386-bundle-${{ env.SUITE }}
+          path: |
+            mariadb_i386.tar.gz
+            mariadb_i386.tar.gz.sha256
+          retention-days: 30

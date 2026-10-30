@@ -18,16 +18,16 @@ import androidx.compose.ui.unit.sp
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.configuration.Reader
 import com.pocketsamp.server.configuration.Writer
-import com.pocketsamp.server.configuration.DirectoryManager
+import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.user_interface.theme.*
 import java.io.File
 
 @Composable
-fun ConfigScreen() {
+fun _Config() {
     val context = LocalContext.current
     val lang = Locales.current
     fun t(key: String): String = Locales.text(lang, key)
-    val serverDir = remember { DirectoryManager.getServerDirectory(context) }
+    val serverDir = remember { _DirectoryManager.getServerDirectory(context) }
     val configFile = remember(serverDir) { File(serverDir, "server.cfg") }
 
     var config by remember(configFile) { mutableStateOf(Reader.read(configFile)) }

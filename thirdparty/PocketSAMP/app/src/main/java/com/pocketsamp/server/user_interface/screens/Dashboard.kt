@@ -39,13 +39,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.pocketsamp.server.Locales
-import com.pocketsamp.server.configuration.DirectoryManager
+import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.service_handler.Status
 import com.pocketsamp.server.user_interface.theme.*
 import java.io.File
 
 @Composable
-fun DashboardScreen(
+fun _Dashboard(
     status: Status,
     isDbRunning: Boolean,
     lanIp: String,
@@ -58,8 +58,8 @@ fun DashboardScreen(
     fun t(key: String): String = Locales.text(lang, key)
     val context = LocalContext.current
     val lifecycleOwner = context as? androidx.lifecycle.LifecycleOwner
-    var currentServerDir by remember { mutableStateOf(DirectoryManager.getServerDirectory(context)) }
-    var hasStoragePermission by remember { mutableStateOf(DirectoryManager.hasStoragePermission(context)) }
+    var currentServerDir by remember { mutableStateOf(_DirectoryManager.getServerDirectory(context)) }
+    var hasStoragePermission by remember { mutableStateOf(_DirectoryManager.hasStoragePermission(context)) }
     var showPhpMyAdmin by remember { mutableStateOf(false) }
 
     val powerManager = remember { context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager }
@@ -77,8 +77,8 @@ fun DashboardScreen(
         DisposableEffect(lifecycleOwner) {
             val observer = LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME) {
-                    hasStoragePermission = DirectoryManager.hasStoragePermission(context)
-                    currentServerDir = DirectoryManager.getServerDirectory(context)
+                    hasStoragePermission = _DirectoryManager.hasStoragePermission(context)
+                    currentServerDir = _DirectoryManager.getServerDirectory(context)
                     isBatteryOptIgnored = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
                         powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
                     } else {
@@ -97,9 +97,9 @@ fun DashboardScreen(
         contract = ActivityResultContracts.OpenDocumentTree()
     ) { uri ->
             if (uri != null) {
-        val dir = DirectoryManager.parseTreeUriToFile(uri)
+        val dir = _DirectoryManager.parseTreeUriToFile(uri)
         if (dir != null && dir.exists() && dir.isDirectory) {
-            DirectoryManager.setServerDirectory(context, dir)
+            _DirectoryManager.setServerDirectory(context, dir)
             currentServerDir = dir
             Toast.makeText(context, t("folder.changed") + ": ${dir.name}", Toast.LENGTH_SHORT).show()
         } else {
@@ -111,7 +111,7 @@ fun DashboardScreen(
     val scrollState = rememberScrollState()
 
     if (showPhpMyAdmin) {
-        PhpMyAdminScreen(
+        _PhpMyAdmin(
             isDbRunning = isDbRunning,
             onClose = { showPhpMyAdmin = false },
             lang = lang
@@ -456,7 +456,7 @@ fun DashboardScreen(
                     Button(
                         onClick = {
                             try {
-                                context.startActivity(DirectoryManager.getManageStorageIntent(context))
+                                context.startActivity(_DirectoryManager.getManageStorageIntent(context))
                             } catch (e: Exception) {
                                 Toast.makeText(context, t("perm.file.settings"), Toast.LENGTH_LONG).show()
                             }
@@ -708,7 +708,7 @@ fun DashboardScreen(
 
                     OutlinedButton(
                         onClick = {
-                            currentServerDir = DirectoryManager.resetToDefaultDirectory(context)
+                            currentServerDir = _DirectoryManager.resetToDefaultDirectory(context)
                             Toast.makeText(context, t("folder.reset.done"), Toast.LENGTH_SHORT).show()
                         },
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = SampThemeColors.textSecondary),

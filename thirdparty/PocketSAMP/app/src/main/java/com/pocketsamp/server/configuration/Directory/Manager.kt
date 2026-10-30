@@ -11,7 +11,7 @@ import androidx.core.content.ContextCompat
 import com.pocketsamp.server.engine_handler.ThirdRuntime
 import java.io.File
 
-object DirectoryManager {
+object _DirectoryManager {
     private const val PREF_NAME = "pocketsamp_prefs"
     private const val KEY_CUSTOM_SERVER_DIR = "custom_server_directory"
 

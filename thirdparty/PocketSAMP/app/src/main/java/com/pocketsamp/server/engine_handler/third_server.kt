@@ -3,7 +3,7 @@ package com.pocketsamp.server.engine_handler
 import android.content.Context
 import android.util.Log
 import com.pocketsamp.server.Locales
-import com.pocketsamp.server.configuration.DirectoryManager
+import com.pocketsamp.server.configuration._DirectoryManager
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -46,7 +46,7 @@ class Server(private val context: Context) {
 
         val qemuBinary = findQemuBinary(context)
         val rootfsDir = File(filesDir, "rootfs_i386")
-        val sampDir = DirectoryManager.getServerDirectory(context)
+        val sampDir = _DirectoryManager.getServerDirectory(context)
         val serverBinary = File(filesDir, "bin/samp03svr").takeIf { it.exists() }
             ?: File(filesDir, "samp_server/samp03svr").takeIf { it.exists() }
             ?: File(sampDir, "samp03svr")

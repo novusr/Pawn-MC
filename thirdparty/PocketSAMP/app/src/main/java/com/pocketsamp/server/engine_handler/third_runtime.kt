@@ -3,7 +3,7 @@ package com.pocketsamp.server.engine_handler
 import android.content.Context
 import android.util.Log
 import com.pocketsamp.server.Locales
-import com.pocketsamp.server.configuration.DirectoryManager
+import com.pocketsamp.server.configuration._DirectoryManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -32,7 +32,7 @@ class ThirdRuntime(private val context: Context) {
 
         /** Sub-directory of Documents/PawnMC that holds the runtime archives. */
         fun storageDir(context: Context): File =
-            File(DirectoryManager.getDocumentsPawnMcDir(), "storage")
+            File(_DirectoryManager.getDocumentsPawnMcDir(), "storage")
 
         fun archiveFile(context: Context, name: String): File =
             File(storageDir(context), "$name.tar.gz")
@@ -47,7 +47,7 @@ class ThirdRuntime(private val context: Context) {
 
     /** Downloads any archive that is missing; true when all exist afterwards. */
     suspend fun sync(onProgress: (String) -> Unit = {}): Boolean = withContext(Dispatchers.IO) {
-        if (!DirectoryManager.hasStoragePermission(context)) {
+        if (!_DirectoryManager.hasStoragePermission(context)) {
             Log.i(TAG, "Storage permission missing; skipping the runtime archive download.")
             return@withContext false
         }

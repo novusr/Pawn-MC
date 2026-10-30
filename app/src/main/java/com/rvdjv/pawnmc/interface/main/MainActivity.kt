@@ -115,12 +115,13 @@ class MainActivity : ComponentActivity() {
 
         val config = CompilerConfig.getInstance(applicationContext)
         enableEdgeToEdge()
-        // PocketSAMP is embedded in this process; its global crash handler has to be
-        // installed before the runtime UI can be opened. Idempotent, so calling it on
-        // every launch is safe.
-        com.pocketsamp.server.SampApp.install(applicationContext)
-        com.pocketsamp.server.service_handler.RuntimeService.setConsoleLogSink { line ->
-            com.rvdjv.pawnmc.data.log.PocketSampConsoleLogStore.record(applicationContext, line)
+        // PocketSAMP is embedded in this process on the modern flavor; its global crash
+        // handler is installed before the runtime UI can be opened, and its console is
+        // mirrored into this app's own log store. Idempotent, so calling it on every
+        // launch is safe. The Nougat flavor supplies a no-op stub of the same object,
+        // so this source set never references the runtime module directly.
+        com.pocketsamp.server.ServerApp.install(applicationContext) { line ->
+            com.rvdjv.pawnmc.data.log._pocket_store.record(applicationContext, line)
         }
         // The ongoing session notification is a nicety, not a requirement, so the prompt
         // is fired once and a refusal only means the shade stays empty.

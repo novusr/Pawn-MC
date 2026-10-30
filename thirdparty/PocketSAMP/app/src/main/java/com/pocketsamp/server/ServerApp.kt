@@ -22,7 +22,7 @@ import com.pocketsamp.server.service_handler.RuntimeService
  * Nothing here renames or rebrands the module: the class, namespace and strings keep
  * the upstream PocketSAMP identity.
  */
-object SampApp {
+object ServerApp {
 
     /**
      * Installs the process-wide pieces PocketSAMP expects. Call once from the host

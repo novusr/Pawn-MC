@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.pocketsamp.server.MainActivity
-import com.pocketsamp.server.user_interface.screens.CrashLogsScreen
+import com.pocketsamp.server.user_interface.screens._CrashInfo
 import com.pocketsamp.server.user_interface.theme.PocketSAMPTheme
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
 
@@ -26,7 +26,7 @@ class CrashDialog : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = SampThemeColors.bg
                 ) {
-                    CrashLogsScreen(
+                    _CrashInfo(
                         initialCrashId = crashId,
                         isCrashDialog = true,
                         onRestartApp = { restartApp() }

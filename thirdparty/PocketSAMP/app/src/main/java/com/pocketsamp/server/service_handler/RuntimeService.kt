@@ -14,7 +14,7 @@ import androidx.core.app.NotificationCompat
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.MainActivity
 import com.pocketsamp.server.R
-import com.pocketsamp.server.configuration.DirectoryManager
+import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.crash_handler.Handler
 import com.pocketsamp.server.crash_handler.Manager
 import com.pocketsamp.server.crash_handler.Report
@@ -274,7 +274,7 @@ class RuntimeService : Service() {
 
                     val runtime = ThirdRuntime(applicationContext)
                     if (!ThirdRuntime.isComplete(applicationContext)) {
-                        if (!DirectoryManager.hasStoragePermission(applicationContext)) {
+                        if (!_DirectoryManager.hasStoragePermission(applicationContext)) {
                             appendLog(t("log.archive.permission"))
                             _serverStatus.value = Status.STOPPED
                             return@launch

@@ -23,7 +23,7 @@ import com.pocketsamp.server.Locales
 import com.pocketsamp.server.user_interface.theme.*
 
 @Composable
-fun ConsoleScreen(
+fun _Console(
     logs: List<String>,
     onClearLogs: () -> Unit
 ) {
