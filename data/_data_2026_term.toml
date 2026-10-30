@@ -7,103 +7,119 @@
 #   [terminal.docs]  ->  get("terminal.docs", language)
 #
 # The docs markdown keeps its literal \n sequences; the reader expands them
-# into real line breaks. Leaves are id, en, es, ru, with en as the fallback.
+# into real line breaks. Leaves are id, en, es, ru, tl, with en as the fallback.
 
 [terminal.help]
 id = "Perintah yang tersedia:\n  help                 Tampilkan daftar perintah\n  docs                 Buka dokumentasi Developer Portal\n  pawncc <file> [flag] Jalankan pawncc dengan file dan flag yang ditulis\n  switch [versi]       Ganti compiler 3.10.7 / 3.10.11\n  clear                Bersihkan riwayat console (alias: celar)\n  ls                   Daftar file dan folder di workspace\n  whoami               Nama pengguna console\n  time                 Jam saat ini\n  date                 Tanggal dan waktu lengkap\n  which <perintah>     Lokasi program atau perintah bawaan\n  deviceinfo           Informasi perangkat dan ABI\n  version              Versi PawnMC dan compiler\n  github               Tautan repositori\n\nContoh: pawncc gamemodes/mode.pwn -d=3\nKetik docs untuk dokumentasi lengkap."
 en = "Available commands:\n  help                 Show the command list\n  docs                 Open the Developer Portal documentation\n  pawncc <file> [flags] Run pawncc with the specified file and flags\n  switch [version]     Switch compiler 3.10.7 / 3.10.11\n  clear                Clear console history (alias: celar)\n  ls                   List files and folders in the workspace\n  whoami               Console user name\n  time                 Current clock time\n  date                 Full date and time\n  which <command>      Location of a program or a built-in command\n  deviceinfo           Device and ABI information\n  version              PawnMC and compiler version\n  github               Repository link\n\nExample: pawncc gamemodes/mode.pwn -d=3\nType docs for full documentation."
 tl = "Mga available na command:\n  help                 Ipakita ang listahan ng command\n  docs                 Buksan ang dokumentasyon ng Developer Portal\n  pawncc <file> [flags] Patakbuhin ang pawncc sa file at flags na tinukoy\n  switch [version]     Palitan ang compiler 3.10.7 / 3.10.11\n  clear                Burahin ang history ng console (alias: celar)\n  ls                   Ilista ang file at folder sa workspace\n  whoami               Pangalan ng user sa console\n  time                 Kasalukuyang oras\n  date                 Buong petsa at oras\n  which <command>      Lokasyon ng program o built-in na command\n  deviceinfo           Impormasyon ng device at ABI\n  version              Bersyon ng PawnMC at compiler\n  github               Link ng repository\n\nHalimbawa: pawncc gamemodes/mode.pwn -d=3\nI-type ang docs para sa buong dokumentasyon."
+ru = "Доступные команды:\n  help                 Показать список команд\n  docs                 Открыть документацию Developer Portal\n  pawncc <file> [flags] Запустить pawncc с указанным файлом и флагами\n  switch [version]     Переключить компилятор 3.10.7 / 3.10.11\n  clear                Очистить историю консоли (псевдоним: celar)\n  ls                   Список файлов и папок рабочей области\n  whoami               Имя пользователя консоли\n  time                 Текущее время\n  date                 Полная дата и время\n  which <command>      Путь к программе или встроенной команде\n  deviceinfo           Сведения об устройстве и ABI\n  version              Версия PawnMC и компилятора\n  github               Ссылка на репозиторий\n\nПример: pawncc gamemodes/mode.pwn -d=3\nВведите docs для полной документации."
 es = "Comandos disponibles:\n  help                 Muestra la lista de comandos\n  docs                 Abre la documentacion del Developer Portal\n  pawncc <archivo> [flags] Ejecuta pawncc con el archivo y los flags indicados\n  switch [version]     Cambia el compilador 3.10.7 / 3.10.11\n  clear                Borra el historial de la consola (alias: celar)\n  ls                   Lista archivos y carpetas del workspace\n  whoami               Nombre de usuario de la consola\n  time                 Hora actual\n  date                 Fecha y hora completas\n  which <comando>      Ubicacion de un programa o comando integrado\n  deviceinfo           Informacion del dispositivo y ABI\n  version              Version de PawnMC y del compilador\n  github               Enlace del repositorio\n\nEjemplo: pawncc gamemodes/mode.pwn -d=3\nEscribi docs para ver la documentacion completa."
 
 [terminal.docs]
 id = "# Developer Portal\n\nConsole ini menjalankan **pawncc native** dan sekumpulan perintah bawaan. Input bukan shell Android: hanya perintah yang tercantum di sini yang dikenali.\n\n## Perintah\n\n- `help` menampilkan daftar perintah.\n- `docs` menampilkan dokumentasi ini.\n- `pawncc <file> [flag...]` mengompilasi file yang disebut secara eksplisit. Perintah `pawncc` tanpa argumen hanya menampilkan cara pakai.\n- `switch [3.10.7|3.10.11]` memilih versi compiler; tanpa argumen, versi console berganti.\n- `clear` menghapus riwayat console; ejaan `celar` juga diterima.\n- `ls` menampilkan file dan folder di workspace aktif.\n- `whoami`, `time`, `date`, `version`, `deviceinfo`, `github` menampilkan nama pengguna console, jam, tanggal, versi PawnMC, informasi perangkat, dan tautan repositori.\n- `which <perintah>` menunjukkan lokasi program atau nama perintah bawaan.\n\n## Contoh\n\n```text\nls\npawncc gamemodes/mode.pwn -d=3\npawncc \"gamemodes/test mode.pwn\" -i=includes -o=mode.amx\nswitch 3.10.11\nclear\n```\n\nHanya flag yang ditulis pada perintah yang diteruskan ke pawncc. Konfigurasi flag, optimisasi, dan include path dari Settings PawnMC tidak ditambahkan. Sertakan sendiri opsi yang diperlukan, misalnya `-i=includes`. File sumber harus berekstensi `.pwn`, `.pawn`, `.p`, atau `.inc` dan berada di dalam workspace.\n\n## Batasan\n\nTidak ada `cd`, pipe, redirect, ekspansi shell, atau pemanggilan program lain: `ls` hanya membaca folder workspace, bukan seluruh sistem file. Versi console dimulai dari **3.10.7**. Jika library compiler versi lain sudah dimuat aplikasi, mulai ulang aplikasi setelah `switch` agar pilihan berlaku."
 en = "# Developer Portal\n\nThis console runs the bundled **native pawncc** plus a set of built-in commands. Input is not an Android shell: only the commands listed here are recognized.\n\n## Commands\n\n- `help` prints the command list.\n- `docs` displays this documentation.\n- `pawncc <file> [flags...]` compiles the explicitly named file. Bare `pawncc` only prints usage.\n- `switch [3.10.7|3.10.11]` selects the compiler version; without an argument, it toggles the console version.\n- `clear` removes console history; the spelling `celar` is also accepted.\n- `ls` lists the files and folders of the active workspace.\n- `whoami`, `time`, `date`, `version`, `deviceinfo`, `github` print the console user name, clock, date, PawnMC version, device information, and the repository link.\n- `which <command>` shows the location of a program or the name of a built-in command.\n\n## Examples\n\n```text\nls\npawncc gamemodes/mode.pwn -d=3\npawncc \"gamemodes/test mode.pwn\" -i=includes -o=mode.amx\nswitch 3.10.11\nclear\n```\n\nOnly flags written in the command are passed to pawncc. PawnMC Settings for flags, optimization, and include paths are not added. Specify needed options yourself, for example `-i=includes`. Source files must use `.pwn`, `.pawn`, `.p`, or `.inc` and stay inside the workspace.\n\n## Limits\n\nThere is no `cd`, pipe, redirect, shell expansion, or launching other programs: `ls` only reads the workspace folder, not the whole filesystem. The console starts with **3.10.7**. If another native compiler library is already loaded by the app, restart after `switch` for the selection to take effect."
-tl = "# Developer Portal\n\nThis console runs the bundled **native pawncc** plus a set of built-in commands. Input is not an Android shell: only the commands listed here are recognized.\n\n## Commands\n\n- `help` prints the command list.\n- `docs` displays this documentation.\n- `pawncc <file> [flags...]` compiles the explicitly named file. Bare `pawncc` only prints usage.\n- `switch [3.10.7|3.10.11]` selects the compiler version; without an argument, it toggles the console version.\n- `clear` removes console history; the spelling `celar` is also accepted.\n- `ls` lists the files and folders of the active workspace.\n- `whoami`, `time`, `date`, `version`, `deviceinfo`, `github` print the console user name, clock, date, PawnMC version, device information, and the repository link.\n- `which <command>` shows the location of a program or the name of a built-in command.\n\n## Examples\n\n```text\nls\npawncc gamemodes/mode.pwn -d=3\npawncc \\"gamemodes/test mode.pwn\\" -i=includes -o=mode.amx\nswitch 3.10.11\nclear\n```\n\nOnly flags written in the command are passed to pawncc. PawnMC Settings for flags, optimization, and include paths are not added. Specify needed options yourself, for example `-i=includes`. Source files must use `.pwn`, `.pawn`, `.p`, or `.inc` and stay inside the workspace.\n\n## Limits\n\nThere is no `cd`, pipe, redirect, shell expansion, or launching other programs: `ls` only reads the workspace folder, not the whole filesystem. The console starts with **3.10.7**. If another native compiler library is already loaded by the app, restart after `switch` for the selection to take effect."
+tl = "# Developer Portal\n\nPinapatakbo ng console na ito ang **native pawncc** kasama ang mga built-in na command. Hindi shell ng Android ang input: mga command lang na nakalista dito ang kinikilala.\n\n## Mga command\n\n- `help` ipinapakita ang listahan ng command.\n- `docs` ipinapakita ang dokumentasyong ito.\n- `pawncc <file> [flags...]` kinokompile ang file na tahasang pinangalanan. Kung walang argumento, usage lang ang ipinapakita ng `pawncc`.\n- `switch [3.10.7|3.10.11]` pumipili ng bersyon ng compiler; kung walang argumento, papagpalitin ang bersyon ng console.\n- `clear` binubura ang history ng console; tinatanggap din ang baybay na `celar`.\n- `ls` naglilista ng file at folder sa aktibong workspace.\n- `whoami`, `time`, `date`, `version`, `deviceinfo`, `github` nagpapakita ng pangalan ng user, oras, petsa, bersyon ng PawnMC, impormasyon ng device, at link ng repository.\n- `which <command>` nagpapakita ng lokasyon ng program o ng built-in na command.\n\n## Mga halimbawa\n\n```text\nls\npawncc gamemodes/mode.pwn -d=3\npawncc \\"gamemodes/test mode.pwn\\" -i=includes -o=mode.amx\nswitch 3.10.11\nclear\n```\n\nAng mga flag lang na nakasulat sa command ang ipinapasa sa pawncc. Hindi idinadagdag ang flag, optimisasyon, at include path mula sa Settings ng PawnMC. Ikaw mismo ang maglagay ng kailangang option, halimbawa `-i=includes`. Dapat `.pwn`, `.pawn`, `.p` o `.inc` ang source file at nasa loob ito ng workspace.\n\n## Mga limitasyon\n\nWalang `cd`, pipe, redirect, shell expansion, o pagpapatakbo ng ibang programa: binabasa lang ng `ls` ang folder ng workspace, hindi ang buong filesystem. Nagsisimula ang console sa **3.10.7**. Kung may ibang native compiler library na naka-load sa app, i-restart ito pagkatapos ng `switch` para magkabisa ang pinili."
 es = "# Developer Portal\n\nEsta consola ejecuta el **pawncc nativo** incluido y un conjunto de comandos integrados. La entrada no es una shell de Android: solo se reconocen los comandos listados aca.\n\n## Comandos\n\n- `help` muestra la lista de comandos.\n- `docs` muestra esta documentacion.\n- `pawncc <archivo> [flags...]` compila el archivo indicado explicitamente. `pawncc` sin argumentos solo muestra el modo de uso.\n- `switch [3.10.7|3.10.11]` elige la version del compilador; sin argumento, alterna la version de la consola.\n- `clear` borra el historial de la consola; tambien se acepta la grafia `celar`.\n- `ls` lista los archivos y carpetas del workspace activo.\n- `whoami`, `time`, `date`, `version`, `deviceinfo`, `github` muestran el usuario de la consola, la hora, la fecha, la version de PawnMC, la informacion del dispositivo y el enlace del repositorio.\n- `which <comando>` muestra la ubicacion de un programa o el nombre de un comando integrado.\n\n## Ejemplos\n\n```text\nls\npawncc gamemodes/mode.pwn -d=3\npawncc \"gamemodes/test mode.pwn\" -i=includes -o=mode.amx\nswitch 3.10.11\nclear\n```\n\nSolo se pasan a pawncc los flags escritos en el comando. No se agregan los flags, la optimizacion ni las rutas de include de la configuracion de PawnMC. Especifica vos mismo las opciones que necesites, por ejemplo `-i=includes`. Los archivos fuente deben usar `.pwn`, `.pawn`, `.p` o `.inc` y deben quedar dentro del workspace.\n\n## Limites\n\nNo hay `cd`, pipes, redireccion, expansion de shell ni ejecucion de otros programas: `ls` solo lee la carpeta del workspace, no todo el sistema de archivos. La consola arranca con **3.10.7**. Si la app ya cargo otra libreria nativa del compilador, reiniciá despues de `switch` para que la eleccion surta efecto."
+ru = "# Developer Portal\n\nЭта консоль запускает встроенный **native pawncc** и набор встроенных команд. Ввод — не оболочка Android: распознаются только перечисленные здесь команды.\n\n## Команды\n\n- `help` печатает список команд.\n- `docs` показывает эту документацию.\n- `pawncc <file> [flags...]` компилирует явно указанный файл. Без аргументов `pawncc` только печатает справку.\n- `switch [3.10.7|3.10.11]` выбирает версию компилятора; без аргумента переключает версию консоли.\n- `clear` очищает историю консоли; также принимается написание `celar`.\n- `ls` перечисляет файлы и папки активной рабочей области.\n- `whoami`, `time`, `date`, `version`, `deviceinfo`, `github` показывают имя пользователя, время, дату, версию PawnMC, сведения об устройстве и ссылку на репозиторий.\n- `which <command>` показывает путь к программе или имя встроенной команды.\n\n## Примеры\n\n```text\nls\npawncc gamemodes/mode.pwn -d=3\npawncc \\"gamemodes/test mode.pwn\\" -i=includes -o=mode.amx\nswitch 3.10.11\nclear\n```\n\nВ pawncc передаются только флаги, написанные в команде. Флаги, оптимизация и include-пути из настроек PawnMC не добавляются. Укажите нужные параметры сами, например `-i=includes`. Исходные файлы должны иметь расширение `.pwn`, `.pawn`, `.p` или `.inc` и находиться внутри рабочей области.\n\n## Ограничения\n\nНет `cd`, конвейеров, перенаправления, раскрытия оболочки или запуска других программ: `ls` читает только папку рабочей области, а не всю файловую систему. Консоль начинает с версии **3.10.7**. Если приложением уже загружена другая библиотека компилятора, перезапустите его после `switch`, чтобы выбор вступил в силу."
 
 [terminal.error.quote]
 id = "Tanda kutip belum ditutup."
 en = "A quoted argument was not closed."
 tl = "May argument na may quote na hindi naisara."
 es = "No se cerro un argumento entre comillas."
+ru = "Аргумент в кавычках не закрыт."
 
 [terminal.error.switch]
 id = "Gunakan `switch`, `switch 3.10.7`, atau `switch 3.10.11`."
 en = "Use `switch`, `switch 3.10.7`, or `switch 3.10.11`."
 tl = "Gamitin ang `switch`, `switch 3.10.7`, o `switch 3.10.11`."
 es = "Usar `switch`, `switch 3.10.7` o `switch 3.10.11`."
+ru = "Используйте `switch`, `switch 3.10.7` или `switch 3.10.11`."
 
 [terminal.error.source]
 id = "Sumber tidak valid. Sebutkan file Pawn secara eksplisit di dalam workspace."
 en = "Invalid source. Name a Pawn file explicitly inside the workspace."
 tl = "Di-wastong source. Tukuyin nang malinaw ang Pawn file sa loob ng workspace."
 es = "Fuente invalida. Nombre un archivo Pawn explicitamente dentro del workspace."
+ru = "Недопустимый источник. Укажите файл Pawn явно внутри рабочей области."
 
 [terminal.error.restart]
 id = "Versi compiler baru belum dapat dimuat karena library lama sudah aktif. Mulai ulang aplikasi untuk memakai versi pilihan."
 en = "The selected compiler cannot load because another native library is already active. Restart the app to use the selected version."
 tl = "Hindi ma-load ang napiling compiler dahil may aktibong native library. I-restart ang app para magamit ang napiling bersyon."
 es = "El compilador elegido no se puede cargar porque ya hay otra libreria nativa activa. Reinicia la app para usar la version seleccionada."
+ru = "Выбранный компилятор не загружается: уже активна другая нативная библиотека. Перезапустите приложение, чтобы использовать выбранную версию."
 
 [terminal.error.command]
 id = "Perintah tidak dikenal. Gunakan {commands}. Ketik `help`."
 en = "Unknown command. Use {commands}. Type `help`."
 tl = "Hindi kilalang command. Gamitin ang {commands}. I-type ang `help`."
 es = "Comando desconocido. Usar {commands}. Escribi `help`."
+ru = "Неизвестная команда. Используйте {commands}. Введите `help`."
 
 [terminal.error.command.suggest]
 id = "Mungkin maksud Anda: {matches}"
 en = "Did you mean: {matches}"
 tl = "Ibig mong sabihin: {matches}"
 es = "Quizas quisiste decir: {matches}"
+ru = "Возможно, вы имели в виду: {matches}"
 
 [terminal.pawncc.usage]
 id = "Cara pakai: pawncc <file.pwn> [flag...]. Sebutkan file sumber dan setiap flag yang ingin diteruskan."
 en = "Usage: pawncc <file.pwn> [flags...]. Specify the source file and every flag to pass through."
 tl = "Paggamit: pawncc <file.pwn> [flags...]. Tukuyin ang source file at bawat flag na ipapasa."
 es = "Modo de uso: pawncc <archivo.pwn> [flags...]. Indica el archivo fuente y cada flag que quieras pasar."
+ru = "Использование: pawncc <file.pwn> [flags...]. Укажите исходный файл и все флаги для передачи."
 
 [terminal.error.execution]
 id = "Kompilasi gagal:"
 en = "Compilation failed:"
 tl = "Nabigo ang kompilasyon:"
 es = "La compilacion fallo:"
+ru = "Компиляция не удалась:"
 
 [terminal.switch.success]
 id = "Versi compiler dipilih: {version}.{restart}"
 en = "Compiler version selected: {version}.{restart}"
 tl = "Napiling bersyon ng compiler: {version}.{restart}"
 es = "Version del compilador seleccionada: {version}.{restart}"
+ru = "Выбрана версия компилятора: {version}.{restart}"
 
 [terminal.switch.restart]
 id = " Mulai ulang aplikasi agar berlaku."
 en = " Restart the app for this to take effect."
 tl = " I-restart ang app para magkabisa ito."
 es = " Reinicia la app para que esto surta efecto."
+ru = " Перезапустите приложение, чтобы это вступило в силу."
 
 [terminal.ready]
 id = "Developer Portal siap. Ketik `help` untuk perintah atau `docs` untuk dokumentasi."
 en = "Developer Portal ready. Type `help` for commands or `docs` for documentation."
 tl = "Handa na ang Developer Portal. I-type ang `help` para sa mga command o `docs` para sa dokumentasyon."
 es = "Developer Portal listo. Escribi `help` para los comandos o `docs` para la documentacion."
+ru = "Developer Portal готов. Введите `help` для списка команд или `docs` для документации."
 
 [terminal.running]
 id = "Menjalankan pawncc..."
 en = "Running pawncc..."
 tl = "Tumatakbo ang pawncc..."
 es = "Ejecutando pawncc..."
+ru = "Запуск pawncc..."
 
 [terminal.input.placeholder]
 id = "Mungkin mau ngetik?..."
 en = "Maybe... want to type?..."
 tl = "Baka... gusto mong mag-type?..."
 es = "Tal vez... escribir algo?..."
+ru = "Может... хотите что-то ввести?.."
 
 [terminal.run]
 id = "Jalankan perintah"
 en = "Run command"
 tl = "Patakbuhin ang command"
 es = "Ejecutar comando"
+ru = "Выполнить команду"
 
 [terminal.close]
 id = "Tutup Developer Portal"
@@ -118,5 +134,4 @@ en = "Show or hide the input"
 tl = "Ipakita o itago ang input"
 es = "Mostrar u ocultar la entrada"
 ru = "Показать или скрыть ввод"
-es = "Cerrar Developer Portal"
 

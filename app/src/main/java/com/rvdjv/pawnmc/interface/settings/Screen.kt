@@ -267,9 +267,9 @@ fun SettingsScreen(
     }
 
     /*
-     * Held in a value holder: the refresh below is a local function, so the resume
-     * observer cannot name it directly, and the holder keeps every reference to the
-     * latest closure instead of the one captured at first composition.
+     * Declared before the resume observer (which runs the inner lambda through
+     * `refreshUpdateStatusState`) so the observer never refers to a variable that is
+     * not initialised yet, which the compiler rejects with "'val' cannot be reassigned".
      */
     val refreshUpdateStatus: () -> Unit = refresh@{
         if (isCheckingUpdates) return@refresh

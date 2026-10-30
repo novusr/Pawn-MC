@@ -82,12 +82,12 @@ class ThirdMariaDb(private val context: Context) {
             if (mariadbd == null) {
                 val binDir = File(mariadbDir, "bin")
                 if (!binDir.isDirectory) {
-                    _dbLogs.emit(_dbLogs.emit("log.mdb.nobin"))
-                    _dbLogs.emit(_dbLogs.emit("log.mdb.nobin.note"))
+                    _dbLogs.emit(t("log.mdb.nobin"))
+                    _dbLogs.emit(t("log.mdb.nobin.note"))
                 } else {
-                    _dbLogs.emit(_dbLogs.emit("log.mdb.daemon.notfound".replace("{dir}", binDir.absolutePath)))
+                    _dbLogs.emit(t("log.mdb.daemon.notfound".replace("{dir}", binDir.absolutePath)))
                 }
-                _dbLogs.emit(_dbLogs.emit("log.mdb.optional"))
+                _dbLogs.emit(t("log.mdb.optional"))
                 return@withContext false
             }
 
@@ -112,7 +112,7 @@ class ThirdMariaDb(private val context: Context) {
                 guestLibraryPath = guestLibs
             )
             if (installerCommand == null) {
-                _dbLogs.emit(_dbLogs.emit("log.mdb.init.noqemu".replace("{name}", installerBinary.name)))
+                _dbLogs.emit(t("log.mdb.init.noqemu".replace("{name}", installerBinary.name)))
                 return@withContext false
             }
             val installBuilder = ProcessBuilder(installerCommand)
@@ -141,14 +141,14 @@ class ThirdMariaDb(private val context: Context) {
                 File(dataDir, "mysql/user.MYD").exists() ||
                 File(systemDb, "user.frm").exists()
             if (exitCode != 0 || !initialized) {
-                _dbLogs.emit(_dbLogs.emit("log.mdb.init.failed".replace("{code}", exitCode.toString()).replace("{output}", output.takeLast(2000))))
+                _dbLogs.emit(t("log.mdb.init.failed".replace("{code}", exitCode.toString()).replace("{output}", output.takeLast(2000))))
                 return@withContext false
             }
             markerFile.writeText("initialized")
             if (output.isNotBlank()) _dbLogs.emit(output.takeLast(2000))
         }
 
-        _dbLogs.emit(_dbLogs.emit("log.mdb.initialized"))
+        _dbLogs.emit(t("log.mdb.initialized"))
         true
     }
 
@@ -166,7 +166,7 @@ class ThirdMariaDb(private val context: Context) {
 
         if (mariadbdBinary == null) {
             scope.launch {
-                _dbLogs.emit(_dbLogs.emit("log.mdb.daemon.missing".replace("{dir}", installed.absolutePath)))
+                _dbLogs.emit(t("log.mdb.daemon.missing".replace("{dir}", installed.absolutePath)))
                 /*
                  * A daemon that exists but cannot be made executable is almost always
                  * the Android 10+ W^X rule: the file is in app storage and not marked
@@ -174,7 +174,7 @@ class ThirdMariaDb(private val context: Context) {
                  */
                 val blocked = File(installed, "bin/mariadbd").takeIf { it.isFile && it.length() > 0 }
                 if (blocked != null) {
-                    _dbLogs.emit(_dbLogs.emit("log.mdb.notexecutable".replace("{path}", blocked.absolutePath)))
+                    _dbLogs.emit(t("log.mdb.notexecutable".replace("{path}", blocked.absolutePath)))
                 }
             }
             return
@@ -211,8 +211,8 @@ class ThirdMariaDb(private val context: Context) {
         )
         if (command == null) {
             scope.launch {
-                _dbLogs.emit(_dbLogs.emit("log.mdb.start.noqemu".replace("{name}", mariadbdBinary.name)))
-                _dbLogs.emit(_dbLogs.emit("log.mdb.start.noqemu.note"))
+                _dbLogs.emit(t("log.mdb.start.noqemu".replace("{name}", mariadbdBinary.name)))
+                _dbLogs.emit(t("log.mdb.start.noqemu.note"))
             }
             return
         }
