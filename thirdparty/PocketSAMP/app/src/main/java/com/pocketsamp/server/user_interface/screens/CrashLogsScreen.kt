@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.pocketsamp.server.Locales
 import com.pocketsamp.server.crash_handler.Manager
 import com.pocketsamp.server.crash_handler.Report
 import com.pocketsamp.server.user_interface.theme.*
@@ -36,6 +37,8 @@ fun CrashLogsScreen(
     onRestartApp: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
+    val lang = Locales.current
+    fun t(key: String): String = Locales.text(lang, key)
     var crashes by remember { mutableStateOf<List<Report>>(emptyList()) }
     var selectedReport by remember { mutableStateOf<Report?>(null) }
     var activeSubTab by remember { mutableStateOf(if (initialCrashId != null) 0 else 1) }
@@ -60,7 +63,7 @@ fun CrashLogsScreen(
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(label, text)
         clipboard.setPrimaryClip(clip)
-        Toast.makeText(context, "Log crash berhasil disalin ke clipboard!", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, t("crash.copied"), Toast.LENGTH_SHORT).show()
     }
 
     Column(
@@ -70,9 +73,6 @@ fun CrashLogsScreen(
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        /*
-         * Warning Banner
-         */
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = if (isCrashDialog) SampThemeColors.danger.copy(alpha = 0.15f) else SampThemeColors.card),
@@ -89,17 +89,14 @@ fun CrashLogsScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (isCrashDialog) "Aplikasi Mengalami Crash (Ditahan)" else "Sistem Pemantau Crash & Error",
+                        text = if (isCrashDialog) t("crash.title.dialog") else t("crash.title"),
                         color = SampThemeColors.textPrimary,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         maxLines = 2
                     )
                     Text(
-                        text = if (isCrashDialog)
-                            "Proses ditahan agar Anda dapat menyalin log error sebelum restart."
-                        else
-                            "Semua riwayat crash sistem tersimpan di sini untuk analisis.",
+                        text = if (isCrashDialog) t("crash.desc.dialog") else t("crash.desc"),
                         color = SampThemeColors.textSecondary,
                         fontSize = 12.sp
                     )
@@ -107,9 +104,6 @@ fun CrashLogsScreen(
             }
         }
 
-        /*
-         * Sub-tabs: Detail / Riwayat
-         */
         TabRow(
             selectedTabIndex = activeSubTab,
             containerColor = SampThemeColors.surface,
@@ -119,28 +113,28 @@ fun CrashLogsScreen(
             Tab(
                 selected = activeSubTab == 0,
                 onClick = { activeSubTab = 0 },
-                text = { Text("Detail Crash", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+                text = { Text(t("crash.tab.detail"), fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
             )
             Tab(
                 selected = activeSubTab == 1,
                 onClick = { activeSubTab = 1 },
-                text = { Text("Riwayat (${crashes.size})", fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+                text = {
+                    Text(
+                        t("crash.tab.history").replace("{count}", crashes.size.toString()),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             )
         }
 
-        /*
-         * Content Area. The bottom inset is carried by the area itself so the
-         * floating tab rail cannot cover the stack trace or the last list row.
-         */
         Box(modifier = Modifier.weight(1f).padding(bottom = 52.dp)) {
             if (activeSubTab == 0) {
-                /*
-                 * Detail Tab
-                 */
                 if (selectedReport != null) {
                     CrashDetailView(
                         report = selectedReport!!,
                         isCrashDialog = isCrashDialog,
+                        lang = lang,
                         onCopy = { copyToClipboard(Manager.formatForClipboard(selectedReport!!)) },
                         onRestart = onRestartApp,
                         onDelete = {
@@ -150,15 +144,13 @@ fun CrashLogsScreen(
                         }
                     )
                 } else {
-                    EmptyCrashState(message = "Pilih crash dari tab Riwayat untuk melihat detail.")
+                    EmptyCrashState(message = t("crash.empty.detail"))
                 }
             } else {
-                /*
-                 * History List Tab
-                 */
                 if (crashes.isNotEmpty()) {
                     CrashHistoryList(
                         crashes = crashes,
+                        lang = lang,
                         selectedId = selectedReport?.id,
                         onSelect = { report ->
                             selectedReport = report
@@ -177,7 +169,7 @@ fun CrashLogsScreen(
                         }
                     )
                 } else {
-                    EmptyCrashState(message = "Belum ada riwayat crash yang tercatat. Sistem berjalan stabil!")
+                    EmptyCrashState(message = t("crash.empty.history"))
                 }
             }
         }
@@ -188,10 +180,12 @@ fun CrashLogsScreen(
 private fun CrashDetailView(
     report: Report,
     isCrashDialog: Boolean,
+    lang: Locales.Lang,
     onCopy: () -> Unit,
     onRestart: (() -> Unit)?,
     onDelete: () -> Unit
 ) {
+    fun t(key: String): String = Locales.text(lang, key)
     val scrollState = rememberScrollState()
 
     Column(
@@ -200,9 +194,6 @@ private fun CrashDetailView(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        /*
-         * Actions Bar
-         */
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -213,7 +204,7 @@ private fun CrashDetailView(
                 shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.weight(1f)
             ) {
-                Text("Salin Log Crash", fontWeight = FontWeight.Bold)
+                Text(t("crash.copy"), fontWeight = FontWeight.Bold)
             }
 
             if (isCrashDialog && onRestart != null) {
@@ -223,7 +214,7 @@ private fun CrashDetailView(
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Buka Ulang App", fontWeight = FontWeight.Bold)
+                    Text(t("crash.reopen"), fontWeight = FontWeight.Bold)
                 }
             } else {
                 OutlinedButton(
@@ -232,14 +223,11 @@ private fun CrashDetailView(
                     border = androidx.compose.foundation.BorderStroke(1.dp, SampThemeColors.danger.copy(alpha = 0.5f)),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Hapus", color = SampThemeColors.danger)
+                    Text(t("crash.delete"), color = SampThemeColors.danger)
                 }
             }
         }
 
-        /*
-         * Summary Card
-         */
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
@@ -265,22 +253,27 @@ private fun CrashDetailView(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Waktu: ${report.formattedDate}", color = SampThemeColors.textSecondary, fontSize = 11.sp)
-                    Text("Thread: ${report.threadName}", color = SampThemeColors.textSecondary, fontSize = 11.sp)
+                    Text(
+                        t("crash.time").replace("{value}", report.formattedDate),
+                        color = SampThemeColors.textSecondary,
+                        fontSize = 11.sp
+                    )
+                    Text(
+                        t("crash.thread").replace("{value}", report.threadName),
+                        color = SampThemeColors.textSecondary,
+                        fontSize = 11.sp
+                    )
                 }
             }
         }
 
-        /*
-         * Device Info Card
-         */
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = SampThemeColors.surface),
             shape = RoundedCornerShape(10.dp)
         ) {
             Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Informasi Perangkat", color = SampThemeColors.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(t("crash.device"), color = SampThemeColors.accent, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 Text(
                     text = report.deviceInfo,
                     color = SampThemeColors.textSecondary,
@@ -290,10 +283,7 @@ private fun CrashDetailView(
             }
         }
 
-        /*
-         * Stack Trace Box
-         */
-        Text("Stack Trace Lengkap:", color = SampThemeColors.textPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Text(t("crash.stack"), color = SampThemeColors.textPrimary, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -318,11 +308,13 @@ private fun CrashDetailView(
 private fun CrashHistoryList(
     crashes: List<Report>,
     selectedId: String?,
+    lang: Locales.Lang,
     onSelect: (Report) -> Unit,
     onCopy: (Report) -> Unit,
     onDelete: (Report) -> Unit,
     onClearAll: () -> Unit
 ) {
+    fun t(key: String): String = Locales.text(lang, key)
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -333,7 +325,7 @@ private fun CrashHistoryList(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Total Log Tersimpan: ${crashes.size}",
+                text = t("crash.total").replace("{count}", crashes.size.toString()),
                 color = SampThemeColors.textSecondary,
                 fontSize = 14.sp
             )
@@ -341,7 +333,7 @@ private fun CrashHistoryList(
                 onClick = onClearAll,
                 colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.danger)
             ) {
-                Text("Hapus Semua", fontSize = 14.sp)
+                Text(t("crash.delete.all"), fontSize = 14.sp)
             }
         }
 
@@ -383,7 +375,8 @@ private fun CrashHistoryList(
                         )
 
                         Text(
-                            text = report.message ?: "Thread: ${report.threadName}",
+                            text = report.message
+                                ?: t("crash.thread").replace("{value}", report.threadName),
                             color = SampThemeColors.textSecondary,
                             fontSize = 14.sp,
                             maxLines = 2

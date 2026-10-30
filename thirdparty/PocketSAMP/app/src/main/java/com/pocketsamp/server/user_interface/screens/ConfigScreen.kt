@@ -15,8 +15,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pocketsamp.server.configuration.ConfigurationReader
-import com.pocketsamp.server.configuration.ConfigurationWriter
+import com.pocketsamp.server.Locales
+import com.pocketsamp.server.configuration.Reader
+import com.pocketsamp.server.configuration.Writer
 import com.pocketsamp.server.configuration.DirectoryManager
 import com.pocketsamp.server.user_interface.theme.*
 import java.io.File
@@ -24,10 +25,12 @@ import java.io.File
 @Composable
 fun ConfigScreen() {
     val context = LocalContext.current
+    val lang = Locales.current
+    fun t(key: String): String = Locales.text(lang, key)
     val serverDir = remember { DirectoryManager.getServerDirectory(context) }
     val configFile = remember(serverDir) { File(serverDir, "server.cfg") }
 
-    var config by remember(configFile) { mutableStateOf(ConfigurationReader.read(configFile)) }
+    var config by remember(configFile) { mutableStateOf(Reader.read(configFile)) }
 
     var hostname by remember(config) { mutableStateOf(config.hostname) }
     var port by remember(config) { mutableStateOf(config.port.toString()) }
@@ -44,7 +47,7 @@ fun ConfigScreen() {
         DisposableEffect(lifecycleOwner, configFile) {
             val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
                 if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                    config = ConfigurationReader.read(configFile)
+                    config = Reader.read(configFile)
                 }
             }
             lifecycleOwner.lifecycle.addObserver(observer)
@@ -60,9 +63,6 @@ fun ConfigScreen() {
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        /*
-         * Header. Bottom room keeps the last field clear of the floating tab rail.
-         */
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -70,14 +70,14 @@ fun ConfigScreen() {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Server Configuration",
+                    text = t("config.title"),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = SampThemeColors.textPrimary,
                     maxLines = 1
                 )
                 Text(
-                    text = "server.cfg Editor",
+                    text = t("config.subtitle"),
                     fontSize = 12.sp,
                     color = SampThemeColors.textSecondary,
                     maxLines = 1
@@ -93,26 +93,26 @@ fun ConfigScreen() {
                     config.gamemode = gamemode
                     config.filterscripts = filterscripts
                     config.plugins = plugins
-                    ConfigurationWriter.write(config, configFile)
+                    Writer.write(config, configFile)
                     Toast.makeText(context, "server.cfg saved successfully!", Toast.LENGTH_SHORT).show()
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
             ) {
-                Text(text = "Save", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text(text = t("config.save"), fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
 
-        ConfigField(label = "Server Hostname", value = hostname, onValueChange = { hostname = it })
+        ConfigField(label = t("config.field.hostname"), value = hostname, onValueChange = { hostname = it })
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            ConfigField(label = "Port", value = port, onValueChange = { port = it }, modifier = Modifier.weight(1f))
-            ConfigField(label = "Max Players", value = maxPlayers, onValueChange = { maxPlayers = it }, modifier = Modifier.weight(1f))
+            ConfigField(label = t("config.field.port"), value = port, onValueChange = { port = it }, modifier = Modifier.weight(1f))
+            ConfigField(label = t("config.field.maxplayers"), value = maxPlayers, onValueChange = { maxPlayers = it }, modifier = Modifier.weight(1f))
         }
-        ConfigField(label = "RCON Password", value = rconPassword, onValueChange = { rconPassword = it })
-        ConfigField(label = "Main Files", value = gamemode, onValueChange = { gamemode = it }, hint = "e.g. bare 1 or your_gamemode 1")
-        ConfigField(label = "Filterscripts", value = filterscripts, onValueChange = { filterscripts = it }, hint = "Space-separated .amx names")
-        ConfigField(label = "Plugins (.so)", value = plugins, onValueChange = { plugins = it }, hint = "e.g. mysql.so streamer.so sscanf.so")
+        ConfigField(label = t("config.field.rcon"), value = rconPassword, onValueChange = { rconPassword = it })
+        ConfigField(label = t("config.field.gamemode"), value = gamemode, onValueChange = { gamemode = it }, hint = t("config.hint.gamemode"))
+        ConfigField(label = t("config.field.filterscripts"), value = filterscripts, onValueChange = { filterscripts = it }, hint = t("config.hint.filterscripts"))
+        ConfigField(label = t("config.field.plugins"), value = plugins, onValueChange = { plugins = it }, hint = t("config.hint.plugins"))
         Spacer(modifier = Modifier.height(52.dp))
     }
 }

@@ -1,5 +1,6 @@
 package com.pocketsamp.server.database_handler
 
+import com.pocketsamp.server.Locales
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
@@ -18,6 +19,8 @@ data class QueryResult(
 )
 
 class DatabaseManager {
+
+    private fun t(key: String): String = Locales.text(Locales.current, key)
 
     companion object {
         private const val DB_URL_BASE = "jdbc:mariadb://127.0.0.1:3306"
@@ -72,13 +75,9 @@ class DatabaseManager {
 
     suspend fun createDatabase(name: String): Pair<Boolean, String> = withContext(Dispatchers.IO) {
         val cleanName = name.trim()
-        if (cleanName.isEmpty()) return@withContext Pair(false, "Database name is empty")
-        /*
-         * Only allow characters that are safe unquoted in an identifier; the
-         * MariaDB wire protocol accepts either quoting or this stricter subset.
-         */
+        if (cleanName.isEmpty()) return@withContext Pair(false, t("db.error.name.empty"))
         if (!cleanName.matches(Regex("[A-Za-z0-9_]+"))) {
-            return@withContext Pair(false, "Database name can only contain letters, digits and underscores")
+            return@withContext Pair(false, t("db.error.name.invalid"))
         }
         try {
             getConnection().use { conn ->
@@ -86,9 +85,9 @@ class DatabaseManager {
                     stmt.execute("CREATE DATABASE IF NOT EXISTS `$cleanName`")
                 }
             }
-            Pair(true, "Database '$cleanName' created")
+            Pair(true, t("db.create.ok".replace("{name}", cleanName)))
         } catch (e: Throwable) {
-            Pair(false, e.message ?: "Failed to create database")
+            Pair(false, e.message ?: t("db.error.create"))
         }
     }
 
@@ -110,7 +109,7 @@ class DatabaseManager {
     suspend fun executeQuery(database: String?, sql: String): QueryResult = withContext(Dispatchers.IO) {
         val cleanSql = sql.trim()
         if (cleanSql.isEmpty()) {
-            return@withContext QueryResult(error = "Query is empty")
+            return@withContext QueryResult(error = t("db.error.query.empty"))
         }
 
         try {
@@ -125,7 +124,7 @@ class DatabaseManager {
                         val rows = mutableListOf<List<String>>()
 
                         var count = 0
-                        while (rs.next() && count < 200) { /* Limit 200 preview rows */
+                        while (rs.next() && count < 200) {
                             val row = (1..colCount).map { rs.getString(it) ?: "NULL" }
                             rows.add(row)
                             count++
@@ -145,7 +144,7 @@ class DatabaseManager {
                 }
             }
         } catch (e: Throwable) {
-            QueryResult(error = e.message ?: "Database query error")
+            QueryResult(error = e.message ?: t("db.error.query"))
         }
     }
 
@@ -175,9 +174,9 @@ class DatabaseManager {
                 }
                 conn.commit()
             }
-            Pair(true, "Database imported successfully")
+            Pair(true, t("db.import.ok"))
         } catch (e: Throwable) {
-            Pair(false, e.message ?: "SQL Import failed")
+            Pair(false, e.message ?: t("db.error.import"))
         }
     }
 }

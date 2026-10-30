@@ -120,7 +120,7 @@ fun DatabaseScreen(
     }
 
     /*
-     * SQL File Import Launcher: opens the system document picker so a chosen
+     * SQL file import launcher: opens the system document picker so a chosen
      * .sql script can be imported into the selected database.
      */
     val importLauncher = rememberLauncherForActivityResult(

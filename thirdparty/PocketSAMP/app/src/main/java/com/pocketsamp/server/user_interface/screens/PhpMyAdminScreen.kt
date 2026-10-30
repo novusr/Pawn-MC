@@ -49,7 +49,7 @@ import com.pocketsamp.server.user_interface.theme.SampThemeColors
  *
  * phpMyAdmin is a server-side PHP application, so it is reached over loopback the
  * same way the SA-MP server itself is: only pages that need the Android system
- * downloader leave this WebView.
+ * ThirdRuntime leave this WebView.
  */
 const val LOCAL_PHPMYADMIN_URL = "http://127.0.0.1/phpmyadmin/"
 

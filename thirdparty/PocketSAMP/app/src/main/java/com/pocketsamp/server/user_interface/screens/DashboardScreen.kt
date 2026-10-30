@@ -60,11 +60,6 @@ fun DashboardScreen(
     val lifecycleOwner = context as? androidx.lifecycle.LifecycleOwner
     var currentServerDir by remember { mutableStateOf(DirectoryManager.getServerDirectory(context)) }
     var hasStoragePermission by remember { mutableStateOf(DirectoryManager.hasStoragePermission(context)) }
-    /*
-     * phpMyAdmin is offered from the Dashboard too: the MariaDB card is the first
-     * place a user looks after starting the server, and making them open the
-     * Database tab first only hid an action they were about to take anyway.
-     */
     var showPhpMyAdmin by remember { mutableStateOf(false) }
 
     val powerManager = remember { context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager }
@@ -115,10 +110,6 @@ fun DashboardScreen(
 
     val scrollState = rememberScrollState()
 
-    /*
-     * Dashboard-level phpMyAdmin: a full-screen browser over the dashboard so the
-     * MariaDB card can open it without routing through the Database tab.
-     */
     if (showPhpMyAdmin) {
         PhpMyAdminScreen(
             isDbRunning = isDbRunning,
@@ -136,11 +127,6 @@ fun DashboardScreen(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        /*
-         * App Header. The back arrow mirrors the Xed editor's navigation icon: one
-         * tap lands back on the PawnMC main interface, because expecting the system
-         * back gesture to close a foreground server service is not discoverable.
-         */
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -172,9 +158,6 @@ fun DashboardScreen(
                 }
             }
 
-            /*
-             * Status Indicator Pill
-             */
             val (statusText, statusColor) = when (status) {
                 Status.RUNNING -> t("status.online") to SampThemeColors.success
                 Status.STARTING, Status.INITIALIZING -> t("status.starting") to SampThemeColors.warn
@@ -206,9 +189,6 @@ fun DashboardScreen(
             }
         }
 
-        /*
-         * Server Address Card (Dual Localhost & LAN Wi-Fi)
-         */
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
@@ -218,9 +198,6 @@ fun DashboardScreen(
                 modifier = Modifier.padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                /*
-                 * Section 1: Localhost (Main di HP Ini - Disarankan)
-                 */
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -256,7 +233,7 @@ fun DashboardScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Copy Localhost IP",
+                                contentDescription = t("dash.copy.local"),
                                 tint = SampThemeColors.accent,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -279,9 +256,6 @@ fun DashboardScreen(
                     )
                 }
 
-                /*
-                 * Section 2: LAN Wi-Fi (Multiplayer Bareng Teman)
-                 */
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -314,7 +288,7 @@ fun DashboardScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Copy LAN IP",
+                                contentDescription = t("dash.copy.lan"),
                                 tint = SampThemeColors.textSecondary,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -340,9 +314,6 @@ fun DashboardScreen(
             }
         }
 
-        /*
-         * Database Card
-         */
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -364,7 +335,7 @@ fun DashboardScreen(
                 ) {
                     Column {
                         Text(
-                            text = "MariaDB (MySQL 5.7/8.0 Wire)",
+                            text = t("db.engine"),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = SampThemeColors.textPrimary,
@@ -372,7 +343,7 @@ fun DashboardScreen(
                             overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = if (isDbRunning) "127.0.0.1:3306 (Active)" else "Stopped",
+                            text = if (isDbRunning) "127.0.0.1:3306 (${t("db.active")})" else t("db.stopped"),
                             fontSize = 12.sp,
                             fontFamily = FontFamily.Monospace,
                             color = if (isDbRunning) SampThemeColors.success else SampThemeColors.textMuted,
@@ -435,30 +406,24 @@ fun DashboardScreen(
             }
         }
 
-        /*
-         * Specification Grid
-         */
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             SpecCard(
-                title = "ARCH TRANSLATION",
+                title = t("spec.arch.title"),
                 value = "QEMU-i386",
-                subtext = "ARM64 -> x86",
+                subtext = t("spec.arch.note"),
                 modifier = Modifier.weight(1f)
             )
             SpecCard(
-                title = "RAM PROFILE",
+                title = t("spec.ram.title"),
                 value = "~150 MB",
-                subtext = "Low Memory Tuned",
+                subtext = t("spec.ram.note"),
                 modifier = Modifier.weight(1f)
             )
         }
 
-        /*
-         * Storage Permission Alert (if needed on Android 11+)
-         */
         if (!hasStoragePermission) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -508,9 +473,6 @@ fun DashboardScreen(
             }
         }
 
-        /*
-         * Battery Optimization Alert (keeps server responsive in background when user opens SA-MP client)
-         */
         if (!isBatteryOptIgnored) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -564,9 +526,6 @@ fun DashboardScreen(
             }
         }
 
-        /*
-         * Background Stability & Anti-Disconnect Guide Card
-         */
         var showAntiDcGuide by remember { mutableStateOf(false) }
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -659,9 +618,6 @@ fun DashboardScreen(
             }
         }
 
-        /*
-         * Gamemode Directory Card (Zero-Copy)
-         */
         val hasCfg = remember(currentServerDir) { File(currentServerDir, "server.cfg").exists() }
 
         Card(
@@ -691,7 +647,7 @@ fun DashboardScreen(
                     }
 
                     val badgeColor = if (hasCfg) SampThemeColors.success else SampThemeColors.warn
-                    val badgeText = if (hasCfg) "server.cfg OK" else "server.cfg"
+                    val badgeText = if (hasCfg) t("folder.cfg.ok") else "server.cfg"
                     Text(
                         text = badgeText,
                         fontSize = 11.sp,
@@ -727,7 +683,7 @@ fun DashboardScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
-                            contentDescription = "Copy Path",
+                            contentDescription = t("copy.path.description"),
                             tint = SampThemeColors.accent,
                             modifier = Modifier.size(15.dp)
                         )
@@ -774,9 +730,6 @@ fun DashboardScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        /*
-         * Main Action Button
-         */
         val isBusy = status == Status.STARTING || status == Status.INITIALIZING || status == Status.STOPPING
         val isRunning = status == Status.RUNNING
 

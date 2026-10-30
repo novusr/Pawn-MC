@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.pocketsamp.server.Locales
 import com.pocketsamp.server.user_interface.theme.*
 
 @Composable
@@ -27,10 +28,9 @@ fun ConsoleScreen(
     onClearLogs: () -> Unit
 ) {
     val listState = rememberLazyListState()
+    val lang = Locales.current
+    fun t(key: String): String = Locales.text(lang, key)
 
-    /*
-     * Auto scroll to bottom when new logs arrive
-     */
     LaunchedEffect(listState) {
         snapshotFlow { listState.layoutInfo.totalItemsCount }
             .distinctUntilChanged()
@@ -46,9 +46,6 @@ fun ConsoleScreen(
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            /*
-             * Console Header
-             */
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -56,14 +53,14 @@ fun ConsoleScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Server Console",
+                        text = t("console.title"),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = SampThemeColors.textPrimary,
                         maxLines = 1
                     )
                     Text(
-                        text = "${logs.size} log lines buffered",
+                        text = t("console.buffered").replace("{count}", logs.size.toString()),
                         fontSize = 12.sp,
                         color = SampThemeColors.textSecondary,
                         maxLines = 1
@@ -77,7 +74,7 @@ fun ConsoleScreen(
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
                     ) {
                         Text(
-                            text = "Clear",
+                            text = t("console.clear"),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = SampThemeColors.textSecondary
@@ -86,10 +83,6 @@ fun ConsoleScreen(
                 }
             }
 
-            /*
-             * Terminal Box. Bottom padding keeps the floating tab rail from covering
-             * the last log lines.
-             */
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -100,7 +93,7 @@ fun ConsoleScreen(
             ) {
                 if (logs.isEmpty()) {
                     Text(
-                        text = "Server console is idle. Press 'Start Server' to view live execution logs.",
+                        text = t("console.idle"),
                         fontSize = 12.sp,
                         fontFamily = FontFamily.Monospace,
                         color = SampThemeColors.textMuted,

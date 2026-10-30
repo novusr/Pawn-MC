@@ -11,16 +11,17 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.pocketsamp.server.Locales
 import com.pocketsamp.server.MainActivity
 import com.pocketsamp.server.R
-import com.pocketsamp.server.engine_handler.Extractor
-import com.pocketsamp.server.engine_handler.Downloader
 import com.pocketsamp.server.configuration.DirectoryManager
-import com.pocketsamp.server.engine_handler.MariaDb
-import com.pocketsamp.server.engine_handler.Samp
 import com.pocketsamp.server.crash_handler.Handler
 import com.pocketsamp.server.crash_handler.Manager
 import com.pocketsamp.server.crash_handler.Report
+import com.pocketsamp.server.engine_handler.Server
+import com.pocketsamp.server.engine_handler.ThirdExtractor
+import com.pocketsamp.server.engine_handler.ThirdMariaDb
+import com.pocketsamp.server.engine_handler.ThirdRuntime
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -73,7 +74,6 @@ class RuntimeService : Service() {
         private val logLock = Any()
 
         fun appendLog(line: String) {
-            // Logging failures must not interrupt server startup or console updates.
             runCatching { consoleLogSink?.invoke(line) }
             synchronized(logLock) {
                 val current = _logFeed.value.toMutableList()
@@ -97,9 +97,9 @@ class RuntimeService : Service() {
     private var wifiLock: WifiManager.WifiLock? = null
     private var multicastLock: WifiManager.MulticastLock? = null
 
-    private lateinit var assetExtractor: Extractor
-    private lateinit var sampEngine: Samp
-    private lateinit var mariaDbEngine: MariaDb
+    private lateinit var assetExtractor: ThirdExtractor
+    private lateinit var serverEngine: Server
+    private lateinit var mariaDbEngine: MariaDB
 
     inner class LocalBinder : Binder() {
         fun getService(): Service = this@RuntimeService
@@ -118,39 +118,40 @@ class RuntimeService : Service() {
         isServiceRunning = true
         createNotificationChannel()
 
-        assetExtractor = Extractor(this)
-        sampEngine = Samp(this)
-        mariaDbEngine = MariaDb(this)
+        assetExtractor = ThirdExtractor(this)
+        serverEngine = Server(this)
+        mariaDbEngine = ThirdMariaDb(this)
 
         /*
          * Handle process termination (e.g. Android Phantom Process Killer / OOM)
          */
-        sampEngine.onExit = { exitCode ->
+        serverEngine.onExit = { exitCode ->
             val prefs = getSharedPreferences("pocketsamp_prefs", Context.MODE_PRIVATE)
             val shouldBeRunning = prefs.getBoolean("server_running_state", false)
+            fun t(key: String): String = Locales.text(Locales.current, key)
 
             if (exitCode == 137) {
-                appendLog("[Android Alert] Proses SA-MP dihentikan oleh Android Phantom Process Killer / OOM (Exit 137).")
-                appendLog("[Solusi 1] Gembok/Kunci aplikasi PocketSAMP di Recent Apps agar tidak di-freeze oleh sistem.")
-                appendLog("[Solusi 2] Aktifkan 'Disable child process restrictions' di Pengaturan Developer Options.")
-                appendLog("[Solusi 3] Di launcher SA-MP, hubungkan ke IP 127.0.0.1:7777 (Localhost).")
-                updateNotification("Server terhenti oleh Android (Exit 137)")
+                appendLog(t("notify.exit137.log"))
+                appendLog(t("log.exit137.fix1"))
+                appendLog(t("log.exit137.fix2"))
+                appendLog(t("log.exit137.fix3"))
+                updateNotification(t("notify.exit137"))
             } else {
-                appendLog("[PocketSAMP] Proses server SA-MP keluar dengan kode: $exitCode")
-                updateNotification("SA-MP Server stopped (Code: $exitCode)")
+                appendLog(t("log.exited").replace("{code}", exitCode.toString()))
+                updateNotification(t("notify.stopped").replace("{code}", exitCode.toString()))
             }
 
             if (shouldBeRunning) {
-                appendLog("[PocketSAMP] Mencoba memulihkan server SA-MP secara otomatis dalam 2 detik...")
+                appendLog(t("log.restoring"))
                 serviceScope.launch {
                     delay(2000)
-                    if (prefs.getBoolean("server_running_state", false) && !sampEngine.isRunning) {
+                    if (prefs.getBoolean("server_running_state", false) && !serverEngine.isRunning) {
                         try {
-                            sampEngine.start(serviceScope)
-                            updateNotification("SA-MP Server active on ${_lanIp.value}:7777")
-                            appendLog("[PocketSAMP] Server SA-MP berhasil dipulihkan secara otomatis!")
+                            serverEngine.start(serviceScope)
+                            updateNotification(t("notify.active").replace("{ip}", _lanIp.value))
+                            appendLog(t("log.restored"))
                         } catch (e: Exception) {
-                            appendLog("[PocketSAMP Error] Gagal memulihkan server: ${e.message}")
+                            appendLog(t("log.restore.failed").replace("{error}", e.message.orEmpty()))
                             _serverStatus.value = Status.STOPPED
                         }
                     }
@@ -164,7 +165,7 @@ class RuntimeService : Service() {
          * Stream logs from engines asynchronously without blocking UI thread
          */
         serviceScope.launch(Dispatchers.Default) {
-            sampEngine.serverLogs.collect { appendLog(it) }
+            serverEngine.serverLogs.collect { appendLog(it) }
         }
         serviceScope.launch(Dispatchers.Default) {
             mariaDbEngine.dbLogs.collect { appendLog(it) }
@@ -200,22 +201,10 @@ class RuntimeService : Service() {
         return START_STICKY
     }
 
-    /**
-     * Initializes (first run) and starts the MariaDB daemon.
-     *
-     * The only path that starts MariaDB: called once from [startServers].
-     */
+    /** Initializes (first run) and starts the MariaDB daemon. */
     private suspend fun initializeDatabase() {
-        /*
-         * A re-init arrives through startForegroundService(); Android requires the
-         * service to call startForeground() within 5 s or it throws
-         * ForegroundServiceDidNotStartInTimeException. Calling it twice on an
-         * already-foregrounded service is equally illegal, so this branches.
-         */
-        ensureForeground("Starting MariaDB (MySQL)...")
-        /*
-         * A previous daemon may still hold the socket/port after a re-init.
-         */
+        fun t(key: String): String = Locales.text(Locales.current, key)
+        ensureForeground(t("log.db.starting"))
         if (mariaDbEngine.isRunning) mariaDbEngine.stop()
 
         val databaseInitialized = mariaDbEngine.initializeIfNeeded(serviceScope)
@@ -224,11 +213,11 @@ class RuntimeService : Service() {
             delay(1500)
             _isDbRunning.value = mariaDbEngine.isRunning
             if (!mariaDbEngine.isRunning) {
-                appendLog("[MariaDB Error] Process exited before opening the localhost SQL port.")
+                appendLog(t("log.db.exited"))
             }
         } else {
             _isDbRunning.value = false
-            appendLog("[MariaDB Info] Local database not running; SQL access is unavailable.")
+            appendLog(t("log.db.unavailable"))
         }
     }
 
@@ -259,11 +248,12 @@ class RuntimeService : Service() {
     private fun startServers() {
         if (_serverStatus.value == Status.RUNNING || _serverStatus.value == Status.STARTING) return
 
+        fun t(key: String): String = Locales.text(Locales.current, key)
         clearLogs()
         _serverStatus.value = Status.STARTING
         acquireLocks()
 
-        val notif = buildNotification("Starting servers...")
+        val notif = buildNotification(t("notify.starting"))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             var serviceType = ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
@@ -277,70 +267,50 @@ class RuntimeService : Service() {
 
         serviceScope.launch {
             try {
-                /*
-                 * 1. Download the runtime archives, then unpack each one.
-                 *
-                 * The archives are no longer bundled in the APK: they live in the
-                 * repository under thirdparty/PocketSAMP/runtime and are fetched from
-                 * raw GitHub into Documents/PawnMC/storage. Extraction runs after the
-                 * download and is skipped entirely when every tree is already in place.
-                 */
+                // Download the runtime archives, then unpack each one.
                 if (!assetExtractor.isExtracted()) {
                     _serverStatus.value = Status.INITIALIZING
-                    appendLog("[PocketSAMP] Preparing runtime archives...")
+                    appendLog(t("log.archive.prepare"))
 
-                    val downloader = Downloader(applicationContext)
-                    if (!Downloader.isComplete(applicationContext)) {
+                    val runtime = ThirdRuntime(applicationContext)
+                    if (!ThirdRuntime.isComplete(applicationContext)) {
                         if (!DirectoryManager.hasStoragePermission(applicationContext)) {
-                            /*
-                             * The gate in MainActivity normally prevents this; reaching
-                             * here means the permission was revoked while running.
-                             */
-                            appendLog("[Setup] Storage access is required to download the runtime files.")
+                            appendLog(t("log.archive.permission"))
                             _serverStatus.value = Status.STOPPED
                             return@launch
                         }
-                        downloader.sync { line -> appendLog("[Setup] $line") }
+                        runtime.sync { line -> appendLog("[Setup] $line") }
                     }
 
-                    if (!Downloader.isComplete(applicationContext)) {
-                        appendLog("[Setup] Runtime archives could not be downloaded; check the connection and retry.")
+                    if (!ThirdRuntime.isComplete(applicationContext)) {
+                        appendLog(t("log.archive.failed"))
                         _serverStatus.value = Status.STOPPED
                         return@launch
                     }
 
-                    appendLog("[PocketSAMP] Extracting runtime archives...")
+                    appendLog(t("log.archive.extract"))
                     assetExtractor.extractAll { progress ->
                         appendLog("[Setup] $progress")
-                        updateNotification("Setup: $progress")
+                        updateNotification(t("notify.setup").replace("{progress}", progress))
                     }
                 }
 
-                /*
-                 * 2. Initialize and start MariaDB
-                 */
                 initializeDatabase()
 
-                /*
-                 * 3. Start SA-MP server via QEMU
-                 */
-                updateNotification("Launching SA-MP Server...")
-                sampEngine.start(serviceScope)
+                updateNotification(t("log.launching"))
+                serverEngine.start(serviceScope)
                 delay(1000)
 
                 _serverStatus.value = Status.RUNNING
                 updateLanIp()
-                updateNotification("SA-MP Server active on ${_lanIp.value}:7777")
-                appendLog("[PocketSAMP] All services active! Connect to ${_lanIp.value}:7777")
+                updateNotification(t("notify.active").replace("{ip}", _lanIp.value))
+                appendLog(t("log.active").replace("{ip}", _lanIp.value))
 
             } catch (e: Exception) {
                 val errorDetails = e.message ?: e.javaClass.simpleName
-                appendLog("[PocketSAMP Error] Failed to start: $errorDetails")
+                appendLog(t("log.start.failed").replace("{error}", errorDetails))
                 Log.e("Service", "Startup error", e)
 
-                /*
-                 * Record to Manager for in-app tracking
-                 */
                 try {
                     val timestamp = System.currentTimeMillis()
                     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
@@ -373,16 +343,17 @@ class RuntimeService : Service() {
         prefs.edit().putBoolean("server_running_state", false).apply()
         _serverStatus.value = Status.STOPPING
         serviceScope.launch {
-            appendLog("[PocketSAMP] Shutting down SA-MP server...")
-            sampEngine.stop()
-            appendLog("[PocketSAMP] Shutting down MariaDB...")
+            fun t(key: String): String = Locales.text(Locales.current, key)
+            appendLog(t("log.stopping.server"))
+            serverEngine.stop()
+            appendLog(t("log.stopping.db"))
             mariaDbEngine.stop()
             _isDbRunning.value = false
             _serverStatus.value = Status.STOPPED
             releaseLocks()
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
-            appendLog("[PocketSAMP] Server successfully stopped.")
+            appendLog(t("log.stopped"))
         }
     }
 
@@ -456,7 +427,7 @@ class RuntimeService : Service() {
             getString(R.string.notification_channel_name),
             NotificationManager.IMPORTANCE_DEFAULT
         ).apply {
-            description = "Maintains SA-MP local server background process"
+            description = Locales.text(Locales.current, "notify.channel.desc")
             setShowBadge(true)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
@@ -478,7 +449,7 @@ class RuntimeService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("PocketSAMP Server (Aktif)")
+            .setContentTitle(Locales.text(Locales.current, "notify.title"))
             .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
@@ -486,7 +457,11 @@ class RuntimeService : Service() {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Stop", stopIntent)
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                Locales.text(Locales.current, "notify.stop"),
+                stopIntent
+            )
             .build()
     }
 
