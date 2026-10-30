@@ -138,11 +138,11 @@ Source layout
 
     com/pocketsamp/server/
         MainActivity.kt          embedded UI entry, permission gate, tab layout
-        SampApp.kt               install() and launch() hooks used by PawnMC
+        ServerApp.kt               install() and launch() hooks used by PawnMC
         Locales.kt               ID/EN/ES/RU/TL string table
         config/
             Config.kt            server.cfg read and write
-            DirectoryManager.kt  gamemode folder, Documents/PawnMC, permissions
+            Directory/Manager.kt  gamemode folder, Documents/PawnMC, permissions
         crash/
             Handler.kt           global uncaught-exception handler
             Dialog.kt            isolated :crash process UI

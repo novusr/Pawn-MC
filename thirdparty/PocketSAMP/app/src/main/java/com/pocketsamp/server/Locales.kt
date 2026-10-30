@@ -21,12 +21,12 @@ object Locales {
     var theme: Theme = Theme.SYSTEM
         private set
 
-    /** Called by the host before [SampApp.launch] so the UI matches the PawnMC setting. */
+    /** Called by the host before [ServerApp.launch] so the UI matches the PawnMC setting. */
     fun setLanguage(lang: Lang) {
         current = lang
     }
 
-    /** Called by the host before [SampApp.launch] so the UI follows the PawnMC theme. */
+    /** Called by the host before [ServerApp.launch] so the UI follows the PawnMC theme. */
     fun setTheme(mode: Theme) {
         theme = mode
     }

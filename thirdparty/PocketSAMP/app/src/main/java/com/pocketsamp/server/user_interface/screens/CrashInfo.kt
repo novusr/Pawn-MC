@@ -31,7 +31,7 @@ import com.pocketsamp.server.crash_handler.Report
 import com.pocketsamp.server.user_interface.theme.*
 
 @Composable
-fun CrashLogsScreen(
+fun _CrashInfo(
     initialCrashId: String? = null,
     isCrashDialog: Boolean = false,
     onRestartApp: (() -> Unit)? = null

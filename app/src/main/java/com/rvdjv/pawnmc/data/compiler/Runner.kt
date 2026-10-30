@@ -5,7 +5,7 @@ import com.rvdjv.pawnmc.data.compiler.Names.AUTO_FALLBACK_ERROR_THRESHOLD
 import com.rvdjv.pawnmc.data.compiler.Names.SSCANF_NO_NICE_FEATURES_FLAG
 import com.rvdjv.pawnmc.data.compiler.Names.STR_PAWNCC_BINARY_NAME
 import com.rvdjv.pawnmc.data.config.CompilerConfig
-import com.rvdjv.pawnmc.data.log.CompileLogStore
+import com.rvdjv.pawnmc.data.log._compiler_store
 import java.io.File
 
 /**
@@ -250,9 +250,9 @@ object Runner {
 
         runCatching {
             val n_source = File(sourceFile)
-            CompileLogStore.record(
+            _compiler_store.record(
                 CompilerConfig.getInstance().applicationContextHolder(),
-                CompileLogStore.Entry(
+                _compiler_store.Entry(
                     timestamp = n_startTime,
                     sourcePath = sourceFile,
                     sourceName = n_source.name,

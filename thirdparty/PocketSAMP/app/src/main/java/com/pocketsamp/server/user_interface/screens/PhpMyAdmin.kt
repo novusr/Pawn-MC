@@ -63,7 +63,7 @@ const val LOCAL_PHPMYADMIN_URL = "http://127.0.0.1/phpmyadmin/"
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-fun PhpMyAdminScreen(
+fun _PhpMyAdmin(
     url: String = LOCAL_PHPMYADMIN_URL,
     isDbRunning: Boolean,
     onClose: () -> Unit,

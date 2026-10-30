@@ -50,7 +50,7 @@ import kotlinx.coroutines.launch
  * UI there — are one tap apart.
  */
 @Composable
-fun DatabaseScreen(
+fun _Database(
     dbManager: DatabaseManager,
     isDbRunning: Boolean,
     onOpenPhpMyAdmin: () -> Unit = {},

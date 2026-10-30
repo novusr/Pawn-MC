@@ -10,7 +10,7 @@ import java.io.File
 /**
  * One unified SQLite compile-log for the whole app, one row per compile.
  */
-object CompileLogStore {
+object _compiler_store {
 
     /** Every compile row keeps these cells. */
     data class Entry(
@@ -106,8 +106,6 @@ object CompileLogStore {
             }
         }
     }
-
-
 
     /** Total number of logged compiles; used for the "total file logging" readout. */
     fun totalEntries(context: Context): Int {

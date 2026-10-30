@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteOpenHelper
 import java.io.File
 
 /** SQLite history for PocketSAMP's live server console; separate from compiler output. */
-object PocketSampConsoleLogStore {
+object _pocket_store {
     data class Entry(val timestamp: Long, val level: String, val message: String)
 
     private const val DATABASE_NAME = "console_logging.db"

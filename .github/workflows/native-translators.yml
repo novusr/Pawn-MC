@@ -187,14 +187,26 @@ jobs:
           # API-qualified driver name, aarch64-linux-android${API_LEVEL}-*, so the
           # prefix must stop at the triple and the API level is passed through
           # ANDROID_API_LEVEL instead. A temporary shim directory then satisfies
-          # the two names QEMU asks for that the triple alone would not resolve.
+          # every name QEMU asks for that the triple alone would not resolve.
+          #
+          # The shim also lives in the checkout (not only in /tmp) so that later
+          # steps, which are separate shells, can reuse it: Meson records the tool
+          # paths configure resolved and BOTH the makefile wrapper and ninja call
+          # the tools by absolute path, so they must still exist when the build runs.
+          #
+          # QEMU probes these with `has` (`command -v`), which does NOT see the
+          # ARM cross tools: putting $TOOLCHAIN/bin on PATH would also expose the
+          # host "gcc"/"cc"/"ar" from the same directory and break the native
+          # compiler detection. Hence explicit overrides for the tools configure
+          # picks up from the environment.
           CROSS_PREFIX="$TOOLCHAIN/bin/aarch64-linux-android-"
-          SHIM_DIR=$(mktemp -d)
+          SHIM_DIR="$PWD/.qemu-cross-bin"
+          mkdir -p "$SHIM_DIR"
           API_TOOL="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}"
           link_tool() { ln -sf "$1" "$SHIM_DIR/aarch64-linux-android-$2"; }
           link_tool "${API_TOOL}-clang"   cc
           link_tool "${API_TOOL}-clang++" c++
-          link_tool "$TOOLCHAIN/bin/llvm-ar"      ar
+          link_tool "$TOOLCHAIN/bin/llvm-ar" ar
           link_tool "$TOOLCHAIN/bin/llvm-ranlib"  ranlib
           link_tool "$TOOLCHAIN/bin/llvm-strip"   strip
           link_tool "$TOOLCHAIN/bin/llvm-nm"      nm
@@ -208,8 +220,26 @@ jobs:
             'export PKG_CONFIG_LIBDIR PKG_CONFIG_SYSROOT_DIR' \
             'exec pkg-config "$@"' > "$SHIM_DIR/aarch64-linux-android-pkg-config"
           chmod +x "$SHIM_DIR/aarch64-linux-android-pkg-config"
-          export PATH="$SHIM_DIR:$PATH"
           export ANDROID_API_LEVEL="$API_LEVEL"
+          export SHIM_DIR
+          echo "SHIM_DIR=$SHIM_DIR" >> "$GITHUB_ENV"
+          # configure's defaults are ${VAR-${cross_prefix}tool}; the override is
+          # what makes it reject a missing tool instead of silently building a
+          # config that references a nonexistent /bin/aarch64-linux-android-nm
+          # later during `ninja`.
+          export AR="$SHIM_DIR/aarch64-linux-android-ar"
+          export NM="$SHIM_DIR/aarch64-linux-android-nm"
+          export RANLIB="$SHIM_DIR/aarch64-linux-android-ranlib"
+          export STRIP="$SHIM_DIR/aarch64-linux-android-strip"
+          export OBJCOPY="$SHIM_DIR/aarch64-linux-android-objcopy"
+          export LD="$SHIM_DIR/aarch64-linux-android-ld"
+          export PATH="$SHIM_DIR:$PATH"
+          for tool in cc c++ ar ranlib strip nm objcopy objdump ld pkg-config; do
+            if ! command -v "aarch64-linux-android-$tool" >/dev/null 2>&1; then
+              echo "::error::cross tool aarch64-linux-android-$tool is missing from $SHIM_DIR"
+              exit 1
+            fi
+          done
           ls -1 "$SHIM_DIR"
           # Meson resolves pkg-config per machine; pin the build machine to the host
           # binary so it is never prefixed with the cross tool name.
@@ -259,8 +289,29 @@ jobs:
           fi
 
       - name: Build
+        # The configure step above is a step of its own, so its `cd qemu` does not
+        # carry over: this step has to enter the QEMU tree too.
+        working-directory: qemu
         run: |
           set -euo pipefail
+          # Separate step means a fresh shell; the shim dir was exported to
+          # $GITHUB_ENV by the configure step so it resolves here too.
+          export PATH="$SHIM_DIR:$PATH"
+          if [ ! -d "$SHIM_DIR" ]; then
+            echo "::error::cross tool shim $SHIM_DIR is gone; configure did not run first."
+            exit 1
+          fi
+          # Do not call `make -C build`: for QEMU 7.2 a correctly configured tree
+          # has no build/ subdirectory at all (configure generates the makefile
+          # next to itself unless it was run from the source root), so pointing
+          # make at it only ever produced "build: No such file or directory".
+          # Build in the tree QEMU's configure already set up, exactly as the QEMU
+          # documentation does (`./configure ... && make`).
+          if [ ! -f GNUmakefile ] && [ ! -f Makefile ]; then
+            echo "::error::No QEMU makefile in the working directory; the configure step did not run in qemu/."
+            ls -la
+            exit 1
+          fi
           set +e
           make -j"$(nproc)"
           build_status=$?
@@ -280,7 +331,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p out/arm64-v8a
-          BIN=$(find . -type f -name "qemu-i386" -perm -u+x | head -n1)
+          BIN=$(find qemu -type f -name "qemu-i386" -perm -u+x | head -n1)
           if [ -z "$BIN" ]; then
             echo "::error::qemu-i386 was not produced by the build."
             exit 1
