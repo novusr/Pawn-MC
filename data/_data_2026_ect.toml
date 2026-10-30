@@ -422,11 +422,11 @@ ru = "Файловая система"
 es = "Sistema de archivos"
 
 [settings.option.ignorecase.desc]
-id = "Membuat salinan cadangan folder (\"nama-folder.backup\"), lalu mengubah semua nama file selain file yang dipilih dan seluruh referensi #include menjadi huruf kecil. Dijalankan sekali per folder, karena melewati Android yang peka huruf besar/kecil."
-en = "Backs the folder up as \"folder.backup\", then lowercases every file name except the one you selected and rewrites every #include reference to lowercase. It runs once per folder because Android storage is case sensitive."
-tl = "Backs the folder up as \\"folder.backup\\", then lowercases every file name except the one you selected and rewrites every #include reference to lowercase. It runs once per folder because Android storage is case sensitive."
-ru = "Создаёт резервную копию папки (\"folder.backup\"), затем переводит имена всех файлов в нижний регистр, кроме выбранного, и переписывает в нижний регистр все ссылки #include. Выполняется один раз для папки, потому что хранилище Android различает регистр символов."
-es = "Crea una copia de seguridad de la carpeta (\"carpeta.backup\"), luego pasa a minusculas todos los nombres de archivo salvo el que seleccionaste y reescribe en minusculas cada referencia #include. Se ejecuta una vez por carpeta porque el almacenamiento de Android distingue mayusculas de minusculas."
+id = "Mencoba memperbaiki akar masalah 'cannot read from file: ...' akibat perbedaan format filesystem Android dan Windows."
+en = "Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."
+tl = "Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."
+ru = "Пытается устранить первопричину ошибок 'cannot read from file: ...', вызванных различиями в форматах файловых систем Android и Windows."
+es = "Intenta solucionar la causa raíz de los errores 'cannot read from file: ...' provocados por las diferencias entre los formatos de los sistemas de archivos de Android y Windows."
 
 [settings.option.explain]
 id = "Lihat Penjelasan"
