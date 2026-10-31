@@ -1,4 +1,8 @@
 import java.util.Properties
+import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -88,8 +92,9 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            // Pawn compiler native libraries support these ABIs. PocketSAMP's
-            // translator assets currently ship only for arm64 and stay flavor-scoped.
+            // ABIs the compiler bridge is built for. Kept on `ndk` (not on the
+            // packaging filter) so the CMake build still produces every target; the
+            // packaging filter below then decides what reaches `lib/`.
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
     }
@@ -131,6 +136,20 @@ android {
         // duplicate is exactly the same licence text, so picking the first input is
         // the correct merge — the licence still ships once inside the APK.
         resources.excludes += setOf("META-INF/AL2.0", "META-INF/LGPL2.1")
+
+        // No `jniLibs` filter here on purpose.
+        //
+        // `JniLibsPackaging` only offers `excludes`, `pickFirsts`, `keepDebugSymbols`,
+        // `testOnly` and `useLegacyPackaging` — there is no "keep" rule, and the merge
+        // filters run before the native libraries are built, so an exclusion here would
+        // also remove the files the per-ABI archive task needs (it would find nothing to
+        // pack). The APK layout is produced after the merge instead, by
+        // `ArchiveAbiLibrariesTask` below: it turns `lib/<abi>/*.so` into
+        // `lib/<abi>/<abi>.zip` and leaves only `libm.so` loose.
+        //
+        // `useLegacyPackaging` defaults to false, i.e. the extracted `.so` files are
+        // mapped straight out of the APK, which is what lets the bridge be loaded without
+        // being copied anywhere.
     }
 
     val appApkNamePrefix = "pawnmc"
@@ -199,4 +218,130 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.ui.test.junit4)
+}
+// ---------------------------------------------------------------------------------
+// Per-ABI native archive
+//
+// `lib/<abi>/` carries a single `<abi>.zip` holding the libraries the app unpacks into
+// `Documents/PawnMC/library/<abi>/` on first launch:
+//
+//   lib/<abi>/<abi>.zip
+//       libpawnc3107.so      Pawn compiler 3.10.7 engine (unpacked, not loaded from the APK)
+//       libpawnc31011.so     Pawn compiler 3.10.11 engine
+//       libandroidx.graphics.path.so   Compose's path library
+//
+// `libm.so` (the PawnMC JNI bridge) is the only library that stays loose in the APK: it
+// has to be loadable before anything is unpacked, and Android's linker will not open a
+// file from app storage that the package manager did not install.
+//
+// The task runs after AGP linked and stripped the libraries but before the APK is
+// packaged, and it rewrites the staging `lib/<abi>/` folder, which the `packaging`
+// filters have already narrowed down to `lib/*/libm.so`.
+// ---------------------------------------------------------------------------------
+val bridgeLibraryName = "libm.so"
+
+val unpackedLibraryNames = listOf(
+    "libpawnc3107.so",
+    "libpawnc31011.so",
+    "libandroidx.graphics.path.so"
+)
+
+
+
+/**
+ * Packs one ABI's native libraries into `lib/<abi>/<abi>.zip`.
+ *
+ * The source is the `lib/<abi>` staging folder AGP merges into the APK, i.e. the
+ * libraries that were linked and stripped for that ABI. The loose `.so` files are then
+ * removed from the folder, so the packaged `lib/<abi>/` contains the archive (and the
+ * bridge, which the `pickFirsts` rule in `packaging` keeps) and nothing else.
+ */
+abstract class ArchiveAbiLibrariesTask : DefaultTask() {
+
+    /** `intermediates/stripped_native_libs/<variant>/<abi>`. */
+    @get:Internal
+    abstract val libraryDirectory: DirectoryProperty
+
+    @get:OutputFile
+    abstract val archive: RegularFileProperty
+
+    @get:Input
+    abstract val abi: Property<String>
+
+    @get:Input
+    abstract val libraryNames: ListProperty<String>
+
+    @TaskAction
+    fun run() {
+        val abiName = abi.get()
+        val folder = libraryDirectory.get().asFile
+        val target = archive.get().asFile
+        // The bridge has to survive the packaging filter: without it the JNI surface
+        // would exist only inside the archive, and nothing could unpack it.
+        require(File(folder, bridgeLibraryName).isFile) {
+            "[native-archive] $abiName: $bridgeLibraryName is missing from " +
+                "${folder.absolutePath}; the packaging filter dropped the bridge"
+        }
+        val present = libraryNames.get().map { File(folder, it) }.filter { it.isFile }
+
+        if (present.isEmpty()) {
+            error("[native-archive] $abiName: no native libraries in ${folder.absolutePath}")
+        }
+
+        target.parentFile?.mkdirs()
+        ZipOutputStream(target.outputStream().buffered()).use { out ->
+            for (file in present) {
+                out.putNextEntry(ZipEntry(file.name).apply { time = 0L })
+                file.inputStream().buffered().use { it.copyTo(out) }
+                out.closeEntry()
+            }
+        }
+        logger.lifecycle("[native-archive] $abiName: ${target.name} <- ${present.joinToString { it.name }}")
+
+        // Only the archive is packaged for this ABI; the loose libraries it now holds are
+        // removed from the staging folder so they cannot be merged into `lib/<abi>/` too.
+        folder.listFiles()
+            ?.filter { it.extension == "so" && it.name in libraryNames.get() }
+            ?.forEach { it.delete() }
+        val missing = libraryNames.get().filterNot { File(folder, it).isFile }
+        if (missing.isNotEmpty()) {
+            logger.lifecycle("[native-archive] $abiName: never produced: ${missing.joinToString()}")
+        }
+    }
+}
+
+/**
+ * One archive task per ABI and variant, wired in front of the APK packaging step.
+ *
+ * `PackageApplication` is hooked through `onVariants`: it is the task that consumes
+ * `lib/<abi>/`, so making the archive a dependency of it guarantees the zip exists (and
+ * the loose libraries are gone) by the time `lib/**` is read.
+ */
+androidComponents.onVariants { variant ->
+    val packagingTaskName = "package${variant.name.replaceFirstChar { it.uppercase() }}"
+    val packagingTask = tasks.named<com.android.build.gradle.tasks.PackageApplication>(packagingTaskName)
+
+    packagingTask.configure {
+        val staging = layout.buildDirectory.dir(
+            "intermediates/stripped_native_libs/${variant.name}"
+        ).get().asFile
+        val variantLabel = variant.name.replaceFirstChar { it.uppercase() }
+
+        android.defaultConfig.ndk.abiFilters.forEach { abiName ->
+            val archiveDirectory = File(staging, abiName)
+            val archiveTask = tasks.register<ArchiveAbiLibrariesTask>(
+                "archiveLibraries$variantLabel" + abiName.split('-', '_').joinToString("") { part ->
+                    part.replaceFirstChar { it.uppercase() }
+                }
+            ) {
+                group = "build"
+                description = "Packs the $abiName libraries into lib/$abiName/$abiName.zip."
+                this.abi.set(abiName)
+                this.libraryDirectory.set(archiveDirectory)
+                this.libraryNames.set(unpackedLibraryNames)
+                this.archive.set(File(archiveDirectory, "$abiName.zip"))
+            }
+            dependsOn(archiveTask)
+        }
+    }
 }

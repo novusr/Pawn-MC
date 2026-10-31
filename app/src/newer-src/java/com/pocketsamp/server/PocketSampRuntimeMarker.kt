@@ -1,34 +1,31 @@
 package com.pocketsamp.server
 
+import android.content.Context
+import com.rvdjv.pawnmc.data.runtime.PocketSampGateway
+
 /** Marker keeping the PocketSAMP compile-time API confined to the modern flavor. */
 internal object PocketSampRuntimeMarker
 
 /**
- * Host-facing PocketSAMP entry point for the modern flavor.
+ * Modern-flavor implementation of [PocketSampGateway.PocketSampHook].
  *
- * The commands that need PocketSAMP's own types (language and theme enums, the
- * console sink) are exposed here, so the shared `main` source set never imports
- * the `:pocketsamp` module directly. The Nougat flavor ships a no-op twin of this
- * object, which is why both flavors can compile the same call sites.
+ * This file is the only place in PawnMC that names PocketSAMP's own types (`ServerApp`,
+ * `Locales`, `RuntimeService`). It lives in `src/newer-src`, so it is compiled only for
+ * the flavor that links `:pocketsamp`; `main` sees the hook interface instead, which is
+ * what lets both flavors compile the same call sites.
+ *
+ * `PocketSampBootstrap` registers it the first time the gateway is asked to do something.
  */
-internal object ServerApp {
+internal object NewerPocketSampHook : PocketSampGateway.PocketSampHook {
 
-    /**
-     * Installs the process-wide pieces PocketSAMP expects and mirrors its console
-     * into [onConsoleLine]. Safe to call on every launch.
-     */
-    fun install(
-        context: android.content.Context,
-        onConsoleLine: ((String) -> Unit)? = null
-    ) {
-        com.pocketsamp.server.ServerApp.install(context)
+    override fun install(context: Context, onConsoleLine: ((String) -> Unit)?) {
+        ServerApp.install(context)
         if (onConsoleLine != null) {
             com.pocketsamp.server.service_handler.RuntimeService.setConsoleLogSink(onConsoleLine)
         }
     }
 
-    /** Opens the embedded runtime UI; [language] and [theme] use the config value strings. */
-    fun launch(context: android.content.Context, language: String, theme: String) {
+    override fun launch(context: Context, language: String, theme: String) {
         Locales.setLanguage(
             when (language) {
                 "id" -> Locales.Lang.ID
@@ -45,6 +42,11 @@ internal object ServerApp {
                 else -> Locales.Theme.SYSTEM
             }
         )
-        com.pocketsamp.server.ServerApp.launch(context)
+        ServerApp.launch(context)
     }
+}
+
+/** Registered automatically when this file's class loader initialises it. */
+internal fun registerNewerPocketSampHook() {
+    PocketSampGateway.install(NewerPocketSampHook)
 }

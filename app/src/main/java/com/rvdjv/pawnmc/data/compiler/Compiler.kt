@@ -24,6 +24,15 @@ object Compiler {
     /** Loaded native compiler version, or null before the first compile. */
     fun getLoadedVersion(): CompilerConfig.CompilerVersion? = Runner.getLoadedVersion()
 
+    /**
+     * Points the compiler at `Documents/PawnMC/library/`, where the per-ABI archive is
+     * unpacked. Called once from the app entry point.
+     */
+    fun attachHost(context: android.content.Context?) = Runner.attachHost(context)
+
+    /** `Documents/PawnMC/library/<abi>`, the folder the compile reads its `.so` from. */
+    fun libraryDirectory(): File? = Runner.libraryDirectory()
+
     /** True when switching to [requestedVersion] needs an app restart. */
     fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean =
         Runner.isRestartRequired(requestedVersion)

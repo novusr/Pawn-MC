@@ -422,7 +422,12 @@ class UpdateManager(private val context: Context) {
             var entry = zip.nextEntry
             while (entry != null) {
                 val output = File(extractDir, entry.name).canonicalFile
-                if (!output.toPath().startsWith(root.toPath())) {
+                val rootPath = root.canonicalPath
+                val outputPath = output.canonicalPath
+
+                if (outputPath != rootPath &&
+                    !outputPath.startsWith(rootPath + File.separator)
+                ) {
                     throw IllegalArgumentException("Unsafe path in update archive.")
                 }
                 if (entry.isDirectory) {
