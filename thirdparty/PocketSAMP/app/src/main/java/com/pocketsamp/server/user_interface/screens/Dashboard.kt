@@ -639,7 +639,7 @@ fun _Dashboard(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = t("folder.gamemode") + " SA-MP",
+                            text = t("folder.gamemode"),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = SampThemeColors.textSecondary

@@ -99,6 +99,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.data.runtime.PocketSampGateway
 
 import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserDialog
@@ -339,10 +340,10 @@ fun MainScreen(
     fun openPocketSamp() {
         // The embedded runtime speaks the language the PawnMC settings hold and
         // follows the same theme (light/dark/system); the dark look is the same
-        // semi-violet ramp as this interface. Both hops live in the flavor-specific
-        // `com.pocketsamp.server.ServerApp` stub, because this source set is shared
-        // with the Nougat flavor, which has no PocketSAMP module at all.
-        ServerApp.launch(context, appLanguage.value, viewModel.n_app_theme.value)
+        // semi-violet ramp as this interface. The mapping onto PocketSAMP's own enums
+        // lives in the flavor hook, because this source set is shared with the Nougat
+        // flavor, which has no PocketSAMP module at all.
+        PocketSampGateway.launch(context, appLanguage.value, viewModel.n_app_theme.value)
     }
     var showCompilingNotice by remember { mutableStateOf(false) }
 

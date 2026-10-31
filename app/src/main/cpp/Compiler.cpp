@@ -23,8 +23,10 @@
 # include <string>
 # include <vector>
 # include <cstdlib>
+# include <cstring>
 # include <libgen.h>
 # include <pthread.h>
+# include <dlfcn.h>
 
 # include "Compiler.h"
 # include "Bridge.h"
@@ -34,6 +36,79 @@ extern "C" {
 }
 
 namespace {
+
+    /** Session state of the library loader; one bridge per process. */
+    MC_BridgeState n_state = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+
+    /**
+     * Finds the engine symbols inside an already `dlopen`ed version library.
+     *
+     * A version library is a plain shared object, not a JNI library: it exports
+     * `mc_compile_entry` / `mc_output_entry` / `mc_errors_entry` and nothing else. The
+     * bridge calls through those pointers so `pc_compile` resolves inside the version
+     * that was selected, instead of the copy linked into the bridge itself.
+     */
+    bool n_bind_version_handle(void* n_handle) {
+        n_state.pc_compile = reinterpret_cast<int (*)(int, char**)>(dlsym(n_handle, MC_SYM_COMPILE));
+        n_state.get_output = reinterpret_cast<char* (*)(void)>(dlsym(n_handle, MC_SYM_OUTPUT));
+        n_state.get_errors = reinterpret_cast<char* (*)(void)>(dlsym(n_handle, MC_SYM_ERRORS));
+        if (n_state.pc_compile == nullptr || n_state.get_output == nullptr || n_state.get_errors == nullptr) {
+            LOGE("Version library is missing its engine entry points: %s", dlerror());
+            n_state.pc_compile = nullptr;
+            n_state.get_output = nullptr;
+            n_state.get_errors = nullptr;
+            return false;
+        }
+        LOGI("Engine symbols bound from the selected version library");
+        return true;
+    }
+
+    /**
+     * `dlopen`s `lib<version>.so`, preferring the extracted ABI folder.
+     *
+     * The folder holds one file per compiler version, so both versions can be present
+     * at the same time and switching only re-points this handle. `nativeLibraryDir`
+     * stays as the fallback for an install that has not extracted its archive yet.
+     */
+    bool n_load_version(const char* n_version) {
+        char n_file_name[64];
+        snprintf(n_file_name, sizeof(n_file_name), "lib%s.so", n_version);
+
+        void* n_handle = nullptr;
+        if (n_state.library_dir != nullptr && n_state.library_dir[0] != '\0') {
+            char n_path[512];
+            snprintf(n_path, sizeof(n_path), "%s/%s", n_state.library_dir, n_file_name);
+            n_handle = dlopen(n_path, RTLD_NOW | RTLD_LOCAL);
+            if (n_handle == nullptr) {
+                LOGE("Could not load %s: %s", n_path, dlerror());
+            }
+        }
+
+        if (n_handle == nullptr) {
+            // RTLD_NOW so a broken engine fails here, with a message the log keeps,
+            // instead of aborting the first compile even though the version "loaded".
+            n_handle = dlopen(n_file_name, RTLD_NOW | RTLD_LOCAL);
+            if (n_handle == nullptr) {
+                LOGE("Could not load %s from the app library directory: %s", n_file_name, dlerror());
+                return false;
+            }
+        }
+
+        if (!n_bind_version_handle(n_handle)) {
+            dlclose(n_handle);
+            return false;
+        }
+
+        // The previous version stays mapped: a compile may still be walking its buffer
+        // when the user switches, and `dlclose` on a live handle would unmap it.
+        n_state.handle = n_handle;
+        if (n_state.version != nullptr) {
+            free(n_state.version);
+        }
+        n_state.version = strdup(n_version);
+        LOGI("Engine ready: %s (%s)", n_version, n_state.library_dir != nullptr ? n_state.library_dir : "nativeLibraryDir");
+        return true;
+    }
 
     /**
      * Resolves the app's cache directory through the JVM.
@@ -185,6 +260,12 @@ namespace {
     }
 }
 
+// `Diagnostics.cpp` binds to `libm.so`'s own compiler, which is what the engine hook
+// in `Bridge.h` is for; this file defines it there and `Engine.cpp` in a version library.
+int MC_run_compile_entry(int argc, char** argv) {
+    return pc_compile(argc, argv);
+}
+
 jstring MC_runner_compile(JNIEnv* env, jobject thiz, jobjectArray args) {
     (void)thiz;
 
@@ -253,7 +334,12 @@ jstring MC_runner_compile(JNIEnv* env, jobject thiz, jobjectArray args) {
         LOGD("Arg[%zu]: %s", i, n_argv[i]);
     }
 
-    LOGI("Calling pc_compile with %zu arguments", n_argv.size());
+    if (n_state.pc_compile == nullptr) {
+        return env->NewStringUTF("Exit code: -1\nNo compiler version is loaded");
+    }
+
+    LOGI("Calling pc_compile with %zu arguments (engine: %s)", n_argv.size(),
+         n_state.version != nullptr ? n_state.version : "?");
     int n_result = MC_compile_on_worker_thread(static_cast<int>(n_argv.size()), n_argv.data());
     LOGI("pc_compile returned: %d", n_result);
 
@@ -275,26 +361,81 @@ extern "C" {
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
     (void)vm;
     (void)reserved;
-    LOGI("Compiler native library loaded");
+    LOGI("Compiler bridge loaded");
     return JNI_VERSION_1_6;
 }
 
-// The exported names still follow the Java owner class
-// (`com.rvdjv.pawnmc.data.compiler.Runner`), which is what the JVM resolves against; the
-// internal `MC_*` names above are only the file-to-file contract.
+// The exported names follow the Java owner class
+// (`com.rvdjv.pawnmc.data.compiler.NativeBridge`), which is what the JVM resolves
+// against; the internal `MC_*` names above are only the file-to-file contract.
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_data_compiler_Runner_compile(JNIEnv* env, jobject thiz, jobjectArray args) {
+Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_compile(
+        JNIEnv* env, jobject thiz, jobjectArray args) {
     return MC_runner_compile(env, thiz, args);
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_data_compiler_Runner_getOutput(JNIEnv* env, jobject thiz) {
+Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_getOutput(JNIEnv* env, jobject thiz) {
     return MC_runner_get_output(env, thiz);
 }
 
 JNIEXPORT jstring JNICALL
-Java_com_rvdjv_pawnmc_data_compiler_Runner_getErrors(JNIEnv* env, jobject thiz) {
+Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_getErrors(JNIEnv* env, jobject thiz) {
     return MC_runner_get_errors(env, thiz);
+}
+
+/**
+ * Sets `Documents/PawnMC/library/<abi>`, the folder the extracted archive fills.
+ *
+ * Called on every compile start, so the path is always the one the app currently
+ * considers its storage root; an empty string means "use nativeLibraryDir only".
+ */
+JNIEXPORT void JNICALL
+Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_setLibraryDirectory(
+        JNIEnv* env, jobject thiz, jstring path) {
+    (void)thiz;
+    if (path == nullptr) return;
+
+    const char* n_chars = env->GetStringUTFChars(path, nullptr);
+    if (n_chars == nullptr) return;
+
+    // strdup before releasing: n_chars points into the JVM's string, not into memory
+    // this function owns.
+    char* n_copy = strdup(n_chars);
+    env->ReleaseStringUTFChars(path, n_chars);
+    if (n_copy == nullptr) return;
+
+    const bool n_changed = n_state.library_dir != nullptr && strcmp(n_state.library_dir, n_copy) != 0;
+    if (n_state.library_dir != nullptr) {
+        free(n_state.library_dir);
+    }
+    n_state.library_dir = n_copy;
+
+    if (n_changed) {
+        // The ABI folder changed (storage root moved); the engine loaded from the old
+        // folder is not the one this path names, so it is re-resolved on the next
+        // `selectVersion`.
+        n_state.pc_compile = nullptr;
+        n_state.get_output = nullptr;
+        n_state.get_errors = nullptr;
+    }
+
+    LOGI("Library directory: %s", n_state.library_dir);
+}
+
+/** `dlopen`s `lib<version>.so` from the library directory; false when it is unusable. */
+JNIEXPORT jboolean JNICALL
+Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_selectVersion(
+        JNIEnv* env, jobject thiz, jstring version) {
+    (void)thiz;
+    if (version == nullptr) return JNI_FALSE;
+
+    const char* n_version = env->GetStringUTFChars(version, nullptr);
+    if (n_version == nullptr) return JNI_FALSE;
+
+    const bool n_ok = n_load_version(n_version);
+    env->ReleaseStringUTFChars(version, n_version);
+    return n_ok ? JNI_TRUE : JNI_FALSE;
 }
 
 } // extern "C"

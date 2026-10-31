@@ -27,6 +27,8 @@ import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.AppStorage
+import com.rvdjv.pawnmc.data.library.LibraryStore
+import com.rvdjv.pawnmc.data.runtime.PocketSampGateway
 import com.rvdjv.pawnmc.data.syntax.InternDat
 import com.rvdjv.pawnmc.data.update.UpdateManager
 import com.rvdjv.pawnmc.`interface`.editor.workspace.buildFolderPickerIntent
@@ -86,6 +88,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         initialUri = intent.data
 
+    // The compiler libraries now ship as one archive per ABI inside the APK and live
+    // in Documents/PawnMC/library/<abi>/ afterwards. Point the compiler at that folder
+    // first, so nothing below has to know about the layout. Host context only:
+    // listing a directory here would be IO on the first frame.
+    Compiler.attachHost(applicationContext)
+
         // The first frame only needs the theme, which comes from SharedPreferences. Every
         // other startup task reads and parses a multi-hundred-kilobyte asset or walks the
         // file system, so it is handed to the IO dispatcher and the UI is drawn immediately
@@ -110,6 +118,10 @@ class MainActivity : ComponentActivity() {
             // Android/data tree over once so an upgrade never strands the user's
             // scripts, logs or settings in the location an uninstall wipes.
             AppStorage.migrateLegacyDataRoot(applicationContext)
+            // Unpack `lib/<abi>/<abi>.zip` into `library/<abi>/`. Idempotent: a folder
+            // that already holds every library is left untouched, so this only costs a
+            // directory listing after the first launch.
+            LibraryStore.ensureExtracted(applicationContext)
             UpdateManager(applicationContext).ensureVersionFileWritten()
         }
 
@@ -118,9 +130,10 @@ class MainActivity : ComponentActivity() {
         // PocketSAMP is embedded in this process on the modern flavor; its global crash
         // handler is installed before the runtime UI can be opened, and its console is
         // mirrored into this app's own log store. Idempotent, so calling it on every
-        // launch is safe. The Nougat flavor supplies a no-op stub of the same object,
-        // so this source set never references the runtime module directly.
-        com.pocketsamp.server.ServerApp.install(applicationContext) { line ->
+        // launch is safe. The gateway resolves the flavor implementation, so this source
+        // set never references the runtime module directly (and no-ops on the Nougat
+        // flavor, which has no runtime).
+        PocketSampGateway.prepare(applicationContext) { line ->
             com.rvdjv.pawnmc.data.log._pocket_store.record(applicationContext, line)
         }
         // The ongoing session notification is a nicety, not a requirement, so the prompt

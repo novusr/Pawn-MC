@@ -132,12 +132,9 @@ set(PAWNC_31011_SOURCES
     ${PAWNC_31011_SOURCE_DIR}/linux/binreloc.c
 )
 
-# pawnc 3107
+# PawnMC bridge sources, split by responsibility:
 #
-# The Pawn compiler itself comes from the `pawnc-3.10.7` submodule; everything under
-# `CMAKE_CURRENT_SOURCE_DIR` is the PawnMC bridge, split by responsibility:
-#
-#   Compiler.cpp     JNI entry points, argument marshalling, cache-directory lookup
+#   Compiler.cpp     JNI entry points, version loading, argument marshalling
 #   Diagnostics.cpp  source-argument classification, compile worker thread
 #   Buffer.cpp       pc_printf / pc_error capture, warning and error counters
 #   Source.cpp       pc_opensrc family backed by an in-memory script cache
@@ -151,9 +148,59 @@ set(MC_BRIDGE_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Files.cpp
 )
 
-add_library(pawnc3107 SHARED
+# PawnMC engine: the code a version library needs to run a compile on its own.
+# It carries no JNI surface, because the JNI surface lives once in the bridge.
+set(MC_ENGINE_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/Diagnostics.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Files.cpp
+)
+
+# ---------------------------------------------------------------------------------
+# Shared library: the JNI bridge.
+#
+# This is the *only* library the APK ships as `lib/<abi>/libm.so`. Android refuses
+# `dlopen` of a file it did not install from the APK, so the bridge has to stay
+# here; the compiler versions do not, and the app extracts them into
+# `Documents/PawnMC/library/<abi>/` instead.
+#
+# The version libraries deliberately do NOT link this one: `pc_compile` and its
+# globals have to be duplicated per version, which is the whole point of having two
+# `libpawnc*.so` files. The bridge links one copy only so the shared callbacks
+# (`MC_buffer_*`, `MC_source_*`, `MC_files_*`) exist inside `libm.so`; it also links
+# `Compiler.cpp`'s `pc_compile`, but nothing calls that copy — compilation is
+# dispatched through `mc_compile_entry` in the selected version library.
+# ---------------------------------------------------------------------------------
+add_library(m SHARED
     ${PAWNC_3107_SOURCES}
     ${MC_BRIDGE_SOURCES}
+)
+
+target_include_directories(m PRIVATE
+    ${PAWN_VERSION_HEADER_3107}
+    ${PAWNC_3107_SOURCE_DIR}/compiler
+    ${PAWNC_3107_SOURCE_DIR}/linux
+    ${PAWNC_3107_SOURCE_DIR}/amx
+)
+
+target_compile_definitions(m PRIVATE ${COMMON_DEFINITIONS})
+
+target_compile_options(m PRIVATE
+    $<$<COMPILE_LANGUAGE:C>:${COMMON_C_FLAGS}>
+    $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -fPIC>
+)
+
+target_link_libraries(m android log dl)
+
+# pawnc 3107
+#
+# A version library: dependent on the bridge (it calls back into the JNI-captured
+# buffer) and exporting only the engine entry points from Engine.cpp.
+add_library(pawnc3107 SHARED
+    ${PAWNC_3107_SOURCES}
+    ${MC_ENGINE_SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Engine.cpp
 )
 
 target_include_directories(pawnc3107 PRIVATE
@@ -170,12 +217,22 @@ target_compile_options(pawnc3107 PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -fPIC>
 )
 
+# Only the three engine entry points are exported (they carry an explicit visibility
+# attribute in Engine.cpp); everything else stays internal, so two versions can never
+# bind to each other's compiler internals.
+set_target_properties(pawnc3107 PROPERTIES
+    C_VISIBILITY_PRESET hidden
+    CXX_VISIBILITY_PRESET hidden
+    LINK_FLAGS "-Wl,--exclude-libs,ALL"
+)
+
 target_link_libraries(pawnc3107 android log)
 
 # pawnc 31011
 add_library(pawnc31011 SHARED
     ${PAWNC_31011_SOURCES}
-    ${MC_BRIDGE_SOURCES}
+    ${MC_ENGINE_SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Engine.cpp
 )
 
 target_include_directories(pawnc31011 PRIVATE
@@ -193,6 +250,12 @@ target_compile_definitions(pawnc31011 PRIVATE
 target_compile_options(pawnc31011 PRIVATE
     $<$<COMPILE_LANGUAGE:C>:${COMMON_C_FLAGS}>
     $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -fPIC>
+)
+
+set_target_properties(pawnc31011 PROPERTIES
+    C_VISIBILITY_PRESET hidden
+    CXX_VISIBILITY_PRESET hidden
+    LINK_FLAGS "-Wl,--exclude-libs,ALL"
 )
 
 target_link_libraries(pawnc31011 android log)

@@ -5,18 +5,51 @@ import com.rvdjv.pawnmc.data.compiler.Names.AUTO_FALLBACK_ERROR_THRESHOLD
 import com.rvdjv.pawnmc.data.compiler.Names.SSCANF_NO_NICE_FEATURES_FLAG
 import com.rvdjv.pawnmc.data.compiler.Names.STR_PAWNCC_BINARY_NAME
 import com.rvdjv.pawnmc.data.config.CompilerConfig
+import com.rvdjv.pawnmc.data.library.LibraryStore
 import com.rvdjv.pawnmc.data.log._compiler_store
 import java.io.File
 
 /**
  * Execution layer: loads the native library, builds the argument list, runs the
  * compiler and keeps the one-shot fallback to the other compiler version.
+ *
+ * The libraries themselves live in `Documents/PawnMC/library/<abi>/` (see
+ * [com.rvdjv.pawnmc.data.library.LibraryStore]); this object only resolves which
+ * ABI folder the compile has to read from and routes the request through
+ * [NativeBridge], which keeps one JNI surface and swaps the version underneath.
  */
 object Runner {
 
     private var INITIALIZED_VER: CompilerConfig.CompilerVersion? = null
     private var IS_INITIALIZED = false
     private var FALL_MUTATION = false
+
+    /** Host context used to find `Documents/PawnMC/library/<abi>`; null disables it. */
+    @Volatile
+    private var HOST: android.content.Context? = null
+
+    /**
+     * Hands the compiler layer its storage root. Called from the app entry point once
+     * `Documents/PawnMC` exists, and safe to call again after a folder change.
+     */
+    fun attachHost(context: android.content.Context?) {
+        HOST = context?.applicationContext
+    }
+
+    /** `library/<abi>` the compile is reading from, for the UI and the log. */
+    fun libraryDirectory(): File? = HOST?.let { NativeBridge.libraryDirectory(it) }
+
+    /**
+     * Re-unpacks `library/<abi>/<abi>.zip` when a library is missing.
+     *
+     * `LibraryStore` skips the archive when every file is already present, so calling
+     * this on the compile path costs one directory listing — and it is what makes a
+     * deleted `libpawnc*.so` come back without the user reinstalling the app.
+     */
+    private fun extractLibraries(): Boolean {
+        val n_host = HOST ?: return false
+        return LibraryStore.ensureExtracted(n_host, LibraryStore.deviceAbi())
+    }
 
     /** Consecutive failed compiles of this session; a success resets it. */
     @Volatile
@@ -73,36 +106,54 @@ object Runner {
         }
     }
 
-    /** Loads the selected native compiler library once per session. */
+    /**
+     * Makes [version] the active compiler.
+     *
+     * The bridge loads once; switching versions only re-points it at another
+     * `lib<version>.so` from `library/<abi>/`, so a swap no longer needs a restart.
+     * When the extracted folder does not provide the version (the user deleted it, or
+     * the archive was never unpacked) the call reports failure and the compile
+     * returns an explicit error instead of an `UnsatisfiedLinkError`.
+     */
     private fun ensureInitialized(version: CompilerConfig.CompilerVersion): Boolean {
-        if (IS_INITIALIZED) {
-            if (INITIALIZED_VER != version) {
-                Log.w("Compiler",
-                    "Requested ${version.label} but ${INITIALIZED_VER?.label} is already loaded. " +
-                    "App restart required for a full version swap.")
-            }
+        val n_host = HOST
+        if (n_host == null) {
+            Log.e("Compiler", "No host context; cannot locate ${version.libraryName}")
+            return false
+        }
+
+        if (IS_INITIALIZED && INITIALIZED_VER == version && NativeBridge.isActive(n_host, version.libraryName)) {
             return true
         }
 
-        return try {
-            System.loadLibrary(version.libraryName)
-            INITIALIZED_VER = version
-            IS_INITIALIZED = true
-            Log.i("Compiler", "Loaded: ${version.libraryName}")
-            true
-        } catch (e: UnsatisfiedLinkError) {
-            Log.e("Compiler", "Failed to load: ${version.libraryName}", e)
-            false
+        val n_ready = NativeBridge.prepare(n_host, version.libraryName)
+        if (!n_ready) {
+            Log.e(
+                "Compiler",
+                "${version.libraryName} is not available in " +
+                    "${NativeBridge.searchDirectories(n_host).joinToString()}"
+            )
+            return false
         }
+
+        INITIALIZED_VER = version
+        IS_INITIALIZED = true
+        Log.i("Compiler", "Loaded: ${version.libraryName} from ${libraryDirectory()?.absolutePath}")
+        return true
     }
 
     /** Loaded native compiler version, or null before the first compile. */
     fun getLoadedVersion(): CompilerConfig.CompilerVersion? = INITIALIZED_VER
 
-    /** True when switching to [requestedVersion] needs an app restart. */
-    fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean {
-        return IS_INITIALIZED && INITIALIZED_VER != requestedVersion
-    }
+    /**
+     * True when switching to [requestedVersion] cannot be honoured in this process.
+     *
+     * A swap no longer needs a restart: every version is its own `lib<version>.so` in
+     * `library/<abi>/` and the bridge only re-points at it. This stays only for the case
+     * where there is no host context at all and therefore no folder to load from.
+     */
+    fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean =
+        HOST == null && IS_INITIALIZED && INITIALIZED_VER != requestedVersion
 
     /** True when the error count in [output] reaches the fallback [threshold]. */
     internal fun shouldRetryWithFallback(output: String, threshold: Int = AUTO_FALLBACK_ERROR_THRESHOLD): Boolean {
@@ -218,8 +269,17 @@ object Runner {
         version: CompilerConfig.CompilerVersion,
         manualArguments: Boolean = false
     ): Pair<Int, String> {
+        // The archive is unpacked at startup, but a user who deleted something under
+        // `library/<abi>/` gets one repair attempt before the compile reports failure.
+        // `LibraryStore` re-unpacks only when a library is actually missing.
+        if (!ensureInitialized(version) && extractLibraries()) {
+            ensureInitialized(version)
+        }
         if (!ensureInitialized(version)) {
-            return -1 to "Failed to load compiler library"
+            return -1 to "Failed to load compiler library ${version.libraryName}" +
+                ". Expected lib${version.libraryName}.so in " +
+                (libraryDirectory()?.absolutePath ?: "the app library folder") +
+                ". Restart PawnMC to unpack it again."
         }
 
         Log.d("Compiler", "Compiling with: ${INITIALIZED_VER?.label}")
@@ -285,7 +345,7 @@ object Runner {
     /** Last captured compiler errors, or empty when not initialized. */
     fun getCapturedErrors(): String = if (IS_INITIALIZED) getErrors() else ""
 
-    private external fun compile(args: Array<String>): String
-    private external fun getOutput(): String
-    private external fun getErrors(): String
+    private fun compile(args: Array<String>): String = NativeBridge.compile(args)
+    private fun getOutput(): String = NativeBridge.getOutput()
+    private fun getErrors(): String = NativeBridge.getErrors()
 }

@@ -121,7 +121,7 @@ jobs:
           # Avoid GLib's stale WrapDB zlib 1.2.11 hash: build a pinned current
           # zlib release for Android and have Meson use this target dependency.
           ZLIB_VERSION=1.3.1
-          curl -fsSL "https://zlib.net/fossils/zlib-${ZLIB_VERSION}.tar.gz" -o zlib.tgz
+          curl -fsSL "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz" -o zlib.tgz
           tar xzf zlib.tgz
           cd "zlib-${ZLIB_VERSION}"
           CC="$CC" ./configure --static --prefix=/opt/glib-android
@@ -241,6 +241,95 @@ jobs:
             fi
           done
           ls -1 "$SHIM_DIR"
+
+          # Bionic compatibility layer, force-included into every QEMU TU (-include).
+          #
+          # QEMU targets glibc, and these are the glibc-only things libqemu's
+          # linux-user code uses that Bionic does not provide:
+          #
+          #   ulong                       Glibc defines it in <sys/types.h>; Bionic does
+          #                               not, which breaks linux-user/mmap.c (and would
+          #                               break any other TU that reaches it first).
+          #   sigorset/sigandset/         Glibc <signal.h> helpers ("_GNU_SOURCE"); the
+          #   sigisemptyset               linux-user signal code calls sigorset.
+          #
+          # Both are re-implemented here over plain byte-wise set operations (a sigset_t
+          # is a bitmask and Bionic has no public equivalent) instead of patching QEMU's
+          # source. The header is force-included rather than edited into the tree: one
+          # file to maintain, and every target sees the same definitions.
+          cat > android-compat.h <<'EOF'
+          #ifndef QEMU_ANDROID_COMPAT_H
+          #define QEMU_ANDROID_COMPAT_H
+          /* .S files share these -include flags; keep the C-only content out of them. */
+          #ifndef __ASSEMBLER__
+
+          /* No Bionic header defines these two, and QEMU's osdep.h does not either. */
+          #include <sys/types.h>
+          #include <stdint.h>
+          #include <signal.h>
+          #include <string.h>
+
+          typedef unsigned char  u_char;
+          typedef unsigned short u_short;
+          typedef unsigned int   u_int;
+          typedef unsigned long  u_long;
+          typedef unsigned long  ulong;
+          typedef unsigned int   uint;
+          typedef unsigned short ushort;
+
+          typedef unsigned char u8;
+          typedef unsigned short u16;
+          typedef unsigned int u32;
+          typedef unsigned long long u64;
+
+          static inline int android_compat_sigorset(sigset_t *dest, const sigset_t *left, const sigset_t *right)
+          {
+              unsigned char *d = (unsigned char *)dest;
+              const unsigned char *l = (const unsigned char *)left;
+              const unsigned char *r = (const unsigned char *)right;
+              for (size_t i = 0; i < sizeof(sigset_t); ++i) {
+                  d[i] = (unsigned char)(l[i] | r[i]);
+              }
+              return 0;
+          }
+
+          static inline int android_compat_sigandset(sigset_t *dest, const sigset_t *left, const sigset_t *right)
+          {
+              unsigned char *d = (unsigned char *)dest;
+              const unsigned char *l = (const unsigned char *)left;
+              const unsigned char *r = (const unsigned char *)right;
+              for (size_t i = 0; i < sizeof(sigset_t); ++i) {
+                  d[i] = (unsigned char)(l[i] & r[i]);
+              }
+              return 0;
+          }
+
+          static inline int android_compat_sigisemptyset(const sigset_t *set)
+          {
+              const unsigned char *s = (const unsigned char *)set;
+              for (size_t i = 0; i < sizeof(sigset_t); ++i) {
+                  if (s[i] != 0) {
+                      return 0;
+                  }
+              }
+              return 1;
+          }
+
+          #define sigorset android_compat_sigorset
+          #define sigandset android_compat_sigandset
+          #define sigisemptyset android_compat_sigisemptyset
+
+          #endif /* __ASSEMBLER__ */
+          #endif /* QEMU_ANDROID_COMPAT_H */
+          EOF
+          QEMU_ANDROID_EXTRA_CFLAGS="-include $PWD/android-compat.h"
+          # Linux-user resolves a few glibc symbols lazily; allow them to stay undefined
+          # in the static link instead of failing at build time.
+          QEMU_ANDROID_EXTRA_LDFLAGS="-Wl,--allow-shlib-undefined"
+          export QEMU_ANDROID_EXTRA_CFLAGS QEMU_ANDROID_EXTRA_LDFLAGS
+          echo 'android-compat header:'
+          head -5 android-compat.h
+
           # Meson resolves pkg-config per machine; pin the build machine to the host
           # binary so it is never prefixed with the cross tool name.
           export PKG_CONFIG="$(command -v pkg-config)"
@@ -250,8 +339,79 @@ jobs:
           # the only compiler that may be used for the target.
           export TARGET_CC="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang"
           export TARGET_CXX="$TOOLCHAIN/bin/aarch64-linux-android${API_LEVEL}-clang++"
+                    mkdir -p compat-include
+          cat > compat-include/mqueue.h <<'EOF'
+          #ifndef ANDROID_COMPAT_MQUEUE_H
+          #define ANDROID_COMPAT_MQUEUE_H
+          
+          /* Bionic ships neither <mqueue.h> nor the mq_* libc calls, so route
+           * QEMU's four libc calls straight to the kernel syscalls. */
+          #include <fcntl.h>
+          #include <stdarg.h>
+          #include <stddef.h>
+          #include <sys/syscall.h>
+          #include <sys/types.h>
+          #include <unistd.h>
+          
+          typedef int mqd_t;
+          
+          struct mq_attr {
+              long mq_flags;
+              long mq_maxmsg;
+              long mq_msgsize;
+              long mq_curmsgs;
+          };
+          
+          static inline mqd_t android_compat_mq_open(const char *name, int oflag, ...)
+          {
+              mode_t mode = 0;
+              struct mq_attr *attr = NULL;
+              if (oflag & O_CREAT) {
+                  va_list ap;
+                  va_start(ap, oflag);
+                  mode = va_arg(ap, mode_t);
+                  attr = va_arg(ap, struct mq_attr *);
+                  va_end(ap);
+              }
+              return (mqd_t)syscall(__NR_mq_open, name, oflag, mode, attr);
+          }
+          
+          static inline int android_compat_mq_unlink(const char *name)
+          {
+              return (int)syscall(__NR_mq_unlink, name);
+          }
+          
+          static inline int android_compat_mq_getattr(mqd_t mqdes, struct mq_attr *attr)
+          {
+              return (int)syscall(__NR_mq_getsetattr, mqdes, NULL, attr);
+          }
+          
+          static inline int android_compat_mq_setattr(mqd_t mqdes, const struct mq_attr *new_attr,
+                                                      struct mq_attr *old_attr)
+          {
+              return (int)syscall(__NR_mq_getsetattr, mqdes, new_attr, old_attr);
+          }
+          
+          #define mq_open android_compat_mq_open
+          #define mq_unlink android_compat_mq_unlink
+          #define mq_getattr android_compat_mq_getattr
+          #define mq_setattr android_compat_mq_setattr
+          
+          #endif /* ANDROID_COMPAT_MQUEUE_H */
+          EOF
+          echo "QEMU_ANDROID_EXTRA_CFLAGS=-I$PWD/compat-include -include $PWD/android-compat.h" >> "$GITHUB_ENV"
           cd qemu
+          # QEMU 7.2 hand-defines these for glibc >= 2.36; the NDK sysroot's
+          # kernel UAPI headers already provide both (identical layout).
+          sed -i '/^struct file_clone_range {$/,/^};$/d' linux-user/syscall.c
+          sed -i '/^struct sched_attr {$/,/^};$/d' linux-user/syscall.c
           set +e
+          # NOTE: no --disable-system / --disable-docs / --disable-tools /
+          # --disable-guest-agent here. QEMU 7.2's configure forwards these straight to
+          # Meson (`meson_option_parse`), but 7.2's meson_options.txt has no such
+          # options, so Meson aborts configure with "ERROR: Unknown options". QEMU
+          # derives both from --target-list: `softmmu=no` because the list holds only
+          # `*-linux-user`, and docs/tools are covered by the `ninja` targets below.
           ./configure \
             --target-list=i386-linux-user \
             --cross-prefix="$CROSS_PREFIX" \
@@ -260,16 +420,19 @@ jobs:
             --cxx="$TARGET_CXX" \
             --host-cc=cc \
             --static \
-            --disable-system \
-            --disable-docs \
-            --disable-tools \
-            --disable-guest-agent \
-            --disable-werror
-          configure_status=$?
+            --disable-werror \
+            --extra-cflags="$QEMU_ANDROID_EXTRA_CFLAGS" \
+            --extra-ldflags="$QEMU_ANDROID_EXTRA_LDFLAGS" \
+            2>&1 | tee configure.log
+          configure_status=${PIPESTATUS[0]}
           if [ -f config-host.mak ]; then
             echo '::group::QEMU configure summary'
             grep -E '^(TARGETS|CONFIG_LINUX|CONFIG_TCG|CONFIG_USER|PKG_CONFIG|CC=|GLIB)' config-host.mak || true
             echo '::endgroup::'
+          fi
+          if [ "$configure_status" -eq 0 ] && [ ! -f GNUmakefile ]; then
+            echo '::error::configure reported success but produced no GNUmakefile.'
+            configure_status=1
           fi
           set -e
           if [ "$configure_status" -ne 0 ]; then
@@ -280,10 +443,8 @@ jobs:
             if [ -f build/meson-logs/meson-log.json ]; then
               cat build/meson-logs/meson-log.json
             fi
-            if [ -f config.log ]; then
-              echo '--- QEMU config.log (tail) ---'
-              tail -n 200 config.log
-            fi
+            echo '--- configure output (tail) ---'
+            tail -n 200 configure.log
             echo '::endgroup::'
             exit "$configure_status"
           fi
@@ -312,21 +473,23 @@ jobs:
             ls -la
             exit 1
           fi
+          # Only the linux-user emulator. The plain `all` target also builds doc/ and
+          # the tools, which the Android cross build has no use for (and, without the
+          # removed --disable-docs/--disable-tools flags, would fail on).
           set +e
-          make -j"$(nproc)"
-          build_status=$?
+          make -j"$(nproc)" qemu-i386 2>&1 | tee ../qemu-build.log
+          build_status=${PIPESTATUS[0]}
           set -e
           if [ "$build_status" -ne 0 ]; then
             echo '::group::QEMU build diagnostics'
-            if [ -f build/meson-logs/meson-log.txt ]; then
-              cat build/meson-logs/meson-log.txt
-            fi
-            if [ -f build/meson-logs/meson-log.json ]; then
-              cat build/meson-logs/meson-log.json
-            fi
+            tail -n 300 ../qemu-build.log || true
             echo '::endgroup::'
             exit "$build_status"
           fi
+          test -x build/qemu-i386 || {
+            echo "::error::qemu-i386 was not produced."
+            exit 1
+          }
       - name: Stage as an Android shared object
         run: |
           set -euo pipefail
@@ -458,7 +621,10 @@ jobs:
           # The default Waf target runs host tests and links a shared library,
           # which fails on Android's linker/version-script differences. Build only
           # the talloc library target, then stage its generated static archive.
-          ./buildtools/bin/waf build --targets=talloc
+          # Samba's waf hard-requires PYTHONHASHSEED=1 (buildtools/wafsamba/wscript).
+          # The ./configure and make wrappers set it; this step calls waf directly
+          # for --targets=talloc, so set it the same way here.
+          PYTHONHASHSEED=1 ./buildtools/bin/waf build --targets=talloc
           install -D -m 644 bin/default/libtalloc.a /opt/talloc-android/libtalloc.a
           install -D -m 644 talloc.h /opt/talloc-android/include/talloc.h
           install -D -m 644 bin/default/talloc.pc /opt/talloc-android/lib/pkgconfig/talloc.pc

@@ -58,6 +58,8 @@ bool MC_is_pawn_source_argument(const char* value) {
     return extension == ".pawn" || extension == ".pwn" || extension == ".p" || extension == ".inc";
 }
 
+int MC_run_compile_entry(int argc, char** argv);
+
 namespace {
 
     struct n_compile_args {
@@ -70,7 +72,10 @@ namespace {
         auto* n_args = static_cast<struct n_compile_args*>(arg);
 
         auto n_start_time = std::chrono::steady_clock::now();
-        n_args->n_result = pc_compile(n_args->n_argc, n_args->n_argv);
+        // Through the engine hook, not `pc_compile` directly: this file is linked into
+        // both `libpawnc*.so`, and the hook is what resolves to the copy inside whichever
+        // of the two the bridge `dlopen`ed.
+        n_args->n_result = MC_run_compile_entry(n_args->n_argc, n_args->n_argv);
 
         auto n_end_time = std::chrono::steady_clock::now();
         double n_elapsed_ms = std::chrono::duration<double, std::milli>(n_end_time - n_start_time).count();
@@ -88,12 +93,12 @@ int MC_compile_on_worker_thread(int argc, char** argv) {
 
     if (pthread_attr_init(&n_thread_attr) != 0) {
         LOGE("Failed to init thread attributes, falling back to direct call");
-        return pc_compile(argc, argv);
+        return MC_run_compile_entry(argc, argv);
     }
     if (pthread_attr_setstacksize(&n_thread_attr, MC_STACK) != 0) {
         LOGE("Failed to set stack size, falling back to direct call");
         pthread_attr_destroy(&n_thread_attr);
-        return pc_compile(argc, argv);
+        return MC_run_compile_entry(argc, argv);
     }
 
     LOGI("Creating compile thread with %zu byte stack", static_cast<size_t>(MC_STACK));
@@ -101,7 +106,7 @@ int MC_compile_on_worker_thread(int argc, char** argv) {
     if (pthread_create(&n_thread, &n_thread_attr, n_compiler_thread, &n_args) != 0) {
         LOGE("Failed to create compile thread, falling back to direct call");
         pthread_attr_destroy(&n_thread_attr);
-        return pc_compile(argc, argv);
+        return MC_run_compile_entry(argc, argv);
     }
 
     pthread_attr_destroy(&n_thread_attr);
