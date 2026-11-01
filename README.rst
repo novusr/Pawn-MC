@@ -24,13 +24,15 @@ without interrupting your creative flow.
 The underlying engine utilizes the native architecture of your Android device, removing
 the need to transfer files to a PC just to verify your code in most cases.
 
-Indonesian | Tutorial
+Indonesia | Tutorial
 ---------------------
 
-* https://www.youtube.com/watch?v=ym9E1QH1ABU
-* https://www.youtube.com/watch?v=sgG58JTytI4
-* https://www.youtube.com/watch?v=xSit9n80DoM
-* https://www.youtube.com/watch?v=B_TWmCZ8cvE
+`YouTube #1 <https://www.youtube.com/watch?v=ym9E1QH1ABU>`_  `YouTube #2 <https://www.youtube.com/watch?v=sgG58JTytI4>`_  `YouTube #3 <https://www.youtube.com/watch?v=xSit9n80DoM>`_  `YouTube #4 <https://www.youtube.com/watch?v=B_TWmCZ8cvE>`_
+
+Indonesia | Subtitles (EN) | Tutorial
+-------------------------------------
+
+`YouTube #1 <https://www.youtube.com/watch?v=ym9E1QH1ABU&hl=en&cc_lang_pref=en&cc_load_policy=1>`_  `YouTube #2 <https://www.youtube.com/watch?v=sgG58JTytI4&hl=en&cc_lang_pref=en&cc_load_policy=1>`_  `YouTube #3 <https://www.youtube.com/watch?v=xSit9n80DoM&hl=en&cc_lang_pref=en&cc_load_policy=1>`_  `YouTube #4 <https://www.youtube.com/watch?v=B_TWmCZ8cvE&hl=en&cc_lang_pref=en&cc_load_policy=1>`_
 
 Notes
 =====
