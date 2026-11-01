@@ -21,6 +21,9 @@ import java.io.File
 
 /** Hard cap on how many entries a workspace scan materialises. */
 private const val MAX_WORKSPACE_ENTRIES = 4000
+private class WorkspaceScanBudget(var remaining: Int = MAX_WORKSPACE_ENTRIES) {
+    var truncated: Boolean = false
+}
 
 /** Hard cap on how deep a workspace scan descends. */
 private const val MAX_WORKSPACE_DEPTH = 8
@@ -48,6 +51,18 @@ internal fun normalizeNewPawnFileName(requestedName: String): String? {
     }
 }
 
+internal fun normalizeNewFolderName(requestedName: String): String? {
+    val name = requestedName.trim()
+    return name.takeIf {
+        it.isNotBlank() &&
+            it != "." &&
+            it != ".." &&
+            !it.contains('/') &&
+            !it.contains('\\') &&
+            it.none { character -> character.isISOControl() }
+    }
+}
+
 /** A file or folder of an opened workspace, with its children already scanned. */
 data class WorkspaceNode(
     val file: File,
@@ -67,6 +82,8 @@ class Workspace(val root: File) {
 
     /** Scanned folder tree, folders first then files, both sorted case-insensitively. */
     var tree by mutableStateOf<List<WorkspaceNode>>(emptyList())
+        private set
+    var isScanTruncated by mutableStateOf(false)
         private set
 
     /** Folders whose children are hidden. */
@@ -92,8 +109,9 @@ class Workspace(val root: File) {
         collapsedPaths = if (isExpanded(node)) collapsedPaths + node.key else collapsedPaths - node.key
     }
 
-    fun applyTree(scanned: List<WorkspaceNode>) {
+    fun applyTree(scanned: List<WorkspaceNode>, truncated: Boolean = false) {
         tree = scanned
+        isScanTruncated = truncated
     }
 
     fun addDocument(document: OpenDocument) {
@@ -355,9 +373,12 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         scanning.add(workspace)
         viewModelScope.launch {
             try {
-                val scanned = withContext(Dispatchers.IO) { scanDirectory(workspace.root, 0) }
+                val budget = WorkspaceScanBudget()
+                val scanned = withContext(Dispatchers.IO) {
+                    scanDirectory(workspace.root, 0, budget)
+                }
                 if (workspace in workspaces) {
-                    workspace.applyTree(scanned)
+                    workspace.applyTree(scanned, budget.truncated)
                     updateFileObservers(workspace, scanned)
                 }
             } finally {
@@ -369,6 +390,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     private fun updateFileObservers(workspace: Workspace, tree: List<WorkspaceNode>) {
         val directories = mutableListOf(workspace.root)
         fun collect(nodes: List<WorkspaceNode>) {
+            if (directories.size >= MAX_WATCHED_DIRECTORIES) return
             nodes.forEach { node ->
                 if (node.isDirectory && directories.size < MAX_WATCHED_DIRECTORIES) {
                     directories += node.file
@@ -470,7 +492,10 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     }
 
     /** Creates a new Pawn source file in the active workspace and opens it. */
-    suspend fun createNewPawnFile(requestedName: String): File? {
+    suspend fun createNewPawnFile(
+        requestedName: String,
+        parentDirectory: File? = null
+    ): File? {
         val target = activeWorkspace ?: run {
             statusMessage = "Open a workspace before creating a file"
             return null
@@ -482,7 +507,12 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
             return null
         }
 
-        val file = File(target.root, fileName)
+        val directory = parentDirectory ?: target.root
+        if (!directory.isDirectory || !isWithinWorkspace(target.root, directory)) {
+            statusMessage = "Choose a folder inside ${target.name}"
+            return null
+        }
+        val file = File(directory, fileName)
         return try {
             val created = withContext(Dispatchers.IO) { file.createNewFile() }
             if (!created) {
@@ -498,6 +528,52 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
             statusMessage = "Could not create $fileName: ${e.localizedMessage}"
             null
         }
+    }
+
+    /** Creates a folder inside [parentDirectory] (or the workspace root). */
+    suspend fun createNewFolder(
+        requestedName: String,
+        parentDirectory: File? = null
+    ): File? {
+        val target = activeWorkspace ?: run {
+            statusMessage = "Open a workspace before creating a folder"
+            return null
+        }
+        val folderName = normalizeNewFolderName(requestedName)
+        if (folderName == null) {
+            statusMessage = "Enter a valid folder name"
+            return null
+        }
+        val directory = parentDirectory ?: target.root
+        if (!directory.isDirectory || !isWithinWorkspace(target.root, directory)) {
+            statusMessage = "Choose a folder inside ${target.name}"
+            return null
+        }
+
+        val folder = File(directory, folderName)
+        return try {
+            val created = withContext(Dispatchers.IO) { folder.mkdir() }
+            if (!created) {
+                statusMessage = if (folder.exists()) {
+                    "Folder already exists: $folderName"
+                } else {
+                    "Could not create $folderName"
+                }
+                return null
+            }
+            refreshTree(target)
+            statusMessage = "Created folder ${folder.name}"
+            folder
+        } catch (error: Exception) {
+            statusMessage = "Could not create folder $folderName: ${error.localizedMessage}"
+            null
+        }
+    }
+
+    private fun isWithinWorkspace(root: File, child: File): Boolean {
+        val rootPath = runCatching { root.canonicalPath }.getOrNull() ?: return false
+        val childPath = runCatching { child.canonicalPath }.getOrNull() ?: return false
+        return childPath == rootPath || childPath.startsWith(rootPath + File.separator)
     }
 
     /** Reads a registered document once and drops it again when the read fails. */
@@ -684,22 +760,31 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         statusMessage = null
     }
 
-    private fun scanDirectory(dir: File, depth: Int): List<WorkspaceNode> {
+    private fun scanDirectory(
+        dir: File,
+        depth: Int,
+        budget: WorkspaceScanBudget
+    ): List<WorkspaceNode> {
         if (depth > MAX_WORKSPACE_DEPTH) return emptyList()
         val entries = dir.listFiles() ?: return emptyList()
-        val budget = intArrayOf(MAX_WORKSPACE_ENTRIES)
-        return entries
+        val candidates = entries.asSequence()
             .filterNot { it.name.startsWith(".") }
+            .take(budget.remaining.coerceAtLeast(0) + 1)
             .sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() }))
-            .mapNotNull { entry ->
-                if (budget[0] <= 0) return@mapNotNull null
-                budget[0]--
-                if (entry.isDirectory) {
-                    WorkspaceNode(entry, true, scanDirectory(entry, depth + 1))
-                } else {
-                    if (!isProbablyText(entry)) null else WorkspaceNode(entry, false)
-                }
+            .toList()
+        if (candidates.size > budget.remaining) budget.truncated = true
+        return candidates.mapNotNull { entry ->
+            if (budget.remaining <= 0) {
+                budget.truncated = true
+                return@mapNotNull null
             }
+            budget.remaining--
+            if (entry.isDirectory) {
+                WorkspaceNode(entry, true, scanDirectory(entry, depth + 1, budget))
+            } else {
+                if (!isProbablyText(entry)) null else WorkspaceNode(entry, false)
+            }
+        }
     }
 }
 
@@ -725,9 +810,17 @@ private fun isProbablyText(file: File): Boolean {
         return false
     }
     return try {
-        val bytes = file.readBytes()
-        val limit = minOf(bytes.size, 512)
-        (0 until limit).none { bytes[it] == 0.toByte() }
+        file.inputStream().use { input ->
+            val buffer = ByteArray(512)
+            var read = 0
+            while (read < buffer.size) {
+                val count = input.read(buffer, read, buffer.size - read)
+                if (count < 0) break
+                if (count == 0) continue
+                read += count
+            }
+            (0 until read).none { buffer[it] == 0.toByte() }
+        }
     } catch (_: Exception) {
         false
     }

@@ -201,9 +201,29 @@ fun EditorScreen(
     var showExitDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     var showNewFileDialog by remember { mutableStateOf(false) }
-    var newFileName by remember { mutableStateOf("") }
+    var newFileName by remember { mutableStateOf("Server.pwn") }
+    var newFileParent by remember { mutableStateOf<File?>(null) }
+    var showNewFolderDialog by remember { mutableStateOf(false) }
+    var newFolderName by remember { mutableStateOf("gamemodes") }
     var showSearchBar by remember { mutableStateOf(false) }
     var showJumpDialog by remember { mutableStateOf(false) }
+
+    fun openNewFileDialog(directory: File) {
+        newFileParent = directory
+        newFileName = "Server.pwn"
+        showNewFileDialog = true
+    }
+
+    fun openNewFolderDialog(directory: File) {
+        newFileParent = directory
+        newFolderName = "gamemodes"
+        showNewFolderDialog = true
+    }
+
+    fun dismissAutoCompletion() {
+        hideAutoCompletion(editorRef)
+    }
+
     var showAboutDialog by remember { mutableStateOf(false) }
     var showHashDialog by remember { mutableStateOf(false) }
     var showHashAlgorithmMenu by remember { mutableStateOf(false) }
@@ -443,12 +463,16 @@ fun EditorScreen(
     if (showNewFileDialog) {
         AlertDialog(
             onDismissRequest = { showNewFileDialog = false },
-            title = { Text("New Pawn File") },
+            title = {
+                Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "File Kode Baru" else "New Code File")
+            },
             text = {
                 OutlinedTextField(
                     value = newFileName,
                     onValueChange = { newFileName = it },
-                    label = { Text("File name") },
+                    label = {
+                        Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Nama file" else "File name")
+                    },
                     placeholder = { Text("Server.pwn") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
@@ -459,7 +483,7 @@ fun EditorScreen(
                     enabled = newFileName.isNotBlank(),
                     onClick = {
                         scope.launch {
-                            if (workspace.createNewPawnFile(newFileName) != null) {
+                            if (workspace.createNewPawnFile(newFileName, newFileParent) != null) {
                                 showNewFileDialog = false
                             }
                         }
@@ -470,6 +494,44 @@ fun EditorScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showNewFileDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showNewFolderDialog) {
+        AlertDialog(
+            onDismissRequest = { showNewFolderDialog = false },
+            title = { Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Folder Baru" else "New Folder") },
+            text = {
+                OutlinedTextField(
+                    value = newFolderName,
+                    onValueChange = { newFolderName = it },
+                    label = {
+                        Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Nama folder" else "Folder name")
+                    },
+                    placeholder = { Text("gamemodes") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done)
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = newFolderName.isNotBlank(),
+                    onClick = {
+                        scope.launch {
+                            if (workspace.createNewFolder(newFolderName, newFileParent) != null) {
+                                showNewFolderDialog = false
+                            }
+                        }
+                    }
+                ) {
+                    Text("Create")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNewFolderDialog = false }) {
                     Text("Cancel")
                 }
             }
@@ -594,24 +656,68 @@ fun EditorScreen(
 
     if (showJumpDialog) {
         var lineInput by remember { mutableStateOf("") }
+        var columnInput by remember { mutableStateOf("") }
+        var showColumnInput by remember { mutableStateOf(false) }
         AlertDialog(
             onDismissRequest = { showJumpDialog = false },
-            title = { Text("Jump to Line") },
+            title = {
+                Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Lompat ke Posisi" else "Jump to Position")
+            },
             text = {
-                OutlinedTextField(
-                    value = lineInput,
-                    onValueChange = { lineInput = it.filter { ch -> ch.isDigit() } },
-                    label = { Text("Line number") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = lineInput,
+                        onValueChange = { lineInput = it.filter { ch -> ch.isDigit() } },
+                        label = {
+                            Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Nomor baris" else "Line number")
+                        },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true
+                    )
+                    TextButton(
+                        onClick = {
+                            if (showColumnInput) columnInput = ""
+                            showColumnInput = !showColumnInput
+                        }
+                    ) {
+                        Text(
+                            if (showColumnInput) {
+                                if (appLanguage == CompilerConfig.AppLanguage.ID) "Sembunyikan Kolom" else "Hide Column"
+                            } else {
+                                if (appLanguage == CompilerConfig.AppLanguage.ID) "Tampilkan Kolom" else "Show Column"
+                            }
+                        )
+                    }
+                    if (showColumnInput) {
+                        OutlinedTextField(
+                            value = columnInput,
+                            onValueChange = { columnInput = it.filter { ch -> ch.isDigit() } },
+                            label = {
+                                Text(
+                                    if (appLanguage == CompilerConfig.AppLanguage.ID) "Kolom (opsional)" else "Column (optional)"
+                                )
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true
+                        )
+                    }
+                }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         val targetLine = lineInput.toIntOrNull()
                         if (targetLine != null && targetLine > 0) {
-                            editorRef?.jumpToLine(targetLine.coerceAtLeast(1) - 1)
+                            editorRef?.let { editor ->
+                                val line = (targetLine - 1).coerceIn(0, editor.text.lineCount - 1)
+                                val lineLength = editor.text.getLine(line).length
+                                val column = resolveJumpColumn(
+                                    columnInput.takeIf { showColumnInput },
+                                    lineLength
+                                )
+                                editor.jumpToLine(line)
+                                editor.setSelection(line, column)
+                            }
                         }
                         showJumpDialog = false
                     }
@@ -804,6 +910,7 @@ fun EditorScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
+                            dismissAutoCompletion()
                             if (isCompiling) {
                                 Toast.makeText(
                                     context,
@@ -830,6 +937,7 @@ fun EditorScreen(
                 actions = {
                     IconButton(
                         onClick = {
+                            dismissAutoCompletion()
                             editorRef?.undo()
                             canUndo = editorRef?.canUndo() == true
                             canRedo = editorRef?.canRedo() == true
@@ -845,6 +953,7 @@ fun EditorScreen(
 
                     IconButton(
                         onClick = {
+                            dismissAutoCompletion()
                             editorRef?.redo()
                             canUndo = editorRef?.canUndo() == true
                             canRedo = editorRef?.canRedo() == true
@@ -862,7 +971,10 @@ fun EditorScreen(
                     // floating rectangle toolbar above the compile button, so the top
                     // bar only keeps history and the overflow menu.
                     Box {
-                        IconButton(onClick = { showMenu = true }) {
+                        IconButton(onClick = {
+                            dismissAutoCompletion()
+                            showMenu = true
+                        }) {
                             Icon(Icons.Filled.HourglassEmpty, contentDescription = "Editor options")
                         }
                         DropdownMenu(
@@ -875,6 +987,7 @@ fun EditorScreen(
                                     Icon(_Icons.Workspace, contentDescription = null)
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     folderPickerLauncher.launch(buildFolderPickerIntent())
                                 }
@@ -894,6 +1007,7 @@ fun EditorScreen(
                                         Icon(Icons.Filled.FolderOpen, contentDescription = null)
                                     },
                                     onClick = {
+                                        dismissAutoCompletion()
                                         showMenu = false
                                         val closing = workspace.activeWorkspace
                                         if (closing != null) {
@@ -908,6 +1022,7 @@ fun EditorScreen(
                                         Icon(Icons.Filled.Close, contentDescription = null)
                                     },
                                     onClick = {
+                                        dismissAutoCompletion()
                                         showMenu = false
                                         workspace.closeAllWorkspaces()
                                         isExplorerVisible = false
@@ -920,6 +1035,7 @@ fun EditorScreen(
                                     Icon(Icons.Filled.Search, contentDescription = null)
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     toolPanelMode = ToolPanelMode.SearchWorkspace
                                 }
@@ -930,6 +1046,7 @@ fun EditorScreen(
                                     Icon(Icons.Filled.FindReplace, contentDescription = null)
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     toolPanelMode = ToolPanelMode.ReplacePerFile
                                 }
@@ -940,6 +1057,7 @@ fun EditorScreen(
                                     Icon(Icons.Filled.FindReplace, contentDescription = null)
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     toolPanelMode = ToolPanelMode.ReplaceAllFiles
                                 }
@@ -950,6 +1068,7 @@ fun EditorScreen(
                                     Icon(Icons.Filled.PrecisionManufacturing, contentDescription = null)
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     hashResult = null
                                     hashError = null
@@ -967,6 +1086,7 @@ fun EditorScreen(
                                     )
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     isExplorerVisible = !isExplorerVisible
                                 }
@@ -977,6 +1097,7 @@ fun EditorScreen(
                                     Icon(Icons.Filled.SelectAll, contentDescription = null)
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     editorRef?.selectAll()
                                 }
@@ -987,6 +1108,7 @@ fun EditorScreen(
                                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     showJumpDialog = true
                                 }
@@ -997,6 +1119,7 @@ fun EditorScreen(
                                     Icon(Icons.AutoMirrored.Filled.WrapText, contentDescription = null)
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     isWordWrap = !isWordWrap
                                     editorRef?.isWordwrap = isWordWrap
@@ -1011,6 +1134,7 @@ fun EditorScreen(
                                     )
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     isReadOnly = !isReadOnly
                                     editorRef?.editable = !isReadOnly
@@ -1025,6 +1149,7 @@ fun EditorScreen(
                                     )
                                 },
                                 onClick = {
+                                    dismissAutoCompletion()
                                     showMenu = false
                                     isLineNumbers = !isLineNumbers
                                     editorRef?.isLineNumberEnabled = isLineNumbers
@@ -1170,14 +1295,29 @@ fun EditorScreen(
                 EditorTabStrip(
                     documents = workspace.documents,
                     activePath = workspace.activePath,
-                    onSelectTab = { file -> workspace.setActive(file) },
-                    onCloseTab = { file -> workspace.closeDocument(file) },
-                    onNewTabClick = { isExplorerVisible = !isExplorerVisible },
-                    onOpenFileClick = { folderPickerLauncher.launch(buildFolderPickerIntent()) },
-                    onOpenPawnFileClick = { pawnFilePickerLauncher.launch(buildFilePickerIntent()) },
+                    onSelectTab = { file ->
+                        dismissAutoCompletion()
+                        workspace.setActive(file)
+                    },
+                    onCloseTab = { file ->
+                        dismissAutoCompletion()
+                        workspace.closeDocument(file)
+                    },
+                    onNewTabClick = {
+                        dismissAutoCompletion()
+                        isExplorerVisible = !isExplorerVisible
+                    },
+                    onOpenFileClick = {
+                        dismissAutoCompletion()
+                        folderPickerLauncher.launch(buildFolderPickerIntent())
+                    },
+                    onOpenPawnFileClick = {
+                        dismissAutoCompletion()
+                        pawnFilePickerLauncher.launch(buildFilePickerIntent())
+                    },
                     onCreateFileClick = {
-                        newFileName = ""
-                        showNewFileDialog = true
+                        dismissAutoCompletion()
+                        openNewFileDialog(workspace.activeWorkspace?.root ?: context.filesDir)
                     }
                 )
 
@@ -1347,10 +1487,20 @@ fun EditorScreen(
                                 session = workspace,
                                 outputText = compileOutput,
                                 isCompiling = isCompiling,
-                                onOpenFile = openWorkspaceFile,
-                                onCloseFile = { file -> workspace.closeDocument(file) },
-                                onSelectFile = { file -> workspace.setActive(file) },
+                                onOpenFile = { file ->
+                                    dismissAutoCompletion()
+                                    openWorkspaceFile(file)
+                                },
+                                onCloseFile = { file ->
+                                    dismissAutoCompletion()
+                                    workspace.closeDocument(file)
+                                },
+                                onSelectFile = { file ->
+                                    dismissAutoCompletion()
+                                    workspace.setActive(file)
+                                },
                                 onOpenHit = { hit ->
+                                    dismissAutoCompletion()
                                     workspace.openFile(hit.file)
                                     // The buffer is filled asynchronously, so the jump has
                                     // to wait for the reload to land in the widget.
@@ -1359,7 +1509,19 @@ fun EditorScreen(
                                     }, 250)
                                 },
                                 onClosePanel = { isExplorerVisible = false },
-                                onOpenFolder = { folderPickerLauncher.launch(buildFolderPickerIntent()) },
+                                onOpenFolder = {
+                                    dismissAutoCompletion()
+                                    folderPickerLauncher.launch(buildFolderPickerIntent())
+                                },
+                                onCreateFileAt = { directory ->
+                                    dismissAutoCompletion()
+                                    openNewFileDialog(directory)
+                                },
+                                onCreateFolderAt = { directory ->
+                                    dismissAutoCompletion()
+                                    openNewFolderDialog(directory)
+                                },
+                                onBeforeAction = ::dismissAutoCompletion,
                                 onHeaderDrag = { delta ->
                                     explorerOffset = IntOffset(
                                         (clampedExplorerOffset.x + delta.x).coerceIn(0, maxOffsetX),
@@ -1382,6 +1544,7 @@ fun EditorScreen(
                         onFindChange = { toolFind = it },
                         onReplaceChange = { toolReplace = it },
                         onRun = {
+                            dismissAutoCompletion()
                             when (mode) {
                                 ToolPanelMode.SearchWorkspace -> runWorkspaceSearch()
                                 ToolPanelMode.ReplacePerFile -> runReplacePerFile(true)
@@ -1389,11 +1552,17 @@ fun EditorScreen(
                             }
                         },
                         onRunSecondary = if (mode == ToolPanelMode.ReplacePerFile) {
-                            { runReplacePerFile(false) }
+                            {
+                                dismissAutoCompletion()
+                                runReplacePerFile(false)
+                            }
                         } else {
                             null
                         },
-                        onClose = { toolPanelMode = null },
+                        onClose = {
+                            dismissAutoCompletion()
+                            toolPanelMode = null
+                        },
                         modifier = Modifier
                             .align(Alignment.TopEnd)
                             .padding(12.dp)
@@ -1408,6 +1577,7 @@ fun EditorScreen(
                     isActive = isPawnTerminalVisible,
                     reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP + PANEL_BUTTON_SIZE + FLOAT_GAP,
                     bubbleIndex = 0,
+                    editor = editorRef,
                     onClick = { isPawnTerminalVisible = !isPawnTerminalVisible }
                 )
 
@@ -1424,6 +1594,7 @@ fun EditorScreen(
                     isActive = isLandscapeForced,
                     alignRight = false,
                     bubbleIndex = 1,
+                    editor = editorRef,
                     onClick = {
                         val next = !isLandscapeForced
                         isLandscapeForced = next
@@ -1446,6 +1617,7 @@ fun EditorScreen(
                     isActive = isExplorerVisible,
                     reservedBelow = TOOLBAR_HEIGHT + FLOAT_GAP,
                     bubbleIndex = 2,
+                    editor = editorRef,
                     onClick = { isExplorerVisible = !isExplorerVisible }
                 )
 
@@ -1454,6 +1626,7 @@ fun EditorScreen(
                     hasUnsavedChanges = hasUnsavedChanges,
                     workspaceOpen = workspace.isWorkspaceOpen,
                     isSearchOpen = showSearchBar,
+                    onBeforeAction = ::dismissAutoCompletion,
                     onSearchClick = {
                         showSearchBar = !showSearchBar
                         if (!showSearchBar) editorRef?.searcher?.stopSearch()
@@ -1489,6 +1662,7 @@ fun EditorScreen(
                         viewModel.filePath.isNotBlank()
                     },
                     onClick = {
+                        dismissAutoCompletion()
                         val target = if (workspace.isWorkspaceOpen) {
                             activeDocument?.file?.path.orEmpty()
                         } else {
@@ -1576,6 +1750,7 @@ fun EditorScreen(
             if (isQuickSymbolBarVisible) {
                 QuickSymbolBar(
                     onSymbolClick = { symbol ->
+                        dismissAutoCompletion()
                         val editor = editorRef
                         if (editor != null) {
                             editor.text.insert(editor.cursor.leftLine, editor.cursor.leftColumn, symbol)
@@ -1848,6 +2023,7 @@ private fun FloatingRectToolbar(
     hasUnsavedChanges: Boolean,
     workspaceOpen: Boolean,
     isSearchOpen: Boolean,
+    onBeforeAction: () -> Unit,
     onSearchClick: () -> Unit,
     onOpenWorkspaceClick: () -> Unit,
     onSaveClick: () -> Unit,
@@ -1863,8 +2039,7 @@ private fun FloatingRectToolbar(
         val toolbarWidthPx = with(density) { TOOLBAR_WIDTH.toPx() }
         val toolbarHeightPx = with(density) { TOOLBAR_HEIGHT.toPx() }
 
-        var draggedOffset by remember { mutableStateOf<IntOffset?>(null) }
-        val offset = draggedOffset ?: restOffset
+        val draggedOffset = remember { mutableStateOf<IntOffset?>(null) }
 
         Surface(
             shape = RoundedCornerShape(14.dp),
@@ -1872,21 +2047,21 @@ private fun FloatingRectToolbar(
             border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
             shadowElevation = 6.dp,
             modifier = Modifier
-                .offset { offset }
+                .offset { draggedOffset.value ?: restOffset }
                 .width(TOOLBAR_WIDTH)
                 .height(TOOLBAR_HEIGHT)
-                .pointerInput(Unit) {
+                .pointerInput(maxWidthPx, maxHeightPx, toolbarWidthPx, toolbarHeightPx, restOffset) {
                     detectDragGestures(
                         onDragEnd = { },
                         onDragCancel = { },
                         onDrag = { change, dragAmount ->
                             change.consume()
-                            val current = draggedOffset ?: restOffset
+                            val current = draggedOffset.value ?: restOffset
                             val newX = (current.x + dragAmount.x)
                                 .coerceIn(0f, (maxWidthPx - toolbarWidthPx).coerceAtLeast(0f))
                             val newY = (current.y + dragAmount.y)
                                 .coerceIn(0f, (maxHeightPx - toolbarHeightPx).coerceAtLeast(0f))
-                            draggedOffset = IntOffset(newX.roundToInt(), newY.roundToInt())
+                            draggedOffset.value = IntOffset(newX.roundToInt(), newY.roundToInt())
                         }
                     )
                 }
@@ -1914,7 +2089,10 @@ private fun FloatingRectToolbar(
                     testTag = "editor_floating_search",
                     isActive = isSearchOpen,
                     tint = FLOAT_TINT_ACTION,
-                    onClick = onSearchClick
+                    onClick = {
+                        onBeforeAction()
+                        onSearchClick()
+                    }
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
@@ -1923,7 +2101,10 @@ private fun FloatingRectToolbar(
                     contentDescription = "Open workspace folder",
                     testTag = "editor_floating_open_workspace",
                     tint = FLOAT_TINT_ACTION,
-                    onClick = onOpenWorkspaceClick
+                    onClick = {
+                        onBeforeAction()
+                        onOpenWorkspaceClick()
+                    }
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
@@ -1935,7 +2116,10 @@ private fun FloatingRectToolbar(
                     testTag = "editor_floating_save",
                     isActive = hasUnsavedChanges,
                     tint = FLOAT_TINT_ACTION,
-                    onClick = onSaveClick
+                    onClick = {
+                        onBeforeAction()
+                        onSaveClick()
+                    }
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
@@ -1944,7 +2128,10 @@ private fun FloatingRectToolbar(
                     contentDescription = if (workspaceOpen) "Save All" else "Save As",
                     testTag = "editor_floating_save_all",
                     tint = FLOAT_TINT_ACTION,
-                    onClick = onSaveAllClick
+                    onClick = {
+                        onBeforeAction()
+                        onSaveAllClick()
+                    }
                 )
             }
         }
@@ -1998,6 +2185,7 @@ private fun FloatingRoundAction(
     bubbleIndex: Int = 0,
     /** Icon colour. Each action carries its own so the stack reads by function. */
     tint: Color = Color.Unspecified,
+    editor: CodeEditor?,
     onClick: () -> Unit
 ) {
     val density = LocalDensity.current
@@ -2020,8 +2208,7 @@ private fun FloatingRoundAction(
         )
         val sizePx = with(density) { size.toPx() }
 
-        var draggedOffset by remember { mutableStateOf<IntOffset?>(null) }
-        val offset = draggedOffset ?: restOffset
+        val draggedOffset = remember { mutableStateOf<IntOffset?>(null) }
 
         // First-entrance bubble: each floating button rises into place one after
         // another, scaled like a bubble surfacing, instead of the whole stack
@@ -2040,7 +2227,10 @@ private fun FloatingRoundAction(
         }
 
         Surface(
-            onClick = onClick,
+            onClick = {
+                hideAutoCompletion(editor)
+                onClick()
+            },
             shape = RoundedCornerShape(14.dp),
             color = if (isActive) {
                 MaterialTheme.colorScheme.secondaryContainer
@@ -2053,26 +2243,27 @@ private fun FloatingRoundAction(
                 .alpha(bubbleProgress.value.coerceIn(0f, 1f))
                 .offset {
                     IntOffset(
-                        offset.x,
-                        offset.y + ((1f - bubbleProgress.value) * 40.dp.toPx()).roundToInt()
+                        draggedOffset.value?.x ?: restOffset.x,
+                        (draggedOffset.value?.y ?: restOffset.y) +
+                            ((1f - bubbleProgress.value) * 40.dp.toPx()).roundToInt()
                     )
                 }
                 .scale(
                     0.6f + 0.4f * bubbleProgress.value.coerceIn(0f, 1f)
                 )
                 .size(size)
-                .pointerInput(Unit) {
+                .pointerInput(maxWidthPx, maxHeightPx, sizePx, restOffset) {
                     detectDragGestures(
                         onDragEnd = { },
                         onDragCancel = { },
                         onDrag = { change, dragAmount ->
                             change.consume()
-                            val current = draggedOffset ?: restOffset
+                            val current = draggedOffset.value ?: restOffset
                             val newX = (current.x + dragAmount.x)
                                 .coerceIn(0f, (maxWidthPx - sizePx).coerceAtLeast(0f))
                             val newY = (current.y + dragAmount.y)
                                 .coerceIn(0f, (maxHeightPx - sizePx).coerceAtLeast(0f))
-                            draggedOffset = IntOffset(newX.roundToInt(), newY.roundToInt())
+                            draggedOffset.value = IntOffset(newX.roundToInt(), newY.roundToInt())
                         }
                     )
                 }
@@ -2347,6 +2538,13 @@ private fun insertIndentAtCursor(editor: CodeEditor?) {
 internal fun cursorPositionLabel(line: Int, column: Int): String =
     "${line + 1}${LINE_COLUMN_SEPARATOR}${column + 1}"
 
+internal fun resolveJumpColumn(input: String?, lineLength: Int): Int =
+    input
+        ?.toIntOrNull()
+        ?.takeIf { it > 0 && it - 1 <= lineLength }
+        ?.minus(1)
+        ?: 0
+
 /** Accepts the visible completion, or indents when no suggestion is open. */
 private fun applyTabAction(editor: CodeEditor?) {
     val target = editor ?: return
@@ -2356,7 +2554,12 @@ private fun applyTabAction(editor: CodeEditor?) {
         if (completion.select()) return
     }
 
+    completion.hide()
     insertIndentAtCursor(target)
+}
+
+private fun hideAutoCompletion(editor: CodeEditor?) {
+    editor?.getComponent(EditorAutoCompletion::class.java)?.hide()
 }
 
 /** One key in the quick symbol row. */
@@ -2516,7 +2719,7 @@ private fun FloatingCompileButton(
 
         // `null` means "not dragged yet", so the button starts in the bottom end
         // corner and follows the panel whenever it has not been moved.
-        var n_draggedOffset by remember { mutableStateOf<IntOffset?>(null) }
+        val n_draggedOffset = remember { mutableStateOf<IntOffset?>(null) }
         val n_restOffset = IntOffset(
             x = (n_maxWidth - n_diameterPx - with(n_density) { 16.dp.toPx() })
                 .coerceAtLeast(0f)
@@ -2525,8 +2728,6 @@ private fun FloatingCompileButton(
                 .coerceAtLeast(0f)
                 .roundToInt()
         )
-        val n_offset = n_draggedOffset ?: n_restOffset
-
         Surface(
             onClick = onClick,
             enabled = enabled,
@@ -2543,20 +2744,20 @@ private fun FloatingCompileButton(
             },
             shadowElevation = 6.dp,
             modifier = Modifier
-                .offset { n_offset }
+                .offset { n_draggedOffset.value ?: n_restOffset }
                 .size(n_diameter)
-                .pointerInput(enabled) {
+                .pointerInput(enabled, n_maxWidth, n_maxHeight, n_diameterPx, n_restOffset) {
                     detectDragGestures(
                         onDragEnd = { },
                         onDragCancel = { },
                         onDrag = { change, dragAmount ->
                             change.consume()
-                            val n_current = n_draggedOffset ?: n_restOffset
+                            val n_current = n_draggedOffset.value ?: n_restOffset
                             val n_newX = (n_current.x + dragAmount.x)
                                 .coerceIn(0f, (n_maxWidth - n_diameterPx).coerceAtLeast(0f))
                             val n_newY = (n_current.y + dragAmount.y)
                                 .coerceIn(0f, (n_maxHeight - n_diameterPx).coerceAtLeast(0f))
-                            n_draggedOffset = IntOffset(n_newX.roundToInt(), n_newY.roundToInt())
+                            n_draggedOffset.value = IntOffset(n_newX.roundToInt(), n_newY.roundToInt())
                         }
                     )
                 }

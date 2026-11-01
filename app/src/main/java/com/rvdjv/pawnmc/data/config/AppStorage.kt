@@ -30,6 +30,33 @@ internal object AppStorage {
         return runCatching { root.ensureDir() }.getOrNull()?.takeIf { it.isDirectory }
     }
 
+    /** Keeps one public marker with only the version currently installed. */
+    fun recordPublicVersion(context: Context, versionName: String): File? {
+        val root = documentsRoot(context) ?: return null
+        val version = versionName.trim()
+            .removeSuffix("-nougat")
+            .removeSuffix("-legacy")
+            .takeIf { it.isNotBlank() && it.all { character -> character.isLetterOrDigit() || character in "._-" } }
+            ?: return null
+        val marker = File(root, "_PAWN_MC_VERSION_")
+        val entry = "_PAWN_MC_v${version}_"
+        synchronized(this) {
+            val markerContents = "$entry\n"
+            if (!marker.isFile || marker.readText() != markerContents) {
+                marker.writeText(markerContents)
+            }
+            root.listFiles()
+                ?.filter { it.isFile && it.name.startsWith("_PAWN_MC") && it != marker }
+                ?.forEach { oldMarker ->
+                    check(oldMarker.delete()) {
+                        "Could not remove stale PawnMC version marker: ${oldMarker.name}"
+                    }
+                }
+                ?: error("Could not inspect Documents/PawnMC for stale version markers.")
+        }
+        return marker
+    }
+
     /** True when the app may write anywhere on shared storage right now. */
     private fun hasPublicWriteAccess(): Boolean =
         publicWriteAccessOverride?.invoke() ?: realPublicWriteAccess()

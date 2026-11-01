@@ -21,6 +21,7 @@ internal object PortalCommandParser {
     /** Commands with no arguments of their own; `which`/`switch`/`pawncc` are separate. */
     private val argumentlessCommands =
         commandNames.filterNot { it == "which" || it == "switch" || it == "pawncc" }
+    private val commandAliases = mapOf("celar" to "clear")
 
     /** Splits [command] on whitespace, honouring quotes; null on an unterminated quote. */
     fun tokenize(command: String): List<String>? {
@@ -85,8 +86,14 @@ internal object PortalCommandParser {
              * Prefix only, and never the input itself: typing `dev` offers
              * `deviceinfo`, typing nothing offers everything.
              */
-            return argumentlessCommands
+            val commandSuggestions = argumentlessCommands
                 .filter { it.startsWith(trimmed, ignoreCase = true) && it != trimmed }
+                .take(SUGGESTION_LIMIT)
+            if (commandSuggestions.isNotEmpty()) return commandSuggestions
+            return commandAliases
+                .filter { (alias, _) -> alias.startsWith(trimmed, ignoreCase = true) && alias != trimmed }
+                .values
+                .distinct()
                 .take(SUGGESTION_LIMIT)
         }
         if (trimmed.startsWith("pawncc ", ignoreCase = true) &&
@@ -126,7 +133,7 @@ internal object PortalCommandParser {
     /** True when the portal dispatches [input] as a command. */
     fun isKnownCommand(input: String): Boolean {
         val name = input.trimStart().substringBefore(' ').lowercase()
-        return name == "celar" || name in commandNames
+        return name in commandAliases || name in commandNames
     }
 
     /** Commands close enough to [word] to be worth naming in the error output. */

@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -98,8 +99,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.data.config.AppLocalization
+import com.rvdjv.pawnmc.data.config.AppStorage
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.data.runtime.PocketSampGateway
+import com.rvdjv.pawnmc.BuildConfig
 
 import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.`interface`.filebrowser.FileBrowserDialog
@@ -113,10 +116,13 @@ import com.rvdjv.pawnmc.`interface`.theme.status_success
 import com.rvdjv.pawnmc.`interface`.theme.status_success_container
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlinx.coroutines.delay
 import java.text.DecimalFormat
+
+private const val VERSION_MARKER_TAG = "PawnMC-Version"
 
 internal val SpaceXS = 4.dp
 internal val SpaceS = 8.dp
@@ -186,8 +192,10 @@ fun MainScreen(
      * previewable and testable on its own.
      */
     onOpenSettingsTarget: (SettingsTarget) -> Unit = { onSettingsClick() },
+    editorOpen: Boolean = false,
 ) {
     val context = LocalContext.current
+    val versionMarkerScope = rememberCoroutineScope()
     val outputScrollState = rememberScrollState()
     // Shared across screens so the localisation asset is read and parsed only once
     // per process; the main screen also warms it up in the background.
@@ -201,6 +209,28 @@ fun MainScreen(
     // the user asks for them.
     var headerActionsVisible by remember { mutableStateOf(false) }
     val onToggleActions = { headerActionsVisible = !headerActionsVisible }
+    var headerActionLocked by remember { mutableStateOf(false) }
+    fun performHeaderAction(action: () -> Unit) {
+        if (headerActionLocked) return
+        headerActionLocked = true
+        action()
+    }
+    fun recordVersionMarker() {
+        if (!hasStoragePermission(context)) return
+        versionMarkerScope.launch(Dispatchers.IO) {
+            try {
+                val marker = AppStorage.recordPublicVersion(
+                    context.applicationContext,
+                    BuildConfig.VERSION_NAME
+                )
+                if (marker == null) {
+                    Log.w(VERSION_MARKER_TAG, "Could not access Documents/PawnMC to record this app version.")
+                }
+            } catch (error: Exception) {
+                Log.e(VERSION_MARKER_TAG, "Could not update the public version marker.", error)
+            }
+        }
+    }
     var isStoragePermissionGranted by remember {
         mutableStateOf(hasStoragePermission(context))
     }
@@ -212,10 +242,19 @@ fun MainScreen(
                 val permissionGranted = hasStoragePermission(context)
                 isStoragePermissionGranted = permissionGranted
                 showPermissionDialog = !permissionGranted
+                if (!editorOpen) headerActionLocked = false
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    LaunchedEffect(editorOpen) {
+        headerActionLocked = editorOpen
+    }
+
+    LaunchedEffect(isStoragePermissionGranted) {
+        if (isStoragePermissionGranted) recordVersionMarker()
     }
 
     // permission launchers
@@ -337,13 +376,14 @@ fun MainScreen(
     // runtime adopted from thirdparty/PocketSAMP. It runs as a separate activity on
     // top of this screen and returns here through its back handling, the same way
     // the Sora-based editor screen is hosted.
-    fun openPocketSamp() {
+    fun openPocketSamp(): Boolean {
         // The embedded runtime speaks the language the PawnMC settings hold and
         // follows the same theme (light/dark/system); the dark look is the same
         // semi-violet ramp as this interface. The mapping onto PocketSAMP's own enums
         // lives in the flavor hook, because this source set is shared with the Nougat
         // flavor, which has no PocketSAMP module at all.
-        if (!PocketSampGateway.launch(context, appLanguage.value, viewModel.n_app_theme.value)) {
+        val launched = PocketSampGateway.launch(context, appLanguage.value, viewModel.n_app_theme.value)
+        if (!launched) {
             Toast.makeText(
                 context,
                 localizer.get(
@@ -354,6 +394,7 @@ fun MainScreen(
                 Toast.LENGTH_LONG
             ).show()
         }
+        return launched
     }
     var showCompilingNotice by remember { mutableStateOf(false) }
 
@@ -395,9 +436,22 @@ fun MainScreen(
                 onClick = {
                     fabScope.launch {
                         if (atBottom) {
-                            listState.animateScrollToItem(0)
+                            var target = listState.firstVisibleItemIndex
+                            while (target > 0) {
+                                val next = (target - 12).coerceAtLeast(0)
+                                listState.animateScrollToItem(next)
+                                if (next == target) break
+                                target = next
+                            }
                         } else {
-                            listState.animateScrollToItem(Int.MAX_VALUE)
+                            val lastItem = (listState.layoutInfo.totalItemsCount - 1).coerceAtLeast(0)
+                            var target = listState.firstVisibleItemIndex
+                            while (target < lastItem && listState.canScrollForward) {
+                                val next = (target + 12).coerceAtMost(lastItem)
+                                listState.animateScrollToItem(next)
+                                if (next == target) break
+                                target = next
+                            }
                         }
                     }
                 },
@@ -431,6 +485,7 @@ fun MainScreen(
                 actionsVisible = headerActionsVisible,
                 onToggleActions = onToggleActions,
                 onEditorClick = {
+                    if (headerActionLocked) return@ScreenHeader
                     if (viewModel.isCompiling) {
                         showCompilingBlockedToast()
                         return@ScreenHeader
@@ -442,7 +497,7 @@ fun MainScreen(
                     }
                     val path = viewModel.selectedFilePath
                     when {
-                        workspaceAvailable -> onEditorClick()
+                        workspaceAvailable -> performHeaderAction(onEditorClick)
                         path.isNullOrBlank() -> {
                             viewModel.ensureTemporaryFileSelected()
                             Toast.makeText(
@@ -450,7 +505,7 @@ fun MainScreen(
                                 viewModel.temporaryFileNotice ?: "This is a temporary file because you have not selected your own Pawn file yet.",
                                 Toast.LENGTH_LONG
                             ).show()
-                            onEditorClick()
+                            performHeaderAction(onEditorClick)
                         }
                         !File(path).isFile -> {
                             Toast.makeText(
@@ -459,21 +514,25 @@ fun MainScreen(
                                 Toast.LENGTH_LONG
                             ).show()
                         }
-                        else -> onEditorClick()
+                        else -> performHeaderAction(onEditorClick)
                     }
                 },
                 onSettingsClick = {
+                    if (headerActionLocked) return@ScreenHeader
                     if (viewModel.isCompiling) {
                         showCompilingBlockedToast()
                     } else {
-                        onSettingsClick()
+                        performHeaderAction(onSettingsClick)
                     }
                 },
                 onPocketSampClick = {
+                    if (headerActionLocked) return@ScreenHeader
                     if (viewModel.isCompiling) {
                         showCompilingBlockedToast()
                     } else {
-                        openPocketSamp()
+                        performHeaderAction {
+                            if (!openPocketSamp()) headerActionLocked = false
+                        }
                     }
                 },
                 localizer = localizer,
@@ -642,10 +701,12 @@ fun MainScreen(
                 DarkSectionContainer {
                     SettingsPromoCard(
                         onEntryClick = { target ->
-                            if (viewModel.isCompiling) {
-                                showCompilingBlockedToast()
-                            } else {
-                                onOpenSettingsTarget(target)
+                            if (!headerActionLocked) {
+                                if (viewModel.isCompiling) {
+                                    showCompilingBlockedToast()
+                                } else {
+                                    performHeaderAction { onOpenSettingsTarget(target) }
+                                }
                             }
                         },
                         localizer = localizer,

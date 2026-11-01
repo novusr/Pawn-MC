@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Add
 
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.HorizontalDivider
@@ -32,12 +33,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +53,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.rvdjv.pawnmc.`interface`.main.explainHighlightedText
+import com.rvdjv.pawnmc.data.config.CompilerConfig
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,6 +67,7 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ContentCopy
 import com.rvdjv.pawnmc.`interface`._Icons
 import java.io.File
+import kotlinx.coroutines.delay
 import kotlin.math.roundToInt/** Minimum height of a touch target in the panel, per the accessibility guidance. */
 private val PanelRowMinHeight = 44.dp
 
@@ -98,8 +105,15 @@ fun WorkspacePanel(
     onClosePanel: () -> Unit = {},
     onOpenFolder: () -> Unit = {},
     onHeaderDrag: (IntOffset) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onCreateFileAt: (File) -> Unit = {},
+    onCreateFolderAt: (File) -> Unit = {},
+    onBeforeAction: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val isIndonesian = remember(context) {
+        CompilerConfig.getInstance(context).n_app_language == CompilerConfig.AppLanguage.ID
+    }
     val workspace = session.activeWorkspace
     val tree = workspace?.tree
     val collapsedPaths = workspace?.collapsedPaths
@@ -109,6 +123,17 @@ fun WorkspacePanel(
     val flatNodes: List<FlatNode> = remember(tree, collapsedPaths, workspace) {
         if (workspace == null) emptyList() else flattenWorkspaceNodes(workspace)
     }
+    var visibleNodeCount by remember(flatNodes) {
+        mutableIntStateOf(minOf(flatNodes.size, INITIAL_VISIBLE_NODES))
+    }
+    LaunchedEffect(flatNodes) {
+        visibleNodeCount = minOf(flatNodes.size, INITIAL_VISIBLE_NODES)
+        while (visibleNodeCount < flatNodes.size) {
+            delay(NODE_REVEAL_INTERVAL_MS)
+            visibleNodeCount = (visibleNodeCount + NODE_REVEAL_BATCH_SIZE).coerceAtMost(flatNodes.size)
+        }
+    }
+    val visibleNodes = flatNodes.take(visibleNodeCount)
 
     // Separate scroll states keep the explorer and compiler output independently
     // touch-scrollable, including logs wider than the floating panel.
@@ -132,18 +157,29 @@ fun WorkspacePanel(
             )
     ) {
         if (session.openWorkspaces.isNotEmpty()) {
-            WorkspaceSwitcherRow(session = session)
+            WorkspaceSwitcherRow(
+                session = session,
+                onCreateFileAt = onCreateFileAt,
+                onCreateFolderAt = onCreateFolderAt,
+                onBeforeAction = onBeforeAction
+            )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
         }
 
         SectionHeader(
             title = (workspace?.name ?: "Pick a folder").uppercase(),
             subtitle = workspace?.root?.path ?: "Tap here to open a folder into this panel",
-            onClose = onClosePanel,
+            onClose = {
+                onBeforeAction()
+                onClosePanel()
+            },
             // The folder picker lives in the panel itself, so a workspace folder can
             // be chosen from right where it is browsed. The folder is remembered
             // permanently, unlike the single temporary file the main screen picks.
-            onOpenFolder = onOpenFolder,
+            onOpenFolder = {
+                onBeforeAction()
+                onOpenFolder()
+            },
             onDrag = onHeaderDrag
         )
 
@@ -178,7 +214,7 @@ fun WorkspacePanel(
             }
 
             items(
-                    items = flatNodes,
+                    items = visibleNodes,
                     key = { entry: FlatNode -> "node:${entry.node.key}" },
                     // Lets the list reuse a row composable for a row of the same kind
                     // while scrolling, instead of rebuilding every row it draws.
@@ -193,7 +229,13 @@ fun WorkspacePanel(
                         node = node,
                         depth = entry.depth,
                         collapsed = current2?.isExpanded(node) == false,
-                        onToggle = { current2?.toggleFolder(node) }
+                        onToggle = {
+                            onBeforeAction()
+                            current2?.toggleFolder(node)
+                        },
+                        onBeforeCreate = onBeforeAction,
+                        onCreateFile = { onCreateFileAt(node.file) },
+                        onCreateFolder = { onCreateFolderAt(node.file) }
                     )
                     else -> FileRow(
                         node = node,
@@ -205,10 +247,39 @@ fun WorkspacePanel(
                 }
             }
 
+            if (visibleNodeCount < flatNodes.size) {
+                item(key = "__loading_workspace_nodes__", contentType = "loading") {
+                    Text(
+                        text = if (isIndonesian) "Memuat isi workspace..." else "Loading workspace entries...",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    )
+                }
+            }
+            if (workspace?.isScanTruncated == true) {
+                item(key = "__workspace_scan_limit__", contentType = "scan-limit") {
+                    Text(
+                        text = if (isIndonesian) {
+                            "Hanya 4.000 entri pertama ditampilkan."
+                        } else {
+                            "Only the first 4,000 workspace entries are shown."
+                        },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+                    )
+                }
+            }
+
             val current3 = workspace
             if (outputText.isNotBlank()) {
                 item(key = "__compiler_output__", contentType = "compiler-output") {
-                    OutputHeaderRow(outputText = outputText, isCompiling = isCompiling)
+                    OutputHeaderRow(
+                        outputText = outputText,
+                        isCompiling = isCompiling,
+                        onBeforeAction = onBeforeAction
+                    )
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -258,7 +329,11 @@ fun WorkspacePanel(
  * streamed output is never captured by accident.
  */
 @Composable
-private fun OutputHeaderRow(outputText: String, isCompiling: Boolean) {
+private fun OutputHeaderRow(
+    outputText: String,
+    isCompiling: Boolean,
+    onBeforeAction: () -> Unit
+) {
     val context = LocalContext.current
     var pendingLogText by remember { mutableStateOf("") }
     val downloadLogLauncher = rememberLauncherForActivityResult(
@@ -288,6 +363,7 @@ private fun OutputHeaderRow(outputText: String, isCompiling: Boolean) {
         Spacer(modifier = Modifier.weight(1f))
         IconButton(
             onClick = {
+                onBeforeAction()
                 pendingLogText = outputText
                 downloadLogLauncher.launch("pawnmc-compile-output.log")
             },
@@ -304,6 +380,7 @@ private fun OutputHeaderRow(outputText: String, isCompiling: Boolean) {
         }
         IconButton(
             onClick = {
+                onBeforeAction()
                 val clipboard =
                     context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("Compilation Result", outputText))
@@ -340,7 +417,12 @@ private fun SectionLabelInline(text: String) {
  * closes that workspace.
  */
 @Composable
-private fun WorkspaceSwitcherRow(session: WorkspaceSession) {
+private fun WorkspaceSwitcherRow(
+    session: WorkspaceSession,
+    onCreateFileAt: (File) -> Unit,
+    onCreateFolderAt: (File) -> Unit,
+    onBeforeAction: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -364,7 +446,10 @@ private fun WorkspaceSwitcherRow(session: WorkspaceSession) {
                         },
                         shape = RoundedCornerShape(10.dp)
                     )
-                    .clickable { session.activateWorkspace(workspace) }
+                    .clickable {
+                        onBeforeAction()
+                        session.activateWorkspace(workspace)
+                    }
                     .padding(horizontal = 8.dp, vertical = 4.dp)
             ) {
                 Icon(
@@ -386,8 +471,23 @@ private fun WorkspaceSwitcherRow(session: WorkspaceSession) {
                         .weight(1f)
                         .padding(start = 6.dp)
                 )
+                CreateEntryMenu(
+                    directory = workspace.root,
+                    onBeforeOpen = onBeforeAction,
+                    onCreateFile = {
+                        session.activateWorkspace(workspace)
+                        onCreateFileAt(workspace.root)
+                    },
+                    onCreateFolder = {
+                        session.activateWorkspace(workspace)
+                        onCreateFolderAt(workspace.root)
+                    }
+                )
                 IconButton(
-                    onClick = { session.closeWorkspace(workspace) },
+                    onClick = {
+                        onBeforeAction()
+                        session.closeWorkspace(workspace)
+                    },
                     modifier = Modifier.size(20.dp)
                 ) {
                     Icon(
@@ -600,7 +700,15 @@ private fun OpenEditorRow(
 }
 
 @Composable
-private fun FolderRow(node: WorkspaceNode, depth: Int, collapsed: Boolean, onToggle: () -> Unit) {
+private fun FolderRow(
+    node: WorkspaceNode,
+    depth: Int,
+    collapsed: Boolean,
+    onToggle: () -> Unit,
+    onBeforeCreate: () -> Unit,
+    onCreateFile: () -> Unit,
+    onCreateFolder: () -> Unit
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
@@ -632,8 +740,66 @@ private fun FolderRow(node: WorkspaceNode, depth: Int, collapsed: Boolean, onTog
             style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = 8.dp)
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
         )
+        Spacer(modifier = Modifier.weight(1f))
+        CreateEntryMenu(
+            directory = node.file,
+            onBeforeOpen = onBeforeCreate,
+            onCreateFile = onCreateFile,
+            onCreateFolder = onCreateFolder
+        )
+    }
+}
+
+@Composable
+private fun CreateEntryMenu(
+    directory: File,
+    onBeforeOpen: () -> Unit,
+    onCreateFile: () -> Unit,
+    onCreateFolder: () -> Unit
+) {
+    val context = LocalContext.current
+    val appLanguage = remember(context) { CompilerConfig.getInstance(context).n_app_language }
+    val isIndonesian = appLanguage == CompilerConfig.AppLanguage.ID
+    var expanded by remember(directory) { mutableStateOf(false) }
+    Box {
+        IconButton(
+            onClick = {
+                onBeforeOpen()
+                expanded = true
+            },
+            modifier = Modifier.size(32.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = if (isIndonesian) {
+                    "Buat di ${directory.name}"
+                } else {
+                    "Create in ${directory.name}"
+                },
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text(if (isIndonesian) "File baru" else "New file") },
+                onClick = {
+                    expanded = false
+                    onCreateFile()
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(if (isIndonesian) "Folder baru" else "New folder") },
+                onClick = {
+                    expanded = false
+                    onCreateFolder()
+                }
+            )
+        }
     }
 }
 
@@ -709,6 +875,10 @@ private fun SearchHitRow(hit: WorkspaceSearchHit, onOpen: () -> Unit) {
 
 /** One tree entry paired with its indent depth. */
 private data class FlatNode(val node: WorkspaceNode, val depth: Int)
+
+private const val INITIAL_VISIBLE_NODES = 80
+private const val NODE_REVEAL_BATCH_SIZE = 80
+private const val NODE_REVEAL_INTERVAL_MS = 24L
 
 /**
  * Turns the recursive [WorkspaceNode] tree into the flat, depth-annotated list a

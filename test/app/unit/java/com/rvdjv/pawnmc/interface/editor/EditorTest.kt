@@ -9,11 +9,13 @@ import com.rvdjv.pawnmc.`interface`.editor.workspace.Workspace
 import com.rvdjv.pawnmc.`interface`.editor.workspace.WorkspaceNode
 import com.rvdjv.pawnmc.`interface`.editor.workspace.WorkspaceSession
 import com.rvdjv.pawnmc.`interface`.editor.workspace.normalizeNewPawnFileName
+import com.rvdjv.pawnmc.`interface`.editor.workspace.normalizeNewFolderName
 import com.rvdjv.pawnmc.`interface`.editor.portal.PortalCommandParser
 import com.rvdjv.pawnmc.`interface`.editor.portal.PortalText
 import com.rvdjv.pawnmc.`interface`.editor.xedapi.EditorViewModel
 import com.rvdjv.pawnmc.`interface`.editor.xedapi.LINE_COLUMN_SEPARATOR
 import com.rvdjv.pawnmc.`interface`.editor.xedapi.cursorPositionLabel
+import com.rvdjv.pawnmc.`interface`.editor.xedapi.resolveJumpColumn
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.`interface`.main.shouldRestoreLastSelectedFile
 import kotlinx.coroutines.Dispatchers
@@ -423,6 +425,25 @@ class EditorTest {
         assertEquals(null, normalizeNewPawnFileName("../outside.pwn"))
         assertEquals(null, normalizeNewPawnFileName("notes.txt"))
         assertEquals(null, normalizeNewPawnFileName(" "))
+    }
+
+    @Test
+    fun `new folder names reject paths and invalid directory entries`() {
+        assertEquals("gamemodes", normalizeNewFolderName("gamemodes"))
+        assertEquals(null, normalizeNewFolderName("../outside"))
+        assertEquals(null, normalizeNewFolderName("folder/name"))
+        assertEquals(null, normalizeNewFolderName(".."))
+        assertEquals(null, normalizeNewFolderName(" "))
+    }
+
+    @Test
+    fun `jump column converts one-based input and falls back to column zero`() {
+        assertEquals(0, resolveJumpColumn("1", 10))
+        assertEquals(2, resolveJumpColumn("3", 10))
+        assertEquals(0, resolveJumpColumn(null, 10))
+        assertEquals(0, resolveJumpColumn("0", 10))
+        assertEquals(0, resolveJumpColumn("12", 10))
+        assertEquals(0, resolveJumpColumn("invalid", 10))
     }
 
     @Test

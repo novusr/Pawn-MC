@@ -44,6 +44,34 @@ class CompilerConfigFileTest {
         assertTrue(CompilerConfigFile.restore(context, restored))
         MIRRORED_KEYS.forEach { key -> assertEquals("key `$key` did not survive the mirror", written.all[key], restored.all[key]) }
     }
+
+    @Test fun recordPublicVersion_keepsOnlyTheCurrentMarkerAndVersion() {
+        val documents = temporaryFolder.newFolder("documents")
+        val context = TestContextWithPublicDocs(temporaryFolder.newFolder("files"), documents)
+        val pawnRoot = File(documents, AppStorage.PUBLIC_DIR_NAME).apply { mkdirs() }
+        File(pawnRoot, "_PAWN_MC_v1.4.0_").writeText("old")
+        File(pawnRoot, "_PAWN_MC_v1.5.1_").writeText("old")
+        File(pawnRoot, "_PAWN_MC_old_marker").writeText("old")
+        File(pawnRoot, "keep-this-file.txt").writeText("user data")
+
+        val marker = AppStorage.recordPublicVersion(context, "1.5.2-nougat")
+        AppStorage.recordPublicVersion(context, "1.5.2")
+        AppStorage.recordPublicVersion(context, "1.5.3")
+
+        assertEquals(listOf("_PAWN_MC_v1.5.3_"), marker?.readLines())
+        assertEquals("_PAWN_MC_VERSION_", marker?.name)
+        assertEquals(
+            listOf("_PAWN_MC_VERSION_", "keep-this-file.txt"),
+            pawnRoot.listFiles()?.map { it.name }?.sorted()
+        )
+        assertEquals("user data", File(pawnRoot, "keep-this-file.txt").readText())
+    }
+
+    @Test fun recordPublicVersion_doesNotWriteWithoutPublicStorageAccess() {
+        val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
+
+        assertEquals(null, AppStorage.recordPublicVersion(context, "1.5.2"))
+    }
     @Test fun mirror_writesAJsonObjectWithSettingsUnderStableNames() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         val prefs = InMemoryPreferences().apply(::seed)

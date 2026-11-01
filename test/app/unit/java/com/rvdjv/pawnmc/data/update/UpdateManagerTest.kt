@@ -45,6 +45,28 @@ class UpdateManagerTest {
     }
 
     @Test
+    fun parseGitHubRelease_doesNotUseNougatArchiveForNewerBuilds() {
+        val json = JSONObject(
+            """
+            {
+              "tag_name": "v1.5.100",
+              "assets": [
+                {
+                  "name": "app-android-7-8-debug.zip",
+                  "browser_download_url": "https://example.com/app-android-7-8-debug.zip"
+                }
+              ]
+            }
+            """.trimIndent()
+        )
+
+        val release = parseGitHubRelease(json)
+
+        assertEquals("https://example.com/app-android-7-8-debug.zip", release.archiveUrl(isNougatBuild = true))
+        assertEquals(null, release.archiveUrl(isNougatBuild = false))
+    }
+
+    @Test
     fun parseGitHubRelease_fallsBackToApkForOlderReleases() {
         val json = JSONObject(
             """

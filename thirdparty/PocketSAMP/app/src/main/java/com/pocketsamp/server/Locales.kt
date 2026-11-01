@@ -390,11 +390,11 @@ object Locales {
             Lang.RU to "ЗАПУСК",
         ),
         "db.phpmyadmin" to mapOf(
-            Lang.ID to "phpMyAdmin",
-            Lang.EN to "phpMyAdmin",
-            Lang.TL to "phpMyAdmin",
-            Lang.ES to "phpMyAdmin",
-            Lang.RU to "phpMyAdmin",
+            Lang.ID to "Control",
+            Lang.EN to "Control",
+            Lang.TL to "Control",
+            Lang.ES to "Control",
+            Lang.RU to "Control",
         ),
         "db.open.phpmyadmin" to mapOf(
             Lang.ID to "Buka phpMyAdmin",

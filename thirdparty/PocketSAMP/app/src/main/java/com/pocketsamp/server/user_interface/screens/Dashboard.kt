@@ -86,7 +86,7 @@ fun _Dashboard(
     val lifecycleOwner = context as? LifecycleOwner
     var currentServerDir by remember { mutableStateOf(_DirectoryManager.getServerDirectory(context)) }
     var hasStoragePermission by remember { mutableStateOf(_DirectoryManager.hasStoragePermission(context)) }
-    var showPhpMyAdmin by remember { mutableStateOf(false) }
+    var showphpMyAdmin by remember { mutableStateOf(false) }
     var showAntiDcGuide by remember { mutableStateOf(false) }
     val powerManager = remember {
         context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
@@ -129,10 +129,10 @@ fun _Dashboard(
         }
     }
 
-    if (showPhpMyAdmin) {
-        _PhpMyAdmin(
+    if (showphpMyAdmin) {
+        _phpMyAdmin(
             isDbRunning = isDbRunning,
-            onClose = { showPhpMyAdmin = false },
+            onClose = { showphpMyAdmin = false },
             lang = lang
         )
         return
@@ -234,7 +234,7 @@ fun _Dashboard(
                         Text(t("db.manage"), maxLines = 1)
                     }
                     OutlinedButton(
-                        onClick = { showPhpMyAdmin = true },
+                        onClick = { showphpMyAdmin = true },
                         enabled = isDbRunning,
                         modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(12.dp)

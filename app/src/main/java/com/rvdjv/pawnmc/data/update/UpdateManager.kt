@@ -51,11 +51,8 @@ data class GitHubRelease(
     val apkUrl: String?
         get() = nougatArchiveUrl.takeIf { it?.endsWith(APK_FILE_EXTENSION, ignoreCase = true) == true }
             ?: newerArchiveUrl?.takeIf { it.endsWith(APK_FILE_EXTENSION, ignoreCase = true) }
-    fun archiveUrl(isNougatBuild: Boolean): String? = if (isNougatBuild) {
-        nougatArchiveUrl ?: newerArchiveUrl
-    } else {
-        newerArchiveUrl ?: nougatArchiveUrl
-    }
+    fun archiveUrl(isNougatBuild: Boolean): String? =
+        if (isNougatBuild) nougatArchiveUrl else newerArchiveUrl
 }
 
 internal fun parseGitHubRelease(releaseJson: JSONObject): GitHubRelease {
@@ -90,7 +87,7 @@ internal fun parseGitHubRelease(releaseJson: JSONObject): GitHubRelease {
     return GitHubRelease(
         version = version,
         nougatArchiveUrl = nougatArchiveUrl ?: fallbackApkUrl,
-        newerArchiveUrl = newerArchiveUrl ?: nougatArchiveUrl ?: fallbackApkUrl,
+        newerArchiveUrl = newerArchiveUrl ?: fallbackApkUrl,
         releaseUrl = releaseUrl,
         bodyMarkdown = releaseJson.optString("body", "").trim()
     )

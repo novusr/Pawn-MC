@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.rvdjv.pawnmc.data.config.AppLocalization
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -105,6 +106,9 @@ import com.rvdjv.pawnmc.`interface`.editor.workspace.resolveTreeToFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+
+private const val FAB_SCROLL_STEP_PX = 900
+private const val FAB_SCROLL_STEP_DURATION_MS = 260
 
 private val THANK_YOU_ID_LINES = listOf(
     "Selamat datang di repositori resmi PawnMC.",
@@ -433,9 +437,24 @@ fun SettingsScreen(
                 onClick = {
                     fabScope.launch {
                         if (atBottom) {
-                            settingsScrollState.animateScrollTo(0)
+                            while (settingsScrollState.value > 0) {
+                                val next = (settingsScrollState.value - FAB_SCROLL_STEP_PX).coerceAtLeast(0)
+                                settingsScrollState.animateScrollTo(
+                                    next,
+                                    animationSpec = tween(durationMillis = FAB_SCROLL_STEP_DURATION_MS)
+                                )
+                                if (next == settingsScrollState.value) break
+                            }
                         } else {
-                            settingsScrollState.animateScrollTo(settingsScrollState.maxValue)
+                            while (settingsScrollState.value < settingsScrollState.maxValue) {
+                                val next = (settingsScrollState.value + FAB_SCROLL_STEP_PX)
+                                    .coerceAtMost(settingsScrollState.maxValue)
+                                settingsScrollState.animateScrollTo(
+                                    next,
+                                    animationSpec = tween(durationMillis = FAB_SCROLL_STEP_DURATION_MS)
+                                )
+                                if (next == settingsScrollState.value) break
+                            }
                         }
                     }
                 },
@@ -1260,8 +1279,10 @@ fun SettingsScreen(
                             ),
                             selected = viewModel.n_app_theme == theme,
                             onClick = {
+                                val changed = viewModel.n_app_theme != theme
                                 viewModel.updateAppTheme(theme)
                                 showThemeDialog = false
+                                if (changed) onRestartRequested()
                             }
                         )
                     }

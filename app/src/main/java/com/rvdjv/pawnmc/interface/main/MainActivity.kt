@@ -160,6 +160,7 @@ class MainActivity : ComponentActivity() {
                 Box(modifier = Modifier.fillMaxSize()) {
                     MainScreen(
                         viewModel = viewModel,
+                        editorOpen = isEditorOpen,
                         onEditorClick = {
                             isEditorOpen = true
                         },

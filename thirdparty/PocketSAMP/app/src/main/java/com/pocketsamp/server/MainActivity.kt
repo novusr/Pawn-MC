@@ -57,7 +57,7 @@ import com.pocketsamp.server.user_interface.screens._Console
 import com.pocketsamp.server.user_interface.screens._CrashInfo
 import com.pocketsamp.server.user_interface.screens._Dashboard
 import com.pocketsamp.server.user_interface.screens._Database
-import com.pocketsamp.server.user_interface.screens._PhpMyAdmin
+import com.pocketsamp.server.user_interface.screens._phpMyAdmin
 import com.pocketsamp.server.user_interface.theme.*
 
 enum class AppTab(val label: String, val icon: ImageVector) {
@@ -159,7 +159,7 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun MainAppLayout() {
         var currentTab by remember { mutableStateOf(AppTab.DASHBOARD) }
-        var isPhpMyAdminVisible by remember { mutableStateOf(false) }
+        var isphpMyAdminVisible by remember { mutableStateOf(false) }
         val lang = Locales.current
         fun t(key: String): String = Locales.text(lang, key)
 
@@ -203,7 +203,7 @@ class MainActivity : ComponentActivity() {
                         AppTab.DATABASE -> _Database(
                             dbManager = dbManager,
                             isDbRunning = isDbRunning,
-                            onOpenPhpMyAdmin = { isPhpMyAdminVisible = true },
+                            onOpenphpMyAdmin = { isphpMyAdminVisible = true },
                             lang = lang
                         )
                         AppTab.CRASHES -> _CrashInfo()
@@ -211,10 +211,10 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                if (isPhpMyAdminVisible) {
-                    _PhpMyAdmin(
+                if (isphpMyAdminVisible) {
+                    _phpMyAdmin(
                         isDbRunning = isDbRunning,
-                        onClose = { isPhpMyAdminVisible = false },
+                        onClose = { isphpMyAdminVisible = false },
                         lang = lang
                     )
                 }
@@ -231,7 +231,7 @@ class MainActivity : ComponentActivity() {
                     verticalArrangement = Arrangement.spacedBy(3.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (!isPhpMyAdminVisible) AppTab.values().forEach { tab ->
+                    if (!isphpMyAdminVisible) AppTab.values().forEach { tab ->
                         val selected = tab == currentTab
                         Box(
                             modifier = Modifier

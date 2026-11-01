@@ -45,7 +45,7 @@ import kotlinx.coroutines.launch
  * Local MariaDB control surface.
  *
  * Inputs come from [DatabaseManager] (list/create databases, list tables, run SQL,
- * import scripts). [onOpenPhpMyAdmin] opens the local phpMyAdmin in the built-in
+ * import scripts). [onOpenphpMyAdmin] opens the local phpMyAdmin in the built-in
  * browser, so the two ways of touching the same server — queries here, the full web
  * UI there — are one tap apart.
  */
@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 fun _Database(
     dbManager: DatabaseManager,
     isDbRunning: Boolean,
-    onOpenPhpMyAdmin: () -> Unit = {},
+    onOpenphpMyAdmin: () -> Unit = {},
     lang: Locales.Lang = Locales.current
 ) {
     val context = LocalContext.current
@@ -342,7 +342,7 @@ fun _Database(
                 item {
                     FilterChip(
                         selected = false,
-                        onClick = onOpenPhpMyAdmin,
+                        onClick = onOpenphpMyAdmin,
                         label = {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
@@ -523,7 +523,7 @@ fun _Database(
              * Direct launch: phpMyAdmin in the built-in full-screen browser.
              */
             Button(
-                onClick = onOpenPhpMyAdmin,
+                onClick = onOpenphpMyAdmin,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(40.dp),
