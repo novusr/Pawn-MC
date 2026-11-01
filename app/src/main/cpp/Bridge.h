@@ -26,10 +26,9 @@
  * Session state of the bridge: which folder is searched for the compiler versions and
  * which one is currently loaded.
  *
- * `library_dir` is the folder the app extracted the per-ABI archive into, or empty when
- * the app has not extracted anything and only `nativeLibraryDir` applies. The selected
- * version is dlopen'ed on the first `MC_runner_compile` that needs it, not at select
- * time, so a version the user never compiles with is never mapped.
+ * `library_dir` is the folder the app extracted the per-ABI archive into. The selected
+ * version is loaded from that folder on the first `MC_runner_compile` that needs it,
+ * not at select time, so unused versions are never mapped.
  */
 struct MC_BridgeState {
     char* library_dir;

@@ -53,6 +53,7 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.HourglassEmpty
@@ -68,7 +69,6 @@ import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.automirrored.filled.WrapText
 import androidx.compose.material.icons.filled.EditNote
@@ -138,7 +138,6 @@ import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.`interface`._Icons
 import com.rvdjv.pawnmc.data.config.AppLocalization
 import com.rvdjv.pawnmc.data.config.CompilerConfig
-import com.rvdjv.pawnmc.data.syntax.PawnRegistry
 import com.rvdjv.pawnmc.`interface`.editor.workspace.MAX_OPEN_WORKSPACES
 import com.rvdjv.pawnmc.`interface`.editor.workspace.OpenDocument
 import com.rvdjv.pawnmc.`interface`.editor.workspace.WorkspaceSession
@@ -153,6 +152,7 @@ import com.rvdjv.pawnmc.`interface`.editor.portal.DeveloperPortal
 import io.github.rosemoe.sora.event.ContentChangeEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.component.EditorAutoCompletion
 import io.github.rosemoe.sora.widget.EditorSearcher
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 import io.github.rosemoe.sora.widget.schemes.SchemeDarcula
@@ -1401,7 +1401,7 @@ fun EditorScreen(
                 }
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
-                    icon = Icons.Filled.VolumeUp,
+                    icon = Icons.Filled.Extension,
                     contentDescription = "Open the Developer Portal",
                     testTag = "editor_terminal_toggle",
                     tint = FLOAT_TINT_PORTAL,
@@ -1417,7 +1417,7 @@ fun EditorScreen(
                 // so the current state is obvious even without reading the label.
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
-                    icon = _Icons.ScreenRotation,
+                    icon = _Icons.Scarf,
                     contentDescription = if (isLandscapeForced) "Switch to Portrait" else "Switch to Landscape",
                     testTag = "editor_orientation_toggle",
                     tint = FLOAT_TINT_ORIENTATION,
@@ -1785,9 +1785,9 @@ private val PANEL_BUTTON_SIZE = 48.dp
 
 /** Icon colours for the floating actions. */
 private val FLOAT_TINT_NEUTRAL = Color(0xFF8A8A94)
-private val FLOAT_TINT_PORTAL = Color(0xFF4FC3F7)
+private val FLOAT_TINT_PORTAL = Color(0xFFE7C66A)
 private val FLOAT_TINT_ACTION = Color(0xFF43A047)
-private val FLOAT_TINT_ORIENTATION = Color(0xFFAB7DF6)
+private val FLOAT_TINT_ORIENTATION = Color(0xFFE35B52)
 
 /** Width of the rectangle-style floating toolbar. */
 private val TOOLBAR_WIDTH = 52.dp
@@ -2195,7 +2195,7 @@ private fun EditorTabStrip(
                         )
                         if (document.isDirty) {
                             Text(
-                                text = "?",
+                                text = "~",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(start = 4.dp)
@@ -2347,27 +2347,16 @@ private fun insertIndentAtCursor(editor: CodeEditor?) {
 internal fun cursorPositionLabel(line: Int, column: Int): String =
     "${line + 1}${LINE_COLUMN_SEPARATOR}${column + 1}"
 
-/** Applies the first matching Pawn completion, falling back to normal indentation. */
+/** Accepts the visible completion, or indents when no suggestion is open. */
 private fun applyTabAction(editor: CodeEditor?) {
     val target = editor ?: return
-    val line = target.cursor.leftLine
-    val column = target.cursor.leftColumn
-    val lineText = target.text.getLine(line).toString()
-    var prefixStart = column
-    while (prefixStart > 0) {
-        val character = lineText[prefixStart - 1]
-        if (!Character.isJavaIdentifierPart(character) && character != '#' && character != ':') break
-        prefixStart--
-    }
-    val prefix = lineText.substring(prefixStart, column)
-    val completion = PawnRegistry.getCompletions(prefix).firstOrNull()
-    if (completion == null) {
-        insertIndentAtCursor(target)
-        return
+    val completion = target.getComponent(EditorAutoCompletion::class.java)
+    if (completion.isShowing()) {
+        if (completion.getCurrentPosition() == -1) completion.moveDown()
+        if (completion.select()) return
     }
 
-    target.text.delete(line, prefixStart, line, column)
-    target.text.insert(line, prefixStart, completion.name)
+    insertIndentAtCursor(target)
 }
 
 /** One key in the quick symbol row. */

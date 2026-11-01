@@ -31,7 +31,7 @@ class UpdateManagerTest {
                 }
               ]
             }
-            "".trimIndent()
+            """.trimIndent()
         )
 
         val release = parseGitHubRelease(json)
@@ -57,7 +57,7 @@ class UpdateManagerTest {
                 }
               ]
             }
-            "".trimIndent()
+            """.trimIndent()
         )
 
         val release = parseGitHubRelease(json)

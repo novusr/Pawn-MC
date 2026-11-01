@@ -51,7 +51,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Pinch
 import androidx.compose.material.icons.filled.DirectionsBike
-import androidx.compose.material.icons.filled.PrecisionManufacturing
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -738,11 +738,8 @@ internal fun ScreenHeader(
                         enabled = !isCompiling,
                         testTag = "pocketsamp_button",
                         icon = {
-                            // PocketSAMP runtime: the SA-MP server console adopted from
-                            // thirdparty/PocketSAMP now lives behind this button. The
-                            // helicopter reads as "launch a server".
                             Icon(
-                                imageVector = Icons.Filled.PrecisionManufacturing,
+                                imageVector = Icons.Filled.ShoppingCart,
                                 contentDescription = localizer?.get("main.header.pocketsamp", appLanguage, "PocketSAMP server") ?: "PocketSAMP server",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )

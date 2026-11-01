@@ -23,6 +23,11 @@ class CodeLanguage(
     private val appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
 ) : Language {
 
+    private companion object {
+        const val COMPLETION_IDLE_DELAY_MS = 2_500L
+        const val COMPLETION_CANCEL_CHECK_MS = 50L
+    }
+
     @Volatile
     private var localFunctions: List<LocalFunction> = emptyList()
     private val codeAnalyzer = CodeAnalyzer { localFunctions = it }
@@ -40,7 +45,7 @@ class CodeLanguage(
     ) {
         val operatorPrefix = operatorPrefixAt(content, position)
         if (operatorPrefix != null) {
-            publisher.checkCancelled()
+            waitForTypingPause(publisher)
             publish(publisher, operatorPrefix, localFunctions)
             return
         }
@@ -50,8 +55,28 @@ class CodeLanguage(
         }
 
         if (prefix.isBlank()) return
-        publisher.checkCancelled()
+        waitForTypingPause(publisher)
         publish(publisher, prefix, localFunctions)
+    }
+
+    private fun waitForTypingPause(publisher: CompletionPublisher) {
+        // Sora runs completion off the UI thread; frequent cancellation checks discard
+        // this request promptly when another keystroke arrives.
+        val deadline = System.nanoTime() + COMPLETION_IDLE_DELAY_MS * 1_000_000L
+        while (true) {
+            publisher.checkCancelled()
+            val remainingNanos = deadline - System.nanoTime()
+            if (remainingNanos <= 0L) return
+            val sleepMillis = ((remainingNanos + 999_999L) / 1_000_000L)
+                .coerceAtMost(COMPLETION_CANCEL_CHECK_MS)
+            try {
+                Thread.sleep(sleepMillis)
+            } catch (interrupted: InterruptedException) {
+                Thread.currentThread().interrupt()
+                publisher.checkCancelled()
+                return
+            }
+        }
     }
 
     /** Returns the operator token ending at the cursor, if any. */

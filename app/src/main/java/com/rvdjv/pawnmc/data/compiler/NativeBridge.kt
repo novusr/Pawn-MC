@@ -7,11 +7,10 @@ import java.io.File
 /**
  * The one loaded native library and the compiler entry points it exposes.
  *
- * The per-architecture archives in `lib/<abi>/<abi>.zip` are unpacked into
- * `Documents/PawnMC/library/<abi>/`, so the compiler versions are no longer loaded as
- * two separate JNI libraries. Instead a single small library — [BRIDGE_LIBRARY] — is
- * loaded from `nativeLibraryDir` and it `dlopen`s the version the user picked from
- * the extracted folder:
+ * The per-architecture archives in app assets are unpacked into
+ * `Documents/PawnMC/library/<abi>/`. The bridge itself is loaded from
+ * `nativeLibraryDir`; the selected compiler is staged from Documents into app-private
+ * code cache because shared storage may be mounted `noexec`:
  *
  * ```
  * Documents/PawnMC/library/<abi>/libpawnc3107.so    (pc_compile{}, wrappers)
@@ -34,15 +33,35 @@ internal object NativeBridge {
         File(LibraryStore.abiDirectory(context), "lib$version.so")
 
     /**
-     * True when the selected [version] is unpacked for this device's ABI, i.e. the
-     * compile can be routed to it without touching the APK's own libraries.
+     * True when the selected [version] is a valid ELF for this device ABI.
      */
     fun isReady(context: android.content.Context, version: String): Boolean =
-        libraryFile(context, version).let { it.isFile && it.length() > 0L }
+        libraryFile(context, version).let {
+            LibraryStore.hasExpectedElfAbi(it, LibraryStore.deviceAbi())
+        }
+
+    /** Explains why a compiler file in Documents cannot be loaded. */
+    fun readinessError(context: android.content.Context, version: String): String {
+        val abi = LibraryStore.deviceAbi()
+        val file = libraryFile(context, version)
+        if (!file.isFile) return "Missing ${file.absolutePath} (expected ABI $abi)."
+        val actual = LibraryStore.elfDescription(file)
+        val expected = LibraryStore.expectedElfDescription(abi)
+        return if (!LibraryStore.hasExpectedElfAbi(file, abi)) {
+            "Invalid compiler library ${file.absolutePath}: found $actual; expected $expected for ABI $abi."
+        } else {
+            val loadError = LAST_PREPARATION_ERROR ?: if (LOADED) getLoadError() else ""
+            if (loadError.isNotBlank()) {
+                "The file matches $expected, but compiler preparation failed: $loadError"
+            } else {
+                "The file matches $expected, but it could not be staged or loaded. Check the compiler log for details."
+            }
+        }
+    }
 
     /**
-     * The ABI folder the compile will read from, or null when the app has no usable
-     * storage root. This is the folder the UI reports, and the one the bridge dlopens.
+     * The ABI folder holding the source compiler libraries, or null when the app has no
+     * usable storage root. This is the folder the UI reports.
      */
     fun libraryDirectory(context: android.content.Context): File? =
         runCatching { AppStorage.dataRoot(context) }
@@ -50,32 +69,66 @@ internal object NativeBridge {
             ?.let { LibraryStore.abiDirectory(context) }
 
     /**
-     * Loads the bridge once, points it at the ABI folder and selects [version].
+     * Loads the bridge once, stages the Documents library into app-private cache,
+     * and selects [version] from that cache.
      *
      * Returns true when the version resolved and its engine entry points bound.
      */
     fun prepare(context: android.content.Context, version: String): Boolean {
-        val directory = libraryDirectory(context) ?: return false
-        if (!isReady(context, version)) return false
+        LAST_PREPARATION_ERROR = null
+        val directory = libraryDirectory(context) ?: run {
+            LAST_PREPARATION_ERROR = "Compiler storage folder is unavailable."
+            return false
+        }
+        if (!isReady(context, version)) {
+            LAST_PREPARATION_ERROR = readinessError(context, version)
+            return false
+        }
 
-        val path = directory.absolutePath
+        val source = libraryFile(context, version)
+        val staged = try {
+            LibraryStore.stageLibraryForLoading(
+                source,
+                File(context.codeCacheDir, "pawnmc-libraries"),
+                LibraryStore.deviceAbi()
+            )
+        } catch (e: java.io.IOException) {
+            LAST_PREPARATION_ERROR = e.message ?: "Could not copy the compiler into app-private code cache."
+            android.util.Log.e(TAG, "Failed to stage ${source.absolutePath} for Android's linker", e)
+            return false
+        } catch (e: IllegalArgumentException) {
+            LAST_PREPARATION_ERROR = e.message ?: "Compiler ELF validation failed."
+            android.util.Log.e(TAG, "Refusing to stage an invalid compiler library ${source.absolutePath}", e)
+            return false
+        } catch (e: java.security.NoSuchAlgorithmException) {
+            LAST_PREPARATION_ERROR = e.message ?: "SHA-256 is unavailable."
+            android.util.Log.e(TAG, "SHA-256 is unavailable; cannot safely stage ${source.absolutePath}", e)
+            return false
+        }
+        val loadDirectory = staged.parentFile ?: run {
+            LAST_PREPARATION_ERROR = "Staged compiler has no parent directory."
+            return false
+        }
+        val sourcePath = directory.absolutePath
         return try {
             if (!LOADED) {
                 System.loadLibrary(BRIDGE_LIBRARY)
                 LOADED = true
             }
-            // The path is pushed on every call, not only on the first one: it is what
-            // tells the bridge the storage root moved. The bridge then forces the next
-            // `selectVersion` to `dlopen` again, so this is also the reload path.
-            setLibraryDirectory(path)
+            setLibraryDirectory(loadDirectory.absolutePath)
             if (!selectVersion(version)) {
-                android.util.Log.e(TAG, "$version did not resolve from $path")
+                val linkerError = getLoadError()
+                LAST_PREPARATION_ERROR = linkerError
+                android.util.Log.e(TAG, "$version did not resolve from ${staged.absolutePath}: $linkerError")
                 return false
             }
-            ACTIVE_DIRECTORY = path
+            ACTIVE_DIRECTORY = sourcePath
             ACTIVE_VERSION = version
+            ACTIVE_SOURCE_LENGTH = source.length()
+            ACTIVE_SOURCE_MODIFIED = source.lastModified()
             true
         } catch (e: UnsatisfiedLinkError) {
+            LAST_PREPARATION_ERROR = e.message ?: "Native bridge or compiler symbol could not be linked."
             android.util.Log.e(TAG, "Failed to prepare the native bridge for $version", e)
             false
         }
@@ -88,18 +141,24 @@ internal object NativeBridge {
     @Volatile
     private var ACTIVE_VERSION: String? = null
 
-    /** True when [version] from the current ABI folder is already the active engine. */
-    fun isActive(context: android.content.Context, version: String): Boolean =
-        LOADED && ACTIVE_VERSION == version && ACTIVE_DIRECTORY == libraryDirectory(context)?.absolutePath
+    @Volatile
+    private var ACTIVE_SOURCE_LENGTH = -1L
 
-    /**
-     * Library search folders in the order the bridge uses them. Kept in Kotlin too so
-     * the compile log can say exactly where a version was looked for.
-     */
-    fun searchDirectories(context: android.content.Context): List<File> = buildList {
-        libraryDirectory(context)?.let(::add)
-        @Suppress("DEPRECATION")
-        runCatching { File(context.applicationInfo.nativeLibraryDir) }.getOrNull()?.let(::add)
+    @Volatile
+    private var ACTIVE_SOURCE_MODIFIED = -1L
+
+    @Volatile
+    private var LAST_PREPARATION_ERROR: String? = null
+
+    /** True when [version] from the current ABI folder is already the active engine. */
+    fun isActive(context: android.content.Context, version: String): Boolean {
+        val source = libraryFile(context, version)
+        return LOADED &&
+            ACTIVE_VERSION == version &&
+            ACTIVE_DIRECTORY == libraryDirectory(context)?.absolutePath &&
+            source.isFile &&
+            ACTIVE_SOURCE_LENGTH == source.length() &&
+            ACTIVE_SOURCE_MODIFIED == source.lastModified()
     }
 
     @Volatile
@@ -114,9 +173,12 @@ internal object NativeBridge {
     /** Warnings and errors captured by the last compile. */
     external fun getErrors(): String
 
-    /** Folder holding `libpawnc*.so`; empty means "use nativeLibraryDir only". */
+    /** Sets the app-private folder holding the staged `libpawnc*.so` file. */
     external fun setLibraryDirectory(path: String)
 
-    /** Selects and dlopens [version] (`pawnc3107` / `pawnc31011`) from that folder. */
+    /** Selects and loads [version] (`pawnc3107` / `pawnc31011`) from that folder. */
     external fun selectVersion(version: String): Boolean
+
+    /** Last dynamic-linker error, or an empty string after a successful load. */
+    external fun getLoadError(): String
 }

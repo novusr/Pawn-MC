@@ -40,11 +40,10 @@ object Runner {
     fun libraryDirectory(): File? = HOST?.let { NativeBridge.libraryDirectory(it) }
 
     /**
-     * Re-unpacks `library/<abi>/<abi>.zip` when a library is missing.
+     * Re-unpacks `library/<abi>/<abi>.zip` when a library is missing or has the wrong ABI.
      *
-     * `LibraryStore` skips the archive when every file is already present, so calling
-     * this on the compile path costs one directory listing — and it is what makes a
-     * deleted `libpawnc*.so` come back without the user reinstalling the app.
+     * `LibraryStore` skips the archive when every file has the expected size and ABI,
+     * so a stale compiler from another architecture is repaired without reinstalling.
      */
     private fun extractLibraries(): Boolean {
         val n_host = HOST ?: return false
@@ -130,8 +129,8 @@ object Runner {
         if (!n_ready) {
             Log.e(
                 "Compiler",
-                "${version.libraryName} is not available in " +
-                    "${NativeBridge.searchDirectories(n_host).joinToString()}"
+                "${version.libraryName} is not loadable. " +
+                    NativeBridge.readinessError(n_host, version.libraryName)
             )
             return false
         }
@@ -269,17 +268,19 @@ object Runner {
         version: CompilerConfig.CompilerVersion,
         manualArguments: Boolean = false
     ): Pair<Int, String> {
-        // The archive is unpacked at startup, but a user who deleted something under
-        // `library/<abi>/` gets one repair attempt before the compile reports failure.
-        // `LibraryStore` re-unpacks only when a library is actually missing.
-        if (!ensureInitialized(version) && extractLibraries()) {
-            ensureInitialized(version)
+        // The archive is unpacked at startup; a missing or wrong-ABI file gets one
+        // repair attempt before the compile reports failure.
+        // `LibraryStore` re-unpacks when a compiler library is missing or has the wrong ABI.
+        var n_initialized = ensureInitialized(version)
+        if (!n_initialized && extractLibraries()) {
+            n_initialized = ensureInitialized(version)
         }
-        if (!ensureInitialized(version)) {
-            return -1 to "Failed to load compiler library ${version.libraryName}" +
-                ". Expected lib${version.libraryName}.so in " +
-                (libraryDirectory()?.absolutePath ?: "the app library folder") +
-                ". Restart PawnMC to unpack it again."
+        if (!n_initialized) {
+            val n_host = HOST
+            val n_detail = n_host?.let {
+                NativeBridge.readinessError(it, version.libraryName)
+            } ?: "PawnMC has no storage context for Documents/PawnMC/library."
+            return -1 to "Failed to load compiler library ${version.libraryName}. $n_detail"
         }
 
         Log.d("Compiler", "Compiling with: ${INITIALIZED_VER?.label}")

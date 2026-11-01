@@ -24,9 +24,13 @@
 # include <vector>
 # include <cstdlib>
 # include <cstring>
+# include <cerrno>
 # include <libgen.h>
 # include <pthread.h>
 # include <dlfcn.h>
+# include <android/dlext.h>
+# include <fcntl.h>
+# include <unistd.h>
 
 # include "Compiler.h"
 # include "Bridge.h"
@@ -39,6 +43,7 @@ namespace {
 
     /** Session state of the library loader; one bridge per process. */
     MC_BridgeState n_state = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+    std::string n_load_error;
 
     /**
      * Finds the engine symbols inside an already `dlopen`ed version library.
@@ -53,7 +58,11 @@ namespace {
         n_state.get_output = reinterpret_cast<char* (*)(void)>(dlsym(n_handle, MC_SYM_OUTPUT));
         n_state.get_errors = reinterpret_cast<char* (*)(void)>(dlsym(n_handle, MC_SYM_ERRORS));
         if (n_state.pc_compile == nullptr || n_state.get_output == nullptr || n_state.get_errors == nullptr) {
-            LOGE("Version library is missing its engine entry points: %s", dlerror());
+            const char* n_symbol_error = dlerror();
+            n_load_error = n_symbol_error != nullptr
+                ? n_symbol_error
+                : "Version library is missing one or more engine entry points.";
+            LOGE("Version library is missing its engine entry points: %s", n_load_error.c_str());
             n_state.pc_compile = nullptr;
             n_state.get_output = nullptr;
             n_state.get_errors = nullptr;
@@ -64,34 +73,38 @@ namespace {
     }
 
     /**
-     * `dlopen`s `lib<version>.so`, preferring the extracted ABI folder.
-     *
-     * The folder holds one file per compiler version, so both versions can be present
-     * at the same time and switching only re-points this handle. `nativeLibraryDir`
-     * stays as the fallback for an install that has not extracted its archive yet.
+     * Loads the selected compiler from the app-private code-cache copy.
+     * Documents remains the authoritative source; the private copy avoids
+     * executable-mapping restrictions on shared storage.
      */
     bool n_load_version(const char* n_version) {
-        char n_file_name[64];
-        snprintf(n_file_name, sizeof(n_file_name), "lib%s.so", n_version);
-
-        void* n_handle = nullptr;
-        if (n_state.library_dir != nullptr && n_state.library_dir[0] != '\0') {
-            char n_path[512];
-            snprintf(n_path, sizeof(n_path), "%s/%s", n_state.library_dir, n_file_name);
-            n_handle = dlopen(n_path, RTLD_NOW | RTLD_LOCAL);
-            if (n_handle == nullptr) {
-                LOGE("Could not load %s: %s", n_path, dlerror());
-            }
+        n_load_error.clear();
+        if (n_state.library_dir == nullptr || n_state.library_dir[0] == '\0') {
+            n_load_error = "Compiler library directory is not set.";
+            LOGE("%s", n_load_error.c_str());
+            return false;
         }
 
+        const std::string n_path = std::string(n_state.library_dir) + "/lib" + n_version + ".so";
+        const int n_fd = open(n_path.c_str(), O_RDONLY | O_CLOEXEC);
+        if (n_fd < 0) {
+            n_load_error = strerror(errno);
+            LOGE("Could not open %s: %s", n_path.c_str(), n_load_error.c_str());
+            return false;
+        }
+
+        android_dlextinfo n_ext_info = {};
+        n_ext_info.flags = ANDROID_DLEXT_USE_LIBRARY_FD;
+        n_ext_info.library_fd = n_fd;
+        dlerror();
+        void* n_handle = android_dlopen_ext(n_path.c_str(), RTLD_NOW | RTLD_LOCAL, &n_ext_info);
+        const char* n_linker_error = n_handle == nullptr ? dlerror() : nullptr;
+        const std::string n_error = n_linker_error != nullptr ? n_linker_error : "unknown linker error";
+        close(n_fd);
         if (n_handle == nullptr) {
-            // RTLD_NOW so a broken engine fails here, with a message the log keeps,
-            // instead of aborting the first compile even though the version "loaded".
-            n_handle = dlopen(n_file_name, RTLD_NOW | RTLD_LOCAL);
-            if (n_handle == nullptr) {
-                LOGE("Could not load %s from the app library directory: %s", n_file_name, dlerror());
-                return false;
-            }
+            n_load_error = n_error;
+            LOGE("Could not load %s: %s", n_path.c_str(), n_load_error.c_str());
+            return false;
         }
 
         if (!n_bind_version_handle(n_handle)) {
@@ -106,7 +119,8 @@ namespace {
             free(n_state.version);
         }
         n_state.version = strdup(n_version);
-        LOGI("Engine ready: %s (%s)", n_version, n_state.library_dir != nullptr ? n_state.library_dir : "nativeLibraryDir");
+        n_load_error.clear();
+        LOGI("Engine ready: %s from %s", n_version, n_path.c_str());
         return true;
     }
 
@@ -385,10 +399,10 @@ Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_getErrors(JNIEnv* env, jobject 
 }
 
 /**
- * Sets `Documents/PawnMC/library/<abi>`, the folder the extracted archive fills.
+ * Sets the private code-cache folder containing the staged compiler library.
  *
  * Called on every compile start, so the path is always the one the app currently
- * considers its storage root; an empty string means "use nativeLibraryDir only".
+ * considers its storage root.
  */
 JNIEXPORT void JNICALL
 Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_setLibraryDirectory(
@@ -423,7 +437,7 @@ Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_setLibraryDirectory(
     LOGI("Library directory: %s", n_state.library_dir);
 }
 
-/** `dlopen`s `lib<version>.so` from the library directory; false when it is unusable. */
+/** Loads `lib<version>.so` from app-private code cache; false when unusable. */
 JNIEXPORT jboolean JNICALL
 Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_selectVersion(
         JNIEnv* env, jobject thiz, jstring version) {
@@ -436,6 +450,12 @@ Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_selectVersion(
     const bool n_ok = n_load_version(n_version);
     env->ReleaseStringUTFChars(version, n_version);
     return n_ok ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_rvdjv_pawnmc_data_compiler_NativeBridge_getLoadError(JNIEnv* env, jobject thiz) {
+    (void)thiz;
+    return env->NewStringUTF(n_load_error.c_str());
 }
 
 } // extern "C"

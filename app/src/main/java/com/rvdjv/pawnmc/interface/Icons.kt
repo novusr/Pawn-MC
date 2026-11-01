@@ -613,6 +613,43 @@ object _Icons {
         }.build()
     }
 
+    /** Scarf-shaped glyph for the orientation toggle. */
+    val Scarf: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "_Icons.Scarf",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(6.1f, 3.2f)
+                curveTo(8.2f, 2.0f, 11.0f, 2.2f, 13.0f, 3.7f)
+                lineTo(18.5f, 7.0f)
+                curveTo(19.5f, 7.6f, 20.0f, 8.7f, 19.8f, 9.9f)
+                lineTo(18.2f, 19.4f)
+                lineTo(15.1f, 21.7f)
+                lineTo(12.7f, 19.3f)
+                lineTo(14.3f, 11.3f)
+                lineTo(10.3f, 8.9f)
+                lineTo(8.6f, 19.9f)
+                lineTo(5.3f, 21.2f)
+                lineTo(3.2f, 18.2f)
+                lineTo(5.0f, 8.5f)
+                curveTo(2.8f, 7.0f, 3.4f, 4.5f, 6.1f, 3.2f)
+                close()
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.1f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(6.0f, 8.0f)
+                lineTo(12.5f, 11.5f)
+            }
+        }.build()
+    }
+
     /** Screen-rotation glyph for the portrait / landscape toggle. */
     val ScreenRotation: ImageVector by lazy {
         ImageVector.Builder(
