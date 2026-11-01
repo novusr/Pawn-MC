@@ -1,7 +1,7 @@
 /**
  * Engine entry points of a Pawn version library.
- * File: Engine.cpp
- * Location: app/src/main/cpp
+ * File: Engine.cc
+ * Location: cpp/
  * License: Apache License (v2)
  *
  * Every `libpawnc<version>.so` ships this one file in addition to the version's own

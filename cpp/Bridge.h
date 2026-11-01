@@ -47,7 +47,7 @@ struct MC_BridgeState {
 /**
  * Shared entry points of the native compiler bridge.
  *
- * `Compiler.cpp` is the only translation unit that carries `JNIEXPORT`; every other file
+ * `Compiler.cc` is the only translation unit that carries `JNIEXPORT`; every other file
  * declares what it implements here so the compiler catches a signature drift between the
  * definition and the call site at build time instead of at the first `UnsatisfiedLinkError`.
  *
@@ -56,7 +56,7 @@ struct MC_BridgeState {
  * `pc_*` trampolines as well.
  */
 
-// --- Compiler.cpp ---------------------------------------------------------------
+// --- Compiler.cc ---------------------------------------------------------------
 // JNI entry points. Their names encode the owner class:
 // `com.rvdjv.pawnmc.data.compiler.Runner`.
 
@@ -69,7 +69,7 @@ jstring MC_runner_get_output(JNIEnv* env, jobject thiz);
 /** Warnings and errors captured by the last compile. */
 jstring MC_runner_get_errors(JNIEnv* env, jobject thiz);
 
-// --- Buffer.cpp -----------------------------------------------------------------
+// --- Buffer.cc -----------------------------------------------------------------
 // Output/error capture, warning and error counters, and the `pc_printf` sink.
 
 void MC_buffer_clear();
@@ -77,7 +77,7 @@ std::string MC_buffer_result(int exit_code);
 std::string MC_buffer_output();
 std::string MC_buffer_errors();
 
-// --- Source.cpp -----------------------------------------------------------------
+// --- Source.cc -----------------------------------------------------------------
 // `pc_opensrc` family: the in-memory cache the compiler reads scripts through.
 
 void  MC_source_clear_cache();
@@ -89,7 +89,7 @@ void* MC_source_position(void* handle);
 int   MC_source_eof(void* handle);
 void* MC_source_create(char* filename);
 
-// --- Files.cpp ------------------------------------------------------------------
+// --- Files.cc ------------------------------------------------------------------
 // Assembly / binary back ends plus the temporary-file helper.
 
 void  MC_files_set_cache_dir(const char* directory);
@@ -107,7 +107,7 @@ long  MC_bin_length(void* handle);
 
 void* MC_temp_create(char** filename);
 
-// --- Diagnostics.cpp -------------------------------------------------------------
+// --- Diagnostics.cc -------------------------------------------------------------
 // Argument classification and the on-device compile thread.
 
 /** True when [value] looks like a Pawn source path rather than a compiler flag. */
@@ -135,9 +135,9 @@ extern "C" {
 /**
  * The `pc_compile` the worker thread runs.
  *
- * `Diagnostics.cpp` is linked into `libm.so` and into both version libraries, and each
- * defines this with *its own* `pc_compile` (defined in `Compiler.cpp` for the bridge,
- * in `Engine.cpp` for a version). Calling `pc_compile` straight from `Diagnostics.cpp`
+ * `Diagnostics.cc` is linked into `libm.so` and into both version libraries, and each
+ * defines this with *its own* `pc_compile` (defined in `Compiler.cc` for the bridge,
+ * in `Engine.cc` for a version). Calling `pc_compile` straight from `Diagnostics.cc`
  * would bind every copy to whichever definition the linker saw first, so the compile
  * would run on the bridge's engine instead of the selected one. This hook is what keeps
  * each copy self-contained.

@@ -8,7 +8,7 @@
  *
  * Everything here is used by more than one translation unit, so it lives in the header
  * instead of being repeated. The implementation is split by responsibility across
- * `Bridge.h`, `Buffer.cpp`, `Source.cpp`, `Files.cpp` and `Diagnostics.cpp`; see
+ * `Bridge.h`, `Buffer.cc`, `Source.cc`, `Files.cc` and `Diagnostics.cc`; see
  * `README.rst` in this directory for the whole picture.
  */
 

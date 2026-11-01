@@ -1,7 +1,7 @@
 /**
  * JNI entry points of the Pawn compiler bridge.
- * File: Compiler.cpp
- * Location: app/src/main/cpp
+ * File: Compiler.cc
+ * Location: cpp/
  * License: Apache License (v2)
  *
  * This file is the *only* translation unit that carries `JNIEXPORT`. It owns three
@@ -11,11 +11,11 @@
  *     `pc_compile` expects, in the order the compiler requires;
  *  2. telling the back ends where the app cache lives, so the preprocessor scratch file
  *     and the working directory end up next to the project rather than in `/tmp`;
- *  3. handing the compile off to `Diagnostics.cpp`, which runs it on a thread with the
+ *  3. handing the compile off to `Diagnostics.cc`, which runs it on a thread with the
  *     enlarged stack the Pawn parser needs.
  *
- * Everything the compiler calls back into lives in its own file — `Buffer.cpp` for the
- * printf/error sinks, `Source.cpp` for the in-memory script cache, `Files.cpp` for the
+ * Everything the compiler calls back into lives in its own file — `Buffer.cc` for the
+ * printf/error sinks, `Source.cc` for the in-memory script cache, `Files.cc` for the
  * asm/bin/scratch streams. See `README.rst` in this directory for the layout.
  */
 
@@ -274,8 +274,8 @@ namespace {
     }
 }
 
-// `Diagnostics.cpp` binds to `libm.so`'s own compiler, which is what the engine hook
-// in `Bridge.h` is for; this file defines it there and `Engine.cpp` in a version library.
+// `Diagnostics.cc` binds to `libm.so`'s own compiler, which is what the engine hook
+// in `Bridge.h` is for; this file defines it there and `Engine.cc` in a version library.
 int MC_run_compile_entry(int argc, char** argv) {
     return pc_compile(argc, argv);
 }

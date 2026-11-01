@@ -1,7 +1,7 @@
 /**
  * Argument inspection and the compile worker thread.
- * File: Diagnostics.cpp
- * Location: app/src/main/cpp
+ * File: Diagnostics.cc
+ * Location: cpp/
  * License: Apache License (v2)
  *
  * Two things that are easy to get wrong and painful to debug on a phone:

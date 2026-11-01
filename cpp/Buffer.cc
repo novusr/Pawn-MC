@@ -1,13 +1,13 @@
 /**
  * Compiler output capture.
- * File: Buffer.cpp
- * Location: app/src/main/cpp
+ * File: Buffer.cc
+ * Location: cpp/
  * License: Apache License (v2)
  *
  * The Pawn compiler does not return its diagnostics: it calls back into the host through
  * `pc_printf` (console text) and `pc_error` (numbered warnings and errors). Both sinks
  * live here together with the counters that decide when to stop collecting, so the whole
- * "what did the compiler say" story is in one translation unit and `Compiler.cpp` only
+ * "what did the compiler say" story is in one translation unit and `Compiler.cc` only
  * has to read the finished strings out.
  *
  * The mutex is shared across all of these functions because the compiler runs on its own
@@ -246,7 +246,7 @@ extern "C" int pc_error(int number, char* message, char* filename,
     return 0;
 }
 // ---------------------------------------------------------------------------------
-// C-linkage façade consumed by Compiler.cpp.
+// C-linkage façade consumed by Compiler.cc.
 //
 // The implementation above lives in `namespace MC_buffer`, which keeps the internal
 // names off the global namespace the Pawn compiler itself links into. These wrappers

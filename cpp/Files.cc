@@ -1,7 +1,7 @@
 /**
  * Assembly, binary and temporary-file back ends.
- * File: Files.cpp
- * Location: app/src/main/cpp
+ * File: Files.cc
+ * Location: cpp/
  * License: Apache License (v2)
  *
  * Three small file abstractions the Pawn compiler calls into, grouped because they are

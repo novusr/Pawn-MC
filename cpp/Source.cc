@@ -1,7 +1,7 @@
 /**
  * Source-file back end for the Pawn compiler.
- * File: Source.cpp
- * Location: app/src/main/cpp
+ * File: Source.cc
+ * Location: cpp/
  * License: Apache License (v2)
  *
  * The compiler reads scripts through the `pc_opensrc` family rather than through `fopen`,

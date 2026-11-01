@@ -81,6 +81,20 @@ your Pawn development workflow.
 
 Official Community: https://discord.gg/2YqkmDvTch
 
+Need help?
+----------
+
+If you need help, `create an Issue <https://github.com/novusr/Pawn-MC/issues/new/choose>`_
+in the PawnMC repository and fill in the available form so we can understand and address
+your request.
+
+Butuh bantuan?
+--------------
+
+Jika membutuhkan bantuan, `buat Issue <https://github.com/novusr/Pawn-MC/issues/new/choose>`_
+di repositori PawnMC dan isi formulir yang tersedia agar kami dapat memahami serta
+menindaklanjuti kebutuhan Anda.
+
 Documentation
 -------------
 

@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.22.1)
 project("pawnc" C CXX)
 
 # Source path
-set(PAWNC_3107_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10.7/source")
-set(PAWNC_31011_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../../../../compilers/pawnc-3.10.11/source")
+set(PAWNC_3107_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../compilers/pawnc-3.10.7/source")
+set(PAWNC_31011_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../compilers/pawnc-3.10.11/source")
 
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PAWNC_3107_SOURCE_DIR}/compiler/CMakeLists.txt")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PAWNC_31011_SOURCE_DIR}/compiler/CMakeLists.txt")
@@ -16,7 +16,7 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PAWNC_31011_SO
 # The Pawn submodules ship `compiler/version.h.in`, but that template is only present in
 # an initialised submodule, and PawnMC compiles the `compiler/` sources directly rather
 # than through pawn-lang's own packaging helper. `version.h` therefore lives in
-# `app/src/main/cpp` and both libraries include it from `${PAWN_VERSION_HEADER_DIR}`.
+# `cpp/` and both libraries include it from `${PAWN_VERSION_HEADER_DIR}`.
 #
 # The per-version numbers are still configured where a submodule is checked out: the
 # `configure_file` calls emit `pawnc3107/version.h` / `pawnc31011/version.h` into the
@@ -134,27 +134,27 @@ set(PAWNC_31011_SOURCES
 
 # PawnMC bridge sources, split by responsibility:
 #
-#   Compiler.cpp     JNI entry points, version loading, argument marshalling
-#   Diagnostics.cpp  source-argument classification, compile worker thread
-#   Buffer.cpp       pc_printf / pc_error capture, warning and error counters
-#   Source.cpp       pc_opensrc family backed by an in-memory script cache
-#   Files.cpp        pc_openasm / pc_openbin / pc_createtmpsrc back ends
+#   Compiler.cc     JNI entry points, version loading, argument marshalling
+#   Diagnostics.cc  source-argument classification, compile worker thread
+#   Buffer.cc       pc_printf / pc_error capture, warning and error counters
+#   Source.cc       pc_opensrc family backed by an in-memory script cache
+#   Files.cc        pc_openasm / pc_openbin / pc_createtmpsrc back ends
 #   Bridge.h         the shared entry points; Compiler.h holds the shared defines
 set(MC_BRIDGE_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/Compiler.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Diagnostics.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Files.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Compiler.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Diagnostics.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Files.cc
 )
 
 # PawnMC engine: the code a version library needs to run a compile on its own.
 # It carries no JNI surface, because the JNI surface lives once in the bridge.
 set(MC_ENGINE_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/Diagnostics.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Source.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Files.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Diagnostics.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Buffer.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Source.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/Files.cc
 )
 
 # ---------------------------------------------------------------------------------
@@ -169,7 +169,7 @@ set(MC_ENGINE_SOURCES
 # globals have to be duplicated per version, which is the whole point of having two
 # `libpawnc*.so` files. The bridge links one copy only so the shared callbacks
 # (`MC_buffer_*`, `MC_source_*`, `MC_files_*`) exist inside `libm.so`; it also links
-# `Compiler.cpp`'s `pc_compile`, but nothing calls that copy — compilation is
+# `Compiler.cc`'s `pc_compile`, but nothing calls that copy — compilation is
 # dispatched through `mc_compile_entry` in the selected version library.
 # ---------------------------------------------------------------------------------
 add_library(m SHARED
@@ -196,11 +196,11 @@ target_link_libraries(m android log dl)
 # pawnc 3107
 #
 # A version library: dependent on the bridge (it calls back into the JNI-captured
-# buffer) and exporting only the engine entry points from Engine.cpp.
+# buffer) and exporting only the engine entry points from Engine.cc.
 add_library(pawnc3107 SHARED
     ${PAWNC_3107_SOURCES}
     ${MC_ENGINE_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Engine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Engine.cc
 )
 
 target_include_directories(pawnc3107 PRIVATE
@@ -218,7 +218,7 @@ target_compile_options(pawnc3107 PRIVATE
 )
 
 # Only the three engine entry points are exported (they carry an explicit visibility
-# attribute in Engine.cpp); everything else stays internal, so two versions can never
+# attribute in Engine.cc); everything else stays internal, so two versions can never
 # bind to each other's compiler internals.
 set_target_properties(pawnc3107 PROPERTIES
     C_VISIBILITY_PRESET hidden
@@ -232,7 +232,7 @@ target_link_libraries(pawnc3107 android log)
 add_library(pawnc31011 SHARED
     ${PAWNC_31011_SOURCES}
     ${MC_ENGINE_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Engine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Engine.cc
 )
 
 target_include_directories(pawnc31011 PRIVATE
