@@ -55,6 +55,18 @@ object Locales {
             Lang.ES to "Runtime portátil local de SA-MP y MySQL",
             Lang.RU to "Локальный переносимый рантайм SA-MP и MySQL",
         ),
+        "section.server.connection" to mapOf(
+            Lang.ID to "Koneksi server",
+            Lang.EN to "Server connection",
+        ),
+        "section.runtime" to mapOf(
+            Lang.ID to "Informasi runtime",
+            Lang.EN to "Runtime information",
+        ),
+        "section.directory" to mapOf(
+            Lang.ID to "Folder gamemode",
+            Lang.EN to "SA-MP game mode directory",
+        ),
         "status.online" to mapOf(
             Lang.ID to "AKTIF",
             Lang.EN to "LIVE",
@@ -575,6 +587,10 @@ object Locales {
             Lang.TL to "Patayin na",
             Lang.ES to "Desactivar optimización de batería",
             Lang.RU to "НЕ В СЕТИ",
+        ),
+        "perm.battery.settings" to mapOf(
+            Lang.ID to "Pengaturan optimasi baterai tidak bisa dibuka.",
+            Lang.EN to "Battery optimization settings could not be opened.",
         ),
         "guide.antidc.title" to mapOf(
             Lang.ID to "Sering ke-disconnect dari game?",

@@ -333,7 +333,7 @@ fun MainScreen(
         )
     }
 
-    // The former self-test button now opens PocketSAMP, the embedded SA-MP server
+    // The PocketSAMP action opens the embedded SA-MP server
     // runtime adopted from thirdparty/PocketSAMP. It runs as a separate activity on
     // top of this screen and returns here through its back handling, the same way
     // the Sora-based editor screen is hosted.
@@ -343,7 +343,17 @@ fun MainScreen(
         // semi-violet ramp as this interface. The mapping onto PocketSAMP's own enums
         // lives in the flavor hook, because this source set is shared with the Nougat
         // flavor, which has no PocketSAMP module at all.
-        PocketSampGateway.launch(context, appLanguage.value, viewModel.n_app_theme.value)
+        if (!PocketSampGateway.launch(context, appLanguage.value, viewModel.n_app_theme.value)) {
+            Toast.makeText(
+                context,
+                localizer.get(
+                    "main.pocketsamp.launch_failed",
+                    appLanguage,
+                    "PocketSAMP could not be opened in this build."
+                ),
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
     var showCompilingNotice by remember { mutableStateOf(false) }
 
@@ -354,7 +364,7 @@ fun MainScreen(
     fun showCompilingBlockedToast() {
         Toast.makeText(
             context,
-            localizer.get("main.busy.toast", appLanguage, "Settings, editor, and self-test are unavailable while compiling"),
+            localizer.get("main.busy.toast", appLanguage, "Settings, editor, and PocketSAMP are unavailable while compiling"),
             Toast.LENGTH_SHORT
         ).show()
     }
@@ -459,7 +469,7 @@ fun MainScreen(
                         onSettingsClick()
                     }
                 },
-                onSelfTestClick = {
+                onPocketSampClick = {
                     if (viewModel.isCompiling) {
                         showCompilingBlockedToast()
                     } else {
@@ -678,7 +688,7 @@ private val HeaderActionIconSize = 24.dp
 internal fun ScreenHeader(
     onEditorClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onSelfTestClick: () -> Unit,
+    onPocketSampClick: () -> Unit,
     actionsVisible: Boolean = false,
     onToggleActions: () -> Unit = {},
     isCompiling: Boolean = false,
@@ -724,9 +734,9 @@ internal fun ScreenHeader(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     HeaderActionButton(
-                        onClick = onSelfTestClick,
+                        onClick = onPocketSampClick,
                         enabled = !isCompiling,
-                        testTag = "self_test_button",
+                        testTag = "pocketsamp_button",
                         icon = {
                             // PocketSAMP runtime: the SA-MP server console adopted from
                             // thirdparty/PocketSAMP now lives behind this button. The
@@ -875,9 +885,9 @@ internal fun CompilingBlockedNotice(
                 if (isCompiling) "main.busy.notice" else "main.busy.completed",
                 appLanguage,
                 if (isCompiling) {
-                    "Settings, Xed Editor, and Self-Test are temporarily unavailable until compilation is complete."
+                    "Settings, Xed Editor, and PocketSAMP are temporarily unavailable until compilation is complete."
                 } else {
-                    "Compilation finished. Settings, Xed Editor, and Self-Test are available again."
+                    "Compilation finished. Settings, Xed Editor, and PocketSAMP are available again."
                 }
             ),
             color = MaterialTheme.colorScheme.primary,

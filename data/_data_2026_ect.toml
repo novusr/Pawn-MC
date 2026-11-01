@@ -674,18 +674,18 @@ ru = "У вас установлена последняя версия"
 es = "Estas usando la version mas reciente"
 
 [main.busy.notice]
-id = "Pengaturan, PawnMC Editor, dan Self-Test sementara tidak tersedia sampai proses kompilasi selesai."
-en = "Settings, PawnMC Editor, and Self-Test are temporarily unavailable until compilation is complete."
-tl = "Pansamantalang hindi available ang Settings, PawnMC Editor, at Self-Test hanggang matapos ang kompilasyon."
-ru = "Настройки, PawnMC Editor и Self-Test временно недоступны до завершения компиляции."
-es = "Configuracion, PawnMC Editor y Self-Test no estan disponibles hasta que termine la compilacion."
+id = "Pengaturan, PawnMC Editor, dan PocketSAMP sementara tidak tersedia sampai proses kompilasi selesai."
+en = "Settings, PawnMC Editor, and PocketSAMP are temporarily unavailable until compilation is complete."
+tl = "Pansamantalang hindi available ang Settings, PawnMC Editor, at PocketSAMP hanggang matapos ang kompilasyon."
+ru = "Настройки, PawnMC Editor и PocketSAMP временно недоступны до завершения компиляции."
+es = "Configuracion, PawnMC Editor y PocketSAMP no estan disponibles hasta que termine la compilacion."
 
 [main.busy.completed]
-id = "Kompilasi selesai. Pengaturan, PawnMC Editor sudah tersedia kembali."
-en = "Compilation finished. Settings, PawnMC Editor are available again."
-tl = "Tapos na ang kompilasyon. Available na muli ang Settings at PawnMC Editor."
-ru = "Компиляция завершена. Настройки, PawnMC Editor снова доступны."
-es = "Compilacion terminada. Configuracion, PawnMC Editor vuelven a estar disponibles."
+id = "Kompilasi selesai. Pengaturan, PawnMC Editor, dan PocketSAMP tersedia kembali."
+en = "Compilation finished. Settings, PawnMC Editor, and PocketSAMP are available again."
+tl = "Tapos na ang kompilasyon. Available na muli ang Settings, PawnMC Editor, at PocketSAMP."
+ru = "Компиляция завершена. Настройки, PawnMC Editor и PocketSAMP снова доступны."
+es = "Compilacion terminada. Configuracion, PawnMC Editor y PocketSAMP vuelven a estar disponibles."
 
 [main.busy.dismiss]
 id = "Tutup pemberitahuan kompilasi"
@@ -695,11 +695,18 @@ ru = "Закрыть уведомление о компиляции"
 es = "Cerrar el aviso de compilacion"
 
 [main.busy.toast]
-id = "Pengaturan, editor, dan self-test tidak tersedia saat proses kompilasi berjalan"
-en = "Settings, editor, and self-test are unavailable while compiling"
-tl = "Hindi available ang settings, editor, at self-test habang nagko-compile"
-ru = "Настройки, редактор и self-test недоступны во время компиляции"
-es = "Configuracion, editor y self-test no estan disponibles mientras se compila"
+id = "Pengaturan, editor, dan PocketSAMP tidak tersedia saat proses kompilasi berjalan"
+en = "Settings, editor, and PocketSAMP are unavailable while compiling"
+tl = "Hindi available ang settings, editor, at PocketSAMP habang nagko-compile"
+ru = "Настройки, редактор и PocketSAMP недоступны во время компиляции"
+es = "Configuracion, editor y PocketSAMP no estan disponibles mientras se compila"
+
+[main.pocketsamp.launch_failed]
+id = "PocketSAMP tidak dapat dibuka di build ini."
+en = "PocketSAMP could not be opened in this build."
+tl = "Hindi mabuksan ang PocketSAMP sa build na ito."
+ru = "Не удалось открыть PocketSAMP в этой сборке."
+es = "No se pudo abrir PocketSAMP en esta compilacion."
 
 [settings.include.paths.notice.title]
 id = "Catatan"

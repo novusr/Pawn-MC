@@ -57,6 +57,71 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      # The compiler libraries do not exist in the repository: CMake builds them per ABI
+      # from `compilers/pawnc-*/`. So the archive has to be produced here, between the
+      # native build and the APK, instead of being read from disk.
+      #
+      # Step 1 builds only the native targets for the three ABIs, which leaves them in
+      # `app/build/intermediates/cxx/*/obj/<abi>/`; step 2 packs them into
+      # `assets/<abi>.zip` there, so the APK ships one archive per ABI and no loose
+      # `libpawnc*.so`.
+      #
+      # `libandroidx.graphics.path.so` is not built here (it comes from the Compose
+      # dependency), so it is collected later, in Gradle, from the merged native libs.
+      - name: Build native compiler libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          ./gradlew :app:externalNativeBuild${{ matrix.flavor == 'nougat' && 'Nougat' || 'Newer' }}Release \
+            --console=plain --no-daemon
+
+      - name: Pack compiler libraries into per-ABI archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          VARIANT="${{ matrix.flavor == 'nougat' && 'Nougat' || 'Newer' }}Release"
+
+          # AGP writes the CMake output under
+          #   intermediates/cxx/<variant>/<hash>/obj/<abi>/
+          # and keeps per-build metadata under .../<hash>/logs/<abi>/. Both folders match
+          # `-name <abi>`, so the search is anchored to `obj/`; otherwise the first hit is
+          # the `logs` twin, which holds only build logs and no libraries.
+          #
+          # `-execdir test -f ...` would be fragile here; instead each candidate is checked
+          # for the libraries below and non-matching candidates are skipped.
+          mapfile -t PAWNC_DIRS < <(
+            find app/build/intermediates/cxx \
+              \( -path '*/obj/arm64-v8a' -o -path '*/obj/armeabi-v7a' -o -path '*/obj/x86_64' \) \
+              -type d | sort -u
+          )
+          if [ ${#PAWNC_DIRS[@]} -eq 0 ]; then
+            echo "::error::No CMake output found under app/build/intermediates/cxx/*/*/obj/"
+            find app/build/intermediates/cxx -maxdepth 4 -type d 2>/dev/null | head -50
+            exit 1
+          fi
+          printf 'CMake output folders:\n%s\n' "${PAWNC_DIRS[@]}"
+
+          for DIR in "${PAWNC_DIRS[@]}"; do
+            ABI=$(basename "$DIR")
+            # Both engines must be present: one archive per ABI carrying both versions.
+            for LIB in libpawnc3107.so libpawnc31011.so; do
+              if [ ! -f "$DIR/$LIB" ]; then
+                echo "::error::$LIB missing in $DIR"
+                ls -la "$DIR"
+                # Show where the libraries actually are, so the next run needs no guessing.
+                echo "--- every .so under app/build ---"
+                find app/build -name '*.so' -printf '%p\n' 2>/dev/null | head -40
+                exit 1
+              fi
+            done
+            ASSET_DIR="app/src/main/assets"
+            mkdir -p "$ASSET_DIR"
+            # -j stores just the two file names, no directory component.
+            zip -j -X "$ASSET_DIR/$ABI.zip" "$DIR/libpawnc3107.so" "$DIR/libpawnc31011.so"
+            echo "Packed $ABI.zip:"
+            unzip -l "$ASSET_DIR/$ABI.zip"
+          done
+
       - name: Build and Lint Release APK
         shell: bash
         run: ./gradlew lint${{ matrix.flavor == 'nougat' && 'Nougat' || 'Newer' }}Release assemble${{ matrix.flavor == 'nougat' && 'Nougat' || 'Newer' }}Release --console=rich --no-daemon
@@ -69,6 +134,17 @@ jobs:
           path: app/build/outputs/apk/${{ matrix.flavor }}/release/*.apk
           if-no-files-found: warn
           retention-days: 90
+
+      - name: Report packaged native archives
+        if: always()
+        shell: bash
+        run: |
+          APK=$(find app/build/outputs/apk/${{ matrix.flavor }}/release -name '*.apk' | head -1)
+          if [ -n "$APK" ]; then
+            echo '--- native entries in the APK ---'
+            unzip -l "$APK" | grep -E 'assets/.*\\.zip|lib/.*\\.so' || true
+          fi
+          ls -la app/src/main/assets 2>/dev/null || true
       - name: Upload Lint Report
         if: always()
         continue-on-error: true

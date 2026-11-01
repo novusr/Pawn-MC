@@ -35,10 +35,10 @@ object PocketSampGateway {
     /**
      * Resolves the flavor implementation once.
      *
-     * `com.pocketsamp.server.NewerPocketSampHook` is reflective on purpose: that class only
-     * exists in the `newer` flavor's source set, so a direct reference here would not
-     * compile for `nougat`. The `legacy` suffix marks the Nougat flavor (it ships with
-     * `applicationIdSuffix = ".legacy"`), so the lookup is skipped there entirely.
+     * The registration function is reflective on purpose: its generated Kotlin file
+     * class only exists in the `newer` flavor's source set, so a direct reference here
+     * would not compile for `nougat`. The `legacy` suffix marks the Nougat flavor (it
+     * ships with `applicationIdSuffix = ".legacy"`), so the lookup is skipped there.
      *
      * The registration function is invoked once; afterwards [hook] answers immediately, so
      * the reflection hop happens at most once per process.
@@ -48,7 +48,7 @@ object PocketSampGateway {
         // The Nougat flavor has no runtime: its hook only reports the API requirement.
         if (com.rvdjv.pawnmc.BuildConfig.APPLICATION_ID.endsWith(".legacy")) return null
         return runCatching {
-            Class.forName("com.pocketsamp.server.NewerPocketSampHookKt")
+            Class.forName("com.pocketsamp.server.PocketSampRuntimeMarkerKt")
                 .getDeclaredMethod("registerNewerPocketSampHook")
                 .invoke(null)
             hook
@@ -76,13 +76,17 @@ object PocketSampGateway {
     }
 
     /** Opens the runtime UI, following the user's language and theme settings. */
-    fun launch(context: Context, language: String, theme: String) {
+    fun launch(context: Context, language: String, theme: String): Boolean {
         val n_hook = resolveHook()
         if (n_hook == null) {
             Log.w(TAG, "PocketSAMP is not embedded in this build.")
-            return
+            return false
         }
-        runCatching { n_hook.launch(context, language, theme) }
+        return runCatching {
+            n_hook.launch(context, language, theme)
+            true
+        }
             .onFailure { Log.e(TAG, "PocketSAMP launch failed", it) }
+            .getOrDefault(false)
     }
 }

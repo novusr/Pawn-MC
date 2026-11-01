@@ -11,16 +11,20 @@ import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 /**
  * Asynchronous background syntax analyzer for Pawn scripts.
  */
-class PawnManager : SimpleAnalyzeManager<Any?>() {
+internal class PawnManager(
+    private val onLocalFunctionsChanged: (List<PawnLocalFunction>) -> Unit = {}
+) : SimpleAnalyzeManager<Any?>() {
 
     /** Tokenizes [text] and paints the result. */
     override fun analyze(text: StringBuilder, delegate: SimpleAnalyzeManager<Any?>.Delegate<Any?>): Styles {
         val styles = Styles()
         val builder = MappedSpans.Builder()
         val blockStack = ArrayDeque<Pair<Int, Int>>()
-        val localFunctions = PawnSourceSymbols.functions(text).mapTo(hashSetOf()) { it.name }
+        val localFunctions = PawnSourceSymbols.functions(text) { delegate.isCancelled() }.orEmpty()
+        if (!delegate.isCancelled()) onLocalFunctionsChanged(localFunctions)
+        val localFunctionNames = localFunctions.mapTo(hashSetOf()) { it.name }
 
-        PawnLexer(text, delegate, localFunctions) { span ->
+        PawnLexer(text, delegate, localFunctionNames) { span ->
             when (span.kind) {
                 SpanKind.BraceOpen -> {
                     blockStack += span.line to span.column

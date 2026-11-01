@@ -11,6 +11,9 @@
 -keep class com.rvdjv.pawnmc.interface.main.MainActivity
 -keep class com.rvdjv.pawnmc.interface.settings.SettingsActivity
 
+# Loaded by generated Kotlin file-class name from PocketSampGateway.
+-keep class com.pocketsamp.server.PocketSampRuntimeMarkerKt { *; }
+
 # Keep CompilerConfig enums (used for SharedPreferences serialization)
 -keep class com.rvdjv.pawnmc.data.config.CompilerConfig$CompilerVersion { *; }
 -keep class com.rvdjv.pawnmc.data.config.CompilerConfig$DebugLevel { *; }

@@ -3,8 +3,8 @@ package com.rvdjv.pawnmc.data.library
 import android.util.Log
 import com.rvdjv.pawnmc.data.config.AppStorage
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.util.zip.ZipInputStream
 
 /**
@@ -67,12 +67,21 @@ object LibraryStore {
         abiDirectory(context, abi).absolutePath
 
     /**
-     * Where the APK keeps the archive for [abi]. Android extracts `lib/<abi>/..` from
-     * the APK into [android.content.pm.ApplicationInfo.nativeLibraryDir] at install
-     * time, so the archive is read from there rather than from inside the APK.
+     * Asset path of the archive for [abi], e.g. `arm64-v8a.zip`.
+     *
+     * The archives are produced by CI (`ci.yml`, "Pack compiler libraries into per-ABI
+     * archives") into `app/src/main/assets/`, because the compiler `.so` files only exist
+     * as CMake build output. `assets/` is used rather than `lib/<abi>/` so the archive is
+     * not itself subject to the native-library merge/packaging rules, and so it survives
+     * as a plain file regardless of `extractNativeLibs`.
      */
-    fun archiveFile(context: android.content.Context, abi: String = deviceAbi()): File =
-        File(context.applicationInfo.nativeLibraryDir, "$abi.zip")
+    fun archiveAssetName(abi: String = deviceAbi()): String = "$abi.zip"
+
+    /** Reads the archive as a stream; null when the APK has no archive for this ABI. */
+    private fun openArchive(context: android.content.Context, abi: String): InputStream? =
+        runCatching { context.assets.open(archiveAssetName(abi)) }
+            .onFailure { Log.i(TAG, "No asset ${archiveAssetName(abi)}: ${it.message}") }
+            .getOrNull()
 
     /** One entry of the per-ABI archive. */
     private data class Entry(val name: String, val size: Long)
@@ -86,19 +95,27 @@ object LibraryStore {
      * `nativeLibraryDir` for anything this folder does not provide.
      */
     fun ensureExtracted(context: android.content.Context, abi: String = deviceAbi()): Boolean {
-        val archive = archiveFile(context, abi)
-        if (!archive.isFile || archive.length() == 0L) {
-            Log.i(TAG, "No $abi archive at ${archive.absolutePath}; using nativeLibraryDir only.")
+        val target = abiDirectory(context, abi)
+
+        // Opening the asset is the only way to learn whether the archive exists; it is
+        // closed again straight away so the real pass below re-reads it.
+        val probe = openArchive(context, abi) ?: run {
+            Log.i(TAG, "No $abi archive in assets; using nativeLibraryDir only.")
             return true
         }
-
-        val target = abiDirectory(context, abi)
-        val entries = runCatching { listArchive(archive) }.getOrElse { error ->
-            Log.e(TAG, "Cannot read ${archive.name}", error)
+        val entries = try {
+            listArchive(probe)
+        } catch (error: Exception) {
+            // A truncated/corrupt asset must not wedge the app: report and carry on, the
+            // loader falls back to nativeLibraryDir.
+            Log.e(TAG, "Cannot read ${archiveAssetName(abi)} (corrupt archive?)", error)
             return false
+        } finally {
+            runCatching { probe.close() }
         }
+
         if (entries.isEmpty()) {
-            Log.w(TAG, "${archive.name} lists no libraries; nothing to extract.")
+            Log.w(TAG, "${archiveAssetName(abi)} lists no libraries; nothing to extract.")
             return true
         }
         if (isComplete(target, entries)) {
@@ -108,12 +125,13 @@ object LibraryStore {
 
         return runCatching {
             target.mkdirs()
-            unpack(archive, target, entries)
+            openArchive(context, abi)?.use { unpack(it, target, entries) }
+                ?: throw java.io.FileNotFoundException(archiveAssetName(abi))
             isComplete(target, entries)
         }.onFailure { error ->
-            Log.e(TAG, "Failed to extract ${archive.name}", error)
+            Log.e(TAG, "Failed to extract ${archiveAssetName(abi)}", error)
         }.getOrDefault(false).also { complete ->
-            Log.i(TAG, "Extracted ${archive.name} into ${target.absolutePath}: $complete")
+            Log.i(TAG, "Extracted ${archiveAssetName(abi)} into ${target.absolutePath}: $complete")
         }
     }
 
@@ -126,9 +144,9 @@ object LibraryStore {
         }
     }
 
-    private fun listArchive(archive: File): List<Entry> {
+    private fun listArchive(source: InputStream): List<Entry> {
         val result = mutableListOf<Entry>()
-        ZipInputStream(FileInputStream(archive).buffered()).use { zip ->
+        ZipInputStream(source.buffered()).use { zip ->
             var entry = zip.nextEntry
             while (entry != null) {
                 // Only flat library file names: no paths, nothing that escapes the folder.
@@ -143,9 +161,9 @@ object LibraryStore {
         return result
     }
 
-    private fun unpack(archive: File, target: File, expected: List<Entry>) {
+    private fun unpack(source: InputStream, target: File, expected: List<Entry>) {
         val allowed = expected.associateBy { it.name }
-        ZipInputStream(FileInputStream(archive).buffered()).use { zip ->
+        ZipInputStream(source.buffered()).use { zip ->
             var entry = zip.nextEntry
             while (entry != null) {
                 val name = entry.name

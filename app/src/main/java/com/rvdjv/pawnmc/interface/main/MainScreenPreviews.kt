@@ -81,7 +81,7 @@ private fun MainScreenFullPreview() {
             ScreenHeader(
                 onEditorClick = {},
                 onSettingsClick = {},
-                onSelfTestClick = {},
+                onPocketSampClick = {},
                 actionsVisible = true
             )
             Spacer(modifier = Modifier.height(SpaceL))

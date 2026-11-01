@@ -263,6 +263,19 @@ jobs:
           /* .S files share these -include flags; keep the C-only content out of them. */
           #ifndef __ASSEMBLER__
 
+          /*
+           * Bionic's termios.h includes linux/termios.h before QEMU can rename
+           * its host structs. Include the UAPI header here with QEMU's aliases
+           * so its later include sees the definitions even after the guard is set.
+           */
+          #define termios host_termios
+          #define winsize host_winsize
+          #define termio host_termio
+          #include <linux/termios.h>
+          #undef termios
+          #undef winsize
+          #undef termio
+
           /* No Bionic header defines these two, and QEMU's osdep.h does not either. */
           #include <sys/types.h>
           #include <stdint.h>
@@ -399,7 +412,9 @@ jobs:
           
           #endif /* ANDROID_COMPAT_MQUEUE_H */
           EOF
-          echo "QEMU_ANDROID_EXTRA_CFLAGS=-I$PWD/compat-include -include $PWD/android-compat.h" >> "$GITHUB_ENV"
+          QEMU_ANDROID_EXTRA_CFLAGS="-I$PWD/compat-include -include $PWD/android-compat.h"
+          export QEMU_ANDROID_EXTRA_CFLAGS
+          echo "QEMU_ANDROID_EXTRA_CFLAGS=$QEMU_ANDROID_EXTRA_CFLAGS" >> "$GITHUB_ENV"
           cd qemu
           # QEMU 7.2 hand-defines these for glibc >= 2.36; the NDK sysroot's
           # kernel UAPI headers already provide both (identical layout).
@@ -567,6 +582,14 @@ jobs:
           curl -fsSL "https://www.samba.org/ftp/talloc/talloc-${TALLOC_VERSION}.tar.gz" -o talloc.tgz
           tar xzf talloc.tgz
           cd "talloc-${TALLOC_VERSION}"
+          # PRoot consumes only the static archive. Talloc's versioned shared
+          # target generates a version script containing glibc-only linker
+          # boundary symbols (_end, __bss_start, _edata), which lld rejects on
+          # Android. Remove the version number for that unused shared target;
+          # the generated version script is then skipped while libtalloc.a is
+          # still built normally.
+          python3 -c 'from pathlib import Path; p=Path("wscript"); s=p.read_text(); old="                          vnum=VERSION,\n                          public_headers="; new="                          public_headers="; assert s.count(old) == 1, "unexpected talloc wscript layout"; p.write_text(s.replace(old, new, 1))'
+          grep -A5 "abi_match='talloc\\* _talloc\\*'" wscript
           # waf cannot execute the target binaries, so every test that must be
           # run goes through buildtools/wafsamba/samba_cross.py:
           #   - the question is looked up in the cross-answers file by exact
@@ -600,10 +623,6 @@ jobs:
           export CFLAGS="-fPIC -D_FILE_OFFSET_BITS=64"
           export LDFLAGS="-static -L$TOOLCHAIN/sysroot/usr/lib/aarch64-linux-android/${API_LEVEL}"
           export LINK_CC="$CC"
-          # Avoid Waf's default -shared version script, which names glibc-only
-          # linker boundary symbols (_end, __bss_start, _edata) unavailable on Android.
-          export SHLD="$CC"
-          export SHLD_FLAGS="-static"
           # --enable-talloc-compat1 is a boolean waf switch and takes no value; passing
           # "=no" aborts with "option does not take a value". Omitting it is correct.
           ./configure \

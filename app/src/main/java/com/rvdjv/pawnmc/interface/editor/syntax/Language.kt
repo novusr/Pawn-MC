@@ -25,7 +25,9 @@ class PawnLanguage(
     private val appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
 ) : Language {
 
-    private val analyzeManager = PawnManager()
+    @Volatile
+    private var localFunctions: List<PawnLocalFunction> = emptyList()
+    private val analyzeManager = PawnManager { localFunctions = it }
     private val symbolPairs = SymbolPairMatch.DefaultSymbolPairs()
 
     override fun getAnalyzeManager(): AnalyzeManager = analyzeManager
@@ -38,8 +40,6 @@ class PawnLanguage(
         publisher: CompletionPublisher,
         extraArguments: Bundle
     ) {
-        val source = (0 until content.getLineCount()).joinToString("\n") { content.getLine(it) }
-        val localFunctions = PawnSourceSymbols.functions(source)
         val operatorPrefix = operatorPrefixAt(content, position)
         if (operatorPrefix != null) {
             publisher.checkCancelled()
@@ -58,7 +58,9 @@ class PawnLanguage(
 
     /** The operator token ending at the cursor, or null. */
     private fun operatorPrefixAt(content: ContentReference, position: CharPosition): String? {
+        if (position.line !in 0 until content.getLineCount()) return null
         val line = content.getLine(position.line)
+        if (position.column !in 0..line.length) return null
         var start = position.column
         while (start > 0 && line[start - 1] in PawnRegistry.OPERATOR_HEADS) {
             start--
@@ -108,7 +110,9 @@ class PawnLanguage(
     }
 
     override fun getIndentAdvance(content: ContentReference, line: Int, column: Int): Int {
+        if (line !in 0 until content.getLineCount()) return 0
         val lineStr = content.getLine(line)
+        if (column !in 0..lineStr.length) return 0
         var count = 0
         for (i in 0 until column.coerceAtMost(lineStr.length)) {
             val c = lineStr[i]
@@ -127,5 +131,7 @@ class PawnLanguage(
     override fun getNewlineHandlers(): Array<NewlineHandler>? = null
 
     override fun destroy() {
+        analyzeManager.destroy()
+        localFunctions = emptyList()
     }
 }

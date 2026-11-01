@@ -1,6 +1,7 @@
 package com.pocketsamp.server
 
 import android.content.Context
+import androidx.annotation.Keep
 import com.rvdjv.pawnmc.data.runtime.PocketSampGateway
 
 /** Marker keeping the PocketSAMP compile-time API confined to the modern flavor. */
@@ -14,7 +15,7 @@ internal object PocketSampRuntimeMarker
  * the flavor that links `:pocketsamp`; `main` sees the hook interface instead, which is
  * what lets both flavors compile the same call sites.
  *
- * `PocketSampBootstrap` registers it the first time the gateway is asked to do something.
+ * The gateway invokes the top-level registration function on its first lookup.
  */
 internal object NewerPocketSampHook : PocketSampGateway.PocketSampHook {
 
@@ -46,7 +47,8 @@ internal object NewerPocketSampHook : PocketSampGateway.PocketSampHook {
     }
 }
 
-/** Registered automatically when this file's class loader initialises it. */
+/** Registration entry point resolved by name from the shared gateway. */
+@Keep
 internal fun registerNewerPocketSampHook() {
     PocketSampGateway.install(NewerPocketSampHook)
 }

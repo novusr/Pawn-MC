@@ -15,14 +15,23 @@ internal object PawnSourceSymbols {
     )
 
     fun functions(source: CharSequence): List<PawnLocalFunction> {
+        return functions(source) { false }.orEmpty()
+    }
+
+    fun functions(source: CharSequence, isCancelled: () -> Boolean): List<PawnLocalFunction>? {
+        if (isCancelled()) return null
         val sourceText = source.toString()
-        val searchableText = maskCommentsAndStrings(sourceText)
+        val searchableText = maskCommentsAndStrings(sourceText, isCancelled) ?: return null
         val functions = mutableListOf<PawnLocalFunction>()
 
         for (match in declarationPattern.findAll(searchableText)) {
+            if (isCancelled()) return null
             val openParen = match.range.last
-            val closeParen = matchingParen(searchableText, openParen) ?: continue
-            val declarationEnd = searchableText.indexOfFirstNonWhitespace(closeParen + 1)
+            val closeParen = matchingParen(searchableText, openParen, isCancelled)
+            if (isCancelled()) return null
+            if (closeParen == null) continue
+            val declarationEnd = searchableText.indexOfFirstNonWhitespace(closeParen + 1, isCancelled)
+                ?: return null
             if (declarationEnd !in searchableText.indices || searchableText[declarationEnd] !in ";{") {
                 continue
             }
@@ -39,9 +48,14 @@ internal object PawnSourceSymbols {
         return functions.distinctBy { it.name.lowercase() }
     }
 
-    private fun matchingParen(source: String, openParen: Int): Int? {
+    private fun matchingParen(
+        source: String,
+        openParen: Int,
+        isCancelled: () -> Boolean
+    ): Int? {
         var depth = 0
         for (index in openParen until source.length) {
+            if (index % CANCELLATION_CHECK_INTERVAL == 0 && isCancelled()) return null
             when (source[index]) {
                 '(' -> depth++
                 ')' -> {
@@ -53,13 +67,19 @@ internal object PawnSourceSymbols {
         return null
     }
 
-    private fun String.indexOfFirstNonWhitespace(start: Int): Int {
+    private fun String.indexOfFirstNonWhitespace(
+        start: Int,
+        isCancelled: () -> Boolean
+    ): Int? {
         var index = start
-        while (index < length && this[index].isWhitespace()) index++
+        while (index < length && this[index].isWhitespace()) {
+            if (index % CANCELLATION_CHECK_INTERVAL == 0 && isCancelled()) return null
+            index++
+        }
         return index
     }
 
-    private fun maskCommentsAndStrings(source: String): String {
+    private fun maskCommentsAndStrings(source: String, isCancelled: () -> Boolean): String? {
         val masked = source.toCharArray()
         var index = 0
         var state = State.Code
@@ -67,6 +87,7 @@ internal object PawnSourceSymbols {
         var escaped = false
 
         while (index < source.length) {
+            if (index % CANCELLATION_CHECK_INTERVAL == 0 && isCancelled()) return null
             val current = source[index]
             val next = source.getOrNull(index + 1)
             when (state) {
@@ -123,6 +144,8 @@ internal object PawnSourceSymbols {
 
         return masked.concatToString()
     }
+
+    private const val CANCELLATION_CHECK_INTERVAL = 1024
 
     private enum class State {
         Code,

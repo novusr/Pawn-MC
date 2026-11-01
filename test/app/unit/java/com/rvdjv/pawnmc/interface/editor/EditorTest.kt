@@ -25,6 +25,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -196,6 +197,18 @@ class EditorTest {
         assertEquals(listOf("abc", "OnReady", "OnLoaded", "localNative"), functions.map { it.name })
         assertTrue(functions.first().description.contains("stock abc(value, const name[])"))
         assertFalse(functions.any { it.name == "strcat" })
+    }
+
+    @Test
+    fun `cancels local function scanning when a newer document edit supersedes it`() {
+        var cancellationChecks = 0
+        val functions = PawnSourceSymbols.functions(" ".repeat(32 * 1024)) {
+            cancellationChecks++
+            cancellationChecks > 2
+        }
+
+        assertNull(functions)
+        assertEquals(3, cancellationChecks)
     }
 
     @Test

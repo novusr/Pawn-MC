@@ -1,4 +1,4 @@
-import java.util.Properties
+﻿import java.util.Properties
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
@@ -134,22 +134,39 @@ android {
         // JNA ships its licence files (AL2.0, LGPL2.1) in both jna and jna-platform,
         // and AGP refuses to merge two copies of the same resource path. The
         // duplicate is exactly the same licence text, so picking the first input is
-        // the correct merge — the licence still ships once inside the APK.
+        // the correct merge: the licence still ships once inside the APK.
         resources.excludes += setOf("META-INF/AL2.0", "META-INF/LGPL2.1")
 
         // No `jniLibs` filter here on purpose.
         //
         // `JniLibsPackaging` only offers `excludes`, `pickFirsts`, `keepDebugSymbols`,
-        // `testOnly` and `useLegacyPackaging` — there is no "keep" rule, and the merge
-        // filters run before the native libraries are built, so an exclusion here would
-        // also remove the files the per-ABI archive task needs (it would find nothing to
-        // pack). The APK layout is produced after the merge instead, by
-        // `ArchiveAbiLibrariesTask` below: it turns `lib/<abi>/*.so` into
-        // `lib/<abi>/<abi>.zip` and leaves only `libm.so` loose.
+        // `testOnly` and `useLegacyPackaging`; there is no "keep" rule.
         //
-        // `useLegacyPackaging` defaults to false, i.e. the extracted `.so` files are
-        // mapped straight out of the APK, which is what lets the bridge be loaded without
-        // being copied anywhere.
+        // APK layout, and why (`libm.so` is the one deliberate exception):
+        //
+        //   assets/<abi>.zip                libpawnc3107.so + libpawnc31011.so
+        //                                   (+ libandroidx.graphics.path.so)
+        //   lib/<abi>/libm.so               JNI bridge only
+        //
+        // The engine libraries must NOT be in `lib/`. CMake declares `pawnc3107` and
+        // `pawnc31011` as SHARED targets, so AGP otherwise packages them into
+        // `lib/<abi>/` in addition to the archive — that is the duplicate this exclusion
+        // removes. The archive still gets them: CI zips them from
+        // `intermediates/cxx/*/obj/<abi>/`, which these filters do not touch.
+        //
+        // `libm.so` is deliberately not excluded: `System.loadLibrary` resolves only
+        // through the APK's `lib/<abi>/` folder, and the Android linker refuses to
+        // `dlopen` a path in app storage. It is the bridge that loads everything else,
+        // so it has to be the one library the loader can reach.
+        jniLibs {
+            excludes += listOf(
+                "**/lib/*/libpawnc3107.so",
+                "**/lib/*/libpawnc31011.so"
+            )
+        }
+        //
+        // `useLegacyPackaging` defaults to false, i.e. `libm.so` is mapped straight out
+        // of the APK rather than extracted, which is what lets it load without a copy.
     }
 
     val appApkNamePrefix = "pawnmc"
@@ -219,129 +236,116 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.ui.test.junit4)
 }
+
 // ---------------------------------------------------------------------------------
-// Per-ABI native archive
+// Third-party native library into the per-ABI archive
 //
-// `lib/<abi>/` carries a single `<abi>.zip` holding the libraries the app unpacks into
-// `Documents/PawnMC/library/<abi>/` on first launch:
+// `assets/<abi>.zip` is produced by CI (`ci.yml`) from the CMake output, because the
+// Pawn compiler libraries only exist as build artifacts:
 //
-//   lib/<abi>/<abi>.zip
-//       libpawnc3107.so      Pawn compiler 3.10.7 engine (unpacked, not loaded from the APK)
+//   assets/<abi>.zip
+//       libpawnc3107.so      Pawn compiler 3.10.7 engine
 //       libpawnc31011.so     Pawn compiler 3.10.11 engine
-//       libandroidx.graphics.path.so   Compose's path library
 //
-// `libm.so` (the PawnMC JNI bridge) is the only library that stays loose in the APK: it
-// has to be loadable before anything is unpacked, and Android's linker will not open a
-// file from app storage that the package manager did not install.
-//
-// The task runs after AGP linked and stripped the libraries but before the APK is
-// packaged, and it rewrites the staging `lib/<abi>/` folder, which the `packaging`
-// filters have already narrowed down to `lib/*/libm.so`.
+// `libandroidx.graphics.path.so` cannot be packed there: it comes from the Compose
+// dependency, not from CMake, so it is only known after AGP has merged native libs.
+// This task adds it to each archive before packaging, whenever the archive and the
+// library are both present. A local build that skipped the CI step has no archives and
+// this task does nothing.
 // ---------------------------------------------------------------------------------
-val bridgeLibraryName = "libm.so"
-
-val unpackedLibraryNames = listOf(
-    "libpawnc3107.so",
-    "libpawnc31011.so",
-    "libandroidx.graphics.path.so"
-)
-
-
+val thirdPartyArchivedLibrary = "libandroidx.graphics.path.so"
 
 /**
- * Packs one ABI's native libraries into `lib/<abi>/<abi>.zip`.
- *
- * The source is the `lib/<abi>` staging folder AGP merges into the APK, i.e. the
- * libraries that were linked and stripped for that ABI. The loose `.so` files are then
- * removed from the folder, so the packaged `lib/<abi>/` contains the archive (and the
- * bridge, which the `pickFirsts` rule in `packaging` keeps) and nothing else.
+ * Appends [thirdPartyArchivedLibrary] to every `assets/<abi>.zip` in the variant's
+ * merged assets, skipping archives that already contain it.
  */
-abstract class ArchiveAbiLibrariesTask : DefaultTask() {
+abstract class AddLibraryToAbiArchivesTask : DefaultTask() {
 
-    /** `intermediates/stripped_native_libs/<variant>/<abi>`. */
-    @get:Internal
-    abstract val libraryDirectory: DirectoryProperty
+    /** Directory holding the merged `assets/` tree for this variant. */
+    @get:InputDirectory
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val assetsDirectory: DirectoryProperty
 
-    @get:OutputFile
-    abstract val archive: RegularFileProperty
+    /** Merged native library roots; `libandroidx.graphics.path.so` is looked up here. */
+    @get:InputFiles
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val nativeLibraries: ConfigurableFileCollection
 
     @get:Input
-    abstract val abi: Property<String>
-
-    @get:Input
-    abstract val libraryNames: ListProperty<String>
+    abstract val libraryName: Property<String>
 
     @TaskAction
     fun run() {
-        val abiName = abi.get()
-        val folder = libraryDirectory.get().asFile
-        val target = archive.get().asFile
-        // The bridge has to survive the packaging filter: without it the JNI surface
-        // would exist only inside the archive, and nothing could unpack it.
-        require(File(folder, bridgeLibraryName).isFile) {
-            "[native-archive] $abiName: $bridgeLibraryName is missing from " +
-                "${folder.absolutePath}; the packaging filter dropped the bridge"
-        }
-        val present = libraryNames.get().map { File(folder, it) }.filter { it.isFile }
+        val assets = assetsDirectory.orNull?.asFile ?: return
+        if (!assets.isDirectory) return
 
-        if (present.isEmpty()) {
-            error("[native-archive] $abiName: no native libraries in ${folder.absolutePath}")
+        val library = nativeLibraries.files
+            .firstOrNull { it.name == libraryName.get() && it.isFile }
+        if (library == null) {
+            logger.lifecycle("[native-archive] ${libraryName.get()} not produced; archives left as-is")
+            return
         }
 
-        target.parentFile?.mkdirs()
-        ZipOutputStream(target.outputStream().buffered()).use { out ->
-            for (file in present) {
-                out.putNextEntry(ZipEntry(file.name).apply { time = 0L })
-                file.inputStream().buffered().use { it.copyTo(out) }
-                out.closeEntry()
+        val archives = assets.listFiles().orEmpty()
+            .filter { it.isFile && it.extension.equals("zip", ignoreCase = true) }
+        if (archives.isEmpty()) {
+            logger.lifecycle("[native-archive] no per-ABI archives in ${assets.absolutePath}")
+            return
+        }
+
+        val payload = library.readBytes()
+        for (archive in archives) {
+            val existing = ZipFile(archive).use { zip ->
+                zip.entries().asSequence().map { entry -> entry.name }.toSet()
             }
-        }
-        logger.lifecycle("[native-archive] $abiName: ${target.name} <- ${present.joinToString { it.name }}")
+            if (libraryName.get() in existing) {
+                logger.lifecycle("[native-archive] ${archive.name} already contains ${library.name}")
+                continue
+            }
 
-        // Only the archive is packaged for this ABI; the loose libraries it now holds are
-        // removed from the staging folder so they cannot be merged into `lib/<abi>/` too.
-        folder.listFiles()
-            ?.filter { it.extension == "so" && it.name in libraryNames.get() }
-            ?.forEach { it.delete() }
-        val missing = libraryNames.get().filterNot { File(folder, it).isFile }
-        if (missing.isNotEmpty()) {
-            logger.lifecycle("[native-archive] $abiName: never produced: ${missing.joinToString()}")
+            val entries = ZipFile(archive).use { zip ->
+                zip.entries().asSequence()
+                    .map { entry ->
+                        entry.name to zip.getInputStream(entry).use { stream -> stream.readBytes() }
+                    }
+                    .toList()
+            }
+
+            // Explicitly typed: `entries + (name to bytes)` yields an ambiguous element
+            // type, which made the destructuring `forEach` fail to resolve.
+            val merged: List<Pair<String, ByteArray>> = entries + listOf(libraryName.get() to payload)
+            ZipOutputStream(archive.outputStream().buffered()).use { out ->
+                for ((name, bytes) in merged) {
+                    out.putNextEntry(ZipEntry(name).apply { time = 0L })
+                    out.write(bytes)
+                    out.closeEntry()
+                }
+            }
+            logger.lifecycle("[native-archive] ${archive.name} <- ${library.name}")
         }
     }
 }
 
-/**
- * One archive task per ABI and variant, wired in front of the APK packaging step.
- *
- * `PackageApplication` is hooked through `onVariants`: it is the task that consumes
- * `lib/<abi>/`, so making the archive a dependency of it guarantees the zip exists (and
- * the loose libraries are gone) by the time `lib/**` is read.
- */
 androidComponents.onVariants { variant ->
-    val packagingTaskName = "package${variant.name.replaceFirstChar { it.uppercase() }}"
-    val packagingTask = tasks.named<com.android.build.gradle.tasks.PackageApplication>(packagingTaskName)
+    val assetsTaskName = "merge${variant.name.replaceFirstChar { it.uppercase() }}Assets"
+    val assetsTask = tasks.matching { it.name == assetsTaskName }.firstOrNull() ?: return@onVariants
 
-    packagingTask.configure {
-        val staging = layout.buildDirectory.dir(
-            "intermediates/stripped_native_libs/${variant.name}"
-        ).get().asFile
-        val variantLabel = variant.name.replaceFirstChar { it.uppercase() }
-
-        android.defaultConfig.ndk.abiFilters.forEach { abiName ->
-            val archiveDirectory = File(staging, abiName)
-            val archiveTask = tasks.register<ArchiveAbiLibrariesTask>(
-                "archiveLibraries$variantLabel" + abiName.split('-', '_').joinToString("") { part ->
-                    part.replaceFirstChar { it.uppercase() }
-                }
-            ) {
-                group = "build"
-                description = "Packs the $abiName libraries into lib/$abiName/$abiName.zip."
-                this.abi.set(abiName)
-                this.libraryDirectory.set(archiveDirectory)
-                this.libraryNames.set(unpackedLibraryNames)
-                this.archive.set(File(archiveDirectory, "$abiName.zip"))
-            }
-            dependsOn(archiveTask)
-        }
+    val addTask = tasks.register<AddLibraryToAbiArchivesTask>(
+        "addThirdPartyLibrary${variant.name.replaceFirstChar { it.uppercase()}}"
+    ) {
+        group = "build"
+        description = "Adds ${thirdPartyArchivedLibrary} to the per-ABI native archives."
+        this.libraryName.set(thirdPartyArchivedLibrary)
+        this.assetsDirectory.set(
+            layout.buildDirectory.dir("intermediates/assets/${variant.name}/merge${variant.name.replaceFirstChar { it.uppercase() }}Assets")
+        )
+        this.nativeLibraries.from(
+            layout.buildDirectory.dir("intermediates/merged_native_libs/${variant.name}")
+        )
+        outputs.upToDateWhen { false }
     }
+
+    assetsTask.finalizedBy(addTask)
 }
