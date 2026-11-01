@@ -7,7 +7,7 @@ plugins {
 // PocketSAMP, adopted from thirdparty/PocketSAMP as an embedded runtime module of
 // PawnMC. It is a *library*, not an application: the UI is opened from the PawnMC
 // main interface (the old self-test header button now launches it), and the engine
-// (foreground service, QEMU/SA-MP, MariaDB) runs inside the single PawnMC process.
+// (foreground service, QEMU/SA-MP, native ARM64 MariaDB) runs inside PawnMC's process.
 // The upstream `com.pocketsamp.server` namespace is deliberately untouched — the
 // project is kept under its own name the same way the Xed editor identity is kept.
 android {
@@ -39,10 +39,9 @@ android {
 
     sourceSets {
         getByName("main") {
-            // The translator and PRoot are ordinary executables renamed to lib*.so so
-            // Android extracts them to nativeLibraryDir. Keeping them under
-            // jniLibs/arm64-v8a is what makes that directory exist: PackageManager
-            // only creates lib/<abi>/ for an ABI the APK declares.
+            // Host-side native helpers such as QEMU are staged here so Android extracts
+            // them to nativeLibraryDir. MariaDB and its libraries are installed from
+            // the separate runtime archive instead of being packaged into the APK.
             jniLibs.srcDirs("src/main/jniLibs")
         }
     }

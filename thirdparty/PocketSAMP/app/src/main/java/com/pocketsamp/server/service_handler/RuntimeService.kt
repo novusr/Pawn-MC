@@ -279,7 +279,7 @@ class RuntimeService : Service() {
                             _serverStatus.value = Status.STOPPED
                             return@launch
                         }
-                        runtime.sync { line -> appendLog("[Setup] $line") }
+                        runtime.sync { line -> appendLog("[Prepare] $line") }
                     }
 
                     if (!ThirdRuntime.isComplete(applicationContext)) {
@@ -290,7 +290,7 @@ class RuntimeService : Service() {
 
                     appendLog(t("log.archive.extract"))
                     assetExtractor.extractAll { progress ->
-                        appendLog("[Setup] $progress")
+                        appendLog("[Prepare] $progress")
                         updateNotification(t("notify.setup").replace("{progress}", progress))
                     }
                 }

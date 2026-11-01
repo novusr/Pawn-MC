@@ -22,7 +22,8 @@ RELEASE_NOTES_DRAFT.md
 TODO.txt
 GOTO.txt
 .env
-
+assets
+!assets/icons
 # --- Build / debug output that must never be committed -------------------------
 # `/build` above only anchors at the repository root, so the `:terminal:*`
 # modules (which have no .gitignore of their own) used to have their whole

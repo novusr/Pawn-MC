@@ -7,6 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import java.io.FileOutputStream
+import java.io.IOException
 import com.rvdjv.pawnmc.data.compiler.CaseConversion
 import com.rvdjv.pawnmc.data.compiler.Compiler
 import com.rvdjv.pawnmc.data.config.CompilerConfig
@@ -35,10 +37,6 @@ class MainViewModel(
         val TEMPORARY_FILE_CONTENT = """
             /*
              * PawnMC starter script
-             * ---------------------
-             * This file is the temporary starter created when you have not picked
-             * your own Pawn source yet. Edit it freely: Compile compiles exactly
-             * what you see here.
              */
 
             /**
@@ -88,15 +86,46 @@ class MainViewModel(
         """.trimIndent()
 
         /** Creates the starter script in the user-visible app workspace. */
-        fun createTemporaryPawnFile(baseDir: File): File {
+        fun createTemporaryPawnFile(baseDir: File, fallbackDir: File? = null): File {
             val directory = if (baseDir.name == WORKSPACE_DIR_NAME) baseDir else File(baseDir, WORKSPACE_DIR_NAME)
-            if (!directory.exists()) {
-                directory.mkdirs()
+            return try {
+                createTemporaryPawnFileIn(directory)
+            } catch (e: IOException) {
+                val fallback = fallbackDir ?: throw e
+                createTemporaryPawnFileIn(
+                    if (fallback.name == WORKSPACE_DIR_NAME) fallback else File(fallback, WORKSPACE_DIR_NAME)
+                )
+            } catch (e: SecurityException) {
+                val fallback = fallbackDir ?: throw e
+                createTemporaryPawnFileIn(
+                    if (fallback.name == WORKSPACE_DIR_NAME) fallback else File(fallback, WORKSPACE_DIR_NAME)
+                )
+            }
+        }
+
+        private fun createTemporaryPawnFileIn(directory: File): File {
+            if (!directory.isDirectory && !directory.mkdirs() && !directory.isDirectory) {
+                throw IOException("Could not create workspace directory: ${directory.absolutePath}")
+            }
+            if (!directory.canWrite()) {
+                throw IOException("Workspace directory is not writable: ${directory.absolutePath}")
+            }
+            val tempFile = File(directory, TEMPORARY_FILE_NAME)
+            if (tempFile.exists()) {
+                if (!tempFile.isFile || !tempFile.canRead() || !tempFile.canWrite()) {
+                    throw IOException("Temporary source file is not accessible: ${tempFile.absolutePath}")
+                }
+                return tempFile
             }
 
-            val tempFile = File(directory, TEMPORARY_FILE_NAME)
-            if (!tempFile.exists()) {
-                tempFile.writeText(TEMPORARY_FILE_CONTENT)
+            val stagedFile = File(directory, ".$TEMPORARY_FILE_NAME.tmp")
+            try {
+                FileOutputStream(stagedFile).bufferedWriter().use { it.write(TEMPORARY_FILE_CONTENT) }
+                if (!stagedFile.renameTo(tempFile) && !tempFile.isFile) {
+                    throw IOException("Could not create temporary source file: ${tempFile.absolutePath}")
+                }
+            } finally {
+                if (stagedFile.exists()) stagedFile.delete()
             }
             return tempFile
         }
@@ -232,7 +261,8 @@ class MainViewModel(
     }
 
     fun ensureTemporaryFileSelected(): String {
-        val file = createTemporaryPawnFile(appDirectory)
+        val privateFallback = context?.filesDir?.let { File(it, "PawnMC") }
+        val file = createTemporaryPawnFile(appDirectory, privateFallback)
         selectedFilePath = file.absolutePath
         config.n_last_selected_file_path = file.absolutePath
         temporaryFileNotice = TEMPORARY_FILE_NOTICE

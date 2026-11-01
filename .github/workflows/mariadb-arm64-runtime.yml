@@ -1,0 +1,105 @@
+name: MariaDB ARM64 Runtime Bundle
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'thirdparty/PocketSAMP/runtime/mariadb/r_mariadb.tar.gz'
+      - 'thirdparty/PocketSAMP/runtime/rootfs/r_rootfs_i386.tar.gz'
+      - 'thirdparty/PocketSAMP/runtime/samp/r_samp.tar.gz'
+      - '.github/workflows/mariadb-arm64-runtime.yml'
+  pull_request:
+    paths:
+      - 'thirdparty/PocketSAMP/runtime/mariadb/r_mariadb.tar.gz'
+      - 'thirdparty/PocketSAMP/runtime/rootfs/r_rootfs_i386.tar.gz'
+      - 'thirdparty/PocketSAMP/runtime/samp/r_samp.tar.gz'
+      - '.github/workflows/mariadb-arm64-runtime.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify native ARM64 runtime bundle
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Verify runtime archive layout
+        run: |
+          set -euo pipefail
+          for archive in \
+            thirdparty/PocketSAMP/runtime/rootfs/r_rootfs_i386.tar.gz \
+            thirdparty/PocketSAMP/runtime/samp/r_samp.tar.gz \
+            thirdparty/PocketSAMP/runtime/mariadb/r_mariadb.tar.gz; do
+            test -s "$archive"
+            tar -tzf "$archive" >/dev/null
+          done
+          sha256sum --check --status <<'CHECKSUMS'
+          182853cee480da1ce80be21c30a487cdca86c32f1eb5882ac08795eee6fad525  thirdparty/PocketSAMP/runtime/rootfs/r_rootfs_i386.tar.gz
+          1499c3709a6fec872c3e056ba0e3cb267829eb2045208ddedc43710bc980b19e  thirdparty/PocketSAMP/runtime/samp/r_samp.tar.gz
+          e4a2b4e50830b8917af6cac7ba0d5cad17098cd9d776618068ae6448ff5d13a5  thirdparty/PocketSAMP/runtime/mariadb/r_mariadb.tar.gz
+          CHECKSUMS
+
+      - name: Verify MariaDB executable and dependencies
+        run: |
+          set -euo pipefail
+          bundle="$(mktemp -d)"
+          trap 'rm -rf "$bundle"' EXIT
+          tar -xzf thirdparty/PocketSAMP/runtime/mariadb/r_mariadb.tar.gz -C "$bundle"
+
+          daemon="$bundle/bin/mariadbd"
+          if [ ! -s "$daemon" ]; then
+            echo "::error::Bundle is missing bin/mariadbd."
+            exit 1
+          fi
+          if ! readelf -h "$daemon" | grep -Eq 'Machine:.*AArch64'; then
+            echo "::error::MariaDB daemon is not an AArch64 ELF."
+            readelf -h "$daemon"
+            exit 1
+          fi
+          if ! readelf -l "$daemon" | grep -Fq '/system/bin/linker64'; then
+            echo "::error::MariaDB daemon does not use Android's ARM64 linker."
+            readelf -l "$daemon"
+            exit 1
+          fi
+          test -s "$bundle/share/mariadb/english/errmsg.sys"
+          grep -Fxq '10.4.3' "$bundle/share/mariadb/pawnmc-version.txt"
+
+          for sql in \
+            mariadb_system_tables.sql \
+            mariadb_performance_tables.sql \
+            mariadb_system_tables_data.sql \
+            fill_help_tables.sql \
+            maria_add_gis_sp_bootstrap.sql \
+            mariadb_test_db.sql; do
+            if [ ! -s "$bundle/share/mariadb/$sql" ]; then
+              echo "::error::Bundle is missing bootstrap SQL file $sql."
+              exit 1
+            fi
+          done
+
+          missing=0
+          for object in "$daemon" "$bundle"/lib/*.so; do
+            if ! readelf -h "$object" | grep -Eq 'Machine:.*AArch64'; then
+              echo "::error::Non-ARM64 ELF in bundle: $object."
+              missing=1
+              continue
+            fi
+            while IFS= read -r library; do
+              case "$library" in
+                libc.so|libdl.so|libm.so) continue ;;
+              esac
+              if [ ! -s "$bundle/lib/$library" ]; then
+                echo "::error::Bundle is missing required library $library (needed by $object)."
+                missing=1
+              fi
+            done < <(readelf -d "$object" | sed -n 's/.*Shared library: \[\(.*\)\].*/\1/p')
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+          echo "MariaDB ARM64 bundle verified."
+          readelf -d "$daemon" | grep NEEDED

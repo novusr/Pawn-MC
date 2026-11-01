@@ -2,7 +2,7 @@ package com.rvdjv.pawnmc.`interface`.editor
 
 import com.rvdjv.pawnmc.data.syntax.PawnRegistry
 import com.rvdjv.pawnmc.data.syntax.InternDat
-import com.rvdjv.pawnmc.`interface`.editor.syntax.PawnSourceSymbols
+import com.rvdjv.pawnmc.`interface`.editor.syntax.CodeSymbols
 import com.rvdjv.pawnmc.`interface`.editor.workspace.MAX_OPEN_WORKSPACES
 import com.rvdjv.pawnmc.`interface`.editor.workspace.OpenDocument
 import com.rvdjv.pawnmc.`interface`.editor.workspace.Workspace
@@ -192,7 +192,7 @@ class EditorTest {
             new sample[] = "stock insideString() {";
         """.trimIndent()
 
-        val functions = PawnSourceSymbols.functions(source)
+        val functions = CodeSymbols.functions(source)
 
         assertEquals(listOf("abc", "OnReady", "OnLoaded", "localNative"), functions.map { it.name })
         assertTrue(functions.first().description.contains("stock abc(value, const name[])"))
@@ -202,7 +202,7 @@ class EditorTest {
     @Test
     fun `cancels local function scanning when a newer document edit supersedes it`() {
         var cancellationChecks = 0
-        val functions = PawnSourceSymbols.functions(" ".repeat(32 * 1024)) {
+        val functions = CodeSymbols.functions(" ".repeat(32 * 1024)) {
             cancellationChecks++
             cancellationChecks > 2
         }

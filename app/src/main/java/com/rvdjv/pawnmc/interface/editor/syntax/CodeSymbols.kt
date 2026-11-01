@@ -2,27 +2,27 @@ package com.rvdjv.pawnmc.`interface`.editor.syntax
 
 import com.rvdjv.pawnmc.data.syntax.PawnRegistry
 
-internal data class PawnLocalFunction(
+internal data class LocalFunction(
     val name: String,
     val description: String
 )
 
-/** Finds explicit function declarations in the current Pawn source file. */
-internal object PawnSourceSymbols {
+/** Finds local function declarations and excludes registry entries. */
+internal object CodeSymbols {
 
     private val declarationPattern = Regex(
         """\b(stock|public|forward|native)\s+((?:[A-Za-z_]\w*:)?[A-Za-z_]\w*)\s*\("""
     )
 
-    fun functions(source: CharSequence): List<PawnLocalFunction> {
+    fun functions(source: CharSequence): List<LocalFunction> {
         return functions(source) { false }.orEmpty()
     }
 
-    fun functions(source: CharSequence, isCancelled: () -> Boolean): List<PawnLocalFunction>? {
+    fun functions(source: CharSequence, isCancelled: () -> Boolean): List<LocalFunction>? {
         if (isCancelled()) return null
         val sourceText = source.toString()
         val searchableText = maskCommentsAndStrings(sourceText, isCancelled) ?: return null
-        val functions = mutableListOf<PawnLocalFunction>()
+        val functions = mutableListOf<LocalFunction>()
 
         for (match in declarationPattern.findAll(searchableText)) {
             if (isCancelled()) return null
@@ -42,7 +42,7 @@ internal object PawnSourceSymbols {
             val signature = sourceText.substring(match.range.first, closeParen + 1)
                 .replace(Regex("\\s+"), " ")
                 .trim()
-            functions += PawnLocalFunction(name, "Declared in this file: $signature")
+            functions += LocalFunction(name, "Declared in this file: $signature")
         }
 
         return functions.distinctBy { it.name.lowercase() }

@@ -11,14 +11,11 @@ import android.view.inputmethod.InputConnectionWrapper
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.EditorRenderer
 
-/** Separator drawn between a line number and its column label. */
+/** Separates the line and column numbers. */
 internal const val LINE_COLUMN_SEPARATOR = "-"
 
-/**
- * Editor that installs a renderer able to draw extra information in the
- * line-number area. See [ColumnLineNumberRenderer].
- */
-class PawnCodeEditor(context: Context) : CodeEditor(context) {
+/** Sora editor with line and column labels. */
+class XedCodeEditor(context: Context) : CodeEditor(context) {
 
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
         val connection = super.onCreateInputConnection(outAttrs) ?: return null
@@ -67,10 +64,7 @@ class PawnCodeEditor(context: Context) : CodeEditor(context) {
         return true
     }
 
-    /**
-     * Extra room reserved (in px) on the right of the line-number area for the
-        * `"-<column>"` label.
-     */
+    /** Extra width for the column label. */
     private var columnSuffixWidth: Float = 0f
 
     override fun onCreateRenderer(): EditorRenderer = ColumnLineNumberRenderer(this)
@@ -95,10 +89,7 @@ class PawnCodeEditor(context: Context) : CodeEditor(context) {
         columnSuffixWidth = 0f
     }
 
-    /**
-     * Recomputes the cached suffix width for the current font and document.
-     * Cheap enough to call whenever the text changes.
-     */
+    /** Updates the gutter width after text or font changes. */
     fun refreshColumnSuffixWidth() {
         val newWidth = if (isLineNumberEnabled) measureColumnSuffix() else 0f
         if (newWidth != columnSuffixWidth) {
@@ -108,7 +99,7 @@ class PawnCodeEditor(context: Context) : CodeEditor(context) {
         }
     }
 
-    /** Width of the `"-<column>"` label, `0` while it is not measured. */
+    /** Returns the extra gutter width. */
     fun getColumnSuffixWidth(): Float = columnSuffixWidth
 
     private fun measureColumnSuffix(): Float {
@@ -136,22 +127,10 @@ class PawnCodeEditor(context: Context) : CodeEditor(context) {
     }
 }
 
-/**
- * Draws the plain line numbers exactly like the stock renderer, and appends the
- * column of the caret (or of the selection ends) on the lines the current
- * selection touches.
- *
- * The state is read from the live editor on every draw, so the label follows
- * caret moves, selection changes and text edits without extra bookkeeping.
- */
+/** Draws the caret column beside relevant line numbers. */
 private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) {
 
-    /**
-     * Own reference to the editor.
-     *
-     * `EditorRenderer` keeps its own editor field private in this Sora version, so the
-     * renderer has to keep the reference it was constructed with.
-     */
+    /** The renderer does not expose its editor reference. */
     private val host = host
 
     private val chipPaint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -164,7 +143,7 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
         width: Float,
         color: Int
     ) {
-        val owner = host as? PawnCodeEditor
+        val owner = host as? XedCodeEditor
         val suffixWidth = owner?.getColumnSuffixWidth() ?: 0f
         val column = if (suffixWidth > 0f) columnLabelFor(line, row) else null
         if (owner == null || column == null) {
@@ -172,25 +151,14 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
             return
         }
 
-        // Boxed tile: instead of the flat number flowing down the panel edge, every
-        // line the selection touches gets a rounded chip holding `line-column`, so the
-        // information reads as a stack of little boxes (`[1-4] [2] [3] [4]`) rather
-        // than a loose column of digits.
+        // Draw the line and column in a rounded gutter label.
         val metrics = host.lineNumberMetrics
         val top = host.getRowTop(row) - host.offsetY
         val bottom = host.getRowBottom(row) - host.offsetY
         val textHeight = metrics.descent - metrics.ascent
         val y = (top + bottom) / 2f - textHeight / 2f - metrics.ascent
 
-        /*
-         * The label is built here rather than through `cursorPositionLabel`.
-         *
-         * `columnLabelFor` already returns a 1-based column, and the last branch
-         * returns a literal 1 for a line the selection spans. Passing that through
-         * `cursorPositionLabel` applied the one-based conversion a second time, which
-         * is where the doubled columns in the gutter came from. The status bar still
-         * uses the helper, because there it converts a raw 0-based caret.
-         */
+        // The column is already one-based.
         val label = "${line + 1}$LINE_COLUMN_SEPARATOR$column"
         chipPaint.textSize = host.textSizePx * 0.82f
         chipPaint.typeface = host.typefaceLineNumber
@@ -223,19 +191,9 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
         canvas.drawText(label, (chipLeft + chipRight) / 2f, y, chipPaint)
     }
 
-    /**
-     * Returns the 1-based column to display for [line], or `null` when [line] carries
-     * no column label.
-     *
-     * Only two kinds of line get one: the line the caret sits on, and each line that
-     * a multi-line selection starts or ends on. Every other line in the gutter shows
-     * the plain number.
-     */
+    /** Returns the displayed column for [line], or null when none applies. */
     private fun columnLabelFor(line: Int, row: Int): Int? {
-        /*
-         * With word wrap a line spans several rows; only the leading row carries the
-         * label, otherwise it would repeat down the whole line.
-         */
+        // Show the label only on the first wrapped row.
         val layout = host.layout ?: return null
         val rowInfo = layout.getRowAt(row)
         if (!rowInfo.isLeadingRow || rowInfo.lineIndex != line) return null
@@ -246,13 +204,6 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
         val leftColumn = cursor.leftColumn
         val rightColumn = cursor.rightColumn
 
-        /*
-         * A plain caret is a collapsed range: leftLine == rightLine. An earlier
-         * version tested that equality first and returned rightColumn + 1, which is
-         * correct for the caret's own line but was evaluated for every line in the
-         * document, so the whole gutter sprouted a column. The caret case has to be
-         * gated on `line` being that line.
-         */
         if (leftLine == rightLine) {
             return if (line == leftLine) rightColumn + 1 else null
         }
@@ -266,9 +217,7 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
     }
 
     private companion object {
-        // Rounded chip colours, tuned for the violet dark theme and readable on the
-        // light theme alike: a translucent violet fill over which the bright label
-        // stays legible in both modes.
+        // Gutter label colors.
         const val CHIP_BACKGROUND = 0x407B5CC7
         const val CHIP_BORDER = 0x60B7A6F5
         const val CHIP_TEXT = 0xFFE4DDF7.toInt()

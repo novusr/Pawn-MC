@@ -8,23 +8,21 @@ import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
-/**
- * Asynchronous background syntax analyzer for Pawn scripts.
- */
-internal class PawnManager(
-    private val onLocalFunctionsChanged: (List<PawnLocalFunction>) -> Unit = {}
+/** Analyzes source and publishes syntax styles. */
+internal class CodeAnalyzer(
+    private val onLocalFunctionsChanged: (List<LocalFunction>) -> Unit = {}
 ) : SimpleAnalyzeManager<Any?>() {
 
-    /** Tokenizes [text] and paints the result. */
+    /** Highlights tokens and collects local function declarations. */
     override fun analyze(text: StringBuilder, delegate: SimpleAnalyzeManager<Any?>.Delegate<Any?>): Styles {
         val styles = Styles()
         val builder = MappedSpans.Builder()
         val blockStack = ArrayDeque<Pair<Int, Int>>()
-        val localFunctions = PawnSourceSymbols.functions(text) { delegate.isCancelled() }.orEmpty()
+        val localFunctions = CodeSymbols.functions(text) { delegate.isCancelled() }.orEmpty()
         if (!delegate.isCancelled()) onLocalFunctionsChanged(localFunctions)
         val localFunctionNames = localFunctions.mapTo(hashSetOf()) { it.name }
 
-        PawnLexer(text, delegate, localFunctionNames) { span ->
+        CodeLexer(text, delegate, localFunctionNames) { span ->
             when (span.kind) {
                 SpanKind.BraceOpen -> {
                     blockStack += span.line to span.column
@@ -55,11 +53,7 @@ internal class PawnManager(
         return styles
     }
 
-    /**
-     * Region classifications. Each value carries the style id Sora should paint it
-     * with (`TextStyle.makeStyle` returns a `long` in this Sora version), so the
-     * analyzer only dispatches on the kind, not on colour.
-     */
+    /** Token types and their Sora styles. */
     private enum class SpanKind(val style: Long) {
         Keyword(TextStyle.makeStyle(EditorColorScheme.KEYWORD)),
         Type(TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME)),
@@ -75,24 +69,11 @@ internal class PawnManager(
         BraceClose(TextStyle.makeStyle(EditorColorScheme.OPERATOR));
     }
 
-    /**
-     * A single styled region of source: [kind] starting at [line]/[column].
-     */
     private data class Span(val line: Int, val column: Int, val kind: SpanKind)
 
-    /**
-     * Single-pass lexer for Pawn source.
-     *
-     * Built with an [emit] callback so spans flow straight into Sora's
-     * [MappedSpans.Builder] without intermediate buffering. Each token kind
-     * owns its own private function, so [run] is just a `when` dispatch on
-     * the current character.
-     */
-    private class PawnLexer(
+    /** Reads source text and emits styled tokens. */
+    private class CodeLexer(
         private val text: CharSequence,
-        // `Delegate` is an inner class of the generic manager, so the outer type
-        // arguments have to be supplied on the reference itself, and the inner
-        // argument is fixed by `SimpleAnalyzeManager<Any?>`.
         private val delegate: SimpleAnalyzeManager<Any?>.Delegate<Any?>,
         private val localFunctions: Set<String>,
         private val emit: (Span) -> Unit,
@@ -108,7 +89,6 @@ internal class PawnManager(
             return if (pos in 0 until size) text[pos] else null
         }
 
-        /** Entry point — drive the lex from start to finish. */
         fun run() {
             while (hasMore()) {
                 val c = text[index]
@@ -126,14 +106,11 @@ internal class PawnManager(
                     c == '{' -> emitSingle(SpanKind.BraceOpen)
                     c == '}' -> emitSingle(SpanKind.BraceClose)
                     c in PawnRegistry.OPERATOR_HEADS -> emitOperator()
-                    // Parentheses and any other punctuation carry no colour:
-                    // the caller name before `(` is what gets highlighted.
+                    // Function names are highlighted; parentheses are not.
                     else -> skipPunctuation()
                 }
             }
         }
-
-        // --- Newlines & whitespace --------------------------------------------------
 
         private fun advanceNewline() {
             index++
@@ -156,8 +133,6 @@ internal class PawnManager(
             }
         }
 
-        // --- Comments ---------------------------------------------------------------
-
         private fun skipLineComment() {
             emit(Span(line, column, SpanKind.Comment))
             while (hasMore() && text[index] != '\n' && text[index] != '\r') {
@@ -168,7 +143,6 @@ internal class PawnManager(
 
         private fun skipBlockComment() {
             emit(Span(line, column, SpanKind.Comment))
-            // Consume the opening `/*`.
             index += 2
             column += 2
             while (hasMore()) {
@@ -201,8 +175,6 @@ internal class PawnManager(
             }
         }
 
-        // --- Directives (#...) ------------------------------------------------------
-
         private fun emitDirective() {
             val startColumn = column
             val startIndex = index
@@ -212,16 +184,12 @@ internal class PawnManager(
                 index++
                 column++
             }
-            // Slice by absolute offset: the column only tracks the start of the
-            // current line, so a column-relative slice would read the wrong
-            // characters on every line but the first.
+            // Columns are line-relative, so use the absolute source index.
             val word = text.substring(startIndex + 1, index)
             if (PawnRegistry.isDirective(word)) {
                 emit(Span(line, startColumn, SpanKind.Directive))
             }
         }
-
-        // --- String & character literals --------------------------------------------
 
         private fun emitString(quote: Char) {
             val startColumn = column
@@ -243,11 +211,9 @@ internal class PawnManager(
                 index++
                 column++
             }
-            // Unterminated literal — still emit so the opening quote is styled.
+            // Highlight an unfinished literal too.
             emit(Span(line, startColumn, SpanKind.String))
         }
-
-        // --- Numbers ----------------------------------------------------------------
 
         private fun skipNumber() {
             if (text[index] == '0' && (peekChar(1) == 'x' || peekChar(1) == 'X')) {
@@ -265,8 +231,6 @@ internal class PawnManager(
             }
         }
 
-        // --- Identifiers (keywords, types, function names, etc.) --------------------
-
         private fun emitIdentifier() {
             val startColumn = column
             val startIndex = index
@@ -275,7 +239,7 @@ internal class PawnManager(
                 if (!(c.isLetterOrDigit() || c == '_' || c == ':')) break
                 index++
                 column++
-                // Pawn tag separator — stop right after the `:`.
+                // Keep the tag separator with the identifier.
                 if (c == ':') break
             }
             val word = text.substring(startIndex, index)
@@ -292,14 +256,7 @@ internal class PawnManager(
             else -> SpanKind.Identifier
         }
 
-        /**
-         * True when the identifier starting at [from] is immediately used as a
-         * call, i.e. followed by `()` with nothing but whitespace in between.
-         *
-         * This is what makes an undeclared name such as `halodunia()` render as
-         * a function, which is the whole point of the call-site rule: the
-         * parenthesised argument list itself stays unstyled.
-         */
+        /** Checks whether the identifier is followed by a call parenthesis. */
         private fun isCallSite(from: Int): Boolean {
             var peek = from
             while (peek < size) {
@@ -311,14 +268,7 @@ internal class PawnManager(
             return false
         }
 
-        // --- Operators & catch-all --------------------------------------------------
-
-        /**
-         * Consume the longest operator starting at the cursor.
-         *
-         * Falling back to a single character keeps unknown punctuation styled as
-         * an operator instead of leaking an unstyled gap into the buffer.
-         */
+        /** Emits the longest operator starting at the cursor. */
         private fun emitOperator() {
             val startColumn = column
             var length = 1
@@ -341,7 +291,7 @@ internal class PawnManager(
             return true
         }
 
-        /** Emits `*begin`, `*end` and `*then` as keyword spans. */
+        /** Highlights block-comment keywords. */
         private fun tryEmitBlockCommentKeyword(): Boolean {
             for (keyword in BlockCommentKeywords) {
                 if (!matchesAt(index, keyword)) continue
@@ -354,13 +304,11 @@ internal class PawnManager(
             return false
         }
 
-        /** Advance over a character that carries no styling of its own. */
         private fun skipPunctuation() {
             index++
             column++
         }
 
-        /** Emit a single-character token such as `{` or `}`. */
         private fun emitSingle(kind: SpanKind) {
             emit(Span(line, column, kind))
             index++

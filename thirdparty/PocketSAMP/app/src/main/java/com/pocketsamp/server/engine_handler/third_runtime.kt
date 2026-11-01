@@ -5,12 +5,21 @@ import android.util.Log
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.configuration._DirectoryManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+
+private data class RuntimeArchive(
+    val fileName: String,
+    val repositoryPath: String,
+    val sha256: String
+)
 
 /**
  * Fetches the runtime archives from GitHub into `Documents/PawnMC/storage/`.
@@ -29,62 +38,117 @@ class ThirdRuntime(private val context: Context) {
         private const val CONNECT_TIMEOUT = 20_000
         private const val READ_TIMEOUT = 60_000
         private const val MAX_ATTEMPTS = 3
+        private val syncMutex = Mutex()
+
+        const val ROOTFS_ARCHIVE = "r_rootfs_i386.tar.gz"
+        const val SAMP_ARCHIVE = "r_samp.tar.gz"
+        const val MARIADB_ARCHIVE = "r_mariadb.tar.gz"
+
+        private val ARCHIVES = listOf(
+            RuntimeArchive(
+                ROOTFS_ARCHIVE,
+                "rootfs/$ROOTFS_ARCHIVE",
+                "182853cee480da1ce80be21c30a487cdca86c32f1eb5882ac08795eee6fad525"
+            ),
+            RuntimeArchive(
+                SAMP_ARCHIVE,
+                "samp/$SAMP_ARCHIVE",
+                "1499c3709a6fec872c3e056ba0e3cb267829eb2045208ddedc43710bc980b19e"
+            ),
+            RuntimeArchive(
+                MARIADB_ARCHIVE,
+                "mariadb/$MARIADB_ARCHIVE",
+                "e4a2b4e50830b8917af6cac7ba0d5cad17098cd9d776618068ae6448ff5d13a5"
+            )
+        )
 
         /** Sub-directory of Documents/PawnMC that holds the runtime archives. */
         fun storageDir(context: Context): File =
             File(_DirectoryManager.getDocumentsPawnMcDir(), "storage")
 
-        fun archiveFile(context: Context, name: String): File =
-            File(storageDir(context), "$name.tar.gz")
+        fun archiveFile(context: Context, fileName: String): File =
+            File(storageDir(context), fileName)
 
-        /** True when every archive is present and non-empty. */
-        fun isComplete(context: Context): Boolean =
-            ARCHIVES.all { archiveFile(context, it).let { f -> f.isFile && f.length() > 0 } }
+        /** Verifies that every downloaded archive matches its expected digest. */
+        suspend fun isComplete(context: Context): Boolean = withContext(Dispatchers.IO) {
+            ARCHIVES.all { archive ->
+                archiveFile(context, archive.fileName).let { file ->
+                    file.isFile && file.length() > 0L && matchesChecksum(file, archive)
+                }
+            }
+        }
 
-        /** Archives fetched on first run. */
-        private val ARCHIVES = listOf("rootfs_i386", "samp_base", "mariadb_i386")
+        private fun matchesChecksum(file: File, archive: RuntimeArchive): Boolean {
+            val digest = MessageDigest.getInstance("SHA-256")
+            return try {
+                FileInputStream(file).use { input ->
+                    val buffer = ByteArray(64 * 1024)
+                    var read: Int
+                    while (input.read(buffer).also { read = it } != -1) digest.update(buffer, 0, read)
+                }
+                digest.digest().joinToString("") { "%02x".format(it) } == archive.sha256
+            } catch (e: IOException) {
+                Log.w(TAG, "Could not verify ${archive.fileName}", e)
+                false
+            }
+        }
     }
 
     /** Downloads any archive that is missing; true when all exist afterwards. */
-    suspend fun sync(onProgress: (String) -> Unit = {}): Boolean = withContext(Dispatchers.IO) {
+    suspend fun sync(onProgress: (String) -> Unit = {}): Boolean = syncMutex.withLock {
+        withContext(Dispatchers.IO) { syncArchives(onProgress) }
+    }
+
+    private fun syncArchives(onProgress: (String) -> Unit): Boolean {
         if (!_DirectoryManager.hasStoragePermission(context)) {
             Log.i(TAG, "Storage permission missing; skipping the runtime archive download.")
-            return@withContext false
+            return false
         }
 
         val dir = storageDir(context).apply { mkdirs() }
         if (!dir.isDirectory) {
             Log.w(TAG, "Cannot create ${dir.absolutePath}")
-            return@withContext false
+            return false
         }
 
-        for (name in ARCHIVES) {
-            val target = archiveFile(context, name)
-            if (target.isFile && target.length() > 0) continue
-            onProgress(t("log.dl.downloading").replace("{name}", name))
-            if (!download(name, target)) {
-                Log.w(TAG, "Could not download $name")
-                return@withContext false
+        for (archive in ARCHIVES) {
+            val target = archiveFile(context, archive.fileName)
+            if (target.isFile && target.length() > 0L && matchesChecksum(target, archive)) continue
+            if (target.exists()) {
+                Log.w(TAG, "Removing invalid cached archive ${archive.fileName}")
+                if (!target.delete()) {
+                    Log.w(TAG, "Could not remove invalid archive ${target.absolutePath}")
+                    return false
+                }
+            }
+            onProgress(t("log.dl.downloading").replace("{name}", archive.fileName))
+            if (!download(archive, target)) {
+                Log.w(TAG, "Could not download ${archive.fileName}")
+                return false
             }
         }
         onProgress(t("log.dl.ready"))
-        true
+        return true
     }
 
     /** Streams one archive, resuming and retrying on a short body. */
-    private fun download(name: String, target: File): Boolean {
+    private fun download(archive: RuntimeArchive, target: File): Boolean {
         val partial = File(target.parentFile, "${target.name}.part")
         var attempt = 1
         while (attempt <= MAX_ATTEMPTS) {
             try {
-                fetch("$REPO_BASE/$name.tar.gz", partial)
+                fetch("$REPO_BASE/${archive.repositoryPath}", partial)
                 if (!partial.isFile || partial.length() == 0L) return false
+                if (!matchesChecksum(partial, archive)) {
+                    partial.delete()
+                    throw IOException("SHA-256 verification failed for ${archive.fileName}")
+                }
                 if (target.exists()) target.delete()
                 if (!partial.renameTo(target)) return false
-                Log.i(TAG, "Downloaded $name (${target.length()} bytes)")
+                Log.i(TAG, "Downloaded ${archive.fileName} (${target.length()} bytes)")
                 return true
             } catch (e: Throwable) {
-                Log.w(TAG, "Attempt $attempt for $name failed: ${e.message}")
+                Log.w(TAG, "Attempt $attempt for ${archive.fileName} failed: ${e.message}")
                 if (attempt == MAX_ATTEMPTS) {
                     partial.delete()
                     return false

@@ -16,10 +16,10 @@ class ThirdExtractor(private val context: Context) {
         private const val TAG = "ThirdExtractor"
         private const val PREF_NAME = "pocketsamp_assets"
         private const val KEY_INSTALLED_VERSION = "assets_installed_version"
-        /** Bump when the runtime archive set changes. */
-        private const val CURRENT_VERSION = 10
+        /** Bump when the archive set changes. */
+        private const val CURRENT_VERSION = 12
         /** The only MariaDB archive PocketSAMP uses. */
-        private const val BUNDLE_ASSET = "mariadb_i386"
+        private const val MARIADB_ARCHIVE = ThirdRuntime.MARIADB_ARCHIVE
 
         fun getServerDirectory(context: Context): File {
             return _DirectoryManager.getServerDirectory(context)
@@ -40,7 +40,9 @@ class ThirdExtractor(private val context: Context) {
             marker.isFile &&
             File(binDir, "samp03svr").isFile &&
             File(rootfsDir, "lib").isDirectory &&
-            File(mariadbDir, "bin/mariadbd").isFile
+            File(mariadbDir, "bin/mariadbd").let {
+                it.isFile && ThirdLauncher.kindOf(it) == ThirdLauncher.Kind.AARCH64
+            }
     }
 
     suspend fun extractAll(onProgress: (String) -> Unit) = withContext(Dispatchers.IO) {
@@ -49,11 +51,11 @@ class ThirdExtractor(private val context: Context) {
         onProgress(t("log.x.runtime"))
         val rootfsDir = File(filesDir, "rootfs_i386")
         if (!rootfsDir.exists()) rootfsDir.mkdirs()
-        extractArchiveAsset("rootfs_i386", rootfsDir)
+        extractRuntimeArchive(ThirdRuntime.ROOTFS_ARCHIVE, rootfsDir)
 
         onProgress(t("log.x.samp"))
         val binDir = File(filesDir, "bin").apply { mkdirs() }
-        extractArchiveAsset("samp_base", binDir)
+        extractRuntimeArchive(ThirdRuntime.SAMP_ARCHIVE, binDir)
         File(binDir, "samp03svr").setExecutable(true, false)
         File(binDir, "announce").setExecutable(true, false)
 
@@ -66,25 +68,26 @@ class ThirdExtractor(private val context: Context) {
         val mariadbDir = File(filesDir, "mariadb")
         if (!mariadbDir.exists()) mariadbDir.mkdirs()
 
-        if (archiveExists(BUNDLE_ASSET)) {
-            extractArchiveAsset(BUNDLE_ASSET, mariadbDir)
+        if (archiveExists(MARIADB_ARCHIVE)) {
+            extractRuntimeArchive(MARIADB_ARCHIVE, mariadbDir)
         } else {
-            onProgress(t("log.x.bundle.missing").replace("{name}", BUNDLE_ASSET))
+            onProgress(t("log.x.bundle.missing").replace("{name}", MARIADB_ARCHIVE))
         }
 
         File(mariadbDir, "bin/mariadbd").let { if (it.exists()) it.setExecutable(true, false) }
-        File(mariadbDir, "bin/mariadb-install-db").let { if (it.exists()) it.setExecutable(true, false) }
 
         val daemon = File(mariadbDir, "bin/mariadbd")
-        val mariadbComplete = daemon.isFile && daemon.length() > 0
+        val mariadbComplete = daemon.isFile &&
+            daemon.length() > 0L &&
+            ThirdLauncher.kindOf(daemon) == ThirdLauncher.Kind.AARCH64
         if (!mariadbComplete) {
             onProgress(t("log.x.daemon.missing"))
         } else {
             onProgress(t("log.x.daemon.ready").replace("{kb}", (daemon.length() / 1024).toString()).replace("{kind}", ThirdLauncher.kindOf(daemon).name))
-            if (ThirdLauncher.findQemu(context) == null) {
-                onProgress(t("log.x.qemu.error"))
-                onProgress(t("log.x.qemu.note"))
-            }
+        }
+        if (ThirdLauncher.findQemu(context) == null) {
+            onProgress(t("log.x.qemu.error"))
+            onProgress(t("log.x.qemu.note"))
         }
 
         onProgress(t("log.x.config"))
@@ -107,16 +110,16 @@ class ThirdExtractor(private val context: Context) {
         }
     }
 
-    /** True when the archive for [baseName] has been downloaded into storage. */
-    private fun archiveExists(baseName: String): Boolean =
-        ThirdRuntime.archiveFile(context, baseName).let { it.isFile && it.length() > 0 }
+    /** Checks whether [archiveName] has been downloaded. */
+    private fun archiveExists(archiveName: String): Boolean =
+        ThirdRuntime.archiveFile(context, archiveName).let { it.isFile && it.length() > 0 }
 
-    /** Unpacks one archive from `Documents/PawnMC/storage/` into [outputDir]. */
-    private fun extractArchiveAsset(baseName: String, outputDir: File) {
-        val stored = ThirdRuntime.archiveFile(context, baseName)
+    /** Extracts [archiveName] into [outputDir]. */
+    private fun extractRuntimeArchive(archiveName: String, outputDir: File) {
+        val stored = ThirdRuntime.archiveFile(context, archiveName)
         if (!stored.isFile || stored.length() == 0L) {
             throw IllegalStateException(
-                t("log.x.archive.notdownloaded").replace("{name}", baseName).replace("{path}", stored.absolutePath)
+                t("log.x.archive.notdownloaded").replace("{name}", archiveName).replace("{path}", stored.absolutePath)
             )
         }
         Log.i(TAG, "Unpacking ${stored.absolutePath} into ${outputDir.absolutePath}")

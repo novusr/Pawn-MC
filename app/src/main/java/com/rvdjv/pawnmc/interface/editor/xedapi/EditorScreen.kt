@@ -68,6 +68,7 @@ import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.automirrored.filled.WrapText
 import androidx.compose.material.icons.filled.EditNote
@@ -146,7 +147,7 @@ import com.rvdjv.pawnmc.`interface`.editor.workspace.buildFolderPickerIntent
 import com.rvdjv.pawnmc.`interface`.editor.workspace.buildFilePickerIntent
 import com.rvdjv.pawnmc.`interface`.editor.workspace.resolveDocumentToFile
 import com.rvdjv.pawnmc.`interface`.editor.workspace.resolveTreeToFile
-import com.rvdjv.pawnmc.`interface`.editor.syntax.PawnLanguage
+import com.rvdjv.pawnmc.`interface`.editor.syntax.CodeLanguage
 import com.rvdjv.pawnmc.`interface`.editor.workspace.WorkspacePanel
 import com.rvdjv.pawnmc.`interface`.editor.portal.DeveloperPortal
 import io.github.rosemoe.sora.event.ContentChangeEvent
@@ -1225,12 +1226,12 @@ fun EditorScreen(
                         } else {
                         // Explicit type argument: without it Kotlin cannot infer the view type of the
 // factory and the update block is reported as untyped.
-                        AndroidView<PawnCodeEditor>(
+                        AndroidView<XedCodeEditor>(
                             factory = { ctx: Context ->
                                 // The last expression must be the editor itself: an
                                 // `apply` block returns Unit, which would break the
                                 // factory's return type.
-                                val created = PawnCodeEditor(ctx)
+                                val created = XedCodeEditor(ctx)
                                 created.apply {
                                     typefaceText = Typeface.MONOSPACE
                                     isLineNumberEnabled = isLineNumbers
@@ -1238,7 +1239,7 @@ fun EditorScreen(
                                     editable = !isReadOnly
                                     setTextSize(14f)
                                     setColorScheme(editorScheme)
-                                    setEditorLanguage(PawnLanguage(appLanguage))
+                                    setEditorLanguage(CodeLanguage(appLanguage))
                                     setText(if (workspace.isWorkspaceOpen) workspace.activeDocument?.content.orEmpty() else viewModel.fileContent.orEmpty())
                                     // Reserve room for the "-<column>" suffix now
                                     // that the document is loaded; later edits are
@@ -1276,7 +1277,7 @@ fun EditorScreen(
                                 }
                                 created
                             },
-                            update = { editor: PawnCodeEditor ->
+                            update = { editor: XedCodeEditor ->
                                 editorRef = editor
                                 // Re-tint when the app theme (and therefore the surface
                                 // ramp) changes while the editor view is still alive.
@@ -1400,7 +1401,7 @@ fun EditorScreen(
                 }
                 FloatingRoundAction(
                     size = PANEL_BUTTON_SIZE,
-                    icon = _Icons.WavingHand,
+                    icon = Icons.Filled.VolumeUp,
                     contentDescription = "Open the Developer Portal",
                     testTag = "editor_terminal_toggle",
                     tint = FLOAT_TINT_PORTAL,

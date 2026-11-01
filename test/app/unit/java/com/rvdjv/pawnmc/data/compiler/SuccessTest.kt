@@ -358,4 +358,24 @@ class SuccessTest {
             tempDir.deleteRecursively()
         }
     }
+
+    @Test
+    fun `temporary starter falls back to private workspace when the selected root cannot be written`() {
+        val tempDir = File(System.getProperty("java.io.tmpdir"), "pawnmc-fallback-${System.nanoTime()}")
+        require(tempDir.mkdirs()) { "Unable to create temp dir for test" }
+        val blockedRoot = File(tempDir, "not-a-directory").apply { writeText("block") }
+        val fallbackRoot = File(tempDir, "private")
+
+        val tempFile = MainViewModel.createTemporaryPawnFile(blockedRoot, fallbackRoot)
+
+        try {
+            assertEquals(
+                File(fallbackRoot, MainViewModel.WORKSPACE_DIR_NAME).absolutePath,
+                tempFile.parentFile?.absolutePath
+            )
+            assertTrue(tempFile.readText().contains("native print(const string[])"))
+        } finally {
+            tempDir.deleteRecursively()
+        }
+    }
 }

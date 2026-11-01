@@ -20,9 +20,8 @@ internal object ThirdLauncher {
     /**
      * Reads the ELF header of [file].
      *
-     * Returns [Kind.UNKNOWN] for anything that is not a well-formed ELF, including the
-     * Android "lib*.so" wrapper some projects ship (which is a valid ELF but has no
-     * interpreter, so it is handled by [isPlainExecutable] instead).
+     * Returns [Kind.UNKNOWN] for non-ELF files, malformed headers, or unsupported
+     * machine types. The filename extension does not determine the executable kind.
      */
     fun kindOf(file: File): Kind {
         if (!file.isFile || file.length() < 20) return Kind.UNKNOWN
@@ -140,10 +139,17 @@ internal object ThirdLauncher {
         guestLibraryPath: String? = null
     ): List<String>? {
         if (!needsQemu(binary)) {
-            /*
-             * Native ARM64/ARM build: exec directly.
-             */
-            return listOf(binary.absolutePath) + arguments
+            val linker = when (kindOf(binary)) {
+                Kind.AARCH64 -> "/system/bin/linker64"
+                Kind.ARM -> "/system/bin/linker"
+                else -> null
+            }
+            // Runtime-installed PIE binaries are launched through Android's linker.
+            return if (linker == null) {
+                listOf(binary.absolutePath) + arguments
+            } else {
+                listOf(linker, binary.absolutePath) + arguments
+            }
         }
         val translator = qemu ?: return null
         val guestLdPath = listOfNotNull(

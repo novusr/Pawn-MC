@@ -18,19 +18,17 @@ import io.github.rosemoe.sora.text.CharPosition
 import io.github.rosemoe.sora.text.ContentReference
 import io.github.rosemoe.sora.widget.SymbolPairMatch
 
-/**
- * Pawn language implementation for the internal Sora-based editor engine.
- */
-class PawnLanguage(
+/** Syntax highlighting and completion for the editor. */
+class CodeLanguage(
     private val appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
 ) : Language {
 
     @Volatile
-    private var localFunctions: List<PawnLocalFunction> = emptyList()
-    private val analyzeManager = PawnManager { localFunctions = it }
+    private var localFunctions: List<LocalFunction> = emptyList()
+    private val codeAnalyzer = CodeAnalyzer { localFunctions = it }
     private val symbolPairs = SymbolPairMatch.DefaultSymbolPairs()
 
-    override fun getAnalyzeManager(): AnalyzeManager = analyzeManager
+    override fun getAnalyzeManager(): AnalyzeManager = codeAnalyzer
 
     override fun getInterruptionLevel(): Int = Language.INTERRUPTION_LEVEL_SLIGHT
 
@@ -56,7 +54,7 @@ class PawnLanguage(
         publish(publisher, prefix, localFunctions)
     }
 
-    /** The operator token ending at the cursor, or null. */
+    /** Returns the operator token ending at the cursor, if any. */
     private fun operatorPrefixAt(content: ContentReference, position: CharPosition): String? {
         if (position.line !in 0 until content.getLineCount()) return null
         val line = content.getLine(position.line)
@@ -74,7 +72,7 @@ class PawnLanguage(
     private fun publish(
         publisher: CompletionPublisher,
         prefix: String,
-        localFunctions: List<PawnLocalFunction>
+        localFunctions: List<LocalFunction>
     ) {
         val localFunctionDescription = when (appLanguage) {
             CompilerConfig.AppLanguage.ID -> "Dideklarasikan di berkas ini"
@@ -131,7 +129,7 @@ class PawnLanguage(
     override fun getNewlineHandlers(): Array<NewlineHandler>? = null
 
     override fun destroy() {
-        analyzeManager.destroy()
+        codeAnalyzer.destroy()
         localFunctions = emptyList()
     }
 }

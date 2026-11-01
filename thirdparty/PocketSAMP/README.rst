@@ -17,15 +17,15 @@ Two processes are started:
     Translates the 32-bit x86 SA-MP server. The guest filesystem is
     ``rootfs_i386``, a minimal i386 glibc sysroot shipped with the runtime.
 
-``qemu-i386`` (second instance)
-    Runs the MariaDB daemon. MariaDB is an ordinary Debian i386 build, not a native
-    Android build: it links glibc, which the same ``rootfs_i386`` already provides.
-    There is no arm64 MariaDB path and none is planned, because MariaDB depends on
-    glibc facilities (``nsswitch``, ``getpwent``, ``dlopen`` semantics) that Android's
-    bionic libc does not implement.
+``linker64``
+    Starts MariaDB, an Android/Bionic ARM64 build installed from the separate
+    ``mariadb/r_mariadb.tar.gz`` runtime archive. Its bundled shared libraries are loaded
+    from the extracted runtime directory; MariaDB does not use QEMU or the i386 glibc
+    sysroot.
 
-Both guests reach the database over TCP loopback at ``127.0.0.1:3306``. The in-app
-database manager is a JDBC client on the same address, so no web server is involved.
+SA-MP plugins remain i386 and connect to MariaDB over TCP loopback at
+``127.0.0.1:3306``. The in-app database manager is a JDBC client on the same address,
+so no web server is involved.
 
 Memory footprint stays near 150 MB by running MariaDB with
 ``innodb_buffer_pool_size = 16M`` and ``performance_schema = OFF``.
@@ -38,9 +38,16 @@ The archives are not packaged in the APK. They stay in the repository under
 downloads each one on demand into shared storage::
 
     /storage/emulated/0/Documents/PawnMC/storage/
-        rootfs_i386.tar.gz
-        samp_base.tar.gz
-        mariadb_i386.tar.gz
+        r_rootfs_i386.tar.gz
+        r_samp.tar.gz
+        r_mariadb.tar.gz
+The repository keeps the same archives grouped by runtime type::
+
+    thirdparty/PocketSAMP/runtime/rootfs/r_rootfs_i386.tar.gz
+    thirdparty/PocketSAMP/runtime/samp/r_samp.tar.gz
+    thirdparty/PocketSAMP/runtime/mariadb/r_mariadb.tar.gz
+The app checks each download against its expected SHA-256 digest and replaces invalid
+cached archives before extraction.
 Each archive is unpacked independently into the app's private storage, so a missing or
 corrupt file only disables the part that needs it::
 
@@ -56,29 +63,26 @@ because neither the SA-MP server nor the database can start without those files.
 MariaDB bundle
 --------------
 
-``mariadb_i386.tar.gz`` must be self-contained. The archive holds::
+``runtime/mariadb/r_mariadb.tar.gz`` contains the Android ARM64 daemon and the non-system
+dependencies needed to run it with Bionic. The archive holds::
 
     bin/mariadbd
-    bin/mariadb-install-db
-    lib/            every shared object mariadbd needs but the rootfs lacks
-    share/mariadb/  error messages (lc-messages-dir)
+    lib/                Bionic ARM64 shared-library dependencies
+    share/mariadb/      error messages and bootstrap system SQL files
 
-``rootfs_i386`` provides ``libc``, ``libm``, ``libz``, ``libgcc_s`` and ``libstdc++``
-only. The bundle must therefore carry the remaining entries of the daemon's ``NEED``
-list:
-
-- ``libcrypto.so.3``
-- ``libssl.so.3``
-- ``libpcre2-8.so.0``
-- ``libaio.so.1``
-- ``libnuma.so.1``
-- ``liburing.so.2``
-- ``libsystemd.so.0``
-- ``libcrypt.so.1``
-
-The ``MariaDB i386 Bundle`` workflow in ``.github/workflows`` assembles the archive
-from Debian i386 packages, verifies every ``NEED`` entry and fails the job rather than
-publishing an incomplete bundle.
+The daemon uses Android system libraries (``libc.so``, ``libdl.so`` and ``libm.so``)
+and libraries shipped in the archive, including ``libc++_shared.so``,
+``libcrypto_3.so``, ``libssl_3.so``, ``libcrypt.so``, ``libpcre2-8.so``,
+``libandroid-support.so`` and ``libz_1.so``. ``ThirdLauncher`` starts the ARM64
+executable through ``/system/bin/linker64`` so it can be installed from the downloaded
+runtime archive instead of shipping the daemon in the APK's ``jniLibs`` directory.
+First-run system tables are created by running ``mariadbd --bootstrap`` with the
+matching SQL scripts shipped in ``share/mariadb/``; no i386 installer or QEMU is used.
+This bundle is MariaDB 10.4.3. Since the previous i386 bundle is MariaDB 10.11.18,
+the runtime refuses to start against a newer existing data directory and leaves it
+untouched; export and import the databases into a compatible runtime before switching.
+The ``MariaDB ARM64 Runtime Bundle`` workflow validates the ELF architecture and
+dependency files in the checked-in archive.
 
 Gamemode directory
 ------------------
@@ -105,31 +109,8 @@ Local build: open the PawnMC project in Android Studio, sync Gradle and build th
 ``app`` module. Continuous integration builds the debug APK in
 ``.github/workflows/ci.yml``.
 
-Native translators
-~~~~~~~~~~~~~~~~~~
-
-Two arm64 shared objects must be present in
-``thirdparty/PocketSAMP/app/src/main/jniLibs/arm64-v8a/`` before the runtime can start
-a guest. They are not in the repository; the ``Native Translators`` workflow builds
-them and publishes each as an artifact.
-
-``libqemu-i386.so``
-    Required. User-mode translator for 32-bit x86 guests. Both ``samp03svr`` and
-    ``mariadbd`` are i386, so without this file neither process starts.
-
-``libproot.so``
-    Optional. Provides ``/dev``, ``/proc`` and the gamemode bind mount to the guest.
-    The runtime works without it, so a failed PRoot build does not block a release.
-
-Both are command-line programs renamed to ``lib*.so``: Android only executes files
-from the APK's ``lib/<abi>/`` directory, and ``nativeLibraryDir`` is where the engines
-look. They must be statically linked; a dynamically linked build fails at startup with
-``error while loading shared libraries``.
-
-Trigger the workflow, download ``libqemu-i386-arm64`` and ``libproot-arm64``, and copy
-the two files into ``jniLibs/arm64-v8a/``. Verify with
-``llvm-readelf -h libqemu-i386.so`` that the machine is ``AArch64`` and
-``llvm-readelf -l`` shows no ``INTERP`` segment.
+Only SA-MP needs the x86 user-mode translator. MariaDB is ARM64-native and PRoot is
+not part of either database launch path.
 
 Source layout
 -------------
@@ -153,7 +134,7 @@ Source layout
         engine/
             Extractor.kt         unpacks the runtime archives
             Downloader.kt        fetches the archives into Documents/PawnMC/storage
-            Launcher.kt          ELF detection, native exec versus QEMU
+            Launcher.kt          ELF detection, Android linker versus QEMU
             MariaDb.kt           MariaDB lifecycle
             Samp.kt              SA-MP server lifecycle
             Process.kt           process supervision and log streaming
