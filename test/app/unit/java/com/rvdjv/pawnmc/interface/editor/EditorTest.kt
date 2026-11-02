@@ -18,7 +18,7 @@ import com.rvdjv.pawnmc.`interface`.editor.xedapi.cursorPositionLabel
 import com.rvdjv.pawnmc.`interface`.editor.xedapi.resolveJumpColumn
 import com.rvdjv.pawnmc.data.config.CompilerConfig
 import com.rvdjv.pawnmc.`interface`.main.shouldRestoreLastSelectedFile
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers as CoroutineDispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.resetMain
@@ -42,12 +42,13 @@ class EditorTest {
 
     @Before
     fun setMainDispatcher() {
-        Dispatchers.setMain(Dispatchers.Unconfined)
+        CoroutineDispatchers.setMain(CoroutineDispatchers.Unconfined)
     }
 
     @After
     fun resetMainDispatcher() {
-        Dispatchers.resetMain()
+        // Teardown must never mask the reason the test body failed.
+        runCatching { CoroutineDispatchers.resetMain() }
     }
 
     @Test
@@ -343,6 +344,13 @@ class EditorTest {
     fun `workspace folder must be a folder and missing folders are pruned`() {
         val session = WorkspaceSession()
         val notAFolder = tempFolder.newFile("main.pwn")
+
+        // Positive control: without a successful open, the rest of the test would pass
+        // by failing for the wrong reason (missing root folder instead of a refused file).
+        val control = tempFolder.newFolder("control")
+        session.openWorkspace(control)
+        assertTrue("workspace session never opened a real folder", session.isWorkspaceOpen)
+        session.closeWorkspace(session.activeWorkspace!!)
 
         session.openWorkspace(notAFolder)
         assertFalse(session.isWorkspaceOpen)

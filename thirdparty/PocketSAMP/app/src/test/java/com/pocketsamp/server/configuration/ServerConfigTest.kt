@@ -22,7 +22,7 @@ class ServerConfigTest {
                 rcon_password test-secret
                 gamemode0 city 1
                 filterscripts admin fs
-                plugins mysql.so
+                plugins mysql_static.so
                 """.trimIndent()
             )
 
@@ -34,7 +34,7 @@ class ServerConfigTest {
             assertEquals("test-secret", config.rconPassword)
             assertEquals("city 1", config.gamemode)
             assertEquals("admin fs", config.filterscripts)
-            assertEquals("mysql.so", config.plugins)
+            assertEquals("mysql_static.so", config.plugins)
         } finally {
             directory.deleteRecursively()
         }

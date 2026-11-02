@@ -1545,11 +1545,11 @@ object Locales {
             Lang.RU to "Плагины (.so)",
         ),
         "config.hint.plugins" to mapOf(
-            Lang.ID to "mis. mysql.so streamer.so sscanf.so",
-            Lang.EN to "e.g. mysql.so streamer.so sscanf.so",
-            Lang.TL to "hal. mysql.so streamer.so sscanf.so",
-            Lang.ES to "p. ej. mysql.so streamer.so sscanf.so",
-            Lang.RU to "напр. mysql.so streamer.so sscanf.so",
+            Lang.ID to "mis. mysql_static.so textdraw-streamer.so sscanf.so",
+            Lang.EN to "e.g. mysql_static.so textdraw-streamer.so sscanf.so",
+            Lang.TL to "hal. mysql_static.so textdraw-streamer.so sscanf.so",
+            Lang.ES to "p. ej. mysql_static.so textdraw-streamer.so sscanf.so",
+            Lang.RU to "напр. mysql_static.so textdraw-streamer.so sscanf.so",
         ),
         "crash.title.dialog" to mapOf(
             Lang.ID to "Aplikasi mengalami crash (ditahan)",

@@ -69,7 +69,9 @@ class RuntimeService : Service() {
         private val _logFeed = MutableStateFlow<List<String>>(emptyList())
         val logFeed: StateFlow<List<String>> = _logFeed.asStateFlow()
 
-        private val _lanIp = MutableStateFlow("127.0.0.1")
+        private const val FALLBACK_LAN_IP = "192.168.1.186"
+
+        private val _lanIp = MutableStateFlow(FALLBACK_LAN_IP)
         val lanIp: StateFlow<String> = _lanIp.asStateFlow()
 
         private val logLock = Any()
@@ -395,6 +397,7 @@ class RuntimeService : Service() {
     }
 
     private fun updateLanIp() {
+        var detected: String? = null
         try {
             val interfaces = NetworkInterface.getNetworkInterfaces()
             while (interfaces.hasMoreElements()) {
@@ -405,15 +408,32 @@ class RuntimeService : Service() {
                 while (addresses.hasMoreElements()) {
                     val address = addresses.nextElement()
                     if (address is Inet4Address && !address.isLoopbackAddress) {
-                        _lanIp.value = address.hostAddress ?: "127.0.0.1"
-                        return
+                        detected = address.hostAddress
+                        break
                     }
                 }
+                if (!detected.isNullOrBlank()) break
             }
-            _lanIp.value = "127.0.0.1"
         } catch (e: Exception) {
-            _lanIp.value = "127.0.0.1"
+            detected = null
         }
+        _lanIp.value = sanitizeLanIp(detected)
+    }
+
+    /**
+     * Keeps the LAN card distinct from the local card on the dashboard: a loopback, localhost,
+     * wildcard or empty detection is never shown as the LAN address.
+     */
+    private fun sanitizeLanIp(candidate: String?): String {
+        val value = candidate?.trim().orEmpty()
+        val isLocalOnly = value.isEmpty() ||
+            value.equals("localhost", ignoreCase = true) ||
+            value == "127.0.0.1" ||
+            value == "0.0.0.0" ||
+            value == "::1" ||
+            value == "::" ||
+            value.startsWith("127.", ignoreCase = true)
+        return if (isLocalOnly) FALLBACK_LAN_IP else value
     }
 
     private fun acquireLocks() {

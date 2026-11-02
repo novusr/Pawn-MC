@@ -86,7 +86,7 @@ class EditorViewModel(
                 val content = withContext(Dispatchers.IO) {
                     file.readText()
                 }
-                val editedDuringLoad = latestEditorContent != null && latestEditorContent != contentAtLoadStart
+                val editedDuringLoad = latestEditorContent != contentAtLoadStart
                 if (!editedDuringLoad) {
                     fileContent = content
                     lastSavedContent = content
