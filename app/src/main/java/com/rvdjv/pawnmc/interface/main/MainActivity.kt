@@ -53,6 +53,19 @@ class MainActivity : ComponentActivity() {
     private var initialUri by mutableStateOf<Uri?>(null)
     private var pendingXedRequest by mutableStateOf<XedRequest?>(null)
 
+    /**
+     * True once this activity was opened by PocketSAMP to show Xed.
+     *
+     * Set during construction, before the first frame: the main screen must never be
+     * composed for a shortcut, otherwise it flashes for a fraction of a second before the
+     * editor replaces it (that is exactly what tapping the entry by hand used to do).
+     */
+    private var launchedForXed = false
+
+    init {
+        launchedForXed = xedRequest(intent) != null
+    }
+
     private data class XedRequest(
         val path: String,
         val workspace: Boolean,
@@ -125,6 +138,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         initialUri = intent.data
         pendingXedRequest = xedRequest(intent)
+        launchedForXed = pendingXedRequest != null
 
     // The compiler libraries now ship as one archive per ABI inside the APK and live
     // in Documents/PawnMC/library/<abi>/ afterwards. Point the compiler at that folder
@@ -184,7 +198,11 @@ class MainActivity : ComponentActivity() {
                     config.pruneMissingIncludePaths()
                 }
 
-                var isEditorOpen by remember { mutableStateOf(false) }
+                var isEditorOpen by remember { mutableStateOf(launchedForXed) }
+                // Null until the PocketSAMP shortcut finishes; null means "not a shortcut".
+                // While it is false nothing is composed, which is what removes the main screen
+                // flash between the tap and the editor.
+                var xedShortcutOpened by remember { mutableStateOf(if (launchedForXed) null else false) }
                 var returnToPocketSamp by remember { mutableStateOf(false) }
                 val currentFilePath = viewModel.selectedFilePath
 
@@ -202,12 +220,13 @@ class MainActivity : ComponentActivity() {
                         target.isFile && target.canRead() &&
                             editorViewModel.workspace.registerExternalFile(target)
                     }
-                    if (opened) {
-                        returnToPocketSamp = true
-                        isEditorOpen = true
-                    } else {
-                        navigateBackToPocketSamp(openFailed = true)
-                    }
+                    // Opening the file is what makes the editor renderable, so the outcome is
+                    // published before the editor flag: no frame draws the main screen between
+                    // the shortcut and the editor, and a failure never leaves a blank surface.
+                    xedShortcutOpened = opened
+                    if (opened) isEditorOpen = true
+                    returnToPocketSamp = opened
+                    if (!opened) navigateBackToPocketSamp(openFailed = true)
                     pendingXedRequest = null
                 }
 
@@ -220,27 +239,38 @@ class MainActivity : ComponentActivity() {
                 }
 
                 Box(modifier = Modifier.fillMaxSize()) {
-                    MainScreen(
-                        viewModel = viewModel,
-                        editorOpen = isEditorOpen,
-                        onEditorClick = {
-                            isEditorOpen = true
-                        },
+                    // A shortcut straight into Xed skips the main screen entirely: it is
+                    // neither composed behind the editor nor shown for a frame before the
+                    // editor appears, so the shortcut behaves like a direct transition
+                    // instead of replaying a manual tap. While the pending request resolves,
+                    // [xedShortcutOpened] is null and nothing is drawn at all.
+                    val xedReady = editorViewModel.workspace.isWorkspaceOpen || !currentFilePath.isNullOrBlank()
+                    val editorVisible = isEditorOpen && xedReady
+                    // While a shortcut is still resolving, draw nothing rather than the main
+                    // screen; once it fails, the main screen comes back with the error.
+                    if (!editorVisible && xedShortcutOpened != null) {
+                        MainScreen(
+                            viewModel = viewModel,
+                            editorOpen = isEditorOpen,
+                            onEditorClick = {
+                                isEditorOpen = true
+                            },
 
-                        onSettingsClick = {
-                            startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
-                        },
-                        onOpenSettingsTarget = { target ->
-                            startActivity(
-                                Intent(this@MainActivity, SettingsActivity::class.java).apply {
-                                    putExtra(SettingsActivity.EXTRA_FOCUS_TARGET, target.name)
-                                }
-                            )
-                        },
-                        initialUri = initialUri,
-                        workspaceAvailable = editorViewModel.workspace.isWorkspaceOpen,
-                    )
-                    if (isEditorOpen && (editorViewModel.workspace.isWorkspaceOpen || !currentFilePath.isNullOrBlank())) {
+                            onSettingsClick = {
+                                startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
+                            },
+                            onOpenSettingsTarget = { target ->
+                                startActivity(
+                                    Intent(this@MainActivity, SettingsActivity::class.java).apply {
+                                        putExtra(SettingsActivity.EXTRA_FOCUS_TARGET, target.name)
+                                    }
+                                )
+                            },
+                            initialUri = initialUri,
+                            workspaceAvailable = editorViewModel.workspace.isWorkspaceOpen,
+                        )
+                    }
+                    if (editorVisible) {
                         EditorScreen(
                             viewModel = editorViewModel,
                             onNavigateBack = {
@@ -274,6 +304,7 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         initialUri = intent.data
         pendingXedRequest = xedRequest(intent)
+        if (pendingXedRequest != null) launchedForXed = true
         if (intent.data != null) {
             viewModel.handleInitialUri(intent.data)
         }

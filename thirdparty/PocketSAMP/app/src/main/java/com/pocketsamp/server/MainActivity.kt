@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Settings
@@ -58,11 +59,14 @@ import com.pocketsamp.server.user_interface.screens._Console
 import com.pocketsamp.server.user_interface.screens._CrashInfo
 import com.pocketsamp.server.user_interface.screens._Dashboard
 import com.pocketsamp.server.user_interface.screens._FileManager
+import com.pocketsamp.server.user_interface.screens._Help
 import com.pocketsamp.server.user_interface.screens._Database
 import com.pocketsamp.server.user_interface.screens._phpMyAdmin
 import com.pocketsamp.server.user_interface.theme.*
 
 enum class AppTab(val label: String, val icon: ImageVector) {
+    // The help entry sits first so the rail reads as "learn, then use".
+    HELP("Help", Icons.Default.HelpOutline),
     DASHBOARD("Dashboard", Icons.Default.Home),
     CONSOLE("Console", Icons.Default.Terminal),
     FILES("Files", Icons.Default.FolderOpen),
@@ -246,6 +250,7 @@ class MainActivity : ComponentActivity() {
                         )
                         AppTab.CRASHES -> _CrashInfo()
                         AppTab.CONFIG -> _Config()
+                        AppTab.HELP -> _Help(lang = lang)
                     }
                 }
 

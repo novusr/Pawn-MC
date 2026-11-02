@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.MainActivity
 import com.pocketsamp.server.R
+import com.pocketsamp.server.configuration.Reader
 import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.crash_handler.Handler
 import com.pocketsamp.server.crash_handler.Manager
@@ -257,14 +258,20 @@ class RuntimeService : Service() {
 
         fun t(key: String): String = Locales.text(Locales.current, key)
         val serverDirectory = _DirectoryManager.getServerDirectory(applicationContext)
+        // No server.cfg yet: the runner writes the shipped defaults once, so the first
+        // start of a fresh folder is not refused.
         if (!File(serverDirectory, "server.cfg").isFile) {
-            appendLog(t("log.cfg.missing").replace("{dir}", serverDirectory.absolutePath))
-            appendLog(t("log.cfg.hint"))
-            getSharedPreferences("pocketsamp_prefs", Context.MODE_PRIVATE)
-                .edit().putBoolean("server_running_state", false).apply()
-            _serverStatus.value = Status.STOPPED
-            stopSelf()
-            return
+            runCatching { Reader.ensureDefaultConfig(serverDirectory) }
+                .onSuccess { appendLog(t("log.cfg.defaults.created")) }
+                .onFailure {
+                    appendLog(t("log.cfg.missing").replace("{dir}", serverDirectory.absolutePath))
+                    appendLog(t("log.cfg.hint"))
+                    getSharedPreferences("pocketsamp_prefs", Context.MODE_PRIVATE)
+                        .edit().putBoolean("server_running_state", false).apply()
+                    _serverStatus.value = Status.STOPPED
+                    stopSelf()
+                    return
+                }
         }
         clearLogs()
         _serverStatus.value = Status.STARTING

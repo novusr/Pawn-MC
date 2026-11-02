@@ -8,13 +8,18 @@ import java.io.File
 object Writer {
 
     fun write(configuration: Configuration, file: File) {
-        require(file.isFile) { "server.cfg does not exist" }
+        if (!file.isFile) {
+            // A folder that has never been set up still gets a complete file, so the
+            // Config screen never writes half a configuration next to nothing.
+            file.parentFile?.mkdirs()
+            file.writeText(Configuration.defaultFileContent())
+        }
         val values = linkedMapOf(
             "hostname" to configuration.hostname,
             "port" to configuration.port.toString(),
             "maxplayers" to configuration.maxPlayers.toString(),
             "rcon_password" to configuration.rconPassword,
-            "gamemode0" to configuration.gamemode,
+            "gamemode0" to Configuration.configGamemodeValue(configuration.gamemode),
             "filterscripts" to configuration.filterscripts,
             "plugins" to configuration.plugins,
             "announce" to flag(configuration.announce).toString(),

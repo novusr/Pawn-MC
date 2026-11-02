@@ -25,6 +25,7 @@ import com.pocketsamp.server.configuration.Writer
 import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -45,19 +46,33 @@ fun _Config() {
     var gamemode by remember(config) { mutableStateOf(config?.gamemode.orEmpty()) }
     var filterscripts by remember(config) { mutableStateOf(config?.filterscripts.orEmpty()) }
     var plugins by remember(config) { mutableStateOf(config?.plugins.orEmpty()) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(configFile, reloadToken) {
         val result = withContext(Dispatchers.IO) {
             runCatching {
-                if (!configFile.isFile) null else Reader.read(configFile)
+                // A missing server.cfg is not an error: the runner still needs the
+                // shipped defaults visible and editable before anything is written.
+                Reader.readOrDefault(configFile.parentFile ?: configFile)
             }
         }
         result.onSuccess {
+            if (config == null || it != config) {
+                // Reset only when the file actually changed, so typing while the screen
+                // reloads on resume does not wipe the field being edited.
+                hostname = it.hostname
+                port = it.port.toString()
+                maxPlayers = it.maxPlayers.toString()
+                rconPassword = it.rconPassword
+                gamemode = it.gamemode
+                filterscripts = it.filterscripts
+                plugins = it.plugins
+            }
             config = it
             readError = null
             saveError = null
         }.onFailure {
-            config = null
+            config = Configuration()
             readError = it.message ?: t("config.read.failed")
         }
     }
@@ -111,13 +126,22 @@ fun _Config() {
                         filterscripts = filterscripts,
                         plugins = plugins
                     )
-                    val result = runCatching { Writer.write(updated, configFile) }
-                    result.onSuccess {
-                        config = updated
-                        saveError = null
-                        Toast.makeText(context, t("config.saved"), Toast.LENGTH_SHORT).show()
-                    }.onFailure {
-                        saveError = it.message ?: t("config.save.failed")
+                    // The file write runs off the main thread; the scope here is the
+                    // composable's lifecycle, which is what the previous inline call lacked.
+                    scope.launch {
+                        val result = runCatching {
+                            withContext(Dispatchers.IO) {
+                                configFile.parentFile?.mkdirs()
+                                Writer.write(updated, configFile)
+                            }
+                        }
+                        result.onSuccess {
+                            config = updated
+                            saveError = null
+                            Toast.makeText(context, t("config.saved"), Toast.LENGTH_SHORT).show()
+                        }.onFailure {
+                            saveError = it.message ?: t("config.save.failed")
+                        }
                     }
                 },
                 colors = ButtonDefaults.buttonColors(
@@ -131,14 +155,10 @@ fun _Config() {
             }
         }
 
-        if (config == null) {
-            ConfigNotice(
-                text = when {
-                    readError != null -> "${t("config.read.failed")}: $readError"
-                    else -> t("config.missing")
-                }
-            )
+        if (!configFile.isFile) {
+            ConfigNotice(t("config.defaults"))
         }
+        readError?.let { error -> ConfigNotice("${t("config.read.failed")}: $error") }
         saveError?.let { ConfigNotice(it) }
 
         ConfigField(label = t("config.field.hostname"), value = hostname, onValueChange = { hostname = it }, enabled = config != null)

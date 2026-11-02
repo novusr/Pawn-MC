@@ -36,7 +36,7 @@ object Reader {
                     ?.takeIf { it in 1..1000 }
                     ?: throw IllegalArgumentException("Invalid maxplayers in server.cfg: $value")
                 "rcon_password" -> configuration.rconPassword = value
-                "gamemode0" -> configuration.gamemode = value
+                "gamemode0" -> configuration.gamemode = editorGamemodeValue(value)
                 "filterscripts" -> configuration.filterscripts = value
                 "plugins" -> configuration.plugins = value
                 "announce" -> configuration.announce = value == "1"
@@ -47,6 +47,36 @@ object Reader {
             }
         }
         return configuration
+    }
+
+    /**
+     * Reads [dir]/server.cfg, or the built-in defaults when the file is missing or
+     * unreadable. Callers that must show a configuration for a folder which has not
+     * been set up yet use this instead of [read].
+     */
+    fun readOrDefault(dir: File): Configuration {
+        val file = File(dir, "server.cfg")
+        return if (file.isFile) runCatching { read(file) }.getOrDefault(Configuration()) else Configuration()
+    }
+
+    /** Writes the default `server.cfg` into [dir] unless one is already there. */
+    fun ensureDefaultConfig(dir: File): File {
+        val file = File(dir, "server.cfg")
+        if (!file.isFile) {
+            file.parentFile?.mkdirs()
+            file.writeText(Configuration.defaultFileContent())
+        }
+        return file
+    }
+
+    /** `blank` -> `blank.pwn`: the editor shows a Pawn file name, SA-MP does not. */
+    fun editorGamemodeValue(value: String): String {
+        val trimmed = value.trim()
+        if (trimmed.isEmpty()) return Configuration.DEFAULT_GAMEMODE
+        val name = trimmed.substringBefore(' ')
+        val repeat = trimmed.drop(name.length).trim()
+        val withExtension = if (name.substringAfterLast('.', "").isEmpty()) "$name.pwn" else name
+        return if (repeat.isEmpty()) withExtension else "$withExtension $repeat"
     }
 
     /** True when [file] sets at least one key this app models. */

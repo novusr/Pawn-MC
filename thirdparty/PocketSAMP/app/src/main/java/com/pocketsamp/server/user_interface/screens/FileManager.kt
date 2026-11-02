@@ -7,32 +7,36 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.DriveFileRenameOutline
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.NoteAdd
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.DriveFileRenameOutline
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,6 +65,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.pocketsamp.server.Locales
+import com.pocketsamp.server.configuration.Reader
 import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.service_handler.Status
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
@@ -72,6 +77,17 @@ import java.io.File
 private enum class FileAction { CREATE_FILE, CREATE_FOLDER, RENAME, DELETE }
 private data class ManagedFile(val file: File, val isDirectory: Boolean, val sizeBytes: Long)
 
+/**
+ * One visible line of the tree: the entry plus the two things the list needs to draw it.
+ *
+ * [depth] drives the hanging indent, [expanded] is only meaningful for folders.
+ */
+private data class FileRow(
+    val entry: ManagedFile,
+    val depth: Int,
+    val expanded: Boolean
+)
+
 @Composable
 fun _FileManager(status: Status, lang: Locales.Lang) {
     val context = LocalContext.current
@@ -82,6 +98,10 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
     var root by remember { mutableStateOf(_DirectoryManager.getServerDirectory(context)) }
     var currentDirectory by remember(root.absolutePath) { mutableStateOf(root) }
     var entries by remember { mutableStateOf<List<ManagedFile>>(emptyList()) }
+    /** Folders shown with their children; the root starts open. */
+    var expandedPaths by remember(root.absolutePath) { mutableStateOf(setOf(root.absolutePath)) }
+    /** A selected folder is also the destination for "new file" / "new folder". */
+    var selectedFolder by remember(root.absolutePath) { mutableStateOf<File?>(null) }
     var loading by remember { mutableStateOf(false) }
     var directoryError by remember { mutableStateOf<String?>(null) }
     var operationError by remember { mutableStateOf<String?>(null) }
@@ -90,6 +110,8 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
     var requestedInitialFolder by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf<FileAction?>(null) }
     var selectedEntry by remember { mutableStateOf<File?>(null) }
+    /** Folder a create action was started from, frozen when the dialog opens. */
+    var createTarget by remember { mutableStateOf(root) }
     val selectedItem = selectedEntry?.let { selected ->
         entries.firstOrNull { it.file.absolutePath == selected.absolutePath }
     }
@@ -120,6 +142,8 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
             } else {
                 root = directory
                 currentDirectory = directory
+                expandedPaths = setOf(directory.absolutePath)
+                selectedFolder = null
                 operationError = null
             }
         }
@@ -135,7 +159,6 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
     LaunchedEffect(root.absolutePath, currentDirectory.absolutePath, refreshToken) {
         loading = true
         directoryError = null
-        serverConfigExists = false
         val result = withContext(Dispatchers.IO) {
             runCatching {
                 val canonicalRoot = root.canonicalFile
@@ -195,6 +218,51 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
         }
     }
 
+    /**
+     * Folder the next create action writes into.
+     *
+     * A selected folder wins - that is what makes tapping a nested folder and then "New
+     * file" land inside it instead of silently going back to the root. Without a
+     * selection the folder currently open is used.
+     */
+    fun createDestination(): File = createDestinationFor(root, currentDirectory, selectedFolder)
+
+    fun startCreate(kind: FileAction) {
+        createTarget = createDestination()
+        name = ""
+        action = kind
+    }
+
+    fun toggleFolder(folder: File) {
+        val path = folder.absolutePath
+        expandedPaths = if (path in expandedPaths) expandedPaths - path else expandedPaths + path
+    }
+
+    /**
+     * Flattens the tree into the visible rows.
+     *
+     * Children are listed straight from the disk when a folder is expanded, so a folder
+     * that changed since the last scan shows its current content without a full refresh.
+     */
+    fun buildRows(nodes: List<ManagedFile>, depth: Int): List<FileRow> {
+        val rows = mutableListOf<FileRow>()
+        nodes.forEach { node ->
+            val isExpanded = node.isDirectory && node.file.absolutePath in expandedPaths
+            rows += FileRow(node, depth, isExpanded)
+            if (isExpanded) {
+                val children = node.file.listFiles()
+                    ?.filter { isWithin(root.canonicalFile, it.canonicalFile) }
+                    ?.map { ManagedFile(it, it.isDirectory, it.length()) }
+                    ?.sortedWith(compareBy<ManagedFile> { !it.isDirectory }.thenBy { it.file.name.lowercase() })
+                    .orEmpty()
+                rows += buildRows(children, depth + 1)
+            }
+        }
+        return rows
+    }
+
+    val rows = remember(entries, expandedPaths, root.absolutePath) { buildRows(entries, 0) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -206,7 +274,7 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
             Column(Modifier.weight(1f)) {
                 Text(t("files.title"), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = SampThemeColors.textPrimary)
                 Text(
-                    currentDirectory.absolutePath,
+                    if (selectedFolder != null) selectedFolder!!.absolutePath else currentDirectory.absolutePath,
                     fontSize = 11.sp,
                     color = SampThemeColors.textSecondary,
                     fontFamily = FontFamily.Monospace,
@@ -226,12 +294,36 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
         }
 
         Card(colors = CardDefaults.cardColors(containerColor = SampThemeColors.card)) {
-            Text(
-                text = if (serverConfigExists) t("files.server.ready") else t("files.server.missing"),
-                modifier = Modifier.padding(12.dp),
-                color = if (serverConfigExists) SampThemeColors.success else SampThemeColors.warn,
-                style = MaterialTheme.typography.bodySmall
-            )
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (serverConfigExists) t("files.server.ready") else t("files.server.missing"),
+                    modifier = Modifier.weight(1f),
+                    color = if (serverConfigExists) SampThemeColors.success else SampThemeColors.warn,
+                    style = MaterialTheme.typography.bodySmall
+                )
+                if (!serverConfigExists) {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                val created = withContext(Dispatchers.IO) {
+                                    runCatching { Reader.ensureDefaultConfig(root) }.isSuccess
+                                }
+                                if (created) {
+                                    operationError = null
+                                    refreshToken++
+                                } else {
+                                    operationError = t("files.create.failed")
+                                }
+                            }
+                        }
+                    ) {
+                        Text(t("files.create.defaults"), fontSize = 11.sp, maxLines = 1)
+                    }
+                }
+            }
         }
 
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -239,26 +331,38 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                 enabled = currentDirectory.absolutePath != root.absolutePath,
                 onClick = {
                     currentDirectory.parentFile?.let { parent ->
-                        if (isWithin(root.canonicalFile, parent.canonicalFile)) currentDirectory = parent
+                        if (isWithin(root.canonicalFile, parent.canonicalFile)) {
+                            currentDirectory = parent
+                            selectedFolder = null
+                            selectedEntry = null
+                        }
                     }
                 },
                 modifier = Modifier.weight(1f)
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                 Spacer(Modifier.size(6.dp))
-                Text(t("files.parent"))
+                Text(t("files.parent"), maxLines = 1)
             }
-            OutlinedButton(onClick = { name = ""; action = FileAction.CREATE_FOLDER }, modifier = Modifier.weight(1f)) {
+            OutlinedButton(onClick = { startCreate(FileAction.CREATE_FOLDER) }, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Default.CreateNewFolder, contentDescription = null)
                 Spacer(Modifier.size(6.dp))
                 Text(t("files.new.folder"), maxLines = 1)
             }
-            OutlinedButton(onClick = { name = ""; action = FileAction.CREATE_FILE }, modifier = Modifier.weight(1f)) {
+            OutlinedButton(onClick = { startCreate(FileAction.CREATE_FILE) }, modifier = Modifier.weight(1f)) {
                 Icon(Icons.Default.NoteAdd, contentDescription = null)
                 Spacer(Modifier.size(6.dp))
                 Text(t("files.new.file"), maxLines = 1)
             }
         }
+
+        Text(
+            text = t("files.target") + ": " + createDestination().name,
+            style = MaterialTheme.typography.labelSmall,
+            color = SampThemeColors.textMuted,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
 
         operationError?.let { ErrorMessage(it) }
         directoryError?.let { ErrorMessage("${t("files.read.failed")}: $it") }
@@ -276,15 +380,24 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                     contentPadding = PaddingValues(bottom = 60.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    items(entries, key = { it.file.absolutePath }) { entry ->
+                    items(rows, key = { it.entry.file.absolutePath }) { row ->
+                        val entry = row.entry
                         FileEntry(
                             entry = entry,
+                            depth = row.depth,
+                            expanded = row.expanded,
                             selected = selectedEntry?.absolutePath == entry.file.absolutePath,
-                            onSelect = { selectedEntry = entry.file },
-                            onBrowse = {
-                                if (entry.isDirectory && isWithin(root.canonicalFile, entry.file.canonicalFile)) {
-                                    currentDirectory = entry.file
-                                    selectedEntry = null
+                            folderSelected = entry.isDirectory &&
+                                selectedFolder?.absolutePath == entry.file.absolutePath,
+                            onSelect = {
+                                selectedEntry = entry.file
+                                // Selecting a folder also aims the create buttons at it.
+                                selectedFolder = if (entry.isDirectory) entry.file else null
+                            },
+                            onToggle = {
+                                if (entry.isDirectory) {
+                                    toggleFolder(entry.file)
+                                    selectedFolder = entry.file
                                 }
                             },
                             onOpenWorkspace = { openXed(entry.file, workspace = true) },
@@ -302,8 +415,9 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                             deleteLabel = t("files.delete"),
                             editLabel = t("files.edit"),
                             workspaceLabel = t("files.open.workspace"),
-                            browseLabel = t("files.browse"),
-                            folderLabel = t("files.folder")
+                            folderLabel = t("files.folder"),
+                            expandLabel = t("files.expand"),
+                            collapseLabel = t("files.collapse")
                         )
                     }
                 }
@@ -317,7 +431,7 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                     ) {
                         if (selected.isDirectory) {
                             OutlinedButton(
-                                onClick = { currentDirectory = selectedFile; selectedEntry = null },
+                                onClick = { currentDirectory = selectedFile; selectedEntry = null; selectedFolder = selectedFile },
                                 modifier = Modifier.weight(1f)
                             ) { Text(t("files.browse"), maxLines = 1) }
                             OutlinedButton(
@@ -370,12 +484,21 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                 if (deleting) {
                     Text(t("files.delete.confirm").replace("{name}", selectedEntry?.name.orEmpty()))
                 } else {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text(t("files.name")) },
-                        singleLine = true
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (activeAction != FileAction.RENAME) {
+                            Text(
+                                text = "${t("files.target")}: ${createTarget.absolutePath}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = SampThemeColors.textMuted
+                            )
+                        }
+                        OutlinedTextField(
+                            value = name,
+                            onValueChange = { name = it },
+                            label = { Text(t("files.name")) },
+                            singleLine = true
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -383,23 +506,29 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                     onClick = {
                         val target = selectedEntry
                         val requestedName = name.trim()
-                        val operationRoot = root
-                        val operationDirectory = currentDirectory
+                        val safeRoot = root
+                        // Frozen when the dialog opened, so a refresh in the background
+                        // cannot move a create action to a different folder mid-typing.
+                        val newParent = createTarget
                         scope.launch {
                             val result = withContext(Dispatchers.IO) {
                                 runCatching {
-                                    val safeRoot = operationRoot.canonicalFile
+                                    val safeRootCanonical = safeRoot.canonicalFile
                                     if (activeAction == FileAction.DELETE) {
-                                        require(target != null && isWithin(safeRoot, target.canonicalFile)) { t("files.outside.root") }
-                                        require(deleteEntry(target, safeRoot)) { t("files.delete.failed") }
+                                        require(target != null && isWithin(safeRootCanonical, target.canonicalFile)) { t("files.outside.root") }
+                                        require(deleteEntry(target, safeRootCanonical)) { t("files.delete.failed") }
                                     } else {
                                         require(isSafeName(requestedName)) { t("files.invalid.name") }
                                         val parent = if (activeAction == FileAction.RENAME) {
-                                            require(target != null && isWithin(safeRoot, target.canonicalFile)) { t("files.outside.root") }
+                                            require(target != null && isWithin(safeRootCanonical, target.canonicalFile)) { t("files.outside.root") }
                                             target.parentFile ?: error(t("files.operation.failed"))
-                                        } else operationDirectory
+                                        } else {
+                                            require(isWithin(safeRootCanonical, newParent.canonicalFile)) { t("files.outside.root") }
+                                            require(newParent.isDirectory) { t("files.folder.failed") }
+                                            newParent
+                                        }
                                         val destination = File(parent, requestedName)
-                                        require(isWithin(safeRoot, destination.canonicalFile)) { t("files.outside.root") }
+                                        require(isWithin(safeRootCanonical, destination.canonicalFile)) { t("files.outside.root") }
                                         when (activeAction) {
                                             FileAction.CREATE_FILE -> {
                                                 require(!destination.exists()) { t("files.name.exists") }
@@ -408,6 +537,8 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                                             FileAction.CREATE_FOLDER -> {
                                                 require(!destination.exists()) { t("files.name.exists") }
                                                 require(destination.mkdir()) { t("files.create.failed") }
+                                                // Open the new folder so its content is directly visible.
+                                                expandedPaths = expandedPaths + parent.absolutePath
                                             }
                                             FileAction.RENAME -> {
                                                 require(!destination.exists()) { t("files.name.exists") }
@@ -441,9 +572,12 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
 @Composable
 private fun FileEntry(
     entry: ManagedFile,
+    depth: Int,
+    expanded: Boolean,
     selected: Boolean,
+    folderSelected: Boolean,
     onSelect: () -> Unit,
-    onBrowse: () -> Unit,
+    onToggle: () -> Unit,
     onOpenWorkspace: () -> Unit,
     onEdit: () -> Unit,
     onRename: () -> Unit,
@@ -452,27 +586,46 @@ private fun FileEntry(
     deleteLabel: String,
     editLabel: String,
     workspaceLabel: String,
-    browseLabel: String,
-    folderLabel: String
+    folderLabel: String,
+    expandLabel: String,
+    collapseLabel: String
 ) {
     val file = entry.file
     var showActions by remember(file.absolutePath) { mutableStateOf(false) }
+    val highlight = selected || folderSelected
     Card(colors = CardDefaults.cardColors(containerColor = SampThemeColors.card)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(start = (depth * 16).dp)
                 .clickable(onClick = onSelect)
-                .background(if (selected) SampThemeColors.accent.copy(alpha = 0.12f) else Color.Transparent)
-                .padding(start = 12.dp, end = 4.dp, top = 7.dp, bottom = 7.dp),
+                .background(if (highlight) SampThemeColors.accent.copy(alpha = 0.12f) else Color.Transparent)
+                .padding(start = 8.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (entry.isDirectory) {
+                IconButton(
+                    onClick = onToggle,
+                    modifier = Modifier.size(26.dp)
+                ) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.ExpandMore
+                        else Icons.Default.ChevronRight,
+                        contentDescription = if (expanded) collapseLabel else expandLabel,
+                        tint = SampThemeColors.textSecondary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            } else {
+                Spacer(Modifier.size(26.dp))
+            }
             Icon(
                 imageVector = if (entry.isDirectory) Icons.Default.Folder else Icons.Default.Description,
                 contentDescription = null,
                 tint = SampThemeColors.accent,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(20.dp)
             )
-            Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+            Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
                 Text(file.name, color = SampThemeColors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
                     text = if (entry.isDirectory) folderLabel else formatSize(entry.sizeBytes),
@@ -484,34 +637,40 @@ private fun FileEntry(
                 IconButton(onClick = { showActions = true }) {
                     Icon(Icons.Default.MoreVert, contentDescription = null, tint = SampThemeColors.textSecondary)
                 }
-                androidx.compose.material3.DropdownMenu(
+                DropdownMenu(
                     expanded = showActions,
                     onDismissRequest = { showActions = false }
                 ) {
                     if (entry.isDirectory) {
-                        androidx.compose.material3.DropdownMenuItem(
-                            text = { Text(browseLabel) },
-                            leadingIcon = { Icon(Icons.Default.FolderOpen, contentDescription = null) },
-                            onClick = { showActions = false; onBrowse() }
+                        DropdownMenuItem(
+                            text = { Text(if (expanded) collapseLabel else expandLabel) },
+                            leadingIcon = {
+                                Icon(
+                                    if (expanded) Icons.Default.ExpandMore
+                                    else Icons.Default.ChevronRight,
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = { showActions = false; onToggle() }
                         )
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             text = { Text(workspaceLabel) },
                             leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) },
                             onClick = { showActions = false; onOpenWorkspace() }
                         )
                     } else {
-                        androidx.compose.material3.DropdownMenuItem(
+                        DropdownMenuItem(
                             text = { Text(editLabel) },
                             leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
                             onClick = { showActions = false; onEdit() }
                         )
                     }
-                    androidx.compose.material3.DropdownMenuItem(
+                    DropdownMenuItem(
                         text = { Text(renameLabel) },
                         leadingIcon = { Icon(Icons.Default.DriveFileRenameOutline, contentDescription = null) },
                         onClick = { showActions = false; onRename() }
                     )
-                    androidx.compose.material3.DropdownMenuItem(
+                    DropdownMenuItem(
                         text = { Text(deleteLabel) },
                         leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
                         onClick = { showActions = false; onDelete() }
@@ -525,6 +684,21 @@ private fun FileEntry(
 @Composable
 private fun ErrorMessage(message: String) {
     Text(message, color = SampThemeColors.danger, style = MaterialTheme.typography.bodySmall)
+}
+
+/**
+ * Resolves where "new file"/"new folder" should be created.
+ *
+ * The selected folder always wins over the folder currently open, because the user picked
+ * it on purpose (usually a nested folder). A selection that is not a real folder inside
+ * the workspace root - deleted meanwhile, or outside the root - is ignored, so the create
+ * action falls back to the open folder instead of failing or escaping the tree.
+ */
+internal fun createDestinationFor(root: File, currentDirectory: File, selectedFolder: File?): File {
+    if (selectedFolder == null || !selectedFolder.isDirectory) return currentDirectory
+    return runCatching {
+        if (isWithin(root.canonicalFile, selectedFolder.canonicalFile)) selectedFolder else currentDirectory
+    }.getOrDefault(currentDirectory)
 }
 
 private fun isWithin(root: File, candidate: File): Boolean {

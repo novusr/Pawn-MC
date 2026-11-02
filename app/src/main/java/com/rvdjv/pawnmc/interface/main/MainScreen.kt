@@ -1112,6 +1112,10 @@ internal fun CompilerLogsSection(
                     modifier = Modifier.weight(1f, fill = false)
                 )
                 Spacer(modifier = Modifier.width(SpaceXS))
+                // The two icon buttons then the chip are pushed to the far right: the title
+                // keeps its natural width (`fill = false`) and the flexible spacer soaks up
+                // the extra room a wide screen has.
+                Spacer(modifier = Modifier.weight(1f))
                 IconButton(
                     onClick = onDownloadClick,
                     enabled = canDownload,
@@ -1138,7 +1142,7 @@ internal fun CompilerLogsSection(
                     )
                 }
                 Spacer(modifier = Modifier.width(SpaceXS))
-                StatusChip(status = status)
+                StatusChip(status = status, modifier = Modifier.align(Alignment.CenterVertically))
             }
         }
 
@@ -1155,7 +1159,10 @@ internal fun CompilerLogsSection(
 }
 
 @Composable
-internal fun StatusChip(status: CompileStatus) {
+internal fun StatusChip(
+    status: CompileStatus,
+    modifier: Modifier = Modifier
+) {
     val (dotColor, containerColor, contentColor) = when (status) {
         CompileStatus.IDLE -> Triple(
             status_idle,
@@ -1181,6 +1188,7 @@ internal fun StatusChip(status: CompileStatus) {
 
     AssistChip(
         onClick = {},
+        modifier = modifier,
         enabled = false,
         label = {
             AnimatedContent(targetState = status.label, label = "status_label") { label ->

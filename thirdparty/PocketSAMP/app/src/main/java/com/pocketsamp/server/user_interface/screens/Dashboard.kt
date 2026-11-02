@@ -153,7 +153,9 @@ fun _Dashboard(
     val isRunning = status == Status.RUNNING
     val hasCfg = File(currentServerDir, "server.cfg").isFile
     val serverConfig = remember(currentServerDir, hasCfg, configReloadToken) {
-        runCatching { Reader.read(File(currentServerDir, "server.cfg")) }
+        // Without a file the screen still shows the runner defaults rather than an
+        // empty card, and the Start button below stays enabled.
+        runCatching { Reader.readOrDefault(currentServerDir) }
     }
     val serverPort = serverConfig.getOrNull()?.port?.toString() ?: "—"
 
@@ -425,7 +427,7 @@ fun _Dashboard(
                             .background(if (hasCfg) SampThemeColors.success else SampThemeColors.warn)
                     )
                     Text(
-                        text = if (hasCfg) t("folder.has.cfg") else t("folder.no.cfg"),
+                        text = if (hasCfg) t("folder.has.cfg") else t("folder.no.cfg.defaults"),
                         style = MaterialTheme.typography.bodySmall,
                         color = SampThemeColors.textPrimary
                     )
@@ -465,7 +467,7 @@ fun _Dashboard(
         Spacer(Modifier.height(2.dp))
         Button(
             onClick = { if (isRunning) onStopServer() else onStartServer() },
-            enabled = !isBusy && (isRunning || hasCfg),
+            enabled = !isBusy,
             modifier = Modifier.fillMaxWidth().height(52.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(
