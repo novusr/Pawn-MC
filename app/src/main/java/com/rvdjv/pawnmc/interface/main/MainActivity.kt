@@ -46,10 +46,47 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.io.File
 
 class MainActivity : ComponentActivity() {
 
     private var initialUri by mutableStateOf<Uri?>(null)
+    private var pendingXedRequest by mutableStateOf<XedRequest?>(null)
+
+    private data class XedRequest(
+        val path: String,
+        val workspace: Boolean,
+        val requestId: Long
+    )
+
+    private fun xedRequest(intent: Intent): XedRequest? {
+        if (intent.action != ACTION_OPEN_XED_PATH) return null
+        val path = intent.getStringExtra(EXTRA_XED_PATH)?.takeIf(String::isNotBlank) ?: return null
+        return XedRequest(
+            path = path,
+            workspace = intent.getBooleanExtra(EXTRA_XED_WORKSPACE, false),
+            requestId = System.nanoTime()
+        )
+    }
+
+    companion object {
+        private const val ACTION_OPEN_XED_PATH = "com.rvdjv.pawnmc.action.OPEN_XED_PATH"
+        private const val EXTRA_XED_PATH = "com.rvdjv.pawnmc.extra.XED_PATH"
+        private const val EXTRA_XED_WORKSPACE = "com.rvdjv.pawnmc.extra.XED_WORKSPACE"
+        private const val EXTRA_RETURN_TO_POCKETSAMP = "com.pocketsamp.server.extra.RETURN_TO_FILES"
+        private const val EXTRA_XED_OPEN_FAILED = "com.pocketsamp.server.extra.XED_OPEN_FAILED"
+    }
+
+    private fun navigateBackToPocketSamp(openFailed: Boolean = false) {
+        startActivity(
+            Intent().apply {
+                setClassName(packageName, "com.pocketsamp.server.MainActivity")
+                putExtra(EXTRA_RETURN_TO_POCKETSAMP, true)
+                putExtra(EXTRA_XED_OPEN_FAILED, openFailed)
+                addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+            }
+        )
+    }
 
     override fun attachBaseContext(newBase: Context) {
         // On a fresh install the device locale decides the starting language, so
@@ -87,6 +124,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initialUri = intent.data
+        pendingXedRequest = xedRequest(intent)
 
     // The compiler libraries now ship as one archive per ABI inside the APK and live
     // in Documents/PawnMC/library/<abi>/ afterwards. Point the compiler at that folder
@@ -147,7 +185,31 @@ class MainActivity : ComponentActivity() {
                 }
 
                 var isEditorOpen by remember { mutableStateOf(false) }
+                var returnToPocketSamp by remember { mutableStateOf(false) }
                 val currentFilePath = viewModel.selectedFilePath
+
+                LaunchedEffect(pendingXedRequest?.requestId) {
+                    val request = pendingXedRequest ?: return@LaunchedEffect
+                    val target = File(request.path)
+                    val opened = if (request.workspace) {
+                        if (!target.isDirectory || !target.canRead()) {
+                            false
+                        } else {
+                            editorViewModel.workspace.openWorkspace(target)
+                            editorViewModel.workspace.activeWorkspace?.root?.absolutePath == target.absolutePath
+                        }
+                    } else {
+                        target.isFile && target.canRead() &&
+                            editorViewModel.workspace.registerExternalFile(target)
+                    }
+                    if (opened) {
+                        returnToPocketSamp = true
+                        isEditorOpen = true
+                    } else {
+                        navigateBackToPocketSamp(openFailed = true)
+                    }
+                    pendingXedRequest = null
+                }
 
                 // The editor follows the file chosen on the main screen, without
                 // recreating its view model so the workspaces stay intact.
@@ -183,7 +245,12 @@ class MainActivity : ComponentActivity() {
                             viewModel = editorViewModel,
                             onNavigateBack = {
                                 isEditorOpen = false
-                                viewModel.loadLastSelectedFile()
+                                if (returnToPocketSamp) {
+                                    returnToPocketSamp = false
+                                    navigateBackToPocketSamp()
+                                } else {
+                                    viewModel.loadLastSelectedFile()
+                                }
                             },
                             editorBackgroundColor = viewModel.n_editor_background_color,
                             compileOutput = when {
@@ -206,6 +273,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         initialUri = intent.data
+        pendingXedRequest = xedRequest(intent)
         if (intent.data != null) {
             viewModel.handleInitialUri(intent.data)
         }

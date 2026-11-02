@@ -200,6 +200,10 @@ object Locales {
             Lang.ES to "Consola",
             Lang.RU to "ЗАПУСК",
         ),
+        "tab.files" to mapOf(
+            Lang.ID to "File Manager",
+            Lang.EN to "File Manager",
+        ),
         "tab.database" to mapOf(
             Lang.ID to "Basis data",
             Lang.EN to "Database",
@@ -234,6 +238,22 @@ object Locales {
             Lang.TL to "Lahat ng binabasa ng server mula sa server.cfg",
             Lang.ES to "Editor de server.cfg",
             Lang.RU to "Редактор server.cfg",
+        ),
+        "config.missing" to mapOf(
+            Lang.ID to "server.cfg tidak ditemukan di folder server aktif. Buat atau pilih konfigurasi melalui File Manager.",
+            Lang.EN to "server.cfg was not found in the active server folder. Create or select one using File Manager.",
+        ),
+        "config.read.failed" to mapOf(
+            Lang.ID to "server.cfg tidak dapat dibaca",
+            Lang.EN to "Could not read server.cfg",
+        ),
+        "config.save.failed" to mapOf(
+            Lang.ID to "server.cfg gagal disimpan",
+            Lang.EN to "Could not save server.cfg",
+        ),
+        "config.validation" to mapOf(
+            Lang.ID to "Port harus 1–65535 dan jumlah pemain harus 1–1000.",
+            Lang.EN to "Port must be 1–65535 and maximum players must be 1–1000.",
         ),
         "config.save" to mapOf(
             Lang.ID to "Simpan",
@@ -511,6 +531,146 @@ object Locales {
             Lang.ES to "No se pudo resolver la ruta de la carpeta elegida.",
             Lang.RU to "Не удалось определить путь выбранной папки.",
         ),
+        "folder.running" to mapOf(
+            Lang.ID to "Hentikan server sebelum mengganti folder server.",
+            Lang.EN to "Stop the server before changing its folder.",
+        ),
+        "files.title" to mapOf(
+            Lang.ID to "File Manager",
+            Lang.EN to "File Manager",
+        ),
+        "files.refresh" to mapOf(
+            Lang.ID to "Muat ulang",
+            Lang.EN to "Refresh",
+        ),
+        "files.edit" to mapOf(
+            Lang.ID to "Edit",
+            Lang.EN to "Edit",
+        ),
+        "files.open.workspace" to mapOf(
+            Lang.ID to "Buka di Xed",
+            Lang.EN to "Open in Xed",
+        ),
+        "files.browse" to mapOf(
+            Lang.ID to "Buka folder",
+            Lang.EN to "Browse folder",
+        ),
+        "files.item.unavailable" to mapOf(
+            Lang.ID to "File atau folder sudah tidak tersedia.",
+            Lang.EN to "The file or folder is no longer available.",
+        ),
+        "files.edit.unsupported" to mapOf(
+            Lang.ID to "Format file ini belum didukung untuk diedit di Xed.",
+            Lang.EN to "This file format is not supported for editing in Xed.",
+        ),
+        "files.open.failed" to mapOf(
+            Lang.ID to "Xed tidak dapat dibuka",
+            Lang.EN to "Could not open Xed",
+        ),
+        "files.choose.root" to mapOf(
+            Lang.ID to "Pilih folder server",
+            Lang.EN to "Choose server folder",
+        ),
+        "files.folder.failed" to mapOf(
+            Lang.ID to "Folder tidak dapat diakses atau jalurnya tidak didukung.",
+            Lang.EN to "The folder is inaccessible or its path is unsupported.",
+        ),
+        "files.folder.running" to mapOf(
+            Lang.ID to "Hentikan server sebelum mengganti folder server.",
+            Lang.EN to "Stop the server before changing its folder.",
+        ),
+        "files.server.ready" to mapOf(
+            Lang.ID to "server.cfg ditemukan. Folder ini siap dikonfigurasi untuk server.",
+            Lang.EN to "server.cfg found. This folder can be configured as the server directory.",
+        ),
+        "files.server.missing" to mapOf(
+            Lang.ID to "server.cfg tidak ditemukan. File Manager tetap dapat digunakan, tetapi server belum siap dijalankan.",
+            Lang.EN to "server.cfg not found. File Manager remains available, but this folder is not ready to run as a server.",
+        ),
+        "files.parent" to mapOf(
+            Lang.ID to "Folder induk",
+            Lang.EN to "Parent",
+        ),
+        "files.new.folder" to mapOf(
+            Lang.ID to "Folder",
+            Lang.EN to "Folder",
+        ),
+        "files.new.file" to mapOf(
+            Lang.ID to "File",
+            Lang.EN to "File",
+        ),
+        "files.rename" to mapOf(
+            Lang.ID to "Ganti nama",
+            Lang.EN to "Rename",
+        ),
+        "files.delete" to mapOf(
+            Lang.ID to "Hapus",
+            Lang.EN to "Delete",
+        ),
+        "files.delete.confirm" to mapOf(
+            Lang.ID to "Hapus \"{name}\"? Tindakan ini tidak dapat dibatalkan.",
+            Lang.EN to "Delete \"{name}\"? This action cannot be undone.",
+        ),
+        "files.name" to mapOf(
+            Lang.ID to "Nama",
+            Lang.EN to "Name",
+        ),
+        "files.save" to mapOf(
+            Lang.ID to "Simpan",
+            Lang.EN to "Save",
+        ),
+        "files.cancel" to mapOf(
+            Lang.ID to "Batal",
+            Lang.EN to "Cancel",
+        ),
+        "files.empty" to mapOf(
+            Lang.ID to "Folder ini kosong.",
+            Lang.EN to "This folder is empty.",
+        ),
+        "files.folder" to mapOf(
+            Lang.ID to "Folder",
+            Lang.EN to "Folder",
+        ),
+        "files.read.failed" to mapOf(
+            Lang.ID to "Folder gagal dibaca",
+            Lang.EN to "Could not read folder",
+        ),
+        "files.read.denied" to mapOf(
+            Lang.ID to "Folder tidak dapat dibaca. Periksa izin penyimpanan dan akses folder.",
+            Lang.EN to "The folder cannot be read. Check storage access and folder permissions.",
+        ),
+        "files.operation.failed" to mapOf(
+            Lang.ID to "Operasi file gagal.",
+            Lang.EN to "File operation failed.",
+        ),
+        "files.permission.denied" to mapOf(
+            Lang.ID to "Izin untuk melakukan operasi ini ditolak.",
+            Lang.EN to "Permission was denied for this operation.",
+        ),
+        "files.delete.failed" to mapOf(
+            Lang.ID to "Item tidak dapat dihapus.",
+            Lang.EN to "The item could not be deleted.",
+        ),
+        "files.invalid.name" to mapOf(
+            Lang.ID to "Nama tidak valid.",
+            Lang.EN to "Invalid name.",
+        ),
+        "files.outside.root" to mapOf(
+            Lang.ID to "Operasi di luar folder server terpilih tidak diizinkan.",
+            Lang.EN to "Operations outside the selected server folder are not allowed.",
+        ),
+        "files.create.failed" to mapOf(
+            Lang.ID to "Item sudah ada atau tidak dapat dibuat.",
+            Lang.EN to "The item already exists or could not be created.",
+        ),
+        "files.name.exists" to mapOf(
+            Lang.ID to "Nama tersebut sudah digunakan.",
+            Lang.EN to "An item with that name already exists.",
+        ),
+        "files.rename.failed" to mapOf(
+            Lang.ID to "Item tidak dapat diganti namanya.",
+            Lang.EN to "The item could not be renamed.",
+        ),
         "dash.local.title" to mapOf(
             Lang.ID to "Main di HP ini",
             Lang.EN to "Just this phone",
@@ -524,6 +684,10 @@ object Locales {
             Lang.TL to "Pinakamainam: walang ping, hindi kailangan ng Wi-Fi, at hindi mapuputol pag lumipat ka ng app.",
             Lang.ES to "Muy recomendado: conexión interna directa (0 ms de ping), sin depender de la señal Wi-Fi, y sin cortes al cambiar o abrir el juego.",
             Lang.RU to "Настоятельно рекомендуется: прямое внутреннее соединение (пинг 0 мс), не зависит от сигнала Wi-Fi и не обрывается при переключении на игру.",
+        ),
+        "dash.cfg.read.failed" to mapOf(
+            Lang.ID to "Konfigurasi gagal dibaca",
+            Lang.EN to "Could not read server configuration",
         ),
         "dash.lan.title" to mapOf(
             Lang.ID to "Main bareng teman",
@@ -920,6 +1084,10 @@ object Locales {
             Lang.TL to "[SA-MP info] Siguraduhing may tamang SA-MP gamemode ang folder, o i-setup ito sa Config tab.",
             Lang.ES to "[Info de SA-MP] Asegúrate de que la carpeta tenga un gamemode SA-MP válido o configura los ajustes en la pestaña Config.",
             Lang.RU to "[SA-MP] Убедитесь, что в папке есть корректный gamemode SA-MP, или настройте конфигурацию во вкладке Config.",
+        ),
+        "log.server.start.refused" to mapOf(
+            Lang.ID to "[SA-MP Error] Server gagal dimulai. Periksa file server dan runtime pada folder yang dipilih.",
+            Lang.EN to "[SA-MP error] Server could not start. Check the server files and runtime for the selected folder.",
         ),
         "log.tuning.lanmode" to mapOf(
             Lang.ID to "[Tuning Jaringan] 'lanmode 1' diaktifkan untuk mencegah query drop di launcher mobile.",

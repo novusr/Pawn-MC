@@ -8,31 +8,37 @@ import java.io.File
 object Writer {
 
     fun write(configuration: Configuration, file: File) {
+        require(file.isFile) { "server.cfg does not exist" }
+        val values = linkedMapOf(
+            "hostname" to configuration.hostname,
+            "port" to configuration.port.toString(),
+            "maxplayers" to configuration.maxPlayers.toString(),
+            "rcon_password" to configuration.rconPassword,
+            "gamemode0" to configuration.gamemode,
+            "filterscripts" to configuration.filterscripts,
+            "plugins" to configuration.plugins,
+            "announce" to flag(configuration.announce).toString(),
+            "query" to flag(configuration.query).toString(),
+            "lanmode" to flag(configuration.lanmode).toString(),
+            "sleep" to configuration.sleep.toString()
+        )
+        val found = mutableSetOf<String>()
+        val originalLines = file.readLines()
         val content = buildString {
-            appendLine("echo Executing Server Config...")
-            appendLine("lanmode ${flag(configuration.lanmode)}")
-            appendLine("rcon_password ${configuration.rconPassword}")
-            appendLine("maxplayers ${configuration.maxPlayers}")
-            appendLine("port ${configuration.port}")
-            appendLine("hostname ${configuration.hostname}")
-            appendLine("gamemode0 ${configuration.gamemode}")
-            if (configuration.filterscripts.isNotBlank()) {
-                appendLine("filterscripts ${configuration.filterscripts}")
+            originalLines.forEach { line ->
+                val trimmed = line.trimStart()
+                val key = trimmed.split(Regex("\\s+"), limit = 2).first().lowercase()
+                val value = values[key]
+                if (value == null || trimmed.startsWith("#") || trimmed.startsWith("echo", ignoreCase = true)) {
+                    appendLine(line)
+                } else if (found.add(key)) {
+                    val inlineComment = Regex("\\s+#.*$").find(line)?.value.orEmpty()
+                    appendLine("$key $value$inlineComment")
+                }
             }
-            if (configuration.plugins.isNotBlank()) {
-                appendLine("plugins ${configuration.plugins}")
+            values.forEach { (key, value) ->
+                if (key !in found && value.isNotBlank()) appendLine("$key $value")
             }
-            appendLine("announce ${flag(configuration.announce)}")
-            appendLine("query ${flag(configuration.query)}")
-            appendLine("sleep ${configuration.sleep}")
-            appendLine("ackslimit 3000")
-            appendLine("weburl www.sa-mp.com")
-            appendLine("maxnpc 0")
-            appendLine("onfoot_rate 40")
-            appendLine("incar_rate 40")
-            appendLine("weapon_rate 40")
-            appendLine("stream_distance 300.0")
-            appendLine("stream_rate 1000")
         }
         file.writeText(content)
     }

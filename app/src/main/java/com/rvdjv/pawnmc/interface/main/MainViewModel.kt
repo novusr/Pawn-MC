@@ -24,7 +24,7 @@ class MainViewModel(
 ) : ViewModel() {
 
     companion object {
-        const val TEMPORARY_FILE_NAME = "unit.pwn"
+        const val TEMPORARY_FILE_NAME = "blank.pwn"
         const val TEMPORARY_FILE_NOTICE = "This is a temporary file because you have not selected your own Pawn file yet."
         const val IGNORE_CASE_BUSY_NOTICE =
             "Ignore case is enabled. Backing up this folder and converting every file name and #include reference to lowercase..."

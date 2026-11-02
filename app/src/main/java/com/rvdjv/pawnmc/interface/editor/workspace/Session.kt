@@ -311,18 +311,22 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     }
 
     /** Registers a file opened from outside the workspace panel as a tab. */
-    fun registerExternalFile(file: File) {
-        if (!file.isFile) return
-        val dir = file.parentFile ?: return
+    fun registerExternalFile(file: File): Boolean {
+        if (!file.isFile) return false
+        val dir = file.parentFile ?: return false
 
         val workspace = workspaces.firstOrNull { it.root.absolutePath == dir.absolutePath }
             ?: newWorkspaceFor(dir)
-            ?: return
+            ?: run {
+                statusMessage = "Close a workspace before opening another file"
+                return false
+            }
 
         if (activeWorkspace == null || activeWorkspace?.root?.absolutePath != workspace.root.absolutePath) {
             activeWorkspace = workspace
         }
         openFile(file, workspace)
+        return true
     }
 
     /** Creates and scans a workspace for [dir], or returns null when the limit is hit. */

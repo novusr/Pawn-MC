@@ -88,7 +88,19 @@ Gamemode directory
 ------------------
 
 The server reads the user's SA-MP files directly, without copying. The default is
-``/storage/emulated/0/PocketSAMP/``; any folder can be chosen from the Dashboard.
+``/storage/emulated/0/PocketSAMP/``; a folder can be chosen from the Dashboard or
+File Manager.
+The same selected folder is used by the PocketSAMP File Manager, Dashboard, Config
+screen and server process. The File Manager can browse folders, create files and
+directories, rename items and delete them after confirmation. It does not copy files
+into the app's private storage, and its operations are restricted to the selected
+folder and its descendants. Stop the server before changing its selected folder.
+
+The Config screen reads ``server.cfg`` from this selected folder. Saving updates the
+settings managed by the screen while keeping other directives and comment lines in
+the file. A folder without ``server.cfg`` remains browsable, but cannot be used to
+start the server until a configuration is added.
+
 Expected contents:
 
 - ``server.cfg``

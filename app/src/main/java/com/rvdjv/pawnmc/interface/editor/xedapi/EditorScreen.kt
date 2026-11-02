@@ -1357,7 +1357,7 @@ fun EditorScreen(
                     }
                     else -> {
                         // An empty workspace must not fall through to a stale single-file
-                        // buffer such as TMP/unit.pwn; offer workspace navigation instead.
+                        // buffer such as TMP/blank.pwn; offer workspace navigation instead.
                         if (workspaceHasNoActiveFile) {
                             EmptyWorkspaceView(
                                 onBrowseExplorer = { isExplorerVisible = !isExplorerVisible },

@@ -35,10 +35,7 @@ object _DirectoryManager {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         val customPath = prefs.getString(KEY_CUSTOM_SERVER_DIR, null)
         if (!customPath.isNullOrBlank()) {
-            val dir = File(customPath)
-            if (dir.exists() && dir.isDirectory) {
-                return dir
-            }
+            return File(customPath)
         }
         val defaultDir = getDefaultServerDirectory()
         if (!defaultDir.exists()) {
@@ -47,10 +44,14 @@ object _DirectoryManager {
         return defaultDir
     }
 
+    fun hasCustomServerDirectory(context: Context): Boolean {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val customPath = prefs.getString(KEY_CUSTOM_SERVER_DIR, null)
+        return !customPath.isNullOrBlank() && File(customPath).let { it.exists() && it.isDirectory }
+    }
+
     fun setServerDirectory(context: Context, directory: File): Boolean {
-        if (!directory.exists()) {
-            directory.mkdirs()
-        }
+        if (!directory.exists() || !directory.isDirectory) return false
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         return prefs.edit().putString(KEY_CUSTOM_SERVER_DIR, directory.absolutePath).commit()
     }

@@ -8,9 +8,6 @@ PawnMC
 *PawnMC* expands the workflow of the Pawn scripting language with a complete, native
 compilation environment for your mobile device.
 
-.. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/content/PAWNMC.png
-   :alt: PawnMC running on Android
-
 With this application, you can use on-the-go development techniques, manage local
 libraries, and build your projects directly on Android to make programming in Pawn more
 accessible, flexible, and efficient.
@@ -145,7 +142,7 @@ Where PawnMC keeps your files
        editor canvas colour. Written on every settings change and read back on the next
        launch, so a manual reinstall behaves like an update.
    * - ``Android/data/com.rvdjv.pawnmc/files/PawnMC/workspace``
-     - The starter script (``unit.pwn``) created when you open the editor without having
+     - The starter script (``blank.pwn``) created when you open the editor without having
        chosen a file yet. It is a normal editable file: any tool on the device can open,
        copy or replace it.
    * - ``Android/data/com.rvdjv.pawnmc/files/.pawnmc``

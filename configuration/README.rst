@@ -207,7 +207,7 @@ Example:
 
 .. code-block:: text
 
-   pawno\pawncc.exe gamemodes\unit.pwn -ogamemodes\unit.amx -i=includes -i=core -i=modules
+   pawno\pawncc.exe gamemodes\blank.pwn -ogamemodes\unit.amx -i=includes -i=core -i=modules
 
 ``-l``
 ~~~~~~

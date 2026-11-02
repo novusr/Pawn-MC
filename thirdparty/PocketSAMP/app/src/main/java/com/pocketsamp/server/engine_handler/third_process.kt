@@ -32,10 +32,10 @@ class ThirdProcess(
         workingDir: File,
         environment: Map<String, String> = emptyMap(),
         scope: CoroutineScope
-    ) {
+    ): Boolean {
         if (isRunning) {
             Log.w(tag, "Process is already running.")
-            return
+            return true
         }
 
         try {
@@ -70,9 +70,11 @@ class ThirdProcess(
                     onExit?.invoke(exitVal)
                 }
             }
+            return true
         } catch (e: Exception) {
             Log.e(tag, "Failed to start process: ${e.message}", e)
             _logs.tryEmit("[$tag] Failed to start: ${e.message}")
+            return false
         }
     }
 

@@ -290,7 +290,7 @@ class EditorTest {
     @Test
     fun `workspace folder opens without activating any previously selected file`() {
         val root = tempFolder.newFolder("empty-workspace")
-        val staleStarter = File(tempFolder.root, "TMP/unit.pwn").apply {
+        val staleStarter = File(tempFolder.root, "TMP/blank.pwn").apply {
             parentFile?.mkdirs()
             writeText("main() { print(\"stale\"); }")
         }

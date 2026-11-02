@@ -48,6 +48,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -64,6 +65,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.pocketsamp.server.Locales
+import com.pocketsamp.server.configuration.Reader
 import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.service_handler.Status
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
@@ -86,6 +88,7 @@ fun _Dashboard(
     val lifecycleOwner = context as? LifecycleOwner
     var currentServerDir by remember { mutableStateOf(_DirectoryManager.getServerDirectory(context)) }
     var hasStoragePermission by remember { mutableStateOf(_DirectoryManager.hasStoragePermission(context)) }
+    var configReloadToken by remember { mutableIntStateOf(0) }
     var showphpMyAdmin by remember { mutableStateOf(false) }
     var showAntiDcGuide by remember { mutableStateOf(false) }
     val powerManager = remember {
@@ -104,6 +107,7 @@ fun _Dashboard(
                 if (event == Lifecycle.Event.ON_RESUME) {
                     hasStoragePermission = _DirectoryManager.hasStoragePermission(context)
                     currentServerDir = _DirectoryManager.getServerDirectory(context)
+                    configReloadToken++
                     isBatteryOptIgnored =
                         android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M ||
                             powerManager?.isIgnoringBatteryOptimizations(context.packageName) == true
@@ -120,9 +124,14 @@ fun _Dashboard(
         if (uri != null) {
             val directory = _DirectoryManager.parseTreeUriToFile(uri)
             if (directory != null && directory.exists() && directory.isDirectory) {
-                _DirectoryManager.setServerDirectory(context, directory)
-                currentServerDir = directory
-                Toast.makeText(context, "${t("folder.changed")}: ${directory.name}", Toast.LENGTH_SHORT).show()
+                if (status != Status.STOPPED) {
+                    Toast.makeText(context, t("folder.running"), Toast.LENGTH_LONG).show()
+                } else if (_DirectoryManager.setServerDirectory(context, directory)) {
+                    currentServerDir = directory
+                    Toast.makeText(context, "${t("folder.changed")}: ${directory.name}", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, t("folder.pick.failed"), Toast.LENGTH_LONG).show()
+                }
             } else {
                 Toast.makeText(context, t("folder.pick.failed"), Toast.LENGTH_LONG).show()
             }
@@ -143,6 +152,10 @@ fun _Dashboard(
         status == Status.STOPPING
     val isRunning = status == Status.RUNNING
     val hasCfg = File(currentServerDir, "server.cfg").isFile
+    val serverConfig = remember(currentServerDir, hasCfg, configReloadToken) {
+        runCatching { Reader.read(File(currentServerDir, "server.cfg")) }
+    }
+    val serverPort = serverConfig.getOrNull()?.port?.toString() ?: "—"
 
     Column(
         modifier = Modifier
@@ -186,7 +199,7 @@ fun _Dashboard(
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                 ConnectionAddress(
                     title = t("dash.local.title"),
-                    address = "127.0.0.1:7777",
+                    address = "127.0.0.1:$serverPort",
                     note = t("dash.local.note"),
                     copyLabel = t("dash.copy.local"),
                     context = context,
@@ -195,7 +208,7 @@ fun _Dashboard(
                 SurfaceDivider()
                 ConnectionAddress(
                     title = t("dash.lan.title"),
-                    address = "$lanIp:7777",
+                    address = "$lanIp:$serverPort",
                     note = t("dash.lan.note"),
                     copyLabel = t("dash.copy.lan"),
                     context = context,
@@ -344,7 +357,8 @@ fun _Dashboard(
                 if (showAntiDcGuide) {
                     listOf(
                         t("guide.antidc.step1") to t("guide.antidc.step1.desc"),
-                        t("guide.antidc.step2") to t("guide.antidc.step2.desc"),
+                        t("guide.antidc.step2").replace("7777", serverPort) to
+                            t("guide.antidc.step2.desc").replace("7777", serverPort),
                         t("guide.antidc.step3") to t("guide.antidc.step3.desc")
                     ).forEach { (title, description) ->
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -416,9 +430,17 @@ fun _Dashboard(
                         color = SampThemeColors.textPrimary
                     )
                 }
+                serverConfig.exceptionOrNull()?.let { error ->
+                    Text(
+                        text = "${t("dash.cfg.read.failed")}: ${error.message.orEmpty()}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SampThemeColors.danger
+                    )
+                }
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = { folderPickerLauncher.launch(null) },
+                        enabled = status == Status.STOPPED,
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp)
                     ) {
@@ -443,7 +465,7 @@ fun _Dashboard(
         Spacer(Modifier.height(2.dp))
         Button(
             onClick = { if (isRunning) onStopServer() else onStartServer() },
-            enabled = !isBusy,
+            enabled = !isBusy && (isRunning || hasCfg),
             modifier = Modifier.fillMaxWidth().height(52.dp),
             shape = RoundedCornerShape(14.dp),
             colors = ButtonDefaults.buttonColors(

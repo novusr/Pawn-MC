@@ -28,11 +28,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.ReportProblem
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Terminal
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,24 +57,32 @@ import com.pocketsamp.server.user_interface.screens._Config
 import com.pocketsamp.server.user_interface.screens._Console
 import com.pocketsamp.server.user_interface.screens._CrashInfo
 import com.pocketsamp.server.user_interface.screens._Dashboard
+import com.pocketsamp.server.user_interface.screens._FileManager
 import com.pocketsamp.server.user_interface.screens._Database
 import com.pocketsamp.server.user_interface.screens._phpMyAdmin
 import com.pocketsamp.server.user_interface.theme.*
 
 enum class AppTab(val label: String, val icon: ImageVector) {
-    DASHBOARD("Dashboard", Icons.Default.Dashboard),
+    DASHBOARD("Dashboard", Icons.Default.Home),
     CONSOLE("Console", Icons.Default.Terminal),
+    FILES("Files", Icons.Default.FolderOpen),
     DATABASE("Database", Icons.Default.Storage),
-    CRASHES("Crash Logs", Icons.Default.BugReport),
-    CONFIG("Config", Icons.Default.Timer)
+    CRASHES("Crash Logs", Icons.Default.ReportProblem),
+    CONFIG("Config", Icons.Default.Settings)
 }
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        const val EXTRA_RETURN_TO_FILES = "com.pocketsamp.server.extra.RETURN_TO_FILES"
+        private const val EXTRA_XED_OPEN_FAILED = "com.pocketsamp.server.extra.XED_OPEN_FAILED"
+    }
 
     /** Host hook invoked when the user leaves while no server is running. */
     var onNavigateBack: (() -> Unit)? = null
 
     private val dbManager by lazy { DatabaseManager() }
+    private val openFilesManager = mutableStateOf(false)
 
     /** Storage access state, pushed into Compose; the gate reads it on every resume. */
     private val hasAllFilesAccess = mutableStateOf(false)
@@ -109,6 +118,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleNavigationIntent(intent)
         lifecycle.addObserver(permissionObserver)
         hasAllFilesAccess.value = _DirectoryManager.hasStoragePermission(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -156,9 +166,36 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleNavigationIntent(intent)
+    }
+
+    private fun handleNavigationIntent(intent: Intent) {
+        if (intent.getBooleanExtra(EXTRA_RETURN_TO_FILES, false)) {
+            openFilesManager.value = true
+        }
+        if (intent.getBooleanExtra(EXTRA_XED_OPEN_FAILED, false)) {
+            android.widget.Toast.makeText(
+                this,
+                Locales.text(Locales.current, "files.open.failed"),
+                android.widget.Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     @Composable
     private fun MainAppLayout() {
-        var currentTab by remember { mutableStateOf(AppTab.DASHBOARD) }
+        var currentTab by remember {
+            mutableStateOf(if (openFilesManager.value) AppTab.FILES else AppTab.DASHBOARD)
+        }
+        LaunchedEffect(openFilesManager.value) {
+            if (openFilesManager.value) {
+                currentTab = AppTab.FILES
+                openFilesManager.value = false
+            }
+        }
         var isphpMyAdminVisible by remember { mutableStateOf(false) }
         val lang = Locales.current
         fun t(key: String): String = Locales.text(lang, key)
@@ -200,6 +237,7 @@ class MainActivity : ComponentActivity() {
                             logs = logs,
                             onClearLogs = { RuntimeService.clearLogs() }
                         )
+                        AppTab.FILES -> _FileManager(status = serverStatus, lang = lang)
                         AppTab.DATABASE -> _Database(
                             dbManager = dbManager,
                             isDbRunning = isDbRunning,

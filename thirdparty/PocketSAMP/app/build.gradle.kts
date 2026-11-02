@@ -75,4 +75,6 @@ dependencies {
     implementation(rootProject.libs.kotlinx.coroutines.android)
     implementation(rootProject.libs.mariadb.java.client)
     implementation(rootProject.libs.commons.compress)
+
+    testImplementation(rootProject.libs.junit)
 }

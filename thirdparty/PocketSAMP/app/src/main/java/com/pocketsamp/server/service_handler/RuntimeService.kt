@@ -26,6 +26,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.net.Inet4Address
@@ -147,9 +148,13 @@ class RuntimeService : Service() {
                     delay(2000)
                     if (prefs.getBoolean("server_running_state", false) && !serverEngine.isRunning) {
                         try {
-                            serverEngine.start(serviceScope)
-                            updateNotification(t("notify.active").replace("{ip}", _lanIp.value))
-                            appendLog(t("log.restored"))
+                            if (serverEngine.start(serviceScope)) {
+                                updateNotification(t("notify.active").replace("{ip}", _lanIp.value))
+                                appendLog(t("log.restored"))
+                            } else {
+                                prefs.edit().putBoolean("server_running_state", false).apply()
+                                _serverStatus.value = Status.STOPPED
+                            }
                         } catch (e: Exception) {
                             appendLog(t("log.restore.failed").replace("{error}", e.message.orEmpty()))
                             _serverStatus.value = Status.STOPPED
@@ -249,6 +254,16 @@ class RuntimeService : Service() {
         if (_serverStatus.value == Status.RUNNING || _serverStatus.value == Status.STARTING) return
 
         fun t(key: String): String = Locales.text(Locales.current, key)
+        val serverDirectory = _DirectoryManager.getServerDirectory(applicationContext)
+        if (!File(serverDirectory, "server.cfg").isFile) {
+            appendLog(t("log.cfg.missing").replace("{dir}", serverDirectory.absolutePath))
+            appendLog(t("log.cfg.hint"))
+            getSharedPreferences("pocketsamp_prefs", Context.MODE_PRIVATE)
+                .edit().putBoolean("server_running_state", false).apply()
+            _serverStatus.value = Status.STOPPED
+            stopSelf()
+            return
+        }
         clearLogs()
         _serverStatus.value = Status.STARTING
         acquireLocks()
@@ -298,9 +313,31 @@ class RuntimeService : Service() {
                 initializeDatabase()
 
                 updateNotification(t("log.launching"))
-                serverEngine.start(serviceScope)
+                if (!serverEngine.start(serviceScope)) {
+                    appendLog(t("log.server.start.refused"))
+                    mariaDbEngine.stop()
+                    _isDbRunning.value = false
+                    getSharedPreferences("pocketsamp_prefs", Context.MODE_PRIVATE)
+                        .edit().putBoolean("server_running_state", false).apply()
+                    _serverStatus.value = Status.STOPPED
+                    releaseLocks()
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    return@launch
+                }
                 delay(1000)
 
+                if (!serverEngine.isRunning) {
+                    getSharedPreferences("pocketsamp_prefs", Context.MODE_PRIVATE)
+                        .edit().putBoolean("server_running_state", false).apply()
+                    mariaDbEngine.stop()
+                    _isDbRunning.value = false
+                    _serverStatus.value = Status.STOPPED
+                    releaseLocks()
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    stopSelf()
+                    return@launch
+                }
                 _serverStatus.value = Status.RUNNING
                 updateLanIp()
                 updateNotification(t("notify.active").replace("{ip}", _lanIp.value))

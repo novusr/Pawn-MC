@@ -38,8 +38,8 @@ class Server(private val context: Context) {
 
     private fun findQemuBinary(context: Context): File? = ThirdLauncher.findQemu(context)
 
-    fun start(scope: CoroutineScope) {
-        if (isRunning) return
+    fun start(scope: CoroutineScope): Boolean {
+        if (isRunning) return true
 
         val nativeLibDir = context.applicationInfo.nativeLibraryDir
         val filesDir = context.filesDir
@@ -66,23 +66,23 @@ class Server(private val context: Context) {
                 _serverLogs.emit(t("log.qemu.missing").replace("{dir}", nativeLibDir))
                 _serverLogs.emit(t("log.qemu.required"))
             }
-            return
+            return false
         }
 
-        if (!serverBinary.exists()) {
+        if (!serverBinary.isFile) {
             scope.launch {
                 _serverLogs.emit(t("log.binary.missing").replace("{dir}", serverBinary.parent.orEmpty()))
             }
-            return
+            return false
         }
 
         val cfgFile = File(sampDir, "server.cfg")
-        if (!cfgFile.exists()) {
+        if (!cfgFile.isFile) {
             scope.launch {
                 _serverLogs.emit(t("log.cfg.missing").replace("{dir}", sampDir.absolutePath))
                 _serverLogs.emit(t("log.cfg.hint"))
             }
-            return
+            return false
         }
 
         // Auto-tune mobile networking in server.cfg to avoid query drops and high ping.
@@ -178,12 +178,13 @@ class Server(private val context: Context) {
             "USER" to "root"
         )
 
-        processRunner.start(
+        val started = processRunner.start(
             command = command,
             workingDir = sampDir,
             environment = env,
             scope = scope
         )
+        if (!started) return false
 
         /*
          * Relay stdout logs
@@ -198,6 +199,7 @@ class Server(private val context: Context) {
          * Tail server_log.txt for detailed SA-MP Pawn logs
          */
         startLogTailer(File(sampDir, "server_log.txt"), scope)
+        return true
     }
 
     private fun startLogTailer(logFile: File, scope: CoroutineScope) {

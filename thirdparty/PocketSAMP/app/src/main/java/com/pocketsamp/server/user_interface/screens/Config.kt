@@ -15,11 +15,17 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import com.pocketsamp.server.Locales
+import com.pocketsamp.server.configuration.Configuration
 import com.pocketsamp.server.configuration.Reader
 import com.pocketsamp.server.configuration.Writer
 import com.pocketsamp.server.configuration._DirectoryManager
-import com.pocketsamp.server.user_interface.theme.*
+import com.pocketsamp.server.user_interface.theme.SampThemeColors
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 @Composable
@@ -27,34 +33,47 @@ fun _Config() {
     val context = LocalContext.current
     val lang = Locales.current
     fun t(key: String): String = Locales.text(lang, key)
-    val serverDir = remember { _DirectoryManager.getServerDirectory(context) }
-    val configFile = remember(serverDir) { File(serverDir, "server.cfg") }
+    val configFile = remember { File(_DirectoryManager.getServerDirectory(context), "server.cfg") }
+    var config by remember(configFile) { mutableStateOf<Configuration?>(null) }
+    var readError by remember(configFile) { mutableStateOf<String?>(null) }
+    var reloadToken by remember(configFile) { mutableIntStateOf(0) }
+    var saveError by remember(configFile) { mutableStateOf<String?>(null) }
+    var hostname by remember(config) { mutableStateOf(config?.hostname.orEmpty()) }
+    var port by remember(config) { mutableStateOf(config?.port?.toString().orEmpty()) }
+    var maxPlayers by remember(config) { mutableStateOf(config?.maxPlayers?.toString().orEmpty()) }
+    var rconPassword by remember(config) { mutableStateOf(config?.rconPassword.orEmpty()) }
+    var gamemode by remember(config) { mutableStateOf(config?.gamemode.orEmpty()) }
+    var filterscripts by remember(config) { mutableStateOf(config?.filterscripts.orEmpty()) }
+    var plugins by remember(config) { mutableStateOf(config?.plugins.orEmpty()) }
 
-    var config by remember(configFile) { mutableStateOf(Reader.read(configFile)) }
+    LaunchedEffect(configFile, reloadToken) {
+        val result = withContext(Dispatchers.IO) {
+            runCatching {
+                if (!configFile.isFile) null else Reader.read(configFile)
+            }
+        }
+        result.onSuccess {
+            config = it
+            readError = null
+            saveError = null
+        }.onFailure {
+            config = null
+            readError = it.message ?: t("config.read.failed")
+        }
+    }
 
-    var hostname by remember(config) { mutableStateOf(config.hostname) }
-    var port by remember(config) { mutableStateOf(config.port.toString()) }
-    var maxPlayers by remember(config) { mutableStateOf(config.maxPlayers.toString()) }
-    var rconPassword by remember(config) { mutableStateOf(config.rconPassword) }
-    var gamemode by remember(config) { mutableStateOf(config.gamemode) }
-    var filterscripts by remember(config) { mutableStateOf(config.filterscripts) }
-    var plugins by remember(config) { mutableStateOf(config.plugins) }
-
-    val scrollState = rememberScrollState()
-
-    val lifecycleOwner = context as? androidx.lifecycle.LifecycleOwner
+    val lifecycleOwner = context as? LifecycleOwner
     if (lifecycleOwner != null) {
         DisposableEffect(lifecycleOwner, configFile) {
-            val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-                if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                    config = Reader.read(configFile)
-                }
+            val observer = LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) reloadToken++
             }
             lifecycleOwner.lifecycle.addObserver(observer)
             onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
         }
     }
 
+    val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -69,52 +88,75 @@ fun _Config() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = t("config.title"),
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = SampThemeColors.textPrimary,
-                    maxLines = 1
-                )
-                Text(
-                    text = t("config.subtitle"),
-                    fontSize = 12.sp,
-                    color = SampThemeColors.textSecondary,
-                    maxLines = 1
-                )
+                Text(t("config.title"), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = SampThemeColors.textPrimary, maxLines = 1)
+                Text(t("config.subtitle"), fontSize = 12.sp, color = SampThemeColors.textSecondary, maxLines = 1)
             }
-
             Button(
+                enabled = config != null,
                 onClick = {
-                    config.hostname = hostname
-                    config.port = port.toIntOrNull() ?: 7777
-                    config.maxPlayers = maxPlayers.toIntOrNull() ?: 50
-                    config.rconPassword = rconPassword
-                    config.gamemode = gamemode
-                    config.filterscripts = filterscripts
-                    config.plugins = plugins
-                    Writer.write(config, configFile)
-                    Toast.makeText(context, "server.cfg saved successfully!", Toast.LENGTH_SHORT).show()
+                    val parsedPort = port.toIntOrNull()
+                    val parsedMaxPlayers = maxPlayers.toIntOrNull()
+                    if (parsedPort == null || parsedPort !in 1..65535 ||
+                        parsedMaxPlayers == null || parsedMaxPlayers !in 1..1000
+                    ) {
+                        saveError = t("config.validation")
+                        return@Button
+                    }
+                    val updated = config!!.copy(
+                        hostname = hostname,
+                        port = parsedPort,
+                        maxPlayers = parsedMaxPlayers,
+                        rconPassword = rconPassword,
+                        gamemode = gamemode,
+                        filterscripts = filterscripts,
+                        plugins = plugins
+                    )
+                    val result = runCatching { Writer.write(updated, configFile) }
+                    result.onSuccess {
+                        config = updated
+                        saveError = null
+                        Toast.makeText(context, t("config.saved"), Toast.LENGTH_SHORT).show()
+                    }.onFailure {
+                        saveError = it.message ?: t("config.save.failed")
+                    }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = SampThemeColors.accent, contentColor = SampThemeColors.bg),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SampThemeColors.accent,
+                    contentColor = SampThemeColors.bg
+                ),
                 shape = RoundedCornerShape(12.dp),
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
             ) {
-                Text(text = t("config.save"), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text(t("config.save"), fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
         }
 
-        ConfigField(label = t("config.field.hostname"), value = hostname, onValueChange = { hostname = it })
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            ConfigField(label = t("config.field.port"), value = port, onValueChange = { port = it }, modifier = Modifier.weight(1f))
-            ConfigField(label = t("config.field.maxplayers"), value = maxPlayers, onValueChange = { maxPlayers = it }, modifier = Modifier.weight(1f))
+        if (config == null) {
+            ConfigNotice(
+                text = when {
+                    readError != null -> "${t("config.read.failed")}: $readError"
+                    else -> t("config.missing")
+                }
+            )
         }
-        ConfigField(label = t("config.field.rcon"), value = rconPassword, onValueChange = { rconPassword = it })
-        ConfigField(label = t("config.field.gamemode"), value = gamemode, onValueChange = { gamemode = it }, hint = t("config.hint.gamemode"))
-        ConfigField(label = t("config.field.filterscripts"), value = filterscripts, onValueChange = { filterscripts = it }, hint = t("config.hint.filterscripts"))
-        ConfigField(label = t("config.field.plugins"), value = plugins, onValueChange = { plugins = it }, hint = t("config.hint.plugins"))
+        saveError?.let { ConfigNotice(it) }
+
+        ConfigField(label = t("config.field.hostname"), value = hostname, onValueChange = { hostname = it }, enabled = config != null)
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            ConfigField(label = t("config.field.port"), value = port, onValueChange = { port = it }, modifier = Modifier.weight(1f), enabled = config != null)
+            ConfigField(label = t("config.field.maxplayers"), value = maxPlayers, onValueChange = { maxPlayers = it }, modifier = Modifier.weight(1f), enabled = config != null)
+        }
+        ConfigField(label = t("config.field.rcon"), value = rconPassword, onValueChange = { rconPassword = it }, enabled = config != null)
+        ConfigField(label = t("config.field.gamemode"), value = gamemode, onValueChange = { gamemode = it }, hint = t("config.hint.gamemode"), enabled = config != null)
+        ConfigField(label = t("config.field.filterscripts"), value = filterscripts, onValueChange = { filterscripts = it }, hint = t("config.hint.filterscripts"), enabled = config != null)
+        ConfigField(label = t("config.field.plugins"), value = plugins, onValueChange = { plugins = it }, hint = t("config.hint.plugins"), enabled = config != null)
         Spacer(modifier = Modifier.height(52.dp))
     }
+}
+
+@Composable
+private fun ConfigNotice(text: String) {
+    Text(text = text, color = SampThemeColors.warn, fontSize = 12.sp)
 }
 
 @Composable
@@ -123,13 +165,15 @@ private fun ConfigField(
     value: String,
     onValueChange: (String) -> Unit,
     hint: String? = null,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(text = label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SampThemeColors.textSecondary, maxLines = 1)
+        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SampThemeColors.textSecondary, maxLines = 1)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
+            enabled = enabled,
             modifier = Modifier.fillMaxWidth(),
             textStyle = LocalTextStyle.current.copy(
                 fontFamily = FontFamily.Monospace,
@@ -145,8 +189,6 @@ private fun ConfigField(
             ),
             shape = RoundedCornerShape(10.dp)
         )
-        if (hint != null) {
-            Text(text = hint, fontSize = 11.sp, color = SampThemeColors.textMuted)
-        }
+        if (hint != null) Text(hint, fontSize = 11.sp, color = SampThemeColors.textMuted)
     }
 }
