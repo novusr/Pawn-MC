@@ -33,8 +33,8 @@ class ServerConfigTest {
             assertEquals(7799, config.port)
             assertEquals(32, config.maxPlayers)
             assertEquals("test-secret", config.rconPassword)
-            // The editor shows the Pawn file name; server.cfg only stores the bare name.
-            assertEquals("city.pwn 1", config.gamemode)
+            // server.cfg stores the bare gamemode name, never the .pwn file on disk.
+            assertEquals("city 1", config.gamemode)
             assertEquals("admin fs", config.filterscripts)
             assertEquals("mysql_static.so", config.plugins)
         } finally {
@@ -95,8 +95,8 @@ class ServerConfigTest {
             assertEquals(Configuration.DEFAULT_PORT, written.port)
             assertEquals(Configuration.DEFAULT_MAX_PLAYERS, written.maxPlayers)
             assertEquals(Configuration.DEFAULT_RCON_PASSWORD, written.rconPassword)
-            assertEquals(Configuration.DEFAULT_GAMEMODE, written.gamemode)
-            assertEquals(Configuration.DEFAULT_FILTERSCRIPTS, written.filterscripts)
+            assertEquals("blank", written.gamemode)
+            assertEquals("mapping", written.filterscripts)
             assertEquals(Configuration.DEFAULT_PLUGINS, written.plugins)
             // SA-MP wants the gamemode without its extension.
             assertTrue(missingConfig.readText().contains("gamemode0 blank"))
@@ -115,8 +115,8 @@ class ServerConfigTest {
             assertEquals(7777, config.port)
             assertEquals(20, config.maxPlayers)
             assertEquals("rcon234", config.rconPassword)
-            assertEquals("blank.pwn", config.gamemode)
-            assertEquals("mapping.pwn", config.filterscripts)
+            assertEquals("blank", config.gamemode)
+            assertEquals("mapping", config.filterscripts)
             assertEquals("sscanf.so streamer.so", config.plugins)
             assertFalse(File(directory, "server.cfg").exists())
         } finally {
@@ -161,12 +161,12 @@ class ServerConfigTest {
     }
 
     @Test
-    fun editorGamemodeValueRoundTripsThroughTheBareConfigName() {
-        assertEquals("city 1", Configuration.configGamemodeValue("city.pwn 1"))
-        assertEquals("city 2", Configuration.configGamemodeValue("city 2"))
-        assertEquals("city.pwn 1", Reader.editorGamemodeValue("city 1"))
-        assertEquals("blank.pwn", Reader.editorGamemodeValue(""))
-        assertEquals("blank", Configuration.configGamemodeValue(""))
+    fun gamemodeIsStoredWithoutThePawnFileExtension() {
+        assertEquals("blank", Configuration.DEFAULT_GAMEMODE)
+        assertEquals("mapping", Configuration.DEFAULT_FILTERSCRIPTS)
+        assertFalse(Configuration.defaultFileContent().contains(".pwn"))
+        assertTrue(Configuration.defaultFileContent().contains("gamemode0 blank"))
+        assertTrue(Configuration.defaultFileContent().contains("filterscripts mapping"))
     }
 
     @Test

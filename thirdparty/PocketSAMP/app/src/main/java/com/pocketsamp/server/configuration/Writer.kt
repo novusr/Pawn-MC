@@ -19,7 +19,7 @@ object Writer {
             "port" to configuration.port.toString(),
             "maxplayers" to configuration.maxPlayers.toString(),
             "rcon_password" to configuration.rconPassword,
-            "gamemode0" to Configuration.configGamemodeValue(configuration.gamemode),
+            "gamemode0" to configuration.gamemode,
             "filterscripts" to configuration.filterscripts,
             "plugins" to configuration.plugins,
             "announce" to flag(configuration.announce).toString(),

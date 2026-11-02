@@ -36,7 +36,7 @@ object Reader {
                     ?.takeIf { it in 1..1000 }
                     ?: throw IllegalArgumentException("Invalid maxplayers in server.cfg: $value")
                 "rcon_password" -> configuration.rconPassword = value
-                "gamemode0" -> configuration.gamemode = editorGamemodeValue(value)
+                "gamemode0" -> configuration.gamemode = value
                 "filterscripts" -> configuration.filterscripts = value
                 "plugins" -> configuration.plugins = value
                 "announce" -> configuration.announce = value == "1"
@@ -67,16 +67,6 @@ object Reader {
             file.writeText(Configuration.defaultFileContent())
         }
         return file
-    }
-
-    /** `blank` -> `blank.pwn`: the editor shows a Pawn file name, SA-MP does not. */
-    fun editorGamemodeValue(value: String): String {
-        val trimmed = value.trim()
-        if (trimmed.isEmpty()) return Configuration.DEFAULT_GAMEMODE
-        val name = trimmed.substringBefore(' ')
-        val repeat = trimmed.drop(name.length).trim()
-        val withExtension = if (name.substringAfterLast('.', "").isEmpty()) "$name.pwn" else name
-        return if (repeat.isEmpty()) withExtension else "$withExtension $repeat"
     }
 
     /** True when [file] sets at least one key this app models. */
