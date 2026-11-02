@@ -53,18 +53,8 @@ class MainActivity : ComponentActivity() {
     private var initialUri by mutableStateOf<Uri?>(null)
     private var pendingXedRequest by mutableStateOf<XedRequest?>(null)
 
-    /**
-     * True once this activity was opened by PocketSAMP to show Xed.
-     *
-     * Set during construction, before the first frame: the main screen must never be
-     * composed for a shortcut, otherwise it flashes for a fraction of a second before the
-     * editor replaces it (that is exactly what tapping the entry by hand used to do).
-     */
+    /** True when PocketSAMP opened this activity directly into Xed. */
     private var launchedForXed = false
-
-    init {
-        launchedForXed = xedRequest(intent) != null
-    }
 
     private data class XedRequest(
         val path: String,
