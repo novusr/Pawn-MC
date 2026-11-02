@@ -15,7 +15,7 @@ body:
     attributes:
       label: "PawnMC version / Versi PawnMC"
       description: "App version shown in Settings > About / Versi aplikasi di Pengaturan > Tentang."
-      placeholder: "1.5.2"
+      placeholder: "1.5.3"
     validations:
       required: true
   - type: input

@@ -13,7 +13,7 @@ run straight from the phone.
 Current status
 --------------
 
-- App version 1.5.2 (versionCode 6), latest tag ``v1.5.2``.
+- App version 1.5.3 (versionCode 6), latest tag ``v1.5.3``.
 - compileSdk and targetSdk 36, minSdk 24. The ``nougat`` flavor serves Android
   7/8 with minSdk 26 and the ``.legacy`` package suffix.
 

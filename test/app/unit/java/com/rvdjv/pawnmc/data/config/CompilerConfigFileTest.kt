@@ -54,8 +54,8 @@ class CompilerConfigFileTest {
         File(pawnRoot, "_PAWN_MC_old_marker").writeText("old")
         File(pawnRoot, "keep-this-file.txt").writeText("user data")
 
-        val marker = AppStorage.recordPublicVersion(context, "1.5.2-nougat")
-        AppStorage.recordPublicVersion(context, "1.5.2")
+        val marker = AppStorage.recordPublicVersion(context, "1.5.3-nougat")
+        AppStorage.recordPublicVersion(context, "1.5.3")
         AppStorage.recordPublicVersion(context, "1.5.3")
 
         assertEquals(listOf("_PAWN_MC_v1.5.3_"), marker?.readLines())
@@ -70,7 +70,7 @@ class CompilerConfigFileTest {
     @Test fun recordPublicVersion_doesNotWriteWithoutPublicStorageAccess() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
 
-        assertEquals(null, AppStorage.recordPublicVersion(context, "1.5.2"))
+        assertEquals(null, AppStorage.recordPublicVersion(context, "1.5.3"))
     }
     @Test fun mirror_writesAJsonObjectWithSettingsUnderStableNames() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
