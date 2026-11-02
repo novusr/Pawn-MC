@@ -35,8 +35,6 @@ class MainViewModel(
         const val IGNORE_CASE_FAILED_NOTICE =
             "Ignore case could not finish for this folder. The original files were left untouched."
         val TEMPORARY_FILE_CONTENT = """
-            #define VERSION_STRING "1.0-starter"
-
             /*
              * PawnMC starter script
              */
@@ -50,7 +48,7 @@ class MainViewModel(
             native print(const string[]);
 
             main() {
-                print("Hello, World from PawnMC " #VERSION_STRING "!");
+                print("Hello, World from PawnMC");
             }
 
             stock testing() {

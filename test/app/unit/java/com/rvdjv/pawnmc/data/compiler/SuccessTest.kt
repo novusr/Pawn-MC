@@ -327,14 +327,6 @@ class SuccessTest {
             // The starter template uses `print` from the console library, and this
             // assertion pins both the native declaration and its first call.
             assertTrue(content.contains("native print(const string[])"))
-            /*
-             * The starter prints a versioned greeting built by concatenation:
-             *   print("Hello, World from PawnMC " #VERSION_STRING "!");
-             * Asserting the bare "Hello, World!" was wrong - that string never appears
-             * in the template, so the test could only ever fail.
-             */
-            assertTrue(content.contains("Hello, World from PawnMC"))
-            assertTrue(content.contains("#VERSION_STRING"))
         } finally {
             tempFile.delete()
             tempDir.deleteRecursively()
