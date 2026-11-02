@@ -29,7 +29,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Settings
@@ -66,7 +66,7 @@ import com.pocketsamp.server.user_interface.theme.*
 
 enum class AppTab(val label: String, val icon: ImageVector) {
     // The help entry sits first so the rail reads as "learn, then use".
-    HELP("Help", Icons.Default.HelpOutline),
+    HELP("Help", Icons.AutoMirrored.Filled.HelpOutline),
     DASHBOARD("Dashboard", Icons.Default.Home),
     CONSOLE("Console", Icons.Default.Terminal),
     FILES("Files", Icons.Default.FolderOpen),

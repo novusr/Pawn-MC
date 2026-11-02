@@ -29,7 +29,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.NoteAdd
+import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -350,7 +350,7 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                 Text(t("files.new.folder"), maxLines = 1)
             }
             OutlinedButton(onClick = { startCreate(FileAction.CREATE_FILE) }, modifier = Modifier.weight(1f)) {
-                Icon(Icons.Default.NoteAdd, contentDescription = null)
+                Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = null)
                 Spacer(Modifier.size(6.dp))
                 Text(t("files.new.file"), maxLines = 1)
             }

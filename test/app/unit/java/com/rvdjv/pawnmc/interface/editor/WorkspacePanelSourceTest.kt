@@ -5,9 +5,9 @@ import java.io.File
 class WorkspacePanelSourceTest {
     @Test
     fun compilerOutputRemainsScrollableAcrossBothAxesWithoutLineTruncation() {
-        val root = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
+        val root: File = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
             .firstOrNull { File(it, "app/src/main").isDirectory }
-            ?: File(System.getProperty("user.dir"))
+            ?: File(System.getProperty("user.dir").orEmpty())
         /*
          * The package folder was renamed to lower case; the old path no longer exists
          * and the read threw FileNotFoundException rather than failing an assertion.
