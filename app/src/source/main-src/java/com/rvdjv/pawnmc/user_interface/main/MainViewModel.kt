@@ -12,6 +12,7 @@ import java.io.IOException
 import com.rvdjv.pawnmc.apps_data.data_compiler.CaseConversion
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
 import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -35,16 +36,6 @@ class MainViewModel(
         const val IGNORE_CASE_FAILED_NOTICE =
             "Ignore case could not finish for this folder. The original files were left untouched."
         val TEMPORARY_FILE_CONTENT = """
-            /*
-             * PawnMC starter script
-             */
-
-            /**
-             * <library>console</library>
-             * <summary>Prints a string to the server console (not in-game chat) and logs (server_log.txt).</summary>
-             * <param name="string">The string to print</param>
-             * <seealso name="printf"/>
-             */
             native print(const string[]);
 
             main() {
@@ -213,20 +204,29 @@ class MainViewModel(
 
     fun loadLastSelectedFile() {
         val lastPath = config.n_last_selected_file_path
-        val isTemporaryStarter = lastPath?.let(::File)?.let { file ->
-            file.name == TEMPORARY_FILE_NAME &&
-                (file.parentFile?.name == WORKSPACE_DIR_NAME || file.parentFile?.name == LEGACY_TEMP_DIR_NAME)
-        } == true
-        if (!isTemporaryStarter && lastPath != null && File(lastPath).exists()) {
-            selectFile(lastPath, isStartupLoad = true)
-        } else if (isTemporaryStarter && File(lastPath!!).exists()) {
+        if (lastPath != null && File(lastPath).exists()) {
             selectFile(lastPath, isStartupLoad = true)
         } else {
             selectedFilePath = null
             config.n_last_selected_file_path = null
+            config.n_last_selected_file_uri = null
             temporaryFileNotice = null
             warmUpCompilerDetection(null)
         }
+    }
+
+    private fun isInternalTemporaryStarter(path: String): Boolean {
+        if (File(path).name != TEMPORARY_FILE_NAME) return false
+        val configuredWorkspace = if (appDirectory.name == WORKSPACE_DIR_NAME) {
+            appDirectory
+        } else {
+            File(appDirectory, WORKSPACE_DIR_NAME)
+        }
+        val configuredPath = File(configuredWorkspace, TEMPORARY_FILE_NAME)
+        if (runCatching { File(path).canonicalFile == configuredPath.canonicalFile }.getOrDefault(false)) {
+            return true
+        }
+        return context?.let { AppStorage.isInternalTemporaryPawnFile(it, path) } == true
     }
 
     fun handleInitialUri(uri: Uri?) {
@@ -285,10 +285,14 @@ class MainViewModel(
             selectionError = "Invalid file type! (only: .pawn .pwn .p)"
             return
         }
+        if (config.n_last_selected_file_path != path) {
+            config.n_last_selected_file_uri = null
+        }
 
         if (!config.n_ignore_case) {
             selectionError = null
-            temporaryFileNotice = null
+            temporaryFileNotice =
+                if (isInternalTemporaryStarter(path)) TEMPORARY_FILE_NOTICE else null
             filesystemNotice = null
             lastExitCode = null
             selectedFilePath = path
@@ -301,7 +305,8 @@ class MainViewModel(
         // "Ignore case" backs the folder up and lowercases it in the background,
         // so the compile action stays disabled until the folder is consistent.
         selectionError = null
-        temporaryFileNotice = null
+        temporaryFileNotice =
+            if (isInternalTemporaryStarter(path)) TEMPORARY_FILE_NOTICE else null
         lastExitCode = null
         selectedFilePath = path
         config.n_last_selected_file_path = path
@@ -362,10 +367,14 @@ class MainViewModel(
             return
         }
         selectedFilePath = path
+        if (config.n_last_selected_file_path != path) {
+            config.n_last_selected_file_uri = null
+        }
         config.n_last_selected_file_path = path
         selectionError = null
         filesystemNotice = null
-        temporaryFileNotice = null
+        temporaryFileNotice =
+            if (isInternalTemporaryStarter(path)) TEMPORARY_FILE_NOTICE else null
         lastExitCode = null
         applyCompilerAutoDetection(path)
     }
@@ -564,6 +573,9 @@ class MainViewModel(
             return
         }
         selectedFilePath = path
+        if (config.n_last_selected_file_path != path) {
+            config.n_last_selected_file_uri = null
+        }
         config.n_last_selected_file_path = path
         applyCompilerAutoDetection(path)
         pendingCompilePath = path

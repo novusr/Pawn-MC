@@ -90,6 +90,22 @@ internal object AppStorage {
     /** Default folder for the bundled starter workspace, `PawnMC/workspace`. */
     fun workspaceRoot(context: Context): File = File(dataRoot(context), "workspace").ensureDir()
 
+    /** True only for the starter file in an app-owned location, never by basename alone. */
+    fun isInternalTemporaryPawnFile(context: Context, path: String): Boolean {
+        val candidate = canonicalPath(File(path))
+        val roots = buildList {
+            add(File(dataRoot(context), "workspace"))
+            runCatching { context.getExternalFilesDir(null) }.getOrNull()
+                ?.let { add(File(File(it, PUBLIC_DIR_NAME), "workspace")) }
+            add(File(File(context.filesDir, PUBLIC_DIR_NAME), "workspace"))
+            add(File(privateRoot(context), "workspace"))
+            add(File(context.filesDir, "TMP"))
+        }
+        return roots.any { root ->
+            canonicalPath(File(root, "blank.pwn")) == candidate
+        }
+    }
+
     /** One-time migration of the user tree from the old app-scoped location. */
     fun migrateLegacyDataRoot(context: Context) {
         val external = runCatching { context.getExternalFilesDir(null) }.getOrNull() ?: return
@@ -126,4 +142,7 @@ internal object AppStorage {
     fun logsRoot(context: Context): File = File(dataRoot(context), "logs").ensureDir()
 
     private fun File.ensureDir(): File = apply { if (!exists()) mkdirs() }
+
+    private fun canonicalPath(file: File): String =
+        runCatching { file.canonicalPath }.getOrElse { file.absolutePath }
 }

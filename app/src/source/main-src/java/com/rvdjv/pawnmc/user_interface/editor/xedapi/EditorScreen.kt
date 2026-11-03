@@ -304,11 +304,15 @@ fun EditorScreen(
     }
 
     val hasUnsavedChanges =
-        if (workspace.isWorkspaceOpen) workspace.hasDirtyDocuments else viewModel.hasUnsavedChanges
+        if (workspace.isWorkspaceOpen) {
+            workspace.hasDirtyDocuments
+        } else {
+            !viewModel.isTemporaryFile && viewModel.hasUnsavedChanges
+        }
     val displayFileName = if (workspace.isWorkspaceOpen) {
         activeDocument?.name ?: "No file open"
     } else {
-        viewModel.fileName
+        viewModel.fileName + if (viewModel.isTemporaryFile) " (internal temporary)" else ""
     }
     val displayFilePath = if (workspace.isWorkspaceOpen) {
         activeDocument?.file?.path ?: workspace.activeWorkspace?.root?.path.orEmpty()
@@ -381,6 +385,12 @@ fun EditorScreen(
                     Toast.makeText(context, "Saved ${document.name}", Toast.LENGTH_SHORT).show()
                 }
             }
+        } else if (viewModel.isTemporaryFile) {
+            Toast.makeText(
+                context,
+                "The internal temporary file cannot be saved. Use Save As to create a Pawn file.",
+                Toast.LENGTH_SHORT
+            ).show()
         } else {
             viewModel.saveFile(editorRef?.text?.toString() ?: "")
         }
@@ -1673,6 +1683,7 @@ fun EditorScreen(
                 FloatingRectToolbar(
                     hasUnsavedChanges = hasUnsavedChanges,
                     workspaceOpen = workspace.isWorkspaceOpen,
+                    saveEnabled = workspace.isWorkspaceOpen || !viewModel.isTemporaryFile,
                     isSearchOpen = showSearchBar,
                     onBeforeAction = ::dismissAutoCompletion,
                     onSearchClick = {
@@ -2086,6 +2097,7 @@ internal fun restOffsetAbove(
 private fun FloatingRectToolbar(
     hasUnsavedChanges: Boolean,
     workspaceOpen: Boolean,
+    saveEnabled: Boolean,
     isSearchOpen: Boolean,
     onBeforeAction: () -> Unit,
     onSearchClick: () -> Unit,
@@ -2183,7 +2195,8 @@ private fun FloatingRectToolbar(
                     onClick = {
                         onBeforeAction()
                         onSaveClick()
-                    }
+                    },
+                    enabled = saveEnabled
                 )
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
@@ -2210,11 +2223,13 @@ private fun ToolBarEntry(
     testTag: String,
     onClick: () -> Unit,
     isActive: Boolean = false,
+    enabled: Boolean = true,
     /** Icon colour; the toolbar actions share the green action tint. */
     tint: Color = Color.Unspecified
 ) {
     IconButton(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             .size(46.dp)
             .testTag(testTag)
@@ -2223,6 +2238,7 @@ private fun ToolBarEntry(
             imageVector = icon,
             contentDescription = contentDescription,
             tint = when {
+                !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                 tint != Color.Unspecified -> tint
                 isActive -> MaterialTheme.colorScheme.primary
                 else -> MaterialTheme.colorScheme.onSurfaceVariant

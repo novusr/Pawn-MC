@@ -63,9 +63,9 @@ class ExplanationTableTest {
     @Test
     fun `existing Spanish Russian and Tagalog explanations remain localized`() {
         val translations = mapOf(
-            CompilerConfig.AppLanguage.ES to "no definido",
-            CompilerConfig.AppLanguage.RU to "Символ не определён",
-            CompilerConfig.AppLanguage.TL to "Undefined symbol",
+            CompilerConfig.AppLanguage.ES to "Símbolo no definido",
+            CompilerConfig.AppLanguage.RU to "не определён",
+            CompilerConfig.AppLanguage.TL to "Hindi defined ang symbol",
         )
         translations.forEach { (language, expected) ->
             val explanation = Explanations.resolve(parsed, "017", language).orEmpty()

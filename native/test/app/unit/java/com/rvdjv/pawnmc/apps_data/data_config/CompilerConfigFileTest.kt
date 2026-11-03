@@ -36,6 +36,17 @@ class CompilerConfigFileTest {
         AppStorage.publicWriteAccessOverride = null
         AppStorage.documentsRootOverride = null
     }
+
+    @Test fun internalTemporaryFileIsRecognizedByLocationNotName() {
+        val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
+        val internalRoot = AppStorage.workspaceRoot(context)
+        val internalBlank = File(internalRoot, "blank.pwn")
+        val externalBlank = File(temporaryFolder.newFolder("external"), "blank.pwn")
+
+        assertTrue(AppStorage.isInternalTemporaryPawnFile(context, internalBlank.absolutePath))
+        assertFalse(AppStorage.isInternalTemporaryPawnFile(context, externalBlank.absolutePath))
+    }
+
     @Test fun mirrorThenRestore_roundTripsEverySetting() {
         val context = contextWithFilesDir(temporaryFolder.newFolder("files"))
         val written = InMemoryPreferences().apply(::seed)

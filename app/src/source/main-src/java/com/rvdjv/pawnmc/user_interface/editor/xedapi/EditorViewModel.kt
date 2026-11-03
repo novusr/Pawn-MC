@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
 import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspaceSession
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +19,9 @@ import java.io.File
 class EditorViewModel(
     initialFilePath: String,
     context: Context? = null,
-    initialFileUri: Uri? = null
+    initialFileUri: Uri? = null,
+    initialIsTemporaryFile: Boolean = initialFileUri == null &&
+        context?.let { AppStorage.isInternalTemporaryPawnFile(it, initialFilePath) } == true
 ) : ViewModel() {
 
     private val appContext = context?.applicationContext
@@ -31,6 +34,8 @@ class EditorViewModel(
         private set
 
     private var activeDocumentUri: Uri? = initialFileUri
+    var isTemporaryFile by mutableStateOf(initialIsTemporaryFile)
+        private set
 
     val file: File get() = File(filePath)
     val fileName: String get() = file.name
@@ -76,6 +81,9 @@ class EditorViewModel(
             config?.n_last_selected_file_uri = null
         }
         filePath = path
+        isTemporaryFile =
+            activeDocumentUri == null &&
+                appContext?.let { AppStorage.isInternalTemporaryPawnFile(it, path) } == true
         if (!workspace.isWorkspaceOpen) loadFile()
     }
 
@@ -125,10 +133,15 @@ class EditorViewModel(
     fun onContentChanged(newContent: String) {
         latestEditorContent = newContent
         val original = lastSavedContent ?: ""
-        hasUnsavedChanges = (newContent != original)
+        hasUnsavedChanges = !isTemporaryFile && newContent != original
     }
 
     fun saveFile(contentToSave: String, onSaved: (Boolean) -> Unit = {}) {
+        if (isTemporaryFile) {
+            statusMessage = "The internal temporary file cannot be saved. Use Save As to create a Pawn file."
+            onSaved(false)
+            return
+        }
         if (isSaving) {
             statusMessage = "Save already in progress"
             return
@@ -154,6 +167,10 @@ class EditorViewModel(
     }
 
     suspend fun saveFileSync(currentContent: String): Boolean {
+        if (isTemporaryFile) {
+            statusMessage = "The internal temporary file cannot be saved. Use Save As to create a Pawn file."
+            return false
+        }
         return try {
             withContext(Dispatchers.IO) {
                 writeContent(currentContent)
@@ -215,6 +232,7 @@ class EditorViewModel(
                 activeDocumentUri = uri
                 filePath = mirrorFile.absolutePath
                 loadedFilePath = filePath
+                isTemporaryFile = false
                 fileContent = content
                 latestEditorContent = content
                 lastSavedContent = content

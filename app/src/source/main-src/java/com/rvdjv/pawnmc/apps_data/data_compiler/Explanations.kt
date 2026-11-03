@@ -115,12 +115,17 @@ object Explanations {
         document.tablesUnder(TABLE_PREFIX).forEach { (path, entries) ->
             val code = path.removePrefix("$TABLE_PREFIX.")
             if (code.isBlank()) return@forEach
+            val unpaddedCode = code.toIntOrNull()?.toString()?.takeIf { it != code }
             entries.forEach { (language, explanation) ->
                 if (explanation.isBlank()) return@forEach
                 result["$code.$language"] = explanation
+                unpaddedCode?.let { result["$it.$language"] = explanation }
             }
             entries[CompilerConfig.AppLanguage.EN.value]?.let { english ->
-                if (english.isNotBlank()) result[code] = english
+                if (english.isNotBlank()) {
+                    result[code] = english
+                    unpaddedCode?.let { result[it] = english }
+                }
             }
         }
 

@@ -265,6 +265,27 @@ class EditorTest {
     }
 
     @Test
+    fun `internal temporary starter cannot be saved and never becomes dirty`() {
+        val temporaryFile = tempFolder.newFile("blank.pwn")
+        val originalContent = "main() { print(\"temporary\"); }"
+        temporaryFile.writeText(originalContent)
+
+        val viewModel = EditorViewModel(
+            initialFilePath = temporaryFile.absolutePath,
+            initialIsTemporaryFile = true
+        )
+        val editedContent = "main() { print(\"edited\"); }"
+        viewModel.onContentChanged(editedContent)
+
+        assertTrue(viewModel.isTemporaryFile)
+        assertFalse(viewModel.hasUnsavedChanges)
+        runBlocking {
+            assertFalse(viewModel.saveFileSync(editedContent))
+        }
+        assertEquals(originalContent, temporaryFile.readText())
+    }
+
+    @Test
     fun `workspace document stays dirty when newer edits arrive during save`() {
         val document = OpenDocument(tempFolder.newFile("workspace.pwn"))
         document.updateContent("saved snapshot")

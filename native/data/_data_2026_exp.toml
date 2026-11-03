@@ -364,7 +364,7 @@ id = "Kesalahan 049: invalid line continuation. Tanda sambung baris diikuti sesu
 es = "Error 050: rango no válido. El rango de una etiqueta case está escrito incorrectamente."
 ru = "Ошибка 050: недопустимый диапазон. Диапазон в метке case записан некорректно."
 tl = "Error 050: hindi valid ang range. Mali ang pagkakasulat ng range sa case label."
-en = "Error 050: invalid range. A range in a case label is written incorrectly."
+en = "Error 050: invalid range. A range in a case label is written incorrectly; check that both endpoints are valid constants and appear in ascending order."
 id = "Kesalahan 050: invalid range. Rentang pada label case ditulis keliru."
 
 [explain."051"]
@@ -868,7 +868,7 @@ id = "Peringatan 215: expression has no effect. Ekspresi dihitung lalu hasilnya 
 es = "Advertencia 216: comentario anidado. Se abrió un comentario dentro de otro."
 ru = "Предупреждение 216: вложенный комментарий. Комментарий открыт внутри другого комментария."
 tl = "Babala 216: nested comment. Binuksan ang isang comment sa loob ng isa pang comment."
-en = "Warning 216: nested comment. A comment is opened inside another comment."
+en = "Warning 216: nested comment. A comment is opened before the previous comment has been closed, so the comment delimiters are nested."
 id = "Peringatan 216: nested comment. Komentar dibuka di dalam komentar lain."
 
 [explain."217"]
@@ -931,7 +931,7 @@ id = "Peringatan 224: indeterminate array size in \"sizeof\" expression (symbol 
 es = "Advertencia 225: código inalcanzable. No se puede ejecutar el código que sigue a este punto."
 ru = "Предупреждение 225: недостижимый код. Код после этой точки не может быть выполнен."
 tl = "Babala 225: hindi maaabot ang code. Hindi tatakbo ang code pagkatapos ng puntong ito."
-en = "Warning 225: unreachable code. The code after this point is unreachable."
+en = "Warning 225: unreachable code. Control flow cannot reach the statements after this point, often because an earlier return, break, or exit always transfers control away."
 id = "Peringatan 225: unreachable code. Kode setelah titik ini tidak terjangkau."
 
 [explain."226"]
@@ -994,7 +994,7 @@ id = "Peringatan 233: state variable \"%s\" shadows a global variable. Variabel 
 es = "Advertencia 234: la función está obsoleta (símbolo \"%s\") %s. El símbolo está marcado como obsoleto."
 ru = "Предупреждение 234: функция устарела (символ \"%s\") %s. Символ помечен как устаревший."
 tl = "Babala 234: deprecated ang function (symbol na \"%s\") %s. Deprecated ang symbol na ito."
-en = "Warning 234: function is deprecated (symbol \"%s\") %s. The symbol is deprecated."
+en = "Warning 234: function is deprecated (symbol \"%s\") %s. The function is marked for removal or replacement; use the alternative named in the warning when one is provided."
 id = "Peringatan 234: function is deprecated (symbol \"%s\") %s. Simbol ditandai usang."
 
 [explain."235"]
