@@ -58,7 +58,7 @@ jobs:
         run: chmod +x gradlew
 
       # The compiler libraries do not exist in the repository: CMake builds them per ABI
-      # from `native/compilers/pawnc-*/`. So the archive has to be produced here, between the
+      # from `compilers/pawnc-*/`. So the archive has to be produced here, between the
       # native build and the APK, instead of being read from disk.
       #
       # Step 1 builds only the native targets for the three ABIs, which leaves them in

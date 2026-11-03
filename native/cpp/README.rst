@@ -2,8 +2,8 @@ C++ Native Compiler Bridge
 ==========================
 
 Everything in the root ``native/cpp/`` directory is PawnMC's own code. The Pawn compiler *itself*
-is not here: it is compiled straight from the ``native/compilers/pawnc-3.10.7`` and
-``native/compilers/pawnc-3.10.11`` git submodules, and this directory only supplies the
+is not here: it is compiled straight from the ``compilers/pawnc-3.10.7`` and
+``compilers/pawnc-3.10.11`` git submodules, and this directory only supplies the
 ``pc_*`` back ends the compiler calls out to plus the JNI surface the Kotlin layer talks
 to.
 

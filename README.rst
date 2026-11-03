@@ -172,7 +172,8 @@ stays short:
 * ``native/cpp`` — the JNI compiler bridge (C++) and its ``CMakeLists.txt``
 * ``native/data`` — localisation data (``.toml``) shipped as app assets
 * ``native/test`` — unit and instrumented test sources
-* ``native/compilers`` — the Pawn compiler git submodules
+* ``compilers`` — the Pawn compiler git submodules, deliberately kept at the root:
+  they are upstream checkouts with their own build layout, not PawnMC sources
 
 Building
 --------

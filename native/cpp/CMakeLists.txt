@@ -4,8 +4,11 @@ cmake_minimum_required(VERSION 3.22.1)
 project("pawnc" C CXX)
 
 # Source path
-set(PAWNC_3107_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../compilers/pawnc-3.10.7/source")
-set(PAWNC_31011_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../compilers/pawnc-3.10.11/source")
+# The compiler submodules stay at the repository root (`compilers/`), outside
+# `native/`: they are upstream checkouts with their own build layout, not part of
+# PawnMC's own native sources, so this file reaches them one level further up.
+set(PAWNC_3107_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../compilers/pawnc-3.10.7/source")
+set(PAWNC_31011_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../compilers/pawnc-3.10.11/source")
 
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PAWNC_3107_SOURCE_DIR}/compiler/CMakeLists.txt")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${PAWNC_31011_SOURCE_DIR}/compiler/CMakeLists.txt")
