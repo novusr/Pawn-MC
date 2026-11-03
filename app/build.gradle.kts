@@ -45,6 +45,10 @@ android {
         // the per-flavor trees beside it, all named with the `-src` suffix so no folder
         // carries the bare `src` name the Gradle source set already implies.
         getByName("main") {
+            // The manifest is not covered by `java`/`res`/`assets`: AGP still reads
+            // `src/main/AndroidManifest.xml` unless the source set is redirected, so
+            // it has to point at the moved tree explicitly.
+            manifest.srcFile("src/source/main-src/AndroidManifest.xml")
             java.srcDir("src/source/main-src/java")
             res.srcDir("src/source/main-src/res")
             // `native/data/_data_2026_ect.toml` is the single source of localisation data
