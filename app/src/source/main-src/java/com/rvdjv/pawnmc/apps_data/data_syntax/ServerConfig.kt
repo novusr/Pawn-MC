@@ -236,7 +236,7 @@ object ServerConfig {
             before.lastIndexOf('\t')
         )
         if (boundary < 0) return null
-        val leading = before.take(boundary).trim()
+        val leading = before.take(boundary).toString().trim()
         if (leading.isEmpty() || leading.any { it == '=' || it == ' ' || it == '\t' }) return null
         return leading.takeIf { isDirective(it) }
     }
