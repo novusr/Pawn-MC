@@ -83,8 +83,8 @@ class ExplanationTableTest {
             assertNotNull("stripped $code", parsed["${code.trimStart('0')}.en"])
             assertNotNull("padded $code", parsed["$code.en"])
         }
-        assertTrue(Explanations.resolve(parsed, "13", CompilerConfig.AppLanguage.EN).isNotBlank())
-        assertTrue(Explanations.resolve(parsed, "013", CompilerConfig.AppLanguage.ID).isNotBlank())
+        assertTrue(Explanations.resolve(parsed, "13", CompilerConfig.AppLanguage.EN).orEmpty().isNotBlank())
+        assertTrue(Explanations.resolve(parsed, "013", CompilerConfig.AppLanguage.ID).orEmpty().isNotBlank())
     }
 
     @Test
