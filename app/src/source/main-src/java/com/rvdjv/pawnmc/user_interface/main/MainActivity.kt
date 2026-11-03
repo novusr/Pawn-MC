@@ -22,15 +22,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
-import com.rvdjv.pawnmc.apps-data.data_compiler.Explanations
-import com.rvdjv.pawnmc.apps-data.data_compiler.Compiler
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
-import com.rvdjv.pawnmc.apps-data.data_config.AppLocalization
-import com.rvdjv.pawnmc.apps-data.data_config.AppStorage
-import com.rvdjv.pawnmc.apps-data.data_library.LibraryStore
-import com.rvdjv.pawnmc.apps-data.data_runtime.PocketSampGateway
-import com.rvdjv.pawnmc.apps-data.data_syntax.InternDat
-import com.rvdjv.pawnmc.apps-data.data_update.UpdateManager
+import com.rvdjv.pawnmc.apps_data.data_compiler.Explanations
+import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
+import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
+import com.rvdjv.pawnmc.apps_data.data_library.LibraryStore
+import com.rvdjv.pawnmc.apps_data.data_runtime.PocketSampGateway
+import com.rvdjv.pawnmc.apps_data.data_syntax.InternDat
+import com.rvdjv.pawnmc.apps_data.data_update.UpdateManager
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFolderPickerIntent
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFilePickerIntent
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveDocumentToFile
@@ -176,7 +176,7 @@ class MainActivity : ComponentActivity() {
         // set never references the runtime module directly (and no-ops on the Nougat
         // flavor, which has no runtime).
         PocketSampGateway.prepare(applicationContext) { line ->
-            com.rvdjv.pawnmc.apps-data.data_logging._pocket_store.record(applicationContext, line)
+            com.rvdjv.pawnmc.apps_data.data_logging._pocket_store.record(applicationContext, line)
         }
         // The ongoing session notification is a nicety, not a requirement, so the prompt
         // is fired once and a refusal only means the shade stays empty.

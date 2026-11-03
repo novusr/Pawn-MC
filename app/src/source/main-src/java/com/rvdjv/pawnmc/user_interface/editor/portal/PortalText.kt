@@ -1,8 +1,8 @@
 package com.rvdjv.pawnmc.user_interface.editor.portal
 
 import android.content.Context
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
-import com.rvdjv.pawnmc.apps-data.data_config.TomlData
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.TomlData
 
 /**
  * Terminal strings and the `docs` markdown, read from the 2026 TOML asset.

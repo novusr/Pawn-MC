@@ -134,10 +134,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.rvdjv.pawnmc.apps-data.data_compiler.Compiler
+import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
 import com.rvdjv.pawnmc.user_interface._Icons
-import com.rvdjv.pawnmc.apps-data.data_config.AppLocalization
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import com.rvdjv.pawnmc.user_interface.editor.workspace.MAX_OPEN_WORKSPACES
 import com.rvdjv.pawnmc.user_interface.editor.workspace.OpenDocument
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspaceSession

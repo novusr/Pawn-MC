@@ -7,8 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.rvdjv.pawnmc.apps-data.data_compiler.Compiler
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 
 class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
 

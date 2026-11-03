@@ -1,8 +1,8 @@
 package com.rvdjv.pawnmc.user_interface.main
 
-import com.rvdjv.pawnmc.apps-data.data_compiler.CaseConversion
-import com.rvdjv.pawnmc.apps-data.data_compiler.Compiler
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_compiler.CaseConversion
+import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import java.io.File
 
 private const val TEST_PREFIX = "Self test"

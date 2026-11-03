@@ -53,7 +53,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.rvdjv.pawnmc.user_interface.main.explainHighlightedText
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp

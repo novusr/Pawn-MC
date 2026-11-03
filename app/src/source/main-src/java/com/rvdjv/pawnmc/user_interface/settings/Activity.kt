@@ -7,10 +7,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
-import com.rvdjv.pawnmc.apps-data.data_compiler.Explanations
-import com.rvdjv.pawnmc.apps-data.data_config.AppLocalization
-import com.rvdjv.pawnmc.apps-data.data_update.UpdateManager
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_compiler.Explanations
+import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
+import com.rvdjv.pawnmc.apps_data.data_update.UpdateManager
 import com.rvdjv.pawnmc.user_interface.main.SettingsTarget
 import com.rvdjv.pawnmc.user_interface.theme.PawnMCTheme
 import com.rvdjv.pawnmc.user_interface.theme.resolveDarkTheme

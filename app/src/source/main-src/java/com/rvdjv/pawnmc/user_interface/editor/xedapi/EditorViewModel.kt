@@ -7,7 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspaceSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

@@ -1,10 +1,10 @@
 package com.rvdjv.pawnmc.user_interface.editor.syntax
 
 import android.os.Bundle
-import com.rvdjv.pawnmc.apps-data.data_syntax._item
-import com.rvdjv.pawnmc.apps-data.data_syntax.PawnItemKind
-import com.rvdjv.pawnmc.apps-data.data_syntax.PawnRegistry
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_syntax._item
+import com.rvdjv.pawnmc.apps_data.data_syntax.PawnItemKind
+import com.rvdjv.pawnmc.apps_data.data_syntax.PawnRegistry
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager

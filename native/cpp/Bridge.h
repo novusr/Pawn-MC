@@ -58,7 +58,7 @@ struct MC_BridgeState {
 
 // --- Compiler.cc ---------------------------------------------------------------
 // JNI entry points. Their names encode the owner class:
-// `com.rvdjv.pawnmc.apps-data.data_compiler.Runner`.
+// `com.rvdjv.pawnmc.apps_data.data_compiler.Runner`.
 
 /** Runs one `pc_compile` on a worker thread and returns `"Exit code: N\n<output>"`. */
 jstring MC_runner_compile(JNIEnv* env, jobject thiz, jobjectArray args);

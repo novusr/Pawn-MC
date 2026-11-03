@@ -99,10 +99,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.rvdjv.pawnmc.apps-data.data_config.AppLocalization
-import com.rvdjv.pawnmc.apps-data.data_config.AppStorage
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
-import com.rvdjv.pawnmc.apps-data.data_runtime.PocketSampGateway
+import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
+import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_runtime.PocketSampGateway
 import com.rvdjv.pawnmc.BuildConfig
 
 import com.rvdjv.pawnmc.user_interface._Icons

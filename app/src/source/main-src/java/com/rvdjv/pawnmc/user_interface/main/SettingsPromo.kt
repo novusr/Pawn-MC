@@ -17,8 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.rvdjv.pawnmc.apps-data.data_config.AppLocalization
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 
 /**
  * The one entry in the settings map that has no setting of its own.

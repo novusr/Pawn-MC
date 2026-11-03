@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.EditorScreen
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.EditorViewModel
 import kotlinx.coroutines.Dispatchers

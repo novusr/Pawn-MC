@@ -380,7 +380,7 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 }
 
 // The exported names follow the Java owner class
-// (`com.rvdjv.pawnmc.apps-data.data_compiler.NativeBridge`), which is what the JVM resolves
+// (`com.rvdjv.pawnmc.apps_data.data_compiler.NativeBridge`), which is what the JVM resolves
 // against; the internal `MC_*` names above are only the file-to-file contract.
 JNIEXPORT jstring JNICALL
 Java_com_rvdjv_pawnmc_apps_1data_data_1compiler_NativeBridge_compile(

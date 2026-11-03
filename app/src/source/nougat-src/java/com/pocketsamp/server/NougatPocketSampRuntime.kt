@@ -2,7 +2,7 @@ package com.pocketsamp.server
 
 import android.content.Context
 import android.widget.Toast
-import com.rvdjv.pawnmc.apps-data.data_runtime.PocketSampGateway
+import com.rvdjv.pawnmc.apps_data.data_runtime.PocketSampGateway
 
 /**
  * Android Nougat entry point of the PocketSAMP integration.

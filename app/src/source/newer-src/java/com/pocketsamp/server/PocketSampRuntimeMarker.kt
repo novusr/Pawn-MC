@@ -2,7 +2,7 @@ package com.pocketsamp.server
 
 import android.content.Context
 import androidx.annotation.Keep
-import com.rvdjv.pawnmc.apps-data.data_runtime.PocketSampGateway
+import com.rvdjv.pawnmc.apps_data.data_runtime.PocketSampGateway
 
 /** Marker keeping the PocketSAMP compile-time API confined to the modern flavor. */
 internal object PocketSampRuntimeMarker

@@ -9,9 +9,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import java.io.FileOutputStream
 import java.io.IOException
-import com.rvdjv.pawnmc.apps-data.data_compiler.CaseConversion
-import com.rvdjv.pawnmc.apps-data.data_compiler.Compiler
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_compiler.CaseConversion
+import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -567,7 +567,7 @@ class MainViewModelFactory(private val context: Context) : ViewModelProvider.Fac
             // The starter workspace is rooted on the app's shared data directory so the
             // example script stays editable outside PawnMC; when shared storage is not
             // mounted AppStorage falls back to the private root on its own.
-            val workspaceRoot = com.rvdjv.pawnmc.apps-data.data_config.AppStorage.workspaceRoot(context)
+            val workspaceRoot = com.rvdjv.pawnmc.apps_data.data_config.AppStorage.workspaceRoot(context)
             return modelClass.cast(MainViewModel(config, workspaceRoot, context))
                 ?: throw IllegalArgumentException("Unknown ViewModel class")
         }

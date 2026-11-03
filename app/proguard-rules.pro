@@ -1,9 +1,9 @@
 # PawnMC ProGuard Rules
 
 # Keep all JNI native methods in Runner
-# `Runner` lives under `com.rvdjv.pawnmc.apps-data`, a hyphenated package segment that
-# Kotlin escapes as `apps-data` in source, so the plain name is used here.
--keep class com.rvdjv.pawnmc.apps-data.data_compiler.Runner {
+# `Runner` lives under `apps_data.data_compiler`; the name is plain, so this rule is
+# the literal JVM package of the class.
+-keep class com.rvdjv.pawnmc.apps_data.data_compiler.Runner {
     private native <methods>;
 }
 
@@ -17,8 +17,8 @@
 -keep class com.pocketsamp.server.PocketSampRuntimeMarkerKt { *; }
 
 # Keep CompilerConfig enums (used for SharedPreferences serialization)
--keep class com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig$CompilerVersion { *; }
--keep class com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig$DebugLevel { *; }
+-keep class com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig$CompilerVersion { *; }
+-keep class com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig$DebugLevel { *; }
 
 # Material Icons Extended generates one ImageVector getter per icon. Do not add
 # package-wide keep rules: unreachable generated getters must remain shrinkable.

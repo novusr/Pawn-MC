@@ -1,7 +1,7 @@
 package com.rvdjv.pawnmc.user_interface.editor
 
-import com.rvdjv.pawnmc.apps-data.data_syntax.PawnRegistry
-import com.rvdjv.pawnmc.apps-data.data_syntax.InternDat
+import com.rvdjv.pawnmc.apps_data.data_syntax.PawnRegistry
+import com.rvdjv.pawnmc.apps_data.data_syntax.InternDat
 import com.rvdjv.pawnmc.user_interface.editor.syntax.CodeSymbols
 import com.rvdjv.pawnmc.user_interface.editor.workspace.MAX_OPEN_WORKSPACES
 import com.rvdjv.pawnmc.user_interface.editor.workspace.OpenDocument
@@ -16,7 +16,7 @@ import com.rvdjv.pawnmc.user_interface.editor.xedapi.EditorViewModel
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.LINE_COLUMN_SEPARATOR
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.cursorPositionLabel
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.resolveJumpColumn
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import com.rvdjv.pawnmc.user_interface.main.shouldRestoreLastSelectedFile
 import kotlinx.coroutines.Dispatchers as CoroutineDispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

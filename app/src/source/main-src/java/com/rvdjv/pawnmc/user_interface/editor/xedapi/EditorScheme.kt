@@ -176,7 +176,7 @@ private val LightPalette = SyntaxPalette(
  * Parses a `#RRGGBB` string into an ARGB int, returning `null` for anything else.
  *
  * The stored preference is already validated by
- * [com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig.normalizeEditorBackgroundColor];
+ * [com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig.normalizeEditorBackgroundColor];
  * this is the second gate that keeps a malformed value from reaching the
  * editor scheme, and it never throws.
  */

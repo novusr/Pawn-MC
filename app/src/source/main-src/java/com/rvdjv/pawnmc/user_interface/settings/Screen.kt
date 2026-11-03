@@ -8,7 +8,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import com.rvdjv.pawnmc.apps-data.data_config.AppLocalization
+import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -97,9 +97,9 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
-import com.rvdjv.pawnmc.apps-data.data_update.UpdateManager
-import com.rvdjv.pawnmc.apps-data.data_update.UpdateStatus
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_update.UpdateManager
+import com.rvdjv.pawnmc.apps_data.data_update.UpdateStatus
 import com.rvdjv.pawnmc.user_interface.main.SettingsTarget
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFolderPickerIntent
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveTreeToFile
