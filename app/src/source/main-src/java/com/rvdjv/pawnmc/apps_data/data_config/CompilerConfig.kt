@@ -57,6 +57,7 @@ class CompilerConfig private constructor(context: Context) {
             n_editor_background_color = n_editor_background_color
             n_workspace_folders = n_workspace_folders
             n_last_selected_file_path = n_last_selected_file_path
+            n_last_selected_file_uri = n_last_selected_file_uri
             n_last_opened_dir_path = n_last_opened_dir_path
         } finally {
             suppressMirror = false
@@ -88,6 +89,7 @@ class CompilerConfig private constructor(context: Context) {
         n_app_language = n_app_language
         n_editor_background_color = n_editor_background_color
         n_last_selected_file_path = n_last_selected_file_path
+        n_last_selected_file_uri = n_last_selected_file_uri
         n_last_opened_dir_path = n_last_opened_dir_path
     }
 
@@ -185,6 +187,13 @@ class CompilerConfig private constructor(context: Context) {
         get() = prefs.getString(KEY_LAST_FILE, null)
         set(value) {
             prefs.edit { putString(KEY_LAST_FILE, value) }
+            mirrorToFile()
+        }
+
+    var n_last_selected_file_uri: String?
+        get() = prefs.getString(KEY_LAST_FILE_URI, null)
+        set(value) {
+            prefs.edit { putString(KEY_LAST_FILE_URI, value) }
             mirrorToFile()
         }
 
@@ -566,6 +575,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val PREFS_NAME           = "compiler_config"
         internal const val KEY_LAST_DIR         = "last_open_dir"
         internal const val KEY_LAST_FILE        = "last_sel_file"
+        internal const val KEY_LAST_FILE_URI    = "last_sel_file_uri"
         private const val KEY_CASE_BACKUP_DIR  = "case_insensitive_backup_dir"
         private const val KEY_IGNORE_CASE_AUTO = "ignore_case_auto"
         private const val KEY_EXPLAIN_AUTO = "explain_output_auto"

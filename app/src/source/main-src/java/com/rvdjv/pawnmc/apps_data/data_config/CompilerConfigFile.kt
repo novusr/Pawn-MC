@@ -209,6 +209,7 @@ internal object CompilerConfigFile {
         listOf(
             CompilerConfig.KEY_WORKSPACE_FOLDERS,
             CompilerConfig.KEY_LAST_FILE,
+            CompilerConfig.KEY_LAST_FILE_URI,
             CompilerConfig.KEY_LAST_DIR
         ).forEach { key ->
             if (root.has(key)) {
@@ -279,6 +280,11 @@ internal object CompilerConfigFile {
             root.optStringOrNull(CompilerConfig.KEY_LAST_FILE)?.let {
                 editor.putString(CompilerConfig.KEY_LAST_FILE, it)
             }
+            if (root.has(CompilerConfig.KEY_LAST_FILE_URI)) {
+                val uri = root.optStringOrNull(CompilerConfig.KEY_LAST_FILE_URI)
+                if (uri == null) editor.remove(CompilerConfig.KEY_LAST_FILE_URI)
+                else editor.putString(CompilerConfig.KEY_LAST_FILE_URI, uri)
+            }
             root.optStringOrNull(CompilerConfig.KEY_LAST_DIR)?.let {
                 editor.putString(CompilerConfig.KEY_LAST_DIR, it)
             }
@@ -337,6 +343,10 @@ internal object CompilerConfigFile {
         if (lastFile == null) root.put(CompilerConfig.KEY_LAST_FILE, JSONObject.NULL)
         else root.put(CompilerConfig.KEY_LAST_FILE, lastFile)
 
+        val lastFileUri = prefs.getString(CompilerConfig.KEY_LAST_FILE_URI, null)
+        if (lastFileUri == null) root.put(CompilerConfig.KEY_LAST_FILE_URI, JSONObject.NULL)
+        else root.put(CompilerConfig.KEY_LAST_FILE_URI, lastFileUri)
+
         val lastDir = prefs.getString(CompilerConfig.KEY_LAST_DIR, null)
         if (lastDir == null) root.put(CompilerConfig.KEY_LAST_DIR, JSONObject.NULL)
         else root.put(CompilerConfig.KEY_LAST_DIR, lastDir)
@@ -386,4 +396,3 @@ private fun JSONObject.optStringOrNull(name: String): String? {
     if (!has(name) || isNull(name)) return null
     return optString(name, "")
 }
-

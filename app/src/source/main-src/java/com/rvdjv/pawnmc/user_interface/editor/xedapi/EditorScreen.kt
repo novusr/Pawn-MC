@@ -3,6 +3,7 @@ package com.rvdjv.pawnmc.user_interface.editor.xedapi
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.Typeface
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -365,6 +366,10 @@ fun EditorScreen(
         }
     }
 
+    LaunchedEffect(compileOutput, isCompiling) {
+        if (isCompiling || compileOutput.isNotBlank()) isExplorerVisible = true
+    }
+
     /** Saves the file shown in the editor, in whichever mode is active. */
     val saveActiveFile: () -> Unit = {
         val document = workspace.activeDocument
@@ -431,25 +436,50 @@ fun EditorScreen(
         contract = ActivityResultContracts.CreateDocument("text/plain")
     ) { uri: Uri? ->
         val targetUri = uri ?: return@rememberLauncherForActivityResult
-        val content = editorRef?.text?.toString() ?: return@rememberLauncherForActivityResult
+        val content = editorRef?.text?.toString()
+        if (content == null) {
+            Toast.makeText(context, "Save As failed: editor is not ready", Toast.LENGTH_SHORT).show()
+            return@rememberLauncherForActivityResult
+        }
 
         try {
-            val outputStream = context.contentResolver.openOutputStream(targetUri)
-                ?: error("Unable to open the selected destination")
-            outputStream.use {
-                it.write(content.toByteArray())
-            }
-            Toast.makeText(
-                context,
-                "Saved as: ${targetUri.path ?: viewModel.fileName}",
-                Toast.LENGTH_SHORT
-            ).show()
+            context.contentResolver.takePersistableUriPermission(
+                targetUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
         } catch (e: Exception) {
             Toast.makeText(
                 context,
                 "Save As failed: ${e.localizedMessage ?: "Unknown error"}",
                 Toast.LENGTH_SHORT
             ).show()
+            return@rememberLauncherForActivityResult
+        }
+
+        val displayName = try {
+            context.contentResolver.query(
+                targetUri,
+                arrayOf(OpenableColumns.DISPLAY_NAME),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    cursor.getString(cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+                } else null
+            } ?: targetUri.lastPathSegment?.substringAfterLast('/') ?: viewModel.fileName
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Save As failed: ${e.localizedMessage ?: "Unable to read the selected filename"}",
+                Toast.LENGTH_SHORT
+            ).show()
+            return@rememberLauncherForActivityResult
+        }
+        viewModel.saveAs(targetUri, content, displayName) { saved ->
+            if (saved) {
+                Toast.makeText(context, "Saved as: $displayName", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -1654,8 +1684,19 @@ fun EditorScreen(
                     onSaveAllClick = {
                         if (workspace.isWorkspaceOpen) {
                             scope.launch {
-                                workspace.saveAll()
+                                var allSaved = true
+                                workspace.openWorkspaces.forEach { openWorkspace ->
+                                    val dirtyCount = openWorkspace.documents.count { it.isDirty }
+                                    if (workspace.saveAll(openWorkspace) != dirtyCount) allSaved = false
+                                }
                                 workspace.refreshTree()
+                                if (!allSaved) {
+                                    Toast.makeText(
+                                        context,
+                                        "Some files could not be saved.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
                         } else {
                             saveAsLauncher.launch(viewModel.fileName)

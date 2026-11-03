@@ -45,6 +45,7 @@ import com.rvdjv.pawnmc.user_interface.theme.resolveDarkTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -228,6 +229,21 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                LaunchedEffect(viewModel.compileRequestId) {
+                    if (!hasStoragePermission(this@MainActivity)) return@LaunchedEffect
+                    val pendingPath = viewModel.consumePendingCompile() ?: return@LaunchedEffect
+                    var waited = 0
+                    while (viewModel.isPreparingFilesystem && waited < 100) {
+                        delay(200)
+                        waited++
+                    }
+                    viewModel.compileFile(
+                        path = pendingPath,
+                        isStoragePermissionGranted = true,
+                        onPermissionRequired = {}
+                    )
+                }
+
                 Box(modifier = Modifier.fillMaxSize()) {
                     // A shortcut straight into Xed skips the main screen entirely: it is
                     // neither composed behind the editor nor shown for a frame before the
@@ -269,7 +285,13 @@ class MainActivity : ComponentActivity() {
                                     returnToPocketSamp = false
                                     navigateBackToPocketSamp()
                                 } else {
-                                    viewModel.loadLastSelectedFile()
+                                    if (!editorViewModel.workspace.isWorkspaceOpen &&
+                                        editorViewModel.filePath.isNotBlank()
+                                    ) {
+                                        viewModel.syncEditorSelection(editorViewModel.filePath)
+                                    } else {
+                                        viewModel.loadLastSelectedFile()
+                                    }
                                 }
                             },
                             editorBackgroundColor = viewModel.n_editor_background_color,

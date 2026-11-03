@@ -351,6 +351,25 @@ class MainViewModel(
         }
     }
 
+    fun syncEditorSelection(path: String) {
+        val source = File(path)
+        if (source.extension.lowercase() !in setOf("pawn", "pwn", "p", "inc")) {
+            selectionError = "Invalid file type! (only: .pawn .pwn .p .inc)"
+            return
+        }
+        if (!source.isFile) {
+            selectionError = "File not found: $path"
+            return
+        }
+        selectedFilePath = path
+        config.n_last_selected_file_path = path
+        selectionError = null
+        filesystemNotice = null
+        temporaryFileNotice = null
+        lastExitCode = null
+        applyCompilerAutoDetection(path)
+    }
+
     /**
      * Reconciles the include paths and the compiler version with [sourcePath].
      *
@@ -533,7 +552,8 @@ class MainViewModel(
      * The file is validated and registered with the compiler system exactly like a
      * file chosen through Browse File, so auto-detection and the ignore-case
      * handling stay identical, and the queued request is consumed by the main
-     * screen when it becomes visible again.
+     * activity-level coordinator while Xed is open, or by the main screen if permission
+     * must first be granted.
      */
     fun requestCompileFromEditor(path: String) {
         hasCompilerOutput = true

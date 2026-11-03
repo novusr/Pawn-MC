@@ -90,6 +90,7 @@ class CompilerConfigFileTest {
             seed(this)
             all[CompilerConfig.KEY_WORKSPACE_FOLDERS] = "/sdcard/projA/;/sdcard/projB/"
             all[CompilerConfig.KEY_LAST_FILE] = "/sdcard/projA/main.pwn"
+            all[CompilerConfig.KEY_LAST_FILE_URI] = "content://provider/document/123"
             all[CompilerConfig.KEY_LAST_DIR] = "/sdcard/projA/"
             all[CompilerConfig.KEY_APP_LANGUAGE_SET] = true
         }
@@ -98,6 +99,7 @@ class CompilerConfigFileTest {
         assertTrue(CompilerConfigFile.restore(context, restored))
         assertEquals("/sdcard/projA/;/sdcard/projB/", restored.all[CompilerConfig.KEY_WORKSPACE_FOLDERS])
         assertEquals("/sdcard/projA/main.pwn", restored.all[CompilerConfig.KEY_LAST_FILE])
+        assertEquals("content://provider/document/123", restored.all[CompilerConfig.KEY_LAST_FILE_URI])
         assertEquals("/sdcard/projA/", restored.all[CompilerConfig.KEY_LAST_DIR])
         assertEquals(true, restored.all[CompilerConfig.KEY_APP_LANGUAGE_SET])
     }
@@ -265,7 +267,8 @@ class CompilerConfigFileTest {
             CompilerConfig.KEY_COMPILER_VERSION, CompilerConfig.KEY_APP_THEME,
             CompilerConfig.KEY_APP_LANGUAGE, CompilerConfig.KEY_APP_LANGUAGE_SET,
             CompilerConfig.KEY_WORKSPACE_FOLDERS, CompilerConfig.KEY_LAST_FILE,
-            CompilerConfig.KEY_LAST_DIR, CompilerConfig.KEY_EDITOR_BG_COLOR,
+            CompilerConfig.KEY_LAST_FILE_URI, CompilerConfig.KEY_LAST_DIR,
+            CompilerConfig.KEY_EDITOR_BG_COLOR,
         )
     }
 }

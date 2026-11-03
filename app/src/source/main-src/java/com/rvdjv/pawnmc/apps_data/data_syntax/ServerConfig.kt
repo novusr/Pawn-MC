@@ -190,7 +190,7 @@ object ServerConfig {
 
     fun isListDirective(word: String): Boolean = word in LIST_DIRECTIVES
 
-    fun isGamemode(word: String): Boolean = word.startsWith("gamemode") && isDirective(word)
+    fun isGamemode(word: String): Boolean = gamemodePattern.matches(word)
 
     fun descriptionFor(word: String, language: CompilerConfig.AppLanguage): String {
         if (isGamemode(word)) return gamemodeDescription(word, language)
@@ -229,15 +229,11 @@ object ServerConfig {
     /** Keys `key = value` or `key value`; whichever separator precedes [column]. */
     fun directiveAt(line: CharSequence, column: Int): String? {
         if (column !in 0..line.length) return null
-        val before = line.subSequence(0, column)
-        val boundary = maxOf(
-            before.lastIndexOf('='),
-            before.lastIndexOf(' '),
-            before.lastIndexOf('\t')
-        )
+        val before = line.subSequence(0, column).toString().trimStart()
+        val boundary = before.indexOfFirst { it == '=' || it == ' ' || it == '\t' }
         if (boundary < 0) return null
-        val leading = before.take(boundary).toString().trim()
-        if (leading.isEmpty() || leading.any { it == '=' || it == ' ' || it == '\t' }) return null
+        val leading = before.substring(0, boundary).trim()
+        if (leading.isEmpty()) return null
         return leading.takeIf { isDirective(it) }
     }
 }

@@ -316,26 +316,23 @@ fun MainScreen(
         }
     }
 
-    // Xed stays open while this mounted screen handles its compile request.
-    LaunchedEffect(viewModel.compileRequestId) {
-        viewModel.consumePendingCompile()?.let { pendingPath ->
-            if (!hasStoragePermission(context)) {
-                showPermissionDialog = true
-            } else {
-                // The main screen also re-registers the last selected file, which
-                // may still be running the ignore-case conversion for that folder.
-                var n_waited = 0
-                while (viewModel.isPreparingFilesystem && n_waited < 100) {
-                    delay(200)
-                    n_waited++
-                }
-                viewModel.compileFile(
-                    path = pendingPath,
-                    isStoragePermissionGranted = true,
-                    onPermissionRequired = { showPermissionDialog = true }
-                )
-            }
+    LaunchedEffect(viewModel.compileRequestId, isStoragePermissionGranted) {
+        val pendingPath = viewModel.pendingCompilePath ?: return@LaunchedEffect
+        if (!isStoragePermissionGranted) {
+            showPermissionDialog = true
+            return@LaunchedEffect
         }
+        viewModel.consumePendingCompile() ?: return@LaunchedEffect
+        var waited = 0
+        while (viewModel.isPreparingFilesystem && waited < 100) {
+            delay(200)
+            waited++
+        }
+        viewModel.compileFile(
+            path = pendingPath,
+            isStoragePermissionGranted = true,
+            onPermissionRequired = { showPermissionDialog = true }
+        )
     }
 
     // autoscroll output

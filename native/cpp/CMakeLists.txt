@@ -93,6 +93,9 @@ set(COMMON_C_FLAGS
     -Wno-misleading-indentation
     -Wno-address-of-packed-member
     -fPIC
+    -Oz
+    -ffunction-sections
+    -fdata-sections
 )
 
 # Soruce files
@@ -217,7 +220,7 @@ target_compile_definitions(pawnc3107 PRIVATE ${COMMON_DEFINITIONS})
 
 target_compile_options(pawnc3107 PRIVATE
     $<$<COMPILE_LANGUAGE:C>:${COMMON_C_FLAGS}>
-    $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -fPIC>
+    $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -fPIC -Oz -ffunction-sections -fdata-sections>
 )
 
 # Only the three engine entry points are exported (they carry an explicit visibility
@@ -226,7 +229,7 @@ target_compile_options(pawnc3107 PRIVATE
 set_target_properties(pawnc3107 PROPERTIES
     C_VISIBILITY_PRESET hidden
     CXX_VISIBILITY_PRESET hidden
-    LINK_FLAGS "-Wl,--exclude-libs,ALL"
+    LINK_FLAGS "-Wl,--exclude-libs,ALL -Wl,--gc-sections"
 )
 
 target_link_libraries(pawnc3107 android log)
@@ -252,13 +255,13 @@ target_compile_definitions(pawnc31011 PRIVATE
 
 target_compile_options(pawnc31011 PRIVATE
     $<$<COMPILE_LANGUAGE:C>:${COMMON_C_FLAGS}>
-    $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -fPIC>
+    $<$<COMPILE_LANGUAGE:CXX>:-std=c++17 -fPIC -Oz -ffunction-sections -fdata-sections>
 )
 
 set_target_properties(pawnc31011 PROPERTIES
     C_VISIBILITY_PRESET hidden
     CXX_VISIBILITY_PRESET hidden
-    LINK_FLAGS "-Wl,--exclude-libs,ALL"
+    LINK_FLAGS "-Wl,--exclude-libs,ALL -Wl,--gc-sections"
 )
 
 target_link_libraries(pawnc31011 android log)

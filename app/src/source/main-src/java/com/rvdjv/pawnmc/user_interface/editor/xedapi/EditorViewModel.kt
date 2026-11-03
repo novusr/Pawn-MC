@@ -1,6 +1,7 @@
 package com.rvdjv.pawnmc.user_interface.editor.xedapi
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,12 +17,20 @@ import java.io.File
 
 class EditorViewModel(
     initialFilePath: String,
-    context: Context? = null
+    context: Context? = null,
+    initialFileUri: Uri? = null
 ) : ViewModel() {
+
+    private val appContext = context?.applicationContext
+    private val config = appContext?.let {
+        CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(it)
+    }
 
     /** Single file opened from the app, outside any workspace. */
     var filePath by mutableStateOf(initialFilePath)
         private set
+
+    private var activeDocumentUri: Uri? = initialFileUri
 
     val file: File get() = File(filePath)
     val fileName: String get() = file.name
@@ -62,6 +71,10 @@ class EditorViewModel(
     /** Points the editor at [path], the file the main screen has selected. */
     fun attachFile(path: String) {
         if (path.isBlank() || (path == filePath && loadedFilePath == path)) return
+        if (path != filePath) {
+            activeDocumentUri = null
+            config?.n_last_selected_file_uri = null
+        }
         filePath = path
         if (!workspace.isWorkspaceOpen) loadFile()
     }
@@ -79,12 +92,20 @@ class EditorViewModel(
         val contentAtLoadStart = latestEditorContent
         viewModelScope.launch {
             try {
-                if (!file.exists()) {
+                if (!file.exists() && activeDocumentUri == null) {
                     loadError = "File not found: $n_path"
                     return@launch
                 }
                 val content = withContext(Dispatchers.IO) {
-                    file.readText()
+                    activeDocumentUri?.let { uri ->
+                        val context = appContext ?: error("File access is unavailable")
+                        val input = context.contentResolver.openInputStream(uri)
+                            ?: error("Unable to open the saved destination")
+                        input.bufferedReader().use { it.readText() }.also { text ->
+                            ensureParentDirectory(file)
+                            file.writeText(text)
+                        }
+                    } ?: file.readText()
                 }
                 val editedDuringLoad = latestEditorContent != contentAtLoadStart
                 if (!editedDuringLoad) {
@@ -117,7 +138,7 @@ class EditorViewModel(
         viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
-                    file.writeText(contentToSave)
+                    writeContent(contentToSave)
                 }
                 lastSavedContent = contentToSave
                 hasUnsavedChanges = latestEditorContent != contentToSave
@@ -135,7 +156,7 @@ class EditorViewModel(
     suspend fun saveFileSync(currentContent: String): Boolean {
         return try {
             withContext(Dispatchers.IO) {
-                file.writeText(currentContent)
+                writeContent(currentContent)
             }
             lastSavedContent = currentContent
             hasUnsavedChanges = latestEditorContent != currentContent
@@ -144,6 +165,88 @@ class EditorViewModel(
         } catch (e: Exception) {
             statusMessage = "Save failed: ${e.localizedMessage}"
             false
+        }
+    }
+
+    fun saveAs(
+        uri: Uri,
+        content: String,
+        displayName: String,
+        onSaved: (Boolean) -> Unit = {}
+    ) {
+        if (isSaving) {
+            statusMessage = "Save already in progress"
+            onSaved(false)
+            return
+        }
+        val context = appContext
+        if (context == null) {
+            statusMessage = "Save As failed: file access is unavailable"
+            onSaved(false)
+            return
+        }
+        if (File(displayName).extension.lowercase() !in setOf("pawn", "pwn", "p", "inc")) {
+            statusMessage = "Save As failed: choose a .pawn, .pwn, .p, or .inc filename"
+            onSaved(false)
+            return
+        }
+
+        isSaving = true
+        statusMessage = "Saving..."
+        viewModelScope.launch {
+            try {
+                val safeName = displayName
+                    .substringAfterLast('/')
+                    .replace(Regex("[^A-Za-z0-9._-]"), "_")
+                    .ifBlank { "untitled.pwn" }
+                val mirrorFile = File(
+                    File(File(context.filesDir, "PawnMC"), "SaveAs")
+                        .resolve(Integer.toHexString(uri.toString().hashCode())),
+                    safeName
+                )
+                withContext(Dispatchers.IO) {
+                    val output = context.contentResolver.openOutputStream(uri, "wt")
+                        ?: error("Unable to open the selected destination")
+                    output.use { it.write(content.toByteArray(Charsets.UTF_8)) }
+                    ensureParentDirectory(mirrorFile)
+                    mirrorFile.writeText(content)
+                }
+
+                activeDocumentUri = uri
+                filePath = mirrorFile.absolutePath
+                loadedFilePath = filePath
+                fileContent = content
+                latestEditorContent = content
+                lastSavedContent = content
+                hasUnsavedChanges = false
+                config?.n_last_selected_file_path = filePath
+                config?.n_last_selected_file_uri = uri.toString()
+                statusMessage = "Saved successfully"
+                isSaving = false
+                onSaved(true)
+            } catch (e: Exception) {
+                isSaving = false
+                statusMessage = "Save As failed: ${e.localizedMessage ?: "Unknown error"}"
+                onSaved(false)
+            }
+        }
+    }
+
+    private fun writeContent(content: String) {
+        activeDocumentUri?.let { uri ->
+            val context = appContext ?: error("File access is unavailable")
+            val output = context.contentResolver.openOutputStream(uri, "wt")
+                ?: error("Unable to open the saved destination")
+            output.use { it.write(content.toByteArray(Charsets.UTF_8)) }
+        }
+        ensureParentDirectory(file)
+        file.writeText(content)
+    }
+
+    private fun ensureParentDirectory(target: File) {
+        val parent = target.parentFile ?: return
+        if (!parent.isDirectory && !parent.mkdirs()) {
+            error("Unable to create directory: ${parent.absolutePath}")
         }
     }
 
@@ -174,7 +277,8 @@ class EditorViewModelFactoryForActivity(context: Context) : ViewModelProvider.Fa
         if (modelClass.isAssignableFrom(EditorViewModel::class.java)) {
             val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(appContext)
             val path = config.n_last_selected_file_path.orEmpty()
-            return modelClass.cast(EditorViewModel(path, appContext))
+            val uri = config.n_last_selected_file_uri?.let { Uri.parse(it) }
+            return modelClass.cast(EditorViewModel(path, appContext, uri))
                 ?: throw IllegalArgumentException("Unknown ViewModel class")
         }
         throw IllegalArgumentException("Unknown ViewModel class")
