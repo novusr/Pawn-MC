@@ -134,4 +134,14 @@ class CompilerConfigTest {
         assertFalse(CompilerConfig.isWarning217Flag("-w17"))
         assertFalse(CompilerConfig.isWarning217Flag("-w"))
     }
+
+    @Test
+    fun isWarning200Flag_matchesOnlyTheSymbolTruncatedSilencer() {
+        assertTrue(CompilerConfig.isWarning200Flag("-w200"))
+        assertTrue(CompilerConfig.isWarning200Flag("-w=200"))
+        assertFalse(CompilerConfig.isWarning200Flag("-w201"))
+        assertFalse(CompilerConfig.isWarning200Flag("-w202"))
+        assertFalse(CompilerConfig.isWarning200Flag("-w17"))
+        assertFalse(CompilerConfig.isWarning200Flag("-w"))
+    }
 }

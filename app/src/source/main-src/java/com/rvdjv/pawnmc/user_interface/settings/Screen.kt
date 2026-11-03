@@ -835,7 +835,7 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = viewModel.n_custom_flags,
                             onValueChange = { viewModel.updateCustomFlags(it) },
-                            placeholder = { Text("e.g. -C+ -v=0 -w217") },
+                            placeholder = { Text("e.g. -C+ -v=0 -w200 -w217") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = false,
                             maxLines = 3

@@ -636,6 +636,7 @@ class CompilerConfig private constructor(context: Context) {
             if (customOptions.none { isCompactEncodingFlag(it) }) { options.add("-C+") }
             if (customOptions.none { isVerbosityFlag(it) }) { options.add("-v0") }
             if (customOptions.none { isWarning217Flag(it) }) { options.add("-w217") }
+            if (customOptions.none { isWarning200Flag(it) }) { options.add("-w200") }
             if (customOptions.isNotEmpty()) {
                 options.addAll(
                     if (compilerVersion == CompilerVersion.V3107) {
@@ -663,6 +664,14 @@ class CompilerConfig private constructor(context: Context) {
          */
         internal fun isWarning217Flag(option: String): Boolean =
             option.matches(Regex("(?i)^-w=?217$"))
+
+        /**
+         * Matches the symbol is truncated to 31 characters warning silencer in all its variants
+         * (`-w200` / `-w=200`) and every other `-w<num>` warning switch, so a
+         * user warning list is never double-declared by the built-in `-w200`.
+         */
+        internal fun isWarning200Flag(option: String): Boolean =
+            option.matches(Regex("(?i)^-w=?200$"))
 
         fun optimizationLevelsFor(compilerVersion: CompilerVersion): List<OptimizationLevel> =
             if (compilerVersion == CompilerVersion.V3107) {
