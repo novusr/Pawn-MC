@@ -34,7 +34,7 @@ Compiler
     threshold.
   * "Ignore case" mode: folder backup, lowercased file names and ``#include``
     references.
-  * Compiler message explanations read from ``data/_data_2026_exp.toml`` with an
+  * Compiler message explanations read from ``native/data/_data_2026_exp.toml`` with an
     override in ``Documents/PawnMC/config``.
   * One SQLite log database for every compile.
 

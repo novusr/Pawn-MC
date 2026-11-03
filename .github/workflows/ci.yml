@@ -58,7 +58,7 @@ jobs:
         run: chmod +x gradlew
 
       # The compiler libraries do not exist in the repository: CMake builds them per ABI
-      # from `compilers/pawnc-*/`. So the archive has to be produced here, between the
+      # from `native/compilers/pawnc-*/`. So the archive has to be produced here, between the
       # native build and the APK, instead of being read from disk.
       #
       # Step 1 builds only the native targets for the three ABIs, which leaves them in
@@ -143,7 +143,7 @@ jobs:
                       f"expected {expected[abi]} for {abi}"
                   )
           PY
-            ASSET_DIR="app/src/main/assets"
+            ASSET_DIR="app/src/source/main-src/assets"
             mkdir -p "$ASSET_DIR"
             # -j stores just the two file names, no directory component.
             zip -j -X "$ASSET_DIR/$ABI.zip" "$DIR/libpawnc3107.so" "$DIR/libpawnc31011.so"
@@ -173,7 +173,7 @@ jobs:
             echo '--- native entries in the APK ---'
             unzip -l "$APK" | grep -E 'assets/.*\\.zip|lib/.*\\.so' || true
           fi
-          ls -la app/src/main/assets 2>/dev/null || true
+          ls -la app/src/source/main-src/assets 2>/dev/null || true
       - name: Upload Lint Report
         if: always()
         continue-on-error: true

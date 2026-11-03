@@ -41,24 +41,29 @@ android {
     }
 
     sourceSets {
+        // Every app source lives under `app/src/source/`: the shared `main-src` tree and
+        // the per-flavor trees beside it, all named with the `-src` suffix so no folder
+        // carries the bare `src` name the Gradle source set already implies.
         getByName("main") {
-            // `data/_data_2026_ect.toml` is the single source of localisation data
+            java.srcDir("src/source/main-src/java")
+            res.srcDir("src/source/main-src/res")
+            // `native/data/_data_2026_ect.toml` is the single source of localisation data
             // and ships as an asset, so nothing else in the app duplicates it.
-            assets.srcDir(rootProject.file("data"))
+            assets.srcDir(rootProject.file("native/data"))
         }
         create("nougat") {
-            java.srcDir("src/nougat-src/java")
-            res.srcDir("src/nougat-src/res")
+            java.srcDir("src/source/nougat-src/java")
+            res.srcDir("src/source/nougat-src/res")
         }
         create("newer") {
-            java.srcDir("src/newer-src/java")
-            res.srcDir("src/newer-src/res")
+            java.srcDir("src/source/newer-src/java")
+            res.srcDir("src/source/newer-src/res")
         }
         getByName("test") {
-            java.srcDir(rootProject.file("test/app/unit"))
+            java.srcDir(rootProject.file("native/test/app/unit"))
         }
         getByName("androidTest") {
-            java.srcDir(rootProject.file("test/app/instrumented"))
+            java.srcDir(rootProject.file("native/test/app/instrumented"))
         }
     }
 
@@ -124,7 +129,7 @@ android {
     }
     externalNativeBuild {
         cmake {
-            path = file("../cpp/CMakeLists.txt")
+            path = file("../native/cpp/CMakeLists.txt")
             version = "3.22.1"
         }
     }
@@ -222,7 +227,7 @@ dependencies {
     implementation(libs.sora.editor)
 
     // PocketSAMP is compiled into the modern flavor only. The Nougat flavor provides its
-    // own `com.pocketsamp.server.ServerApp` stub (src/nougat-src), so depending on the
+    // own `com.pocketsamp.server.ServerApp` stub (src/source/nougat-src), so depending on the
     // module there as well would define that class twice and break R8.
     "newerImplementation"(project(":pocketsamp"))
 

@@ -156,10 +156,23 @@ first. The app never removes that folder on its own.
 Testing
 -------
 
-Test sources are kept outside the Android modules under ``test/``. Gradle source sets point
-there so the existing tasks still work:
+Test sources are kept outside the Android modules under ``native/test/``. Gradle source sets
+point there so the existing tasks still work:
 
-* ``test/app/unit`` and ``test/app/instrumented``
+* ``native/test/app/unit`` and ``native/test/app/instrumented``
+
+Repository layout
+-----------------
+
+Everything that is not the Android app itself lives in one place, so the repository root
+stays short:
+
+* ``app/src/source/main-src`` — the shared app code (Kotlin, resources, manifest)
+* ``app/src/source/nougat-src`` and ``app/src/source/newer-src`` — the per-flavor trees
+* ``native/cpp`` — the JNI compiler bridge (C++) and its ``CMakeLists.txt``
+* ``native/data`` — localisation data (``.toml``) shipped as app assets
+* ``native/test`` — unit and instrumented test sources
+* ``native/compilers`` — the Pawn compiler git submodules
 
 Building
 --------

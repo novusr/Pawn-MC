@@ -1,22 +1,24 @@
 # PawnMC ProGuard Rules
 
 # Keep all JNI native methods in Runner
--keep class com.rvdjv.pawnmc.data.compiler.Runner {
+# `Runner` lives under `com.rvdjv.pawnmc.apps-data`, a hyphenated package segment that
+# Kotlin escapes as `apps-data` in source, so the plain name is used here.
+-keep class com.rvdjv.pawnmc.apps-data.data_compiler.Runner {
     private native <methods>;
 }
 
 # Keep Activities (referenced in AndroidManifest.xml)
-# `interface` is a Kotlin keyword, so the package is escaped as `interface` in
-# source files; ProGuard needs the plain name here.
--keep class com.rvdjv.pawnmc.interface.main.MainActivity
--keep class com.rvdjv.pawnmc.interface.settings.SettingsActivity
+# `interface` is a Kotlin keyword and the package now carries a hyphen, so source files
+# escape it as `user-interface`; ProGuard needs the plain name here.
+-keep class com.rvdjv.pawnmc.user-interface.main.MainActivity
+-keep class com.rvdjv.pawnmc.user-interface.settings.SettingsActivity
 
 # Loaded by generated Kotlin file-class name from PocketSampGateway.
 -keep class com.pocketsamp.server.PocketSampRuntimeMarkerKt { *; }
 
 # Keep CompilerConfig enums (used for SharedPreferences serialization)
--keep class com.rvdjv.pawnmc.data.config.CompilerConfig$CompilerVersion { *; }
--keep class com.rvdjv.pawnmc.data.config.CompilerConfig$DebugLevel { *; }
+-keep class com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig$CompilerVersion { *; }
+-keep class com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig$DebugLevel { *; }
 
 # Material Icons Extended generates one ImageVector getter per icon. Do not add
 # package-wide keep rules: unreachable generated getters must remain shrinkable.
