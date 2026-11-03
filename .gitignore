@@ -21,6 +21,10 @@ release-key.jks
 RELEASE_NOTES_DRAFT.md
 TODO.txt
 .env
+# --- Ignore the Pawn source tree, which is only used for reference. ---
+pawn-lang
+# --- Ignore the SA-MP source tree, which is only used for reference. ---
+SA-MP-master
 # --- Build / debug output that must never be committed -------------------------
 # `/build` above only anchors at the repository root, so the `:terminal:*`
 # modules (which have no .gitignore of their own) used to have their whole

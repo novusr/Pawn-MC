@@ -205,7 +205,7 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                 android.content.Intent().apply {
                     setClassName(
                         context.packageName,
-                          "com.rvdjv.pawnmc.user-interface.main.MainActivity"
+                          "com.rvdjv.pawnmc.user_interface.main.MainActivity"
                     )
                     this.action = ACTION_OPEN_XED
                     putExtra(EXTRA_XED_PATH, item.absolutePath)

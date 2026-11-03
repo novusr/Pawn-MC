@@ -31,6 +31,22 @@ class ServerConfigTest {
                 "no description: $directive",
                 ServerConfig.descriptionFor(directive, CompilerConfig.AppLanguage.EN).isNotBlank()
             )
+            assertTrue(
+                "no Indonesian description: $directive",
+                ServerConfig.descriptionFor(directive, CompilerConfig.AppLanguage.ID).isNotBlank()
+            )
+        }
+    }
+
+    @Test
+    fun `descriptions are specific rather than a generic placeholder`() {
+        // A real description names a concrete effect; the old placeholder text did not.
+        requiredDirectives.forEach { directive ->
+            val text = ServerConfig.descriptionFor(directive, CompilerConfig.AppLanguage.EN)
+            assertFalse(
+                "$directive still has placeholder text",
+                text.contains("include set", ignoreCase = true) || text.length < 20
+            )
         }
     }
 

@@ -8,10 +8,10 @@
 }
 
 # Keep Activities (referenced in AndroidManifest.xml)
-# `interface` is a Kotlin keyword and the package now carries a hyphen, so source files
-# escape it as `user-interface`; ProGuard needs the plain name here.
--keep class com.rvdjv.pawnmc.user-interface.main.MainActivity
--keep class com.rvdjv.pawnmc.user-interface.settings.SettingsActivity
+# `interface` is a Kotlin keyword and a hyphen is not a legal package identifier, so
+# the package is `user_interface`.
+-keep class com.rvdjv.pawnmc.user_interface.main.MainActivity
+-keep class com.rvdjv.pawnmc.user_interface.settings.SettingsActivity
 
 # Loaded by generated Kotlin file-class name from PocketSampGateway.
 -keep class com.pocketsamp.server.PocketSampRuntimeMarkerKt { *; }
