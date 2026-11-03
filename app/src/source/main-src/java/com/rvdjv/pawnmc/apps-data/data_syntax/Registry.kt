@@ -63,12 +63,36 @@ object PawnRegistry {
         val natives = PawnIndex.INCLUDES.flatMap { it.natives }
             .filterNot { it.name in nativeSet || it.name in keywordSet }
             .distinctBy { it.name }
-        addAll(natives.map { _item(it.name, it.description, it.kind, it.descriptionId, it.descriptionEs) })
+        addAll(
+            natives.map {
+                _item(
+                    it.name,
+                    it.description,
+                    it.kind,
+                    it.descriptionId,
+                    it.descriptionEs,
+                    it.descriptionRu,
+                    it.descriptionTl,
+                )
+            }
+        )
 
         val forwards = PawnIndex.INCLUDES.flatMap { it.forwards }
             .filterNot { it.name in callbackSet || it.name in keywordSet }
             .distinctBy { it.name }
-        addAll(forwards.map { _item(it.name, it.description, it.kind, it.descriptionId, it.descriptionEs) })
+        addAll(
+            forwards.map {
+                _item(
+                    it.name,
+                    it.description,
+                    it.kind,
+                    it.descriptionId,
+                    it.descriptionEs,
+                    it.descriptionRu,
+                    it.descriptionTl,
+                )
+            }
+        )
     }
 
     private val keywordSet: Set<String> by lazy {

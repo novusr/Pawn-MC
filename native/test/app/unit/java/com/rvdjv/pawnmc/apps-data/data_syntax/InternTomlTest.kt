@@ -1,5 +1,7 @@
 package com.rvdjv.pawnmc.apps-data.data_syntax
 
+import com.rvdjv.pawnmc.apps-data.data_config.CompilerConfig
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -14,11 +16,56 @@ import java.io.File
  */
 class InternTomlTest {
 
+    @Test
+    fun `item and include descriptions load every supported language`() {
+        val parsed = InternDat.parse(
+            """
+            [item.KEYWORD]
+            "stock" = { en = "English item", id = "Item Indonesia", es = "Item espanol", ru = "Элемент по-русски", tl = "Item sa Tagalog" }
+
+            [native."a_samp.inc"]
+            "SendClientMessage" = { en = "English native", id = "Native Indonesia", es = "Native espanol", ru = "Функция по-русски", tl = "Native sa Tagalog" }
+            """.trimIndent()
+        )
+
+        val item = parsed.items.single()
+        assertEquals("Item espanol", item.descriptionFor(CompilerConfig.AppLanguage.ES))
+        assertEquals("Элемент по-русски", item.descriptionFor(CompilerConfig.AppLanguage.RU))
+        assertEquals("Item sa Tagalog", item.descriptionFor(CompilerConfig.AppLanguage.TL))
+
+        val symbol = parsed.symbols.single()
+        assertEquals("Native espanol", symbol.descriptionEs)
+        assertEquals("Функция по-русски", symbol.descriptionRu)
+        assertEquals("Native sa Tagalog", symbol.descriptionTl)
+    }
+
     private val toml: String by lazy {
         val root = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
             .firstOrNull { File(it, "native/data/_data_2026_intern.toml").isFile }
             ?: File(System.getProperty("user.dir").orEmpty())
         File(root, "native/data/_data_2026_intern.toml").readText()
+    }
+
+    @Test
+    fun `every bundled internal description has all supported languages`() {
+        val rows = toml.lineSequence()
+            .map(String::trim)
+            .filter { it.startsWith("\"") && it.contains("= {") }
+            .toList()
+        val missing = rows.flatMap { row ->
+            listOf("en", "id", "es", "ru", "tl")
+                .filter { language ->
+                    Regex("$language\\s*=\\s*\"([^\"]*)\"")
+                        .find(row)
+                        ?.groupValues
+                        ?.get(1)
+                        .isNullOrBlank()
+                }
+                .map { language -> "$language: $row" }
+        }
+
+        assertTrue("expected all bundled descriptions to include five languages", rows.size >= 750)
+        assertTrue("descriptions missing a language: $missing", missing.isEmpty())
     }
 
     /** `"Name" = { en = "...", id = "..." }` rows of one table. */

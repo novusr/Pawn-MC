@@ -12,6 +12,7 @@ internal data class PawnInternalSymbol(
     val descriptionId: String? = null,
     val descriptionEs: String? = null,
     val descriptionRu: String? = null,
+    val descriptionTl: String? = null,
 )
 
 internal data class InternDatset(
@@ -22,11 +23,14 @@ internal data class InternDatset(
 internal object InternDat {
 
     private const val ASSET_PATH = "_data_2026_intern.toml"
-    private const val FALLBACK_PATH = "data/_data_2026_intern.toml"
+    private const val FALLBACK_PATH = "native/data/_data_2026_intern.toml"
 
     /** Language leaf keys of every symbol entry. */
     private const val EN = "en"
     private const val ID = "id"
+    private const val ES = "es"
+    private const val RU = "ru"
+    private const val TL = "tl"
 
     /** Table holding the language items, e.g. `[item.KEYWORD]`. */
     private const val ITEM_PREFIX = "item"
@@ -86,6 +90,9 @@ internal object InternDat {
                     description = description,
                     kind = kind,
                     descriptionId = fields[ID],
+                    descriptionEs = fields[ES],
+                    descriptionRu = fields[RU],
+                    descriptionTl = fields[TL],
                 )
             }
         }
@@ -107,6 +114,9 @@ internal object InternDat {
                         name = name,
                         description = description,
                         descriptionId = fields[ID],
+                        descriptionEs = fields[ES],
+                        descriptionRu = fields[RU],
+                        descriptionTl = fields[TL],
                     )
                 }
             }

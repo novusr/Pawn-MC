@@ -9,14 +9,14 @@ import java.io.File
 /**
  * Loader of the external compiler explanation table.
  *
- * `data/_data_2026_exp.toml` holds the defaults; an override in
+ * `native/data/_data_2026_exp.toml` holds the defaults; an override in
  * `Documents/PawnMC/config/` wins. The table is read once per process.
  */
 object Explanations {
 
     private const val ASSET_PATH = "_data_2026_exp.toml"
 
-    private const val FALLBACK_PATH = "data/_data_2026_exp.toml"
+    private const val FALLBACK_PATH = "native/data/_data_2026_exp.toml"
 
     private const val PUBLIC_OVERRIDE_PATH = "config/_data_2026_exp.toml"
 
