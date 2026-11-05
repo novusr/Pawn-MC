@@ -116,12 +116,14 @@ object Explanations {
             val code = path.removePrefix("$TABLE_PREFIX.")
             if (code.isBlank()) return@forEach
             val unpaddedCode = code.toIntOrNull()?.toString()?.takeIf { it != code }
-            entries.forEach { (language, explanation) ->
-                if (explanation.isBlank()) return@forEach
+            entries.forEach { (field, explanation) ->
+                if (!field.startsWith("local_")) return@forEach
+                val language = field.removePrefix("local_")
+                if (language !in setOf("id", "en", "es", "ru", "tl") || explanation.isBlank()) return@forEach
                 result["$code.$language"] = explanation
                 unpaddedCode?.let { result["$it.$language"] = explanation }
             }
-            entries[CompilerConfig.AppLanguage.EN.value]?.let { english ->
+            entries["local_${CompilerConfig.AppLanguage.EN.value}"]?.let { english ->
                 if (english.isNotBlank()) {
                     result[code] = english
                     unpaddedCode?.let { result[it] = english }

@@ -46,6 +46,7 @@ class CodeLanguage(
         val operatorPrefix = operatorPrefixAt(content, position)
         if (operatorPrefix != null) {
             waitForTypingPause(publisher)
+            if (!matchesAtCursor(content, position, operatorPrefix)) return
             publish(publisher, operatorPrefix, localFunctions)
             return
         }
@@ -56,7 +57,22 @@ class CodeLanguage(
 
         if (prefix.isBlank()) return
         waitForTypingPause(publisher)
+        if (!matchesAtCursor(content, position, prefix)) return
         publish(publisher, prefix, localFunctions)
+    }
+
+    private fun matchesAtCursor(
+        content: ContentReference,
+        position: CharPosition,
+        expectedPrefix: String
+    ): Boolean {
+        if (position.line !in 0 until content.getLineCount()) return false
+        val line = content.getLine(position.line)
+        if (position.column !in 0..line.length) return false
+        val actualPrefix = CompletionHelper.computePrefix(content, position) { ch ->
+            Character.isJavaIdentifierPart(ch) || ch == '#' || ch == ':'
+        }
+        return actualPrefix == expectedPrefix && actualPrefix.isNotBlank()
     }
 
     private fun waitForTypingPause(publisher: CompletionPublisher) {
@@ -108,7 +124,7 @@ class CodeLanguage(
         }
         val matchingItems = PawnRegistry.getCompletions(prefix, appLanguage) + localFunctions
             .filter { it.name.startsWith(prefix, ignoreCase = true) }
-            .map { _item(it.name, "$localFunctionDescription: ${it.description.substringAfter(": ")}", PawnItemKind.FUNCTION) }
+            .map { _item(it.name, "$localFunctionDescription: ${it.description.substringBefore("(").substringAfter(": ").trim()}", PawnItemKind.FUNCTION) }
         for (item in matchingItems) {
             publisher.checkCancelled()
             val itemKind = when (item.kind) {

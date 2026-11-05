@@ -1,6 +1,7 @@
 package com.rvdjv.pawnmc.apps_data.data_compiler
 
 import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -74,6 +75,13 @@ class ExplanationTableTest {
                 explanation.contains(expected),
             )
         }
+    }
+
+    @Test
+    fun `symbol warning descriptions stay neutral until the source symbol is applied`() {
+        val text = parsed["203.en"].orEmpty()
+        assertTrue(text.contains("symbol is never used"))
+        assertFalse(text.contains("%s"))
     }
 
     @Test

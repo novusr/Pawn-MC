@@ -1,6 +1,7 @@
 package com.rvdjv.pawnmc.apps_data.data_config
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 class AppLocalizationTest {
@@ -34,14 +35,14 @@ class AppLocalizationTest {
         val parsed = AppLocalization.parseLocalizationData(
             """
             [settings.general]
-            id = "Umum"
-            en = "General"
-            es = "General"
+            local_id = "Umum"
+            local_en = "General"
+            local_es = "General"
 
             [settings.theme]
-            id = "Tema"
-            en = "Theme"
-            es = "Tema"
+            local_id = "Tema"
+            local_en = "Theme"
+            local_es = "Tema"
             """.trimIndent()
         )
 
@@ -54,19 +55,36 @@ class AppLocalizationTest {
     }
 
     @Test
+    fun `localization reads explicit local field names only`() {
+        val parsed = AppLocalization.parseLocalizationData(
+            """
+            [settings.compiler.version]
+            local_id = "Versi Compiler"
+            local_en = "Compiler Version"
+            local_tl = "Bersyon ng Compiler"
+            local_ru = "Версия компилятора"
+            local_es = "Version del compilador"
+            "".trimIndent()
+        )
+        assertEquals("Versi Compiler", parsed["settings.compiler.version.id"])
+        assertEquals("Compiler Version", parsed["settings.compiler.version.en"])
+        assertFalse(parsed.containsKey("settings.compiler.version.local_en"))
+    }
+
+    @Test
     fun `localization translates English words to Indonesian when ID is selected`() {
         val data = """
             [settings.general]
-            id = "Umum"
-            en = "General"
+            local_id = "Umum"
+            local_en = "General"
 
             [settings.language]
-            id = "Bahasa"
-            en = "Language"
+            local_id = "Bahasa"
+            local_en = "Language"
 
             [settings.title]
-            id = "Pengaturan"
-            en = "Settings"
+            local_id = "Pengaturan"
+            local_en = "Settings"
         """.trimIndent()
 
         val parsed = AppLocalization.parseLocalizationData(data)
@@ -90,19 +108,19 @@ class AppLocalizationTest {
         val localizer = AppLocalization.parseLocalizationData(
             """
             [settings.general]
-            id = "Umum"
-            en = "General"
-            es = "General"
+            local_id = "Umum"
+            local_en = "General"
+            local_es = "General"
 
             [settings.language]
-            id = "Bahasa"
-            en = "Language"
-            es = "Idioma"
+            local_id = "Bahasa"
+            local_en = "Language"
+            local_es = "Idioma"
 
             [settings.title]
-            id = "Pengaturan"
-            en = "Settings"
-            es = "Configuracion"
+            local_id = "Pengaturan"
+            local_en = "Settings"
+            local_es = "Configuracion"
             """.trimIndent()
         ).let { parsed ->
             val constructor = AppLocalization::class.java.getDeclaredConstructor(Map::class.java)
@@ -127,22 +145,22 @@ class AppLocalizationTest {
         val localizer = AppLocalization.parseLocalizationData(
             """
             [settings.general]
-            id = "Umum"
-            en = "General"
-            es = "General"
-            ru = "Основные"
+            local_id = "Umum"
+            local_en = "General"
+            local_es = "General"
+            local_ru = "Основные"
 
             [settings.language]
-            id = "Bahasa"
-            en = "Language"
-            es = "Idioma"
-            ru = "Язык"
+            local_id = "Bahasa"
+            local_en = "Language"
+            local_es = "Idioma"
+            local_ru = "Язык"
 
             [settings.title]
-            id = "Pengaturan"
-            en = "Settings"
-            es = "Configuracion"
-            ru = "Настройки"
+            local_id = "Pengaturan"
+            local_en = "Settings"
+            local_es = "Configuracion"
+            local_ru = "Настройки"
             """.trimIndent()
         ).let { parsed ->
             val constructor = AppLocalization::class.java.getDeclaredConstructor(Map::class.java)
@@ -166,8 +184,8 @@ class AppLocalizationTest {
         val localizer = AppLocalization.parseLocalizationData(
             """
             [settings.option.debug.level.3.desc]
-            id = "Debug paling terperinci; optimisasi otomatis dinonaktifkan."
-            en = "Most detailed debugging; optimization is disabled automatically."
+            local_id = "Debug paling terperinci; optimisasi otomatis dinonaktifkan."
+            local_en = "Most detailed debugging; optimization is disabled automatically."
             """.trimIndent()
         ).let { parsed ->
             val constructor = AppLocalization::class.java.getDeclaredConstructor(Map::class.java)

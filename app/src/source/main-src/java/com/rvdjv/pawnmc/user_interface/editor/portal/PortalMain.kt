@@ -114,162 +114,20 @@ internal fun DeveloperPortal(
         keyboard?.hide()
         isRunning = true
         scope.launch {
-            val tokens = PortalCommandParser.tokenize(commandLine)
-            val output: String
-            val markdown: Boolean
-            var recordCommand = true
-            if (tokens == null) {
-                output = text("terminal.error.quote")
-                markdown = false
-            } else {
-                when (tokens.firstOrNull()?.lowercase()) {
-                    "help" -> {
-                        output = text("terminal.help")
-                        markdown = false
-                    }
-                    "docs" -> {
-                        output = text("terminal.docs")
-                        markdown = true
-                    }
-                    "clear", "celar" -> {
-                        entries.clear()
-                        output = ""
-                        markdown = false
-                        recordCommand = false
-                    }
-                    "switch" -> {
-                        val requested = when (tokens.getOrNull(1)?.removePrefix("3.10.")) {
-                            null -> selectedVersion.other()
-                            "7" -> CompilerConfig.CompilerVersion.V3107
-                            "11" -> CompilerConfig.CompilerVersion.V31011
-                            else -> null
-                        }
-                        if (tokens.size > 2 || requested == null) {
-                            output = text("terminal.error.switch")
-                        } else {
-                            onVersionChange(requested)
-                            output = text("terminal.switch.success")
-                                .replace("{version}", requested.value)
-                                .replace(
-                                    "{restart}",
-                                    if (Compiler.isRestartRequired(requested)) text("terminal.switch.restart") else ""
-                                )
-                        }
-                        markdown = false
-                    }
-                    "pawncc" -> {
-                        if (tokens.size == 1) {
-                            output = text("terminal.pawncc.usage")
-                            markdown = false
-                        } else {
-                            val root = workspaceRoot ?: activeSource?.parentFile
-                            val invocation = root?.let {
-                                PortalCommandParser.pawnccInvocation(tokens.drop(1), it)
-                            }
-                            if (invocation == null) {
-                                output = text("terminal.error.source")
-                                markdown = false
-                            } else if (Compiler.isRestartRequired(selectedVersion)) {
-                                output = text("terminal.error.restart")
-                                markdown = false
-                            } else {
-                                output = runCatching {
-                                    onCompile(invocation.source, invocation.options, selectedVersion)
-                                }.getOrElse {
-                                    "${text("terminal.error.execution")} ${it.message.orEmpty()}"
-                                }
-                                markdown = false
-                            }
-                        }
-                    }
-                    "ls" -> {
-                        val root = workspaceRoot ?: activeSource?.parentFile
-                        val files = root?.listFiles()?.map { if (it.isDirectory) "${it.name}/" else it.name }?.sorted()
-                        output = if (!files.isNullOrEmpty()) {
-                            files.joinToString("  ")
-                        } else {
-                            "gamemodes/  filterscripts/  include/  pawno/  scriptfiles/  server.cfg"
-                        }
-                        markdown = false
-                    }
-                    "whoami" -> {
-                        output = "pawnmc"
-                        markdown = false
-                    }
-                    "time" -> {
-                        val timeFormat = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault())
-                        output = timeFormat.format(java.util.Date())
-                        markdown = false
-                    }
-                    "date" -> {
-                        val dateFormat = java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", java.util.Locale.US)
-                        output = dateFormat.format(java.util.Date())
-                        markdown = false
-                    }
-                    "which" -> {
-                        val target = tokens.getOrNull(1)
-                        output = when (target?.lowercase()) {
-                            null -> "usage: which <command>"
-                            "pawncc" -> "/system/bin/pawncc (${selectedVersion.value})"
-                            "mariadbd", "mariadb" -> "${context.filesDir.absolutePath}/mariadb/bin/mariadbd"
-                            "qemu-i386" -> "${context.applicationInfo.nativeLibraryDir}/libqemu-i386.so"
-                            "sh", "bash" -> "/system/bin/sh"
-                            "ls", "whoami", "time", "date", "which", "deviceinfo", "version", "github", "help", "docs", "switch", "clear", "celar" -> "built-in command: $target"
-                            else -> "$target: command not found"
-                        }
-                        markdown = false
-                    }
-                    "deviceinfo" -> {
-                        output = buildString {
-                            appendLine("Device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (${android.os.Build.DEVICE})")
-                            appendLine("Android: ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})")
-                            appendLine("ABIs: ${android.os.Build.SUPPORTED_ABIS.joinToString(", ")}")
-                            append("Board: ${android.os.Build.BOARD} | Hardware: ${android.os.Build.HARDWARE}")
-                        }
-                        markdown = false
-                    }
-                    "version" -> {
-                        val packageInfo = runCatching {
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                                context.packageManager.getPackageInfo(context.packageName, android.content.pm.PackageManager.PackageInfoFlags.of(0))
-                            } else {
-                                @Suppress("DEPRECATION")
-                                context.packageManager.getPackageInfo(context.packageName, 0)
-                            }
-                        }.getOrNull()
-                        val versionName = packageInfo?.versionName ?: "1.5.3"
-                        output = "PawnMC v$versionName (compiler: ${selectedVersion.value})"
-                        markdown = false
-                    }
-                    "github" -> {
-                        output = "https://github.com/novusr/PawnMC"
-                        markdown = false
-                    }
-                    else -> {
-                        // The notice is composed from the command catalogue rather
-                        // than a hand-written sentence: `ls`, `whoami`, `time`, ... are
-                        // real commands now, and a hardcoded list kept telling users
-                        // they did not exist. A near miss is named when it is obvious.
-                        val typed = tokens.firstOrNull().orEmpty()
-                        val near = PortalCommandParser.nearMisses(typed)
-                        val base = text("terminal.error.command")
-                            .replace("{commands}", PortalCommandParser.commandNames.joinToString(", ") { "`$it`" })
-                        output = if (near.isEmpty()) {
-                            base
-                        } else {
-                            base + "\n" +
-                                text("terminal.error.command.suggest")
-                                    .replace("{matches}", near.joinToString(", ") { "`$it`" })
-                        }
-                        markdown = false
-                    }
-                }
-            }
-            if (recordCommand) {
-                entries += PortalEntry(commandLine, output, markdown, showPrompt = !isAutomatic)
-                while (entries.size > 24) entries.removeAt(0)
-            }
-            isRunning = false
+            runCommandAndUpdateTranscript(
+                commandLine = commandLine,
+                isAutomatic = isAutomatic,
+                context = context,
+                language = language,
+                activeSource = activeSource,
+                workspaceRoot = workspaceRoot,
+                selectedVersion = selectedVersion,
+                onVersionChange = onVersionChange,
+                onCompile = onCompile,
+                entries = entries,
+                setRunning = { isRunning = it },
+                onCommandFinished = { _, _ -> }
+            )
         }
     }
 
@@ -466,4 +324,178 @@ internal fun DeveloperPortal(
             }
         }
     }
+}
+
+
+private suspend fun runCommandAndUpdateTranscript(
+    commandLine: String,
+    isAutomatic: Boolean,
+    context: Context,
+    language: CompilerConfig.AppLanguage,
+    activeSource: File?,
+    workspaceRoot: File?,
+    selectedVersion: CompilerConfig.CompilerVersion,
+    onVersionChange: (CompilerConfig.CompilerVersion) -> Unit,
+    onCompile: suspend (File, List<String>, CompilerConfig.CompilerVersion) -> String,
+    entries: MutableList<PortalEntry>,
+    setRunning: (Boolean) -> Unit,
+    onCommandFinished: (String, Boolean) -> Unit
+) {
+    try {
+        val result = executeCommand(
+            commandLine, context, language, activeSource, workspaceRoot, selectedVersion,
+            onVersionChange, onCompile, clearTranscript = { entries.clear() }
+        )
+        if (result.record) {
+            entries += PortalEntry(commandLine, result.output, result.markdown, showPrompt = !isAutomatic)
+            trimTranscript(entries)
+        }
+    } finally {
+        setRunning(false)
+        onCommandFinished(commandLine, isAutomatic)
+    }
+}
+
+private data class PortalCommandResult(
+    val output: String,
+    val markdown: Boolean = false,
+    val record: Boolean = true
+)
+
+private suspend fun executeCommand(
+    commandLine: String,
+    context: Context,
+    language: CompilerConfig.AppLanguage,
+    activeSource: File?,
+    workspaceRoot: File?,
+    selectedVersion: CompilerConfig.CompilerVersion,
+    onVersionChange: (CompilerConfig.CompilerVersion) -> Unit,
+    onCompile: suspend (File, List<String>, CompilerConfig.CompilerVersion) -> String,
+    clearTranscript: () -> Unit
+): PortalCommandResult {
+    val tokens = PortalCommandParser.tokenize(commandLine)
+        ?: return PortalCommandResult(PortalText.get(context, "terminal.error.quote", language))
+    val command = tokens.firstOrNull()?.lowercase().orEmpty()
+    val text: (String) -> String = { key -> PortalText.get(context, key, language) }
+    return when (command) {
+        "help" -> PortalCommandResult(text("terminal.help"))
+        "docs" -> PortalCommandResult(text("terminal.docs"), markdown = true)
+        "clear", "celar" -> {
+            clearTranscript()
+            PortalCommandResult("", record = false)
+        }
+        "switch" -> switchCommand(tokens, selectedVersion, onVersionChange, text)
+        "pawncc" -> pawnccCommand(tokens, activeSource, workspaceRoot, selectedVersion, onCompile, text)
+        "ls" -> listFilesCommand(activeSource, workspaceRoot)
+        "whoami" -> PortalCommandResult("pawnmc")
+        "time" -> PortalCommandResult(java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date()))
+        "date" -> PortalCommandResult(java.text.SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", java.util.Locale.US).format(java.util.Date()))
+        "which" -> whichCommand(tokens, context, selectedVersion)
+        "deviceinfo" -> deviceInfoCommand()
+        "version" -> versionCommand(context, selectedVersion)
+        "github" -> PortalCommandResult("https://github.com/novusr/PawnMC")
+        else -> unknownCommand(command, text)
+    }
+}
+
+private fun switchCommand(
+    tokens: List<String>,
+    selectedVersion: CompilerConfig.CompilerVersion,
+    onVersionChange: (CompilerConfig.CompilerVersion) -> Unit,
+    text: (String) -> String
+): PortalCommandResult {
+    val requested = when (tokens.getOrNull(1)?.removePrefix("3.10.")) {
+        null -> selectedVersion.other()
+        "7" -> CompilerConfig.CompilerVersion.V3107
+        "11" -> CompilerConfig.CompilerVersion.V31011
+        else -> null
+    }
+    if (tokens.size > 2 || requested == null) return PortalCommandResult(text("terminal.error.switch"))
+    onVersionChange(requested)
+    return PortalCommandResult(
+        text("terminal.switch.success")
+            .replace("{version}", requested.value)
+            .replace("{restart}", if (Compiler.isRestartRequired(requested)) text("terminal.switch.restart") else "")
+    )
+}
+
+private suspend fun pawnccCommand(
+    tokens: List<String>,
+    activeSource: File?,
+    workspaceRoot: File?,
+    selectedVersion: CompilerConfig.CompilerVersion,
+    onCompile: suspend (File, List<String>, CompilerConfig.CompilerVersion) -> String,
+    text: (String) -> String
+): PortalCommandResult {
+    if (tokens.size == 1) return PortalCommandResult(text("terminal.pawncc.usage"))
+    val root = workspaceRoot ?: activeSource?.parentFile
+    val invocation = root?.let { PortalCommandParser.pawnccInvocation(tokens.drop(1), it) }
+        ?: return PortalCommandResult(text("terminal.error.source"))
+    if (Compiler.isRestartRequired(selectedVersion)) return PortalCommandResult(text("terminal.error.restart"))
+    val result = runCatching { onCompile(invocation.source, invocation.options, selectedVersion) }
+        .getOrElse { "${text("terminal.error.execution")} ${it.message.orEmpty()}" }
+    return PortalCommandResult(result)
+}
+
+private fun listFilesCommand(activeSource: File?, workspaceRoot: File?): PortalCommandResult {
+    val root = workspaceRoot ?: activeSource?.parentFile
+    val files = root?.listFiles()?.map { if (it.isDirectory) "${it.name}/" else it.name }?.sorted()
+    return PortalCommandResult(files?.takeIf { it.isNotEmpty() }?.joinToString("  ")
+        ?: "gamemodes/  filterscripts/  include/  pawno/  scriptfiles/  server.cfg")
+}
+
+private fun whichCommand(
+    tokens: List<String>,
+    context: Context,
+    selectedVersion: CompilerConfig.CompilerVersion
+): PortalCommandResult {
+    val target = tokens.getOrNull(1)
+    val output = when (target?.lowercase()) {
+        null -> "usage: which <command>"
+        "pawncc" -> "/system/bin/pawncc (${selectedVersion.value})"
+        "mariadbd", "mariadb" -> "${context.filesDir.absolutePath}/mariadb/bin/mariadbd"
+        "qemu-i386" -> "${context.applicationInfo.nativeLibraryDir}/libqemu-i386.so"
+        "sh", "bash" -> "/system/bin/sh"
+        else -> if (PortalCommandParser.isBuiltinCommand(target.orEmpty())) {
+            "built-in command: $target"
+        } else {
+            "$target: command not found"
+        }
+    }
+    return PortalCommandResult(output)
+}
+
+private fun deviceInfoCommand(): PortalCommandResult = PortalCommandResult(buildString {
+    appendLine("Device: ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} (${android.os.Build.DEVICE})")
+    appendLine("Android: ${android.os.Build.VERSION.RELEASE} (API ${android.os.Build.VERSION.SDK_INT})")
+    appendLine("ABIs: ${android.os.Build.SUPPORTED_ABIS.joinToString(", ")}")
+    append("Board: ${android.os.Build.BOARD} | Hardware: ${android.os.Build.HARDWARE}")
+})
+
+private fun versionCommand(
+    context: Context,
+    selectedVersion: CompilerConfig.CompilerVersion
+): PortalCommandResult {
+    val packageInfo = runCatching {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            context.packageManager.getPackageInfo(context.packageName, android.content.pm.PackageManager.PackageInfoFlags.of(0))
+        } else {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0)
+        }
+    }.getOrNull()
+    return PortalCommandResult("PawnMC v${packageInfo?.versionName ?: "1.5.3"} (compiler: ${selectedVersion.value})")
+}
+
+private fun unknownCommand(command: String, text: (String) -> String): PortalCommandResult {
+    val near = PortalCommandParser.nearMisses(command)
+    val base = text("terminal.error.command")
+        .replace("{commands}", PortalCommandParser.commandNames.joinToString(", ") { "`$it`" })
+    val output = if (near.isEmpty()) base else base + "\n" +
+        text("terminal.error.command.suggest").replace("{matches}", near.joinToString(", ") { "`$it`" })
+    return PortalCommandResult(output)
+}
+
+private fun trimTranscript(entries: MutableList<PortalEntry>) {
+    while (entries.size > 24) entries.removeAt(0)
 }

@@ -18,6 +18,10 @@ internal object PortalCommandParser {
         "whoami", "time", "date", "which", "deviceinfo", "version", "github"
     )
 
+    /** True when the console command can be executed without launching an external process. */
+    fun isBuiltinCommand(name: String): Boolean =
+        name.lowercase() in commandNames || name.lowercase() in commandAliases
+
     /** Commands with no arguments of their own; `which`/`switch`/`pawncc` are separate. */
     private val argumentlessCommands =
         commandNames.filterNot { it == "which" || it == "switch" || it == "pawncc" }

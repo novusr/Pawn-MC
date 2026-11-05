@@ -4,14 +4,14 @@ package com.rvdjv.pawnmc.apps_data.data_config
  * Minimal TOML reader for the files in `data/`.
  *
  * The 2026 data files are real TOML: tables are declared with `[a.b]`, string
- * leaves use `key = "value"` and inline tables use `key = { en = "...", id = "..." }`.
+ * leaves use `key = "value"` and inline tables use `key = { local_en = "...", local_id = "..." }`.
  * Only the subset those files use is supported, which keeps the parser small and
  * predictable:
  *
  *  - comments (`#`), blank lines
  *  - `[table]` headers with dotted and/or quoted segments
- *  - `key = "string"` leaves, with the escapes `\" \\ \n \r \t \uXXXX`
- *  - `key = { k = "v", ... }` inline tables (used for `en`/`id` pairs)
+ *  - `key = "string"` leaves with escapes `\" \\ \n \r \t \uXXXX`
+ *  - `key = { k = "v", ... }` inline tables (used for `local_<language>` fields)
  *
  * The reader never guesses: anything it does not recognise is skipped instead of
  * being half-parsed, so a typo can only drop one entry and never corrupt the

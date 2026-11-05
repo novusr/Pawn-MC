@@ -83,64 +83,69 @@ object _compiler_store {
 
     /** Records one finished compile as a single row ("cell") and prunes old rows. */
     fun record(context: Context, entry: Entry) {
+        if (!entry.isValid()) return
         val store = helperFor(context) ?: return
         runCatching {
             store.writableDatabase.use { db ->
-                db.insert(
-                    TABLE,
-                    null,
-                    ContentValues().apply {
-                        put(C_TIMESTAMP, entry.timestamp)
-                        put(C_SOURCE_PATH, entry.sourcePath)
-                        put(C_SOURCE_NAME, entry.sourceName)
-                        put(C_EXIT_CODE, entry.exitCode)
-                        put(C_DURATION_MS, entry.durationMs)
-                        put(C_COMPILER_VERSION, entry.compilerVersion)
-                        put(C_OUTPUT, entry.output)
-                    }
-                )
-                db.execSQL(
-                    "DELETE FROM $TABLE WHERE $C_ID NOT IN (" +
-                        "SELECT $C_ID FROM $TABLE ORDER BY $C_TIMESTAMP DESC LIMIT $MAX_ROWS)"
-                )
+                db.insert(TABLE, null, entry.toContentValues())
+                pruneOldRows(db)
             }
         }
+    }
+
+    private fun Entry.isValid(): Boolean =
+        timestamp > 0L && sourcePath.isNotBlank() && sourceName.isNotBlank() &&
+            durationMs >= 0L && compilerVersion.isNotBlank()
+
+    private fun Entry.toContentValues() = ContentValues().apply {
+        put(C_TIMESTAMP, timestamp)
+        put(C_SOURCE_PATH, sourcePath)
+        put(C_SOURCE_NAME, sourceName)
+        put(C_EXIT_CODE, exitCode)
+        put(C_DURATION_MS, durationMs)
+        put(C_COMPILER_VERSION, compilerVersion)
+        put(C_OUTPUT, output)
+    }
+
+    private fun pruneOldRows(db: SQLiteDatabase) {
+        db.execSQL(
+            "DELETE FROM $TABLE WHERE $C_ID NOT IN (" +
+                "SELECT $C_ID FROM $TABLE ORDER BY $C_TIMESTAMP DESC LIMIT $MAX_ROWS)"
+        )
     }
 
     /** Total number of logged compiles; used for the "total file logging" readout. */
     fun totalEntries(context: Context): Int {
         val store = helperFor(context) ?: return 0
-        return runCatching {
-            store.readableDatabase.rawQuery("SELECT COUNT(*) FROM $TABLE", null).use { cursor ->
-                if (cursor.moveToFirst()) cursor.getInt(0) else 0
-            }
-        }.getOrDefault(0)
+        return runCatching { readTotal(store.readableDatabase) }.getOrDefault(0)
     }
+
+    private fun readTotal(db: SQLiteDatabase): Int =
+        db.rawQuery("SELECT COUNT(*) FROM $TABLE", null).use { cursor ->
+            if (cursor.moveToFirst()) cursor.getInt(0) else 0
+        }
 
     /** Latest recorded compile rows, newest first, used by any log viewer. */
     fun recentEntries(context: Context, limit: Int = 50): List<Entry> {
         val store = helperFor(context) ?: return emptyList()
-        return runCatching {
-            store.readableDatabase.query(
-                TABLE, null, null, null, null, null,
-                "$C_TIMESTAMP DESC", limit.toString()
-            ).use { cursor ->
-                buildList {
-                    while (cursor.moveToNext()) {
-                        add(
-                            Entry(
-                                timestamp = cursor.getLong(cursor.getColumnIndexOrThrow(C_TIMESTAMP)),
-                                sourcePath = cursor.getString(cursor.getColumnIndexOrThrow(C_SOURCE_PATH)),
-                                sourceName = cursor.getString(cursor.getColumnIndexOrThrow(C_SOURCE_NAME)),
-                                exitCode = cursor.getInt(cursor.getColumnIndexOrThrow(C_EXIT_CODE)),
-                                durationMs = cursor.getLong(cursor.getColumnIndexOrThrow(C_DURATION_MS)),
-                                compilerVersion = cursor.getString(cursor.getColumnIndexOrThrow(C_COMPILER_VERSION)),
-                                output = cursor.getString(cursor.getColumnIndexOrThrow(C_OUTPUT))
-                            )
-                        )
-                    }
-                }
-            }
-        }.getOrDefault(emptyList())
+        val safeLimit = limit.coerceIn(1, MAX_ROWS)
+        return runCatching { readRecent(store.readableDatabase, safeLimit) }.getOrDefault(emptyList())
     }
+
+    private fun readRecent(db: SQLiteDatabase, limit: Int): List<Entry> =
+        db.query(TABLE, null, null, null, null, null, "$C_TIMESTAMP DESC", limit.toString()).use { cursor ->
+            buildList {
+                while (cursor.moveToNext()) add(cursor.toCompilerEntry())
+            }
+        }
+
+    private fun android.database.Cursor.toCompilerEntry() = Entry(
+        timestamp = getLong(getColumnIndexOrThrow(C_TIMESTAMP)),
+        sourcePath = getString(getColumnIndexOrThrow(C_SOURCE_PATH)),
+        sourceName = getString(getColumnIndexOrThrow(C_SOURCE_NAME)),
+        exitCode = getInt(getColumnIndexOrThrow(C_EXIT_CODE)),
+        durationMs = getLong(getColumnIndexOrThrow(C_DURATION_MS)),
+        compilerVersion = getString(getColumnIndexOrThrow(C_COMPILER_VERSION)),
+        output = getString(getColumnIndexOrThrow(C_OUTPUT))
+    )
 }

@@ -35,8 +35,11 @@ internal object PortalText {
         val result = linkedMapOf<String, String>()
         document.tablesUnder("").forEach { (table, entries) ->
             if (table.isBlank()) return@forEach
-            entries.forEach { (language, value) ->
-                result["$table.$language"] = value.replace("\\n", "\n")
+            entries.forEach { (field, value) ->
+                val language = field.removePrefix("local_")
+                if (language in setOf("id", "en", "es", "ru", "tl")) {
+                    result["$table.$language"] = value.replace("\\n", "\n")
+                }
             }
         }
         return result

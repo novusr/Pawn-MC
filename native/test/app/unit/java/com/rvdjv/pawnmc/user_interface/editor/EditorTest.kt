@@ -522,6 +522,9 @@ class EditorTest {
         assertFalse(PortalCommandParser.isKnownCommand("lsfoo"))
         assertTrue("lss should point at ls", "ls" in PortalCommandParser.nearMisses("lss"))
         assertTrue("hep should point at help", "help" in PortalCommandParser.nearMisses("hep"))
+        assertTrue(PortalCommandParser.isBuiltinCommand("help"))
+        assertTrue(PortalCommandParser.isBuiltinCommand("celar"))
+        assertFalse(PortalCommandParser.isBuiltinCommand("unknown"))
         /* Still dispatched, even though it is not suggested. */
         assertTrue(PortalCommandParser.isKnownCommand("celar"))
     }
@@ -547,8 +550,8 @@ class EditorTest {
         val entries = PortalText.parse(
             """
             [terminal.docs]
-            id = "# Developer Portal\nDokumentasi"
-            en = "# Developer Portal\nDocumentation"
+            local_id = "# Developer Portal\nDokumentasi"
+            local_en = "# Developer Portal\nDocumentation"
             """.trimIndent()
         )
 
@@ -561,11 +564,11 @@ class EditorTest {
         val dataset = InternDat.parse(
             """
             [item.KEYWORD]
-            "new" = { en = "Declares a local or global variable", id = "Mendeklarasikan variabel lokal atau global" }
-            "stock" = { en = "Description without translation", id = "Description without translation" }
+            "new" = { local_en = "Declares a local or global variable", local_id = "Mendeklarasikan variabel lokal atau global" }
+            "stock" = { local_en = "Description without translation", local_id = "Description without translation" }
 
             [item.FUNCTION]
-            "print" = { en = "Prints a plain string: print(const string[])", id = "Mencetak teks biasa: print(const string[])" }
+            "print" = { local_en = "Prints a plain string", local_id = "Mencetak teks biasa" }
             """.trimIndent()
         )
 
@@ -575,10 +578,10 @@ class EditorTest {
 
         assertEquals("Mendeklarasikan variabel lokal atau global", keyword.descriptionFor(CompilerConfig.AppLanguage.ID))
         assertEquals("Declares a local or global variable", keyword.descriptionFor(CompilerConfig.AppLanguage.EN))
-        assertEquals("Mencetak teks biasa: print(const string[])", function.descriptionFor(CompilerConfig.AppLanguage.ID))
+        assertEquals("Mencetak teks biasa", function.descriptionFor(CompilerConfig.AppLanguage.ID))
         assertEquals("Description without translation", untranslated.descriptionFor(CompilerConfig.AppLanguage.ID))
         assertEquals("Declares a local or global variable", keyword.descriptionFor(CompilerConfig.AppLanguage.ES))
-        assertEquals("Prints a plain string: print(const string[])", function.descriptionFor(CompilerConfig.AppLanguage.ES))
+        assertEquals("Prints a plain string", function.descriptionFor(CompilerConfig.AppLanguage.ES))
         assertEquals("Description without translation", untranslated.descriptionFor(CompilerConfig.AppLanguage.ES))
     }
 }

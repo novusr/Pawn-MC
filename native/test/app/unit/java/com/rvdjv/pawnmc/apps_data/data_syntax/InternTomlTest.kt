@@ -21,10 +21,10 @@ class InternTomlTest {
         val parsed = InternDat.parse(
             """
             [item.KEYWORD]
-            "stock" = { en = "English item", id = "Item Indonesia", es = "Item espanol", ru = "Элемент по-русски", tl = "Item sa Tagalog" }
+            "stock" = { local_en = "English item", local_id = "Item Indonesia", local_es = "Item espanol", local_ru = "Элемент по-русски", local_tl = "Item sa Tagalog" }
 
             [native."a_samp.inc"]
-            "SendClientMessage" = { en = "English native", id = "Native Indonesia", es = "Native espanol", ru = "Функция по-русски", tl = "Native sa Tagalog" }
+            "SendClientMessage" = { local_en = "English native", local_id = "Native Indonesia", local_es = "Native espanol", local_ru = "Функция по-русски", local_tl = "Native sa Tagalog" }
             """.trimIndent()
         )
 
@@ -53,7 +53,7 @@ class InternTomlTest {
             .filter { it.startsWith("\"") && it.contains("= {") }
             .toList()
         val missing = rows.flatMap { row ->
-            listOf("en", "id", "es", "ru", "tl")
+            listOf("local_en", "local_id", "local_es", "local_ru", "local_tl")
                 .filter { language ->
                     Regex("$language\\s*=\\s*\"([^\"]*)\"")
                         .find(row)
@@ -68,7 +68,7 @@ class InternTomlTest {
         assertTrue("descriptions missing a language: $missing", missing.isEmpty())
     }
 
-    /** `"Name" = { en = "...", id = "..." }` rows of one table. */
+    /** `"Name" = { local_en = "...", local_id = "..." }` rows of one table. */
     private fun rowsUnder(prefix: String): List<Triple<String, String, String>> {
         val out = mutableListOf<Triple<String, String, String>>()
         var active = false
@@ -80,8 +80,8 @@ class InternTomlTest {
             }
             if (!active || !line.startsWith("\"")) continue
             val name = line.substring(1, line.indexOf('"', 1))
-            val en = Regex("en\\s*=\\s*\"([^\"]*)\"").find(line)?.groupValues?.get(1).orEmpty()
-            val id = Regex("id\\s*=\\s*\"([^\"]*)\"").find(line)?.groupValues?.get(1).orEmpty()
+            val en = Regex("local_en\\s*=\\s*\"([^\"]*)\"").find(line)?.groupValues?.get(1).orEmpty()
+            val id = Regex("local_id\\s*=\\s*\"([^\"]*)\"").find(line)?.groupValues?.get(1).orEmpty()
             out += Triple(name, en, id)
         }
         return out

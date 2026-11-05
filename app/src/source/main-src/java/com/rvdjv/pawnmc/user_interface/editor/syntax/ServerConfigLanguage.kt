@@ -57,7 +57,15 @@ class ServerConfigLanguage(
         val inValue = line != null && ServerConfig.directiveAt(line, position.column) != null
 
         waitForTypingPause(publisher)
-        publish(publisher, prefix, inValue)
+        if (position.line !in 0 until content.getLineCount()) return
+        val currentLine = content.getLine(position.line).toString()
+        if (position.column !in 0..currentLine.length) return
+        val currentPrefix = CompletionHelper.computePrefix(content, position) { ch ->
+            Character.isJavaIdentifierPart(ch)
+        }
+        if (currentPrefix != prefix || currentPrefix.isBlank()) return
+        val stillInValue = ServerConfig.directiveAt(currentLine, position.column) != null
+        publish(publisher, currentPrefix, inValue && stillInValue)
     }
 
     private fun waitForTypingPause(publisher: CompletionPublisher) {

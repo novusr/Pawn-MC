@@ -271,8 +271,11 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
             document.tablesUnder("").forEach { (table, entries) ->
                 val normalizedTable = normalizeKey(table)
                 if (normalizedTable.isBlank()) return@forEach
-                entries.forEach { (language, value) ->
-                    result["$normalizedTable.$language"] = value
+                entries.forEach { (field, value) ->
+                    val language = field.removePrefix("local_")
+                    if (field.startsWith("local_") && language in setOf("id", "en", "es", "ru", "tl")) {
+                        result["$normalizedTable.$language"] = value
+                    }
                 }
             }
             return result

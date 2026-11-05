@@ -21,10 +21,10 @@ class ExplanationsTest {
             """
             # comment line
             [explain."017"]
-            en = "Undefined symbol."
+            local_en = "Undefined symbol."
 
             [explain."100"]
-            en = "Cannot read from file."
+            local_en = "Cannot read from file."
             """.trimIndent()
         )
 
@@ -37,10 +37,10 @@ class ExplanationsTest {
         val parsed = Explanations.parse(
             """
             [explain."217"]
-            en = "First wording."
+            local_en = "First wording."
 
             [explain."217"]
-            en = "Second wording."
+            local_en = "Second wording."
             """.trimIndent()
         )
 
@@ -52,12 +52,12 @@ class ExplanationsTest {
         val parsed = Explanations.parse(
             """
             [explain."013"]
-            en = "No entry point was found."
-            id = "Titik masuk program tidak ditemukan."
-            es = "No se encontro el punto de entrada."
+            local_en = "No entry point was found."
+            local_id = "Titik masuk program tidak ditemukan."
+            local_es = "No se encontro el punto de entrada."
 
             [explain."017"]
-            en = "Undefined symbol."
+            local_en = "Undefined symbol."
             """.trimIndent()
         )
 
@@ -91,10 +91,23 @@ class ExplanationsTest {
             # only a comment
             no-separator-here
             [explain."999"]
-            en = "unterminated
+            local_en = "unterminated
             """.trimIndent()
         )
 
         assertTrue(parsed.isEmpty())
+    }
+
+    @Test
+    fun `localized field names are flattened to language keys`() {
+        val parsed = Explanations.parse(
+            """
+            [explain."203"]
+            local_en = "Warning 203: symbol is never used: \"%s\"."
+            local_id = "Simbol \"%s\" tidak digunakan."
+            "".trimIndent()
+        )
+        assertEquals("Warning 203: symbol is never used: \"%s\".", parsed["203.en"])
+        assertEquals("Simbol \"%s\" tidak digunakan.", parsed["203.id"])
     }
 }

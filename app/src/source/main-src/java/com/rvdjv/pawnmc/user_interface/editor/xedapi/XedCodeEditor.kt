@@ -40,6 +40,20 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
         return super.onKeyDown(keyCode, event)
     }
 
+    override fun onKeyShortcut(keyCode: Int, event: KeyEvent): Boolean {
+        if (!event.isCtrlPressed || event.isAltPressed || event.isMetaPressed) {
+            return super.onKeyShortcut(keyCode, event)
+        }
+        val action = when (keyCode) {
+            KeyEvent.KEYCODE_A -> android.R.id.selectAll
+            KeyEvent.KEYCODE_C -> android.R.id.copy
+            KeyEvent.KEYCODE_X -> android.R.id.cut
+            KeyEvent.KEYCODE_V -> android.R.id.paste
+            else -> return super.onKeyShortcut(keyCode, event)
+        }
+        return performContextMenuAction(action) || super.onKeyShortcut(keyCode, event)
+    }
+
     private fun deleteIndentLevel(): Boolean {
         val currentCursor = cursor
         if (currentCursor.leftLine != currentCursor.rightLine ||

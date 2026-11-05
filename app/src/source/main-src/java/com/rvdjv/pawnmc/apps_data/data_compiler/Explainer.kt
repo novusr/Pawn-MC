@@ -10,9 +10,22 @@ object Explainer {
 
     private val COMPILER_MESSAGE_REGEX = Regex("""(?i)(warning|error|fatal)\s+(\d+)""")
 
-    private const val NO_LOCAL_EXPLANATION =
-        "No local explanation found for this compiler message. " +
-        "Check the Pawn error reference for details."
+    private val SYMBOL_WARNING_REGEX = Regex("(?i)symbol is never used:\\s*(?:\"([^\"]+)\"|'([^']+)'|(\\S+))")
+
+    private fun noLocalExplanation(language: CompilerConfig.AppLanguage): String = when (language) {
+        CompilerConfig.AppLanguage.ID -> "Belum ada penjelasan lokal untuk pesan ini. Cek referensi error Pawn untuk detailnya."
+        CompilerConfig.AppLanguage.ES -> "¡Vaya! Aún no tenemos una explicación para este mensaje. Consulta la referencia de errores de Pawn."
+        CompilerConfig.AppLanguage.RU -> "Пока не нашли объяснение для этого сообщения. Подробности есть в справочнике ошибок Pawn."
+        CompilerConfig.AppLanguage.TL -> "Wala pang paliwanag para sa mensaheng ito. Tingnan ang Pawn error reference para sa detalye."
+        CompilerConfig.AppLanguage.EN -> "No explanation for this one yet! Check the Pawn error reference for details."
+    }
+
+    private fun explanationText(line: String, explanation: String): String {
+        val match = SYMBOL_WARNING_REGEX.find(line) ?: return explanation
+        val symbol = match.groupValues.drop(1).firstOrNull { it.isNotBlank() }?.trim()
+            ?.takeIf { it.isNotEmpty() } ?: return explanation
+        return explanation.replace("%s", symbol)
+    }
 
     fun explainCompilerOutput(
         rawText: String,
@@ -31,14 +44,16 @@ object Explainer {
                 builder.appendLine(line)
                 val match = COMPILER_MESSAGE_REGEX.find(line)
                 if (match != null) {
-                    val code = match.groupValues[2].trimStart('0')
+                    val rawCode = match.groupValues[2]
+                    val code = rawCode.trimStart('0').ifEmpty { "0" }
                     val explanation = Explanations.explanationFor(code, n_language)
-                        ?: Explanations.explanationFor(match.groupValues[2], n_language)
-                        ?: NO_LOCAL_EXPLANATION
+                        ?: Explanations.explanationFor(rawCode, n_language)
+                        ?: noLocalExplanation(n_language)
+                    val renderedExplanation = explanationText(line, explanation)
                     // Marker with explicit padding so interfaces that colourise the
                     // token by substring keep matching it even when the hint text is
                     // long enough to wrap.
-                    builder.appendLine("    [explain] $explanation")
+                    builder.appendLine("    [explain] $renderedExplanation")
                 }
             }
         }
