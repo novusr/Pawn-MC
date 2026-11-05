@@ -41,9 +41,9 @@ class InternTomlTest {
 
     private val toml: String by lazy {
         val root = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
-            .firstOrNull { File(it, "native/data/_data_2026_intern.toml").isFile }
+            .firstOrNull { File(it, "native/data/_internal.toml").isFile }
             ?: File(System.getProperty("user.dir").orEmpty())
-        File(root, "native/data/_data_2026_intern.toml").readText()
+        File(root, "native/data/_internal.toml").readText()
     }
 
     @Test

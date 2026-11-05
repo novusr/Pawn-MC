@@ -53,7 +53,7 @@ android {
             res.srcDir("src/source/main-src/res")
             // CI generates the per-ABI compiler archives here before the APK build.
             assets.srcDir("src/source/main-src/assets")
-            // `native/data/_data_2026_ect.toml` is the single source of localisation data
+            // `native/data/_extraction.toml` is the single source of localisation data
             // and ships as an asset, so nothing else in the app duplicates it.
             assets.srcDir(rootProject.file("native/data"))
         }

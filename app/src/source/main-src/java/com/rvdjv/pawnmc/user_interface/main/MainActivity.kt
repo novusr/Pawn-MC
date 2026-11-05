@@ -150,7 +150,7 @@ class MainActivity : ComponentActivity() {
             // compiler is not handed stale -i values.
             config.pruneMissingIncludePaths()
             Compiler.resetSessionState()
-            // The local compiler message explanations live in `data/_data_2026_exp.toml`; load
+            // The local compiler message explanations live in `data/_explainer.toml`; load
             // the table once so `explainCompilerOutput` never has to touch the disk per line.
             Explanations.load(applicationContext)
             // The localisation table and the Pawn symbol table are the two largest assets;

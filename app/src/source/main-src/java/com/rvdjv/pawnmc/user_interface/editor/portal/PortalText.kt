@@ -9,7 +9,7 @@ import com.rvdjv.pawnmc.apps_data.data_config.TomlData
  */
 internal object PortalText {
 
-    private const val ASSET_PATH = "_data_2026_term.toml"
+    private const val ASSET_PATH = "_developer.toml"
 
     @Volatile
     private var cached: Map<String, String>? = null

@@ -177,15 +177,15 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         /**
          * Localisation table shipped as an asset.
          *
-         * `_data_2026_ect.toml` replaces the old `_data_mc_26_extract.dat`. Every
+         * `_extraction.toml` replaces the old `_data_mc_26_extract.dat`. Every
          * table is named after the setting it belongs to, so a lookup key is the
          * same dotted name the UI already uses, the languages are the leaves, and
          * the old `0x01` / `0x02` markers are gone.
          */
-        private const val ASSET_PATH = "_data_2026_ect.toml"
+        private const val ASSET_PATH = "_extraction.toml"
 
         private val FALLBACK_PATHS = listOf(
-            "data/_data_2026_ect.toml",
+            "data/_extraction.toml",
             ASSET_PATH
         )
 
@@ -212,7 +212,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         }
 
         /**
-         * Reads the localisation table from `data/_data_2026_ect.toml` only.
+         * Reads the localisation table from `data/_extraction.toml` only.
          *
          * The asset is the single source of truth; there is deliberately no bundled copy
          * and no comparison between the asset and anything else, so a string only ever has

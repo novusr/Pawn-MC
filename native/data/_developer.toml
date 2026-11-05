@@ -1,6 +1,6 @@
 # Developer Portal (terminal simulator) data - 2026 format
 #
-# Naming: _data_2026_term.toml  (terminal / simulation)
+# Naming: _developer.toml
 # One table per terminal key; the reader asks for a key plus the interface
 # language, so a lookup uses the same dotted name the console already uses,
 # for example

@@ -1,6 +1,6 @@
 # PawnMC Pawn symbol data - 2026 format
 #
-# Naming: _data_2026_intern.toml  (internal)
+# Naming: _internal.toml
 # Keywords, directives, types, constants, callbacks, operators and the
 # natives / forwards of every SA-MP include, all in one table set.
 #

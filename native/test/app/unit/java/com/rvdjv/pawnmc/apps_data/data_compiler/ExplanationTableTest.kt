@@ -18,9 +18,9 @@ class ExplanationTableTest {
 
     private val toml: String by lazy {
         val root = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
-            .firstOrNull { File(it, "native/data/_data_2026_exp.toml").isFile }
+            .firstOrNull { File(it, "native/data/_explainer.toml").isFile }
             ?: File(System.getProperty("user.dir").orEmpty())
-        File(root, "native/data/_data_2026_exp.toml").readText()
+        File(root, "native/data/_explainer.toml").readText()
     }
 
     private val parsed: Map<String, String> by lazy { Explanations.parse(toml) }

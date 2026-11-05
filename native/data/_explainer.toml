@@ -1,6 +1,6 @@
 # PawnMC compiler message explanations - 2026 format
 #
-# Naming: _data_2026_exp.toml  (explain)
+# Naming: _explainer.toml
 # One table per Pawn compiler message code, taken straight from the warning,
 # error or fatal number in the compiler output.
 #

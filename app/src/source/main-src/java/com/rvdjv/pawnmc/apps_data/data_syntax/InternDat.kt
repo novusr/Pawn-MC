@@ -22,8 +22,8 @@ internal data class InternDatset(
 
 internal object InternDat {
 
-    private const val ASSET_PATH = "_data_2026_intern.toml"
-    private const val FALLBACK_PATH = "native/data/_data_2026_intern.toml"
+    private const val ASSET_PATH = "_internal.toml"
+    private const val FALLBACK_PATH = "native/data/_internal.toml"
 
     /** Language leaf keys of every symbol entry. */
     private const val EN = "en"

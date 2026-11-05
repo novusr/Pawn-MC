@@ -6,7 +6,7 @@ import org.junit.Test
 import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 
 /**
- * Regression tests for the `data/_data_2026_exp.toml` parser.
+ * Regression tests for the `data/_explainer.toml` parser.
  *
  * The explanations themselves are external data, so only the decoding contract is
  * asserted here: every `[explain."<code>"]` table is flattened into

@@ -34,7 +34,7 @@ Compiler
     threshold.
   * "Ignore case" mode: folder backup, lowercased file names and ``#include``
     references.
-  * Compiler message explanations read from ``native/data/_data_2026_exp.toml`` with an
+  * Compiler message explanations read from ``native/data/_explainer.toml`` with an
     override in ``Documents/PawnMC/config``.
   * One SQLite log database for every compile.
 
@@ -64,8 +64,8 @@ Next
 - Add tests for the "Ignore case" conversion and the compiler version detection
   so regressions surface before a release.
 - Extend language coverage of the localization assets
-  (``_data_2026_exp.toml``, ``_data_2026_term.toml``) so every message, not just
-  the interface, exists in all five languages.
+  (``_explainer.toml``, ``_developer.toml``) so every message, not just the
+  interface, exists in all five languages.
 - Keep the SA-MP runtime behind a small interface so a QEMU or MariaDB package
   update never touches the UI code.
 

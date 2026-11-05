@@ -613,7 +613,7 @@ fun EditorScreen(
             title = { Text(when (appLanguage) {
                 CompilerConfig.AppLanguage.ID -> "Informasi"
                 CompilerConfig.AppLanguage.ES -> "Informacion"
-                CompilerConfig.AppLanguage.RU -> "???????????"
+                CompilerConfig.AppLanguage.RU -> "Уведомление"
                 CompilerConfig.AppLanguage.TL -> "Abiso"
                 CompilerConfig.AppLanguage.EN -> "Notice"
             }) },
@@ -623,7 +623,7 @@ fun EditorScreen(
                     Text(when (appLanguage) {
                         CompilerConfig.AppLanguage.ID -> "Tutup"
                         CompilerConfig.AppLanguage.ES -> "Cerrar"
-                        CompilerConfig.AppLanguage.RU -> "???????"
+                        CompilerConfig.AppLanguage.RU -> "Закрыть"
                         CompilerConfig.AppLanguage.TL -> "Isara"
                         CompilerConfig.AppLanguage.EN -> "Dismiss"
                     })
