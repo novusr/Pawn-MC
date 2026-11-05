@@ -59,7 +59,7 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
         return when (action) {
             android.R.id.selectAll -> {
                 val lastLine = text.lineCount - 1
-                setSelection(0, 0, text.getLine(lastLine).length, lastLine)
+                setSelectionRegion(0, 0, lastLine, text.getLine(lastLine).length)
                 true
             }
             android.R.id.copy -> copySelection()
