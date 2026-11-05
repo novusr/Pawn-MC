@@ -56,7 +56,40 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
             KeyEvent.KEYCODE_V -> android.R.id.paste
             else -> return super.onKeyShortcut(keyCode, event)
         }
-        return onTextContextMenuItem(action) || super.onKeyShortcut(keyCode, event)
+        return when (action) {
+            android.R.id.selectAll -> {
+                setSelection(0, 0, text.lineCount - 1, text.getLine(text.lineCount - 1).length)
+                true
+            }
+            android.R.id.copy -> copySelection()
+            android.R.id.cut -> cutSelection()
+            android.R.id.paste -> pasteClipboard()
+            else -> super.onKeyShortcut(keyCode, event)
+        }
+    }
+
+    private fun copySelection(): Boolean {
+        val selection = cursor
+        if (selection.leftLine == selection.rightLine && selection.leftColumn == selection.rightColumn) return false
+        val copied = text.subContent(selection.leftLine, selection.leftColumn, selection.rightLine, selection.rightColumn).toString()
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager ?: return false
+        clipboard.setPrimaryClip(android.content.ClipData.newPlainText("Xed", copied))
+        return true
+    }
+
+    private fun cutSelection(): Boolean {
+        if (!copySelection()) return false
+        val selection = cursor
+        text.delete(selection.leftLine, selection.leftColumn, selection.rightLine, selection.rightColumn)
+        return true
+    }
+
+    private fun pasteClipboard(): Boolean {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager ?: return false
+        val pasted = clipboard.primaryClip?.getItemAt(0)?.coerceToText(context)?.toString() ?: return false
+        val selection = cursor
+        text.insert(selection.leftLine, selection.leftColumn, pasted)
+        return true
     }
 
     private fun skipExistingClosingCharacter(typed: Char): Boolean {

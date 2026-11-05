@@ -1542,7 +1542,7 @@ fun EditorScreen(
                         val panelWidthPx = with(density) { panelWidth.toPx().roundToInt() }
                         val overlapsRightControls = isKeyboardVisible &&
                             clampedExplorerOffset.x + panelWidthPx > controlsRightX &&
-                            clampedExplorerOffset.y + with(density) { maxHeight * EXPLORER_HEIGHT_FRACTION }.roundToPx() > controlY
+                            clampedExplorerOffset.y + with(density) { (maxHeight.roundToPx() * EXPLORER_HEIGHT_FRACTION).roundToInt() } > controlY
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = MaterialTheme.colorScheme.surfaceContainer,

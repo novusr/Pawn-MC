@@ -294,7 +294,7 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
             }
             IconButton(
                 enabled = !serverActive,
-                onClick = { folderPicker.launch(null) }
+                onClick = { folderPicker.launch(pocketsampFolderPickerIntent()) }
             ) {
                 Icon(Icons.Default.FolderOpen, contentDescription = t("files.choose.root"), tint = SampThemeColors.accent)
             }
