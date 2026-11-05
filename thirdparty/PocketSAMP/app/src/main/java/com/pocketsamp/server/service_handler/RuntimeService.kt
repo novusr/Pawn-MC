@@ -254,7 +254,10 @@ class RuntimeService : Service() {
     }
 
     private fun startServers() {
-        if (_serverStatus.value == Status.RUNNING || _serverStatus.value == Status.STARTING) return
+        if (_serverStatus.value != Status.STOPPED) {
+            appendLog("[Runtime] Start request ignored; service status is ${_serverStatus.value}.")
+            return
+        }
 
         fun t(key: String): String = Locales.text(Locales.current, key)
         val serverDirectory = _DirectoryManager.getServerDirectory(applicationContext)
@@ -489,10 +492,11 @@ class RuntimeService : Service() {
         val channel = NotificationChannel(
             CHANNEL_ID,
             getString(R.string.notification_channel_name),
-            NotificationManager.IMPORTANCE_DEFAULT
+            NotificationManager.IMPORTANCE_LOW
         ).apply {
             description = Locales.text(Locales.current, "notify.channel.desc")
             setShowBadge(true)
+            setSound(null, null)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
         }
         val manager = getSystemService(NotificationManager::class.java)

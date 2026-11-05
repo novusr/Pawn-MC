@@ -51,6 +51,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.content.ContextCompat
 import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.database_handler.DatabaseManager
+import com.pocketsamp.server.engine_handler.ThirdExtractor
 import com.pocketsamp.server.engine_handler.ThirdRuntime
 import com.pocketsamp.server.service_handler.RuntimeService
 import com.pocketsamp.server.service_handler.Status
@@ -86,6 +87,7 @@ class MainActivity : ComponentActivity() {
     var onNavigateBack: (() -> Unit)? = null
 
     private val dbManager by lazy { DatabaseManager() }
+    private val assetExtractor by lazy { ThirdExtractor(this) }
     private val openFilesManager = mutableStateOf(false)
 
     /** Storage access state, pushed into Compose; the gate reads it on every resume. */
@@ -102,14 +104,48 @@ class MainActivity : ComponentActivity() {
 
     /** Only one background sync per process lifetime. */
     private var downloadStarted = false
-    /** Fetches the runtime archives into `Documents/PawnMC/storage` without any UI. */
+    private var assetExtractorInitialised = false
+    /** Fetches and unpacks runtime archives before the console is made available. */
     private fun startRuntimeDownload() {
         if (downloadStarted) return
         downloadStarted = true
+        assetExtractorInitialised = false
         lifecycleScope.launch {
             val runtime = ThirdRuntime(applicationContext)
-            if (ThirdRuntime.isComplete(applicationContext)) return@launch
-            runtime.sync { line -> android.util.Log.i("RuntimeDownload", line) }
+            if (!ThirdRuntime.isComplete(applicationContext)) {
+                runtime.sync { line ->
+                    android.util.Log.i("RuntimeDownload", line)
+                    RuntimeService.appendLog("[Prepare] $line")
+                }
+            }
+            if (!ThirdRuntime.isComplete(applicationContext)) {
+                RuntimeService.appendLog(Locales.text(Locales.current, "log.archive.failed"))
+                downloadStarted = false
+                assetExtractorInitialised = false
+                return@launch
+            }
+            try {
+                if (!assetExtractor.isExtracted()) {
+                    assetExtractor.extractAll { progress ->
+                        RuntimeService.appendLog("[Prepare] $progress")
+                    }
+                }
+                assetExtractorInitialised = assetExtractor.isExtracted()
+                if (!assetExtractorInitialised) {
+                    RuntimeService.appendLog(Locales.text(Locales.current, "log.x.incomplete"))
+                    downloadStarted = false
+                } else {
+                    RuntimeService.appendLog(Locales.text(Locales.current, "log.x.complete"))
+                }
+            } catch (error: Exception) {
+                android.util.Log.e("RuntimeDownload", "Runtime initialization failed", error)
+                assetExtractorInitialised = false
+                downloadStarted = false
+                RuntimeService.appendLog(
+                    Locales.text(Locales.current, "log.start.failed")
+                        .replace("{error}", error.message ?: error.javaClass.simpleName)
+                )
+            }
         }
     }
 
@@ -125,6 +161,15 @@ class MainActivity : ComponentActivity() {
         handleNavigationIntent(intent)
         lifecycle.addObserver(permissionObserver)
         hasAllFilesAccess.value = _DirectoryManager.hasStoragePermission(this)
+        lifecycleScope.launch {
+            assetExtractorInitialised = assetExtractor.isExtracted()
+            if (assetExtractorInitialised) {
+                downloadStarted = true
+            } else {
+                assetExtractorInitialised = false
+                if (hasAllFilesAccess.value) startRuntimeDownload()
+            }
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -192,7 +237,16 @@ class MainActivity : ComponentActivity() {
     @Composable
     private fun MainAppLayout() {
         var currentTab by remember {
-            mutableStateOf(if (openFilesManager.value) AppTab.FILES else AppTab.DASHBOARD)
+            mutableStateOf(
+                when {
+                    openFilesManager.value -> AppTab.FILES
+                    !assetExtractorInitialised -> AppTab.CONSOLE
+                    else -> AppTab.DASHBOARD
+                }
+            )
+        }
+        LaunchedEffect(assetExtractorInitialised, openFilesManager.value) {
+            if (!assetExtractorInitialised && !openFilesManager.value) currentTab = AppTab.CONSOLE
         }
         LaunchedEffect(openFilesManager.value) {
             if (openFilesManager.value) {

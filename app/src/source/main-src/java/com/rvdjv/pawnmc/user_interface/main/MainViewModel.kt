@@ -11,6 +11,7 @@ import java.io.FileOutputStream
 import java.io.IOException
 import com.rvdjv.pawnmc.apps_data.data_compiler.CaseConversion
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
+import com.rvdjv.pawnmc.apps_data.data_compiler.Runner
 import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
 import kotlinx.coroutines.Dispatchers
@@ -530,7 +531,7 @@ class MainViewModel(
             }
 
             val n_startTime = System.currentTimeMillis()
-            val n_result = withContext(Dispatchers.IO) {
+            var n_result = withContext(Dispatchers.IO) {
                 Compiler.compile(sourcePath, n_options, n_selectedVersion)
             }
             val n_duration = System.currentTimeMillis() - n_startTime

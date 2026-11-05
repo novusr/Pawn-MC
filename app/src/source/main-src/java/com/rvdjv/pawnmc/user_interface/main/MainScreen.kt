@@ -400,6 +400,8 @@ fun MainScreen(
         if (viewModel.isCompiling) showCompilingNotice = true
     }
 
+
+
     fun showCompilingBlockedToast() {
         Toast.makeText(
             context,
@@ -1112,7 +1114,7 @@ internal fun CompilerLogsSection(
                 // The two icon buttons then the chip are pushed to the far right: the title
                 // keeps its natural width (`fill = false`) and the flexible spacer soaks up
                 // the extra room a wide screen has.
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.weight(1f, fill = false))
                 IconButton(
                     onClick = onDownloadClick,
                     enabled = canDownload,
@@ -1138,7 +1140,6 @@ internal fun CompilerLogsSection(
                         modifier = Modifier.size(16.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(SpaceXS))
                 StatusChip(status = status, modifier = Modifier.align(Alignment.CenterVertically))
             }
         }

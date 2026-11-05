@@ -138,16 +138,16 @@ class ThirdRuntime(private val context: Context) {
         while (attempt <= MAX_ATTEMPTS) {
             try {
                 fetch("$REPO_BASE/${archive.repositoryPath}", partial)
-                if (!partial.isFile || partial.length() == 0L) return false
+                if (!partial.isFile || partial.length() == 0L) throw IOException("Empty download for ${archive.fileName}")
                 if (!matchesChecksum(partial, archive)) {
                     partial.delete()
                     throw IOException("SHA-256 verification failed for ${archive.fileName}")
                 }
-                if (target.exists()) target.delete()
-                if (!partial.renameTo(target)) return false
+                if (target.exists() && !target.delete()) throw IOException("Could not replace ${archive.fileName}")
+                if (!partial.renameTo(target)) throw IOException("Could not finalize ${archive.fileName}")
                 Log.i(TAG, "Downloaded ${archive.fileName} (${target.length()} bytes)")
                 return true
-            } catch (e: Throwable) {
+            } catch (e: Exception) {
                 Log.w(TAG, "Attempt $attempt for ${archive.fileName} failed: ${e.message}")
                 if (attempt == MAX_ATTEMPTS) {
                     partial.delete()

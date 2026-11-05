@@ -129,11 +129,18 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
     }
 
     val folderPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val uri = result.data?.data
         if (uri != null) {
+            runCatching {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            }
             val directory = _DirectoryManager.parseTreeUriToFile(uri)
-            if (directory == null || !directory.isDirectory) {
+            if (directory == null || !directory.isDirectory || !directory.canRead()) {
                 operationError = t("files.folder.failed")
             } else if (serverActive) {
                 operationError = t("files.folder.running")
@@ -152,7 +159,7 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
     LaunchedEffect(Unit) {
         if (!_DirectoryManager.hasCustomServerDirectory(context) && !requestedInitialFolder) {
             requestedInitialFolder = true
-            folderPicker.launch(null)
+            folderPicker.launch(pocketsampFolderPickerIntent())
         }
     }
 
@@ -736,3 +743,17 @@ private const val EXTRA_XED_WORKSPACE = "com.rvdjv.pawnmc.extra.XED_WORKSPACE"
 private val EDITABLE_EXTENSIONS = setOf(
     "pwn", "pawn", "inc", "p", "txt", "cfg", "ini", "json", "sql", "log", "xml", "yml", "yaml"
 )
+
+private fun pocketsampFolderPickerIntent(): android.content.Intent = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+    addFlags(
+        android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or
+            android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+            android.content.Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+    )
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        putExtra(
+            android.provider.DocumentsContract.EXTRA_INITIAL_URI,
+            android.net.Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload")
+        )
+    }
+}

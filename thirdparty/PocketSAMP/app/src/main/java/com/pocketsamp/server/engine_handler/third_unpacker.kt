@@ -43,9 +43,11 @@ internal object ThirdUnpacker {
                     while (entry != null) {
                         val name = entry.name.removePrefix("./")
                         if (name.isNotBlank()) {
-                            val target = File(outputDir, name).canonicalFile
-                            val inside = target.path.startsWith(outputDir.canonicalPath + File.separator) ||
-                                target.path == outputDir.canonicalPath
+                            val root = outputDir.canonicalFile
+                            if (!root.exists() && !root.mkdirs()) error("Unable to create extraction directory")
+                            val target = File(root, name).canonicalFile
+                            val inside = target.path.startsWith(root.path + File.separator) ||
+                                target.path == root.path
                             if (!inside) {
                                 Log.w(TAG, "Skipping entry outside destination: $name")
                             } else if (entry.isDirectory) {
@@ -69,8 +71,8 @@ internal object ThirdUnpacker {
                                     }
                                 }
                                 if (!partial.renameTo(target)) {
-                                    target.delete()
-                                    partial.renameTo(target)
+                                    partial.delete()
+                                    throw IllegalStateException("Unable to finalize extracted file ${target.name}")
                                 }
                                 if ((entry.mode and 0b001_001_001) != 0) {
                                     target.setExecutable(true, false)

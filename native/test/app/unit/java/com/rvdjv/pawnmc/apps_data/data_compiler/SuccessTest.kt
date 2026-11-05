@@ -21,6 +21,19 @@ class SuccessTest {
     }
 
     @Test
+    fun `address of recovery only triggers for forced 3 10 7 and is one shot per session`() {
+        Compiler.resetSessionState()
+        val output = "error 017: undefined symbol __addressof"
+        assertFalse(Compiler.shouldRecoverAddressOf("undefined symbol _addressof"))
+        assertFalse(Compiler.claimAddressOfRecovery(output, forcedMode = false, CompilerConfig.CompilerVersion.V3107))
+        assertFalse(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V31011))
+        assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V3107))
+        assertFalse(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V3107))
+        Compiler.resetSessionState()
+        assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V3107))
+    }
+
+    @Test
     fun `returns the other compiler version`() {
         assertEquals(CompilerConfig.CompilerVersion.V31011, CompilerConfig.CompilerVersion.V3107.other())
         assertEquals(CompilerConfig.CompilerVersion.V3107, CompilerConfig.CompilerVersion.V31011.other())

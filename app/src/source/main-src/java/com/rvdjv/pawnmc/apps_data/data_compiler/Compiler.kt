@@ -21,6 +21,13 @@ object Compiler {
     /** Resets the compile fallback state for this session. */
     fun resetSessionState() = Runner.resetSessionState()
 
+    internal fun shouldRecoverAddressOf(output: String): Boolean = Runner.shouldRecoverAddressOf(output)
+    internal fun claimAddressOfRecovery(
+        output: String,
+        forcedMode: Boolean,
+        configuredVersion: CompilerConfig.CompilerVersion
+    ): Boolean = Runner.claimAddressOfRecovery(output, forcedMode, configuredVersion)
+
     /** Loaded native compiler version, or null before the first compile. */
     fun getLoadedVersion(): CompilerConfig.CompilerVersion? = Runner.getLoadedVersion()
 

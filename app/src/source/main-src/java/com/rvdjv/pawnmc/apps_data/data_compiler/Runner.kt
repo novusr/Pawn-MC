@@ -76,10 +76,30 @@ object Runner {
     ): CompilerConfig.CompilerVersion =
         if (forcedMode) selectedVersion else detectedVersion ?: CompilerConfig.CompilerVersion.V3107
 
-    /** Resets the compile fallback state for this session. */
+    /** Resets one-shot compiler recovery state for a new app process/session. */
+    @Synchronized
     fun resetSessionState() {
         FALL_MUTATION = false
         CONSECUTIVE_FAILURES = 0
+        ADDRO_REFIX_USED = false
+    }
+
+    @Volatile
+    private var ADDRO_REFIX_USED = false
+    internal fun shouldRecoverAddressOf(output: String): Boolean =
+        output.contains("__addressof", ignoreCase = true)
+
+    @Synchronized
+    internal fun claimAddressOfRecovery(
+        output: String,
+        forcedMode: Boolean,
+        configuredVersion: CompilerConfig.CompilerVersion
+    ): Boolean {
+        if (!shouldRecoverAddressOf(output) || !forcedMode ||
+            configuredVersion != CompilerConfig.CompilerVersion.V3107 || ADDRO_REFIX_USED
+        ) return false
+        ADDRO_REFIX_USED = true
+        return true
     }
 
     /** Enables the one-shot assist toggles after a failed compile. */
@@ -176,6 +196,22 @@ object Runner {
         val n_isForced = n_config?.n_forced_compiler_mode == true
 
         val n_result = compileWithVersion(sourceFile, options, version)
+        if (n_config != null && claimAddressOfRecovery(
+                n_result.second,
+                n_config.n_forced_compiler_mode,
+                n_config.n_compiler_version
+            )
+        ) {
+            n_config.n_forced_compiler_mode = false
+            n_config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
+            Log.w("Compiler", "__addressof recovery: switched forced compiler 3.10.7 to automatic 3.10.11")
+            val retried = compileWithVersion(
+                sourceFile,
+                n_config.buildOptions(CompilerConfig.CompilerVersion.V31011),
+                CompilerConfig.CompilerVersion.V31011
+            )
+            return retried.first to "[Compiler switched to 3.10.11; retried once]\n${retried.second}"
+        }
 
         if (!n_isForced && !FALL_MUTATION && shouldRetryWithFallback(n_result.second)) {
             val n_fallbackVersion = version.other()
@@ -202,12 +238,24 @@ object Runner {
         return n_result
     }
 
-    /** Runs pawncc with exactly the arguments entered by the manual console. */
+    /** Runs the manual command, applying the same one-shot __addressof recovery once. */
     fun compileManual(
         sourceFile: String,
         options: List<String>,
         version: CompilerConfig.CompilerVersion
-    ): Pair<Int, String> = compileWithVersion(sourceFile, options, version, manualArguments = true)
+    ): Pair<Int, String> {
+        val first = compileWithVersion(sourceFile, options, version, manualArguments = true)
+        val config = CompilerConfig.getInstanceOrNull() ?: return first
+        if (!claimAddressOfRecovery(first.second, config.n_forced_compiler_mode, config.n_compiler_version)) return first
+        config.n_forced_compiler_mode = false
+        config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
+        val retry = compileWithVersion(
+            sourceFile,
+            config.buildOptions(CompilerConfig.CompilerVersion.V31011),
+            CompilerConfig.CompilerVersion.V31011
+        )
+        return retry.first to "[Compiler switched to 3.10.11; retried once]\n${retry.second}"
+    }
 
     internal fun compilerArgumentsForManual(sourceFile: String, options: List<String>): List<String> =
         buildList {

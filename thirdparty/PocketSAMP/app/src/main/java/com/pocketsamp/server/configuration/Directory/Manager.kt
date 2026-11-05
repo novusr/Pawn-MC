@@ -51,9 +51,10 @@ object _DirectoryManager {
     }
 
     fun setServerDirectory(context: Context, directory: File): Boolean {
-        if (!directory.exists() || !directory.isDirectory) return false
+        if (!hasStoragePermission(context) || !directory.exists() || !directory.isDirectory || !directory.canRead()) return false
+        val canonical = runCatching { directory.canonicalFile }.getOrNull() ?: return false
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        return prefs.edit().putString(KEY_CUSTOM_SERVER_DIR, directory.absolutePath).commit()
+        return prefs.edit().putString(KEY_CUSTOM_SERVER_DIR, canonical.absolutePath).commit()
     }
 
     fun resetToDefaultDirectory(context: Context): File {
@@ -74,11 +75,13 @@ object _DirectoryManager {
     fun hasStoragePermission(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
-        } else {
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ContextCompat.checkSelfPermission(
                 context,
                 android.Manifest.permission.WRITE_EXTERNAL_STORAGE
             ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        } else {
+            true
         }
     }
 
@@ -110,9 +113,13 @@ object _DirectoryManager {
         if (parts.isEmpty()) return null
 
         val type = parts[0]
-        val subPath = if (parts.size > 1) parts[1] else ""
+        val subPath = docId.substringAfter(':', "")
+        if (subPath.split('/').any { it == ".." || it == "." }) return null
 
-        return if ("primary".equals(type, ignoreCase = true)) {
+        if (type.equals("primary", ignoreCase = true) &&
+            (subPath.isBlank() || subPath == "Download" || subPath == "Downloads")
+        ) return null
+        val resolved = if ("primary".equals(type, ignoreCase = true)) {
             val basePath = Environment.getExternalStorageDirectory().absolutePath
             if (subPath.isNotEmpty()) File(basePath, subPath) else File(basePath)
         } else {
@@ -122,5 +129,6 @@ object _DirectoryManager {
             val extPath = "/storage/$type"
             if (subPath.isNotEmpty()) File(extPath, subPath) else File(extPath)
         }
+        return runCatching { resolved.canonicalFile }.getOrNull()?.takeIf { it.isDirectory && it.canRead() }
     }
 }

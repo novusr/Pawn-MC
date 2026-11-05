@@ -71,6 +71,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
 import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.roundToInt
@@ -432,8 +433,26 @@ private suspend fun pawnccCommand(
     val invocation = root?.let { PortalCommandParser.pawnccInvocation(tokens.drop(1), it) }
         ?: return PortalCommandResult(text("terminal.error.source"))
     if (Compiler.isRestartRequired(selectedVersion)) return PortalCommandResult(text("terminal.error.restart"))
-    val result = runCatching { onCompile(invocation.source, invocation.options, selectedVersion) }
+    var result = runCatching { onCompile(invocation.source, invocation.options, selectedVersion) }
         .getOrElse { "${text("terminal.error.execution")} ${it.message.orEmpty()}" }
+    if (Compiler.shouldRecoverAddressOf(result) && Compiler.claimAddressOfRecovery(
+            result,
+            CompilerConfig.getInstanceOrNull()?.n_forced_compiler_mode == true,
+            CompilerConfig.getInstanceOrNull()?.n_compiler_version ?: selectedVersion
+        )
+    ) {
+        val config = CompilerConfig.getInstanceOrNull()
+        if (config != null) {
+            config.n_forced_compiler_mode = false
+            config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
+            result = runCatching {
+                onCompile(invocation.source, invocation.options, CompilerConfig.CompilerVersion.V31011)
+            }.getOrElse { "${text("terminal.error.execution")} ${it.message.orEmpty()}" }
+            if (Compiler.shouldRecoverAddressOf(result)) {
+                result = "[Compiler 3.10.11 retry completed; no further retry will run]\n$result"
+            }
+        }
+    }
     return PortalCommandResult(result)
 }
 

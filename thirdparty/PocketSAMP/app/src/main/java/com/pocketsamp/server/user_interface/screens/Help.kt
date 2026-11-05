@@ -49,16 +49,16 @@ internal data class HelpSection(
 internal object HelpContent {
 
     fun intro(lang: Locales.Lang): String = when (lang) {
-        Locales.Lang.ID -> "Halo! Ini panduan singkat PocketSAMP. Santai aja, baca per bagian — semuanya cuma butuh beberapa menit."
-        Locales.Lang.EN -> "Hey! This is the short PocketSAMP guide. Take it easy and read one section at a time — the whole thing takes a couple of minutes."
+        Locales.Lang.ID -> "Panduan singkat untuk menyiapkan dan menggunakan PocketSAMP."
+        Locales.Lang.EN -> "A short guide to setting up and using PocketSAMP."
         Locales.Lang.TL -> "Uy! Ito ang maikling gabay sa PocketSAMP. Relax lang, basahin bawat bahagi — ilang minuto lang lahat."
         Locales.Lang.ES -> "¡Hola! Esta es la guía corta de PocketSAMP. Sin prisa, lee una sección a la vez — todo toma un par de minutos."
         Locales.Lang.RU -> "Привет! Это короткое руководство по PocketSAMP. Не спешите, читайте по одному разделу — всё займёт пару минут."
     }
 
     fun footer(lang: Locales.Lang): String = when (lang) {
-        Locales.Lang.ID -> "Kalau ada yang masih bingung, buka Console dan baca log-nya: hampir semua masalah server bisa dikenali dari sana."
-        Locales.Lang.EN -> "If something still looks odd, open Console and read the log: almost every server problem is visible there."
+        Locales.Lang.ID -> "Jika server bermasalah, periksa pesan di Console."
+        Locales.Lang.EN -> "If the server has a problem, check the Console messages."
         Locales.Lang.TL -> "Kung may hindi pa malinaw, buksan ang Console at basahin ang log: halos lahat ng problema ng server makikita doon."
         Locales.Lang.ES -> "Si algo sigue rare, abre Console y lee el registro: casi todos los problemas del servidor se ven ahí."
         Locales.Lang.RU -> "Если что-то всё ещё не так, откройте Console и прочитайте журнал: почти все проблемы сервера видны там."
@@ -69,104 +69,67 @@ internal object HelpContent {
             HelpSection(
                 "dashboard",
                 "Antarmuka Utama",
-                "Di sini kamu menyalakan dan mematikan server.\n\n" +
-                    "Kartu pertama berisi alamat Local (127.0.0.1) untuk main di HP ini sendiri, " +
-                    "dan alamat LAN untuk teman yang tersambung ke Wi-Fi/hotspot yang sama. " +
-                    "Ketuk alamat untuk menyalinnya.\n\n" +
-                    "Tombol paling bawah adalah Start/Stop. Kalau server.cfg belum ada, runner tetap " +
-                    "memakai pengaturan bawaan (PocketSAMP/PawnMC Runner, port 7777, 20 pemain, rcon234) " +
-                    "dan membuat file itu saat pertama kali dijalankan."
+                "Mulai atau hentikan server di sini. Salin alamat Local untuk bermain di perangkat ini, " +
+                    "atau alamat LAN untuk pemain di jaringan Wi-Fi yang sama.\n\n" +
+                    "Jika server.cfg belum ada, file dengan pengaturan awal akan dibuat saat server pertama kali dimulai."
             ),
             HelpSection(
                 "console",
                 "Console",
-                "Semua yang server katakan muncul di sini: pesan startup, plugin yang termuat, " +
-                    "sampai error saat gamemode gagal dimuat.\n\n" +
-                    "Kalau server terasa aneh, lihat tab ini dulu. Baris merah biasanya sebabnya. " +
-                    "Gunakan tombol hapus untuk membersihkan tampilan — log lama tidak hilang dari perangkat."
+                "Pesan startup, plugin, dan error server tampil di sini. Bersihkan tampilan tanpa menghapus log tersimpan."
             ),
             HelpSection(
                 "files",
                 "File Manager",
-                "Ini tempat mengatur file server. Folder bisa dibuka-tutup seperti di Xed Editor, " +
-                    "jadi isi subfolder kelihatan langsung tanpa pindah halaman.\n\n" +
-                    "Pilih sebuah folder lebih dulu kalau ingin membuat file/folder baru di dalamnya; " +
-                    "kalau belum ada yang dipilih, file baru dibuat di folder yang sedang terbuka.\n\n" +
-                    "Tombol Edit membuka file di Xed, dan Open workspace membuka foldernya sebagai workspace."
+                "Kelola file server dan subfolder di sini. Pilih folder untuk membuat file baru. Edit membuka file di Xed; Open workspace membukanya sebagai workspace."
             ),
             HelpSection(
                 "database",
                 "Database",
-                "Engine MariaDB berjalan bersama server. Dari sini kamu bisa membuat database, " +
-                    "melihat tabel, menjalankan SQL, dan mengimpor file .sql.\n\n" +
-                    "Akun bawaan biasanya root tanpa password; atur sendiri jika gamemode-mu butuh kredensial lain."
+                "MariaDB berjalan bersama server. Buat database, lihat tabel, jalankan SQL, atau impor file .sql. Sesuaikan akun jika gamemode memerlukannya."
             ),
             HelpSection(
                 "crashes",
                 "Crash Logs",
-                "Kalau aplikasi sempat berhenti mendadak, laporan lengkapnya tersimpan di sini. " +
-                    "Buka detailnya, salin pesan pentingnya, lalu kirim ke developer.\n\n" +
-                    "Crash yang sudah lama boleh dihapus supaya daftarnya tetap ringkas."
+                "Lihat dan salin laporan saat aplikasi berhenti mendadak. Hapus laporan lama untuk merapikan daftar."
             ),
             HelpSection(
                 "config",
                 "Configuration",
-                "Editor untuk server.cfg: hostname, port, max players, password RCON, gamemode, " +
-                    "filterscripts, dan plugins.\n\n" +
-                    "Kalau file belum ada, yang tampil adalah pengaturan bawaan runner. Tekan Save " +
-                    "untuk menuliskannya ke folder server."
+                "Ubah hostname, port, pemain, RCON, gamemode, filterscripts, dan plugins. Simpan untuk memperbarui server.cfg."
             )
         )
         Locales.Lang.EN -> listOf(
             HelpSection(
                 "dashboard",
                 "Main interface",
-                "This is where the server is started and stopped.\n\n" +
-                    "The first card holds the Local address (127.0.0.1) for playing on this phone, " +
-                    "and the LAN address for friends on the same Wi-Fi/hotspot. Tap an address to copy it.\n\n" +
-                    "The bottom button is Start/Stop. Without a server.cfg the runner still uses its " +
-                    "defaults (PocketSAMP/PawnMC Runner, port 7777, 20 players, rcon234) and writes " +
-                    "that file on the first start."
+                "Start or stop the server here. Copy the Local address to play on this phone, or the LAN address for players on the same Wi-Fi network.\n\n" +
+                    "If server.cfg is missing, the app creates it with default settings on first start."
             ),
             HelpSection(
                 "console",
                 "Console",
-                "Everything the server says appears here: startup lines, loaded plugins, and the " +
-                    "error that stopped a gamemode from loading.\n\n" +
-                    "When something feels off, look here first — a red line is usually the reason. " +
-                    "Clearing the view does not delete old logs from the device."
+                "Startup messages, plugins, and server errors appear here. Clear the view without deleting saved logs."
             ),
             HelpSection(
                 "files",
                 "File Manager",
-                "Manage the server files here. Folders open and close in place like the Xed Editor " +
-                    "workspace, so nested content is visible without leaving the screen.\n\n" +
-                    "Select a folder first to create files or folders inside it; with nothing selected, " +
-                    "new entries land in the folder currently open.\n\n" +
-                    "Edit opens a file in Xed, and Open workspace hands the folder to the editor."
+                "Manage server files and folders here. Select a folder to create an item inside it. Edit opens a file in Xed; Open workspace opens it in the editor workspace."
             ),
             HelpSection(
                 "database",
                 "Database",
-                "The MariaDB engine runs alongside the server. Create databases, inspect tables, run " +
-                    "SQL and import .sql files from here.\n\n" +
-                    "The usual account is root without a password; change it yourself when a gamemode " +
-                    "expects different credentials."
+                "MariaDB runs with the server. Create databases, view tables, run SQL, or import .sql files. Set credentials if your gamemode requires them."
             ),
             HelpSection(
                 "crashes",
                 "Crash logs",
-                "When the app stopped unexpectedly, the full report is kept here. Open the detail, copy " +
-                    "the important part, and send it to the developer.\n\n" +
-                    "Old reports can be deleted so the list stays short."
+                "View and copy reports when the app stops unexpectedly. Delete old reports to keep the list tidy."
             ),
             HelpSection(
                 "config",
                 "Configuration",
-                "The server.cfg editor: hostname, port, max players, RCON password, gamemode, " +
-                    "filterscripts and plugins.\n\n" +
-                    "If the file does not exist yet, the runner defaults are shown. Press Save to write " +
-                    "them into the server folder."
+                "Edit hostname, port, player limit, RCON, gamemode, filterscripts, and plugins. Save to update server.cfg."
             )
         )
         Locales.Lang.TL -> listOf(
@@ -357,7 +320,10 @@ fun _Help(lang: Locales.Lang) {
         )
 
         sections.forEachIndexed { index, section ->
-            Card(colors = CardDefaults.cardColors(containerColor = SampThemeColors.card)) {
+            Card(
+                colors = CardDefaults.cardColors(containerColor = SampThemeColors.card),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
+            ) {
                 Column(
                     modifier = Modifier.padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)

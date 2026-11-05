@@ -119,22 +119,27 @@ fun _Dashboard(
     }
 
     val folderPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { uri ->
-        if (uri != null) {
-            val directory = _DirectoryManager.parseTreeUriToFile(uri)
-            if (directory != null && directory.exists() && directory.isDirectory) {
-                if (status != Status.STOPPED) {
-                    Toast.makeText(context, t("folder.running"), Toast.LENGTH_LONG).show()
-                } else if (_DirectoryManager.setServerDirectory(context, directory)) {
-                    currentServerDir = directory
-                    Toast.makeText(context, "${t("folder.changed")}: ${directory.name}", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(context, t("folder.pick.failed"), Toast.LENGTH_LONG).show()
-                }
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val uri = result.data?.data ?: return@rememberLauncherForActivityResult
+        runCatching {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+        }
+        val directory = _DirectoryManager.parseTreeUriToFile(uri)
+        if (directory != null && directory.exists() && directory.isDirectory && directory.canRead()) {
+            if (status != Status.STOPPED) {
+                Toast.makeText(context, t("folder.running"), Toast.LENGTH_LONG).show()
+            } else if (_DirectoryManager.hasStoragePermission(context) && _DirectoryManager.setServerDirectory(context, directory)) {
+                currentServerDir = directory
+                Toast.makeText(context, "${t("folder.changed")}: ${directory.name}", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(context, t("folder.pick.failed"), Toast.LENGTH_LONG).show()
             }
+        } else {
+            Toast.makeText(context, t("folder.pick.failed"), Toast.LENGTH_LONG).show()
         }
     }
 
@@ -441,7 +446,7 @@ fun _Dashboard(
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
-                        onClick = { folderPickerLauncher.launch(null) },
+                        onClick = { folderPickerLauncher.launch(pocketsampFolderPickerIntent()) },
                         enabled = status == Status.STOPPED,
                         modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp)
@@ -692,4 +697,18 @@ private fun copyToClipboard(context: Context, label: String, value: String, mess
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText(label, value))
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+}
+
+private fun pocketsampFolderPickerIntent(): Intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+    addFlags(
+        Intent.FLAG_GRANT_READ_URI_PERMISSION or
+            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+    )
+    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        putExtra(
+            android.provider.DocumentsContract.EXTRA_INITIAL_URI,
+            Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload")
+        )
+    }
 }

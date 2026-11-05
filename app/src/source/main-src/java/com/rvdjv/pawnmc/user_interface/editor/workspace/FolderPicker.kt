@@ -23,6 +23,7 @@ import java.io.File
 
 /** Intent that opens the system folder picker, starting in the Downloads folder. */
 fun buildFolderPickerIntent(): Intent {
+    val initialUri = downloadsInitialUri()
     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
         addFlags(
             Intent.FLAG_GRANT_READ_URI_PERMISSION or
@@ -30,29 +31,30 @@ fun buildFolderPickerIntent(): Intent {
                 Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
         )
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        downloadsInitialUri()?.let { intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, it) }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && initialUri != null) {
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, initialUri)
     }
     return intent
 }
 
 /** Intent that opens the system file picker, starting in the Downloads folder. */
 fun buildFilePickerIntent(): Intent {
+    val initialUri = downloadsInitialUri()
     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
         addCategory(Intent.CATEGORY_OPENABLE)
         type = "*/*"
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
     }
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        downloadsInitialUri()?.let { intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, it) }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && initialUri != null) {
+        intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, initialUri)
     }
     return intent
 }
 
 /** Downloads folder of the primary shared storage, where the picker starts. */
-private fun downloadsInitialUri(): Uri? = Uri.parse(
-    "content://com.android.externalstorage.documents/document/primary%3ADownload"
-)
+private fun downloadsInitialUri(): Uri? = runCatching {
+    Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload")
+}.getOrNull()
 
 /**
  * Turns a picked tree URI into a real [File] on the primary shared storage.
@@ -71,7 +73,7 @@ suspend fun resolveDocumentToFile(context: Context, uri: Uri): File? =
         val id = runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull() ?: return@withContext null
         if (!id.startsWith("primary:")) return@withContext null
         val relative = id.removePrefix("primary:")
-        if (relative.isBlank()) return@withContext null
+        if (relative.isBlank() || relative.split('/').any { it == ".." || it == "." }) return@withContext null
         val root = File("/storage/emulated/0").canonicalFile
         val file = File(root, relative).canonicalFile
         file.takeIf { it.isFile && it.path.startsWith(root.path + File.separator) }
@@ -81,10 +83,13 @@ private fun resolveTree(resolver: ContentResolver, treeUri: Uri): File? {
     val documentId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull() ?: return null
     if (!documentId.startsWith("primary:")) return null
 
-    val segments = documentId.removePrefix("primary:").split(':').filter { it.isNotEmpty() }
+    val segments = documentId.removePrefix("primary:").split('/').filter { it.isNotEmpty() }
     if (segments.isEmpty()) return null
 
     val relative = segments.joinToString(File.separator)
-    val candidate = File("/storage/emulated/0/$relative")
-    return candidate.takeIf { it.exists() }
+    val root = File("/storage/emulated/0").canonicalFile
+    if (relative.split(File.separatorChar).any { it == ".." || it == "." }) return null
+    val candidate = runCatching { File(root, relative).canonicalFile }.getOrNull() ?: return null
+    if (!candidate.path.startsWith(root.path + File.separator)) return null
+    return candidate.takeIf { it.isDirectory && it.canRead() }
 }

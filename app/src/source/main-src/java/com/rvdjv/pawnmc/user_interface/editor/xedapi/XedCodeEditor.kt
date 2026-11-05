@@ -20,6 +20,11 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
         val connection = super.onCreateInputConnection(outAttrs) ?: return null
         return object : InputConnectionWrapper(connection, true) {
+            override fun commitText(text: CharSequence?, newCursorPosition: Int): Boolean {
+                if (text != null && text.length == 1 && skipExistingClosingCharacter(text[0])) return true
+                return super.commitText(text, newCursorPosition)
+            }
+
             override fun deleteSurroundingText(beforeLength: Int, afterLength: Int): Boolean {
                 if (beforeLength == 1 && afterLength == 0 && deleteIndentLevel()) return true
                 return super.deleteSurroundingText(beforeLength, afterLength)
@@ -51,7 +56,21 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
             KeyEvent.KEYCODE_V -> android.R.id.paste
             else -> return super.onKeyShortcut(keyCode, event)
         }
-        return performContextMenuAction(action) || super.onKeyShortcut(keyCode, event)
+        return onTextContextMenuItem(action) || super.onKeyShortcut(keyCode, event)
+    }
+
+    private fun skipExistingClosingCharacter(typed: Char): Boolean {
+        if (typed !in CLOSING_SYMBOLS) return false
+        val currentCursor = cursor
+        if (currentCursor.leftLine != currentCursor.rightLine ||
+            currentCursor.leftColumn != currentCursor.rightColumn
+        ) return false
+        val line = currentCursor.leftLine
+        val column = currentCursor.leftColumn
+        val lineText = text.getLine(line).toString()
+        if (column >= lineText.length || lineText[column] != typed) return false
+        setSelection(line, column + 1)
+        return true
     }
 
     private fun deleteIndentLevel(): Boolean {
@@ -138,6 +157,7 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
 
     private companion object {
         const val INDENT_SIZE = 4
+        val CLOSING_SYMBOLS = setOf(')', '}', ']')
     }
 }
 

@@ -216,6 +216,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     private val scanning = mutableStateListOf<Workspace>()
     private val fileObservers = mutableMapOf<Workspace, MutableMap<String, FileObserver>>()
     private val refreshJobs = mutableMapOf<Workspace, Job>()
+    private val documentLoads = mutableMapOf<String, Job>()
 
     /** Workspace shown in the panel and used by search/replace. */
     var activeWorkspace by mutableStateOf<Workspace?>(null)
@@ -582,12 +583,16 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
 
     /** Reads a registered document once and drops it again when the read fails. */
     private fun loadDocument(document: OpenDocument, workspace: Workspace) {
-        viewModelScope.launch {
+        val path = document.file.absolutePath
+        if (documentLoads[path]?.isActive == true) return
+        documentLoads[path] = viewModelScope.launch {
             try {
                 document.loadFromDisk()
             } catch (e: Exception) {
-                workspace.removeDocument(document.file.absolutePath)
+                workspace.removeDocument(path)
                 statusMessage = "Failed to open ${document.name}: ${e.localizedMessage}"
+            } finally {
+                documentLoads.remove(path)
             }
         }
     }

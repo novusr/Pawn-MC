@@ -36,7 +36,7 @@ private val LightColorScheme = lightColorScheme(
     onSurface = TextPrimaryLight
 )
 
-/** True when the embedded UI should paint the dark semi-violet look. */
+/** True when the embedded UI should use its dark charcoal and olive palette. */
 @Composable
 fun isPocketSampDarkTheme(): Boolean = when (Locales.theme) {
     Locales.Theme.DARK -> true
@@ -47,7 +47,7 @@ fun isPocketSampDarkTheme(): Boolean = when (Locales.theme) {
 /**
  * Semantic palette for the current theme. Screens read [SampThemeColors] instead
  * of raw constants so the whole embedded UI adapts to PawnMC's theme setting;
- * the dark look remains the semi-violet ramp, identical to the main interface.
+ * dark surfaces use charcoal neutrals with a restrained olive accent.
  */
 object SampThemeColors {
     val bg: Color @Composable get() = if (isPocketSampDarkTheme()) BgDark else BgLight

@@ -32,6 +32,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -658,6 +660,9 @@ fun EditorScreen(
                                 }
                                 showExitDialog = false
                                 if (allSaved) {
+                                    workspace.openWorkspaces.forEach { openWorkspace ->
+                                        openWorkspace.documents.forEach { document -> workspace.openFile(document.file, openWorkspace) }
+                                    }
                                     onNavigateBack()
                                 } else {
                                     Toast.makeText(
@@ -672,6 +677,7 @@ fun EditorScreen(
                             viewModel.saveFile(currentText) { success ->
                                 showExitDialog = false
                                 if (success) {
+                                    viewModel.loadFile()
                                     onNavigateBack()
                                 }
                             }
@@ -1348,7 +1354,7 @@ fun EditorScreen(
                     activePath = workspace.activePath,
                     onSelectTab = { file ->
                         dismissAutoCompletion()
-                        workspace.setActive(file)
+                        workspace.openFile(file)
                     },
                     onCloseTab = { file ->
                         dismissAutoCompletion()
@@ -1524,10 +1530,19 @@ fun EditorScreen(
                             (maxHeight - maxHeight * EXPLORER_HEIGHT_FRACTION - EXPLORER_EDGE_MARGIN)
                                 .toPx().coerceAtLeast(0f).roundToInt()
                         }
+                        val imeBottom = WindowInsets.ime.getBottom(density)
+                        val isKeyboardVisible = imeBottom > 0
                         val clampedExplorerOffset = IntOffset(
                             explorerOffset.x.coerceIn(0, maxOffsetX),
                             explorerOffset.y.coerceIn(0, maxOffsetY)
                         )
+                        val controlsRightX = with(density) { (maxWidth - 68.dp).toPx().roundToInt().coerceAtLeast(0) }
+                        val controlsLeftX = with(density) { 12.dp.toPx().roundToInt() }
+                        val controlY = with(density) { (maxHeight - imeBottom.toDp() - 150.dp).toPx().roundToInt().coerceAtLeast(0) }
+                        val panelWidthPx = with(density) { panelWidth.toPx().roundToInt() }
+                        val overlapsRightControls = isKeyboardVisible &&
+                            clampedExplorerOffset.x + panelWidthPx > controlsRightX &&
+                            clampedExplorerOffset.y + with(density) { maxHeight * EXPLORER_HEIGHT_FRACTION }.roundToPx() > controlY
                         Surface(
                             shape = RoundedCornerShape(16.dp),
                             color = MaterialTheme.colorScheme.surfaceContainer,
@@ -1535,7 +1550,26 @@ fun EditorScreen(
                             shadowElevation = 10.dp,
                             modifier = Modifier
                                 .align(Alignment.TopStart)
-                                .offset { clampedExplorerOffset }
+                                .offset {
+                                    val safeOffset = IntOffset(
+                                        clampedExplorerOffset.x.coerceIn(0, maxOffsetX),
+                                        clampedExplorerOffset.y.coerceIn(0, maxOffsetY)
+                                    )
+                                    if (!overlapsRightControls) safeOffset
+                                    else {
+                                        val shift = with(density) { 64.dp.roundToPx() }
+                                        val leftCandidate = (safeOffset.x - shift).coerceIn(0, maxOffsetX)
+                                        val rightCandidate = (safeOffset.x + shift).coerceIn(0, maxOffsetX)
+                                        val leftCanMove = leftCandidate < safeOffset.x
+                                        val rightCanMove = rightCandidate > safeOffset.x
+                                        val nextX = when {
+                                            leftCanMove -> leftCandidate
+                                            rightCanMove -> rightCandidate
+                                            else -> safeOffset.x
+                                        }
+                                        IntOffset(nextX, safeOffset.y)
+                                    }
+                                }
                                 .padding(start = EXPLORER_EDGE_MARGIN, top = EXPLORER_EDGE_MARGIN)
                                 .width(panelWidth)
                                 .fillMaxHeight(EXPLORER_HEIGHT_FRACTION)
@@ -1555,7 +1589,7 @@ fun EditorScreen(
                                 },
                                 onSelectFile = { file ->
                                     dismissAutoCompletion()
-                                    workspace.setActive(file)
+                                    workspace.openFile(file)
                                 },
                                 onOpenHit = { hit ->
                                     dismissAutoCompletion()
@@ -1822,8 +1856,16 @@ fun EditorScreen(
                     onSymbolClick = { symbol ->
                         dismissAutoCompletion()
                         val editor = editorRef
-                        if (editor != null) {
-                            editor.text.insert(editor.cursor.leftLine, editor.cursor.leftColumn, symbol)
+                        if (editor != null && symbol.length == 1) {
+                            val cursor = editor.cursor
+                            val nextChar = runCatching {
+                                editor.text.getLine(cursor.leftLine).getOrNull(cursor.leftColumn)
+                            }.getOrNull()
+                            if (symbol[0] in setOf(')', '}', ']') && nextChar == symbol[0]) {
+                                editor.setSelection(cursor.leftLine, cursor.leftColumn + 1)
+                            } else {
+                                editor.text.insert(cursor.leftLine, cursor.leftColumn, symbol)
+                            }
                         }
                     },
                     onTabClick = { applyTabAction(editorRef) }

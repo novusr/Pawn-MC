@@ -43,6 +43,8 @@ class EditorViewModel(
     /** Path currently held in [fileContent], used to skip redundant reloads. */
     private var loadedFilePath: String? = null
     private var latestEditorContent: String = ""
+    private var loadGeneration = 0
+    private var activeSaveJob: kotlinx.coroutines.Job? = null
 
     /** Workspace opened from the editor; empty until the user picks a folder. */
     val workspace = WorkspaceSession(context)
@@ -94,6 +96,7 @@ class EditorViewModel(
             return
         }
         loadedFilePath = n_path
+        val generation = ++loadGeneration
         isLoading = true
         loadError = null
         // Edits made while the read is in flight are newer than the file.
@@ -115,6 +118,7 @@ class EditorViewModel(
                         }
                     } ?: file.readText()
                 }
+                if (generation != loadGeneration || n_path != filePath) return@launch
                 val editedDuringLoad = latestEditorContent != contentAtLoadStart
                 if (!editedDuringLoad) {
                     fileContent = content
@@ -123,9 +127,11 @@ class EditorViewModel(
                     hasUnsavedChanges = false
                 }
             } catch (e: Exception) {
-                loadError = "Failed to open file: ${e.localizedMessage ?: "Unknown error"}"
+                if (generation == loadGeneration) {
+                    loadError = "Failed to open file: ${e.localizedMessage ?: "Unknown error"}"
+                }
             } finally {
-                isLoading = false
+                if (generation == loadGeneration) isLoading = false
             }
         }
     }
@@ -148,7 +154,7 @@ class EditorViewModel(
         }
         isSaving = true
         statusMessage = "Saving..."
-        viewModelScope.launch {
+        activeSaveJob = viewModelScope.launch {
             try {
                 withContext(Dispatchers.IO) {
                     writeContent(contentToSave)
@@ -156,10 +162,12 @@ class EditorViewModel(
                 lastSavedContent = contentToSave
                 hasUnsavedChanges = latestEditorContent != contentToSave
                 isSaving = false
+                activeSaveJob = null
                 statusMessage = "Saved successfully"
                 onSaved(true)
             } catch (e: Exception) {
                 isSaving = false
+                activeSaveJob = null
                 statusMessage = "Save failed: ${e.localizedMessage}"
                 onSaved(false)
             }
@@ -171,6 +179,9 @@ class EditorViewModel(
             statusMessage = "The internal temporary file cannot be saved. Use Save As to create a Pawn file."
             return false
         }
+        activeSaveJob?.join()
+        if (isSaving) return false
+        isSaving = true
         return try {
             withContext(Dispatchers.IO) {
                 writeContent(currentContent)
@@ -178,9 +189,11 @@ class EditorViewModel(
             lastSavedContent = currentContent
             hasUnsavedChanges = latestEditorContent != currentContent
             statusMessage = "Saved successfully"
+            isSaving = false
             true
         } catch (e: Exception) {
             statusMessage = "Save failed: ${e.localizedMessage}"
+            isSaving = false
             false
         }
     }
