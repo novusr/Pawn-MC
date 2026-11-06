@@ -1465,7 +1465,7 @@ fun EditorScreen(
                                     isLineNumberEnabled = isLineNumbers
                                     isWordwrap = isWordWrap
                                     editable = !isReadOnly
-                                    autoCloseMode = autoCloseMode
+                                    this.autoCloseMode = autoCloseMode
                                     setTextSize(14f)
                                     setColorScheme(editorScheme)
                                     setEditorLanguage(codeLanguage)
