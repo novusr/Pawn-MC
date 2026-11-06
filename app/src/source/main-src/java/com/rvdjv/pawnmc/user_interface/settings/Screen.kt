@@ -210,7 +210,7 @@ fun SettingsScreen(
     LaunchedEffect(recreateAfterLanguageChange) {
         if (recreateAfterLanguageChange) {
             recreateAfterLanguageChange = false
-            (LocalContext.current as? Activity)?.recreate()
+            (context as? Activity)?.recreate()
         }
     }
     var showEditorBackgroundDialog by remember { mutableStateOf(false) }
