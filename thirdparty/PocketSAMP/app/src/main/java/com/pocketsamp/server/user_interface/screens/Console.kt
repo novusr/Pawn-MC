@@ -111,7 +111,7 @@ fun _Console(
                             line.contains("error", ignoreCase = true) || line.contains("failed", ignoreCase = true) -> SampThemeColors.danger
                             line.contains("loaded", ignoreCase = true) || line.contains("success", ignoreCase = true) -> SampThemeColors.success
                             line.contains("warning", ignoreCase = true) -> SampThemeColors.warn
-                            line.startsWith("[SA-MP]") -> SampThemeColors.accent
+                            line.startsWith("[PROCESS]") -> SampThemeColors.accent
                             line.startsWith("[MariaDB]") -> MaterialTheme.colorScheme.secondary
                             else -> SampThemeColors.textSecondary
                         }

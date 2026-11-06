@@ -182,11 +182,11 @@ object Locales {
             Lang.RU to "Телефон капризничает?",
         ),
         "folder.pick" to mapOf(
-            Lang.ID to "Pilih folder",
-            Lang.EN to "Pick a folder",
-            Lang.TL to "Pumili ng folder",
-            Lang.ES to "Elegir...",
-            Lang.RU to "Выбрать...",
+            Lang.ID to "Bagikan folder",
+            Lang.EN to "Share a folder",
+            Lang.TL to "Magbahagi ng folder",
+            Lang.ES to "Compartir una carpeta",
+            Lang.RU to "Поделиться папкой",
         ),
         "folder.reset" to mapOf(
             Lang.ID to "Balik ke awal",
@@ -1295,7 +1295,7 @@ object Locales {
             Lang.EN to "[SA-MP info] PocketSAMP needs the QEMU translator to run the 32-bit SA-MP server on ARM64.",
             Lang.TL to "[SA-MP info] Kailangan ng PocketSAMP ang QEMU translator para patakbuhin ang 32-bit SA-MP server sa ARM64.",
             Lang.ES to "[Info de SA-MP] PocketSAMP necesita el traductor QEMU para ejecutar el servidor SA-MP de 32 bits en ARM64.",
-            Lang.RU to "[SA-MP] Для запуска 32-битного сервера SA-MP на ARM64 нужен транслятор QEMU.",
+            Lang.RU to "[PROCESS] Для запуска 32-битного сервера SA-MP на ARM64 нужен транслятор QEMU.",
         ),
         "log.binary.missing" to mapOf(
             Lang.ID to "[SA-MP Error] Biner samp03svr tidak ditemukan di {dir}",
@@ -1316,7 +1316,7 @@ object Locales {
             Lang.EN to "[SA-MP info] Make sure the folder holds a valid SA-MP gamemode, or set the configuration in the Config tab.",
             Lang.TL to "[SA-MP info] Siguraduhing may tamang SA-MP gamemode ang folder, o i-setup ito sa Config tab.",
             Lang.ES to "[Info de SA-MP] Asegúrate de que la carpeta tenga un gamemode SA-MP válido o configura los ajustes en la pestaña Config.",
-            Lang.RU to "[SA-MP] Убедитесь, что в папке есть корректный gamemode SA-MP, или настройте конфигурацию во вкладке Config.",
+            Lang.RU to "[PROCESS] Убедитесь, что в папке есть корректный gamemode SA-MP, или настройте конфигурацию во вкладке Config.",
         ),
         "log.server.start.refused" to mapOf(
             Lang.ID to "[SA-MP Error] Server gagal dimulai. Periksa file server dan runtime pada folder yang dipilih.",
