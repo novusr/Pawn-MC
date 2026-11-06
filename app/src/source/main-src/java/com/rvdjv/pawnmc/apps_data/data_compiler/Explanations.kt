@@ -23,6 +23,9 @@ object Explanations {
     /** Prefix of every explanation table, e.g. `explain.` in `[explain."013"]`. */
     private const val TABLE_PREFIX = "explain"
 
+    /** Language leaf codes of the explanation tables. */
+    private val LANGUAGES = setOf("id", "en", "es", "ru", "tl")
+
     @Volatile
     private var cached: Map<String, String>? = null
 
@@ -117,16 +120,26 @@ object Explanations {
             if (code.isBlank()) return@forEach
             val unpaddedCode = code.toIntOrNull()?.toString()?.takeIf { it != code }
             entries.forEach { (field, explanation) ->
-                if (!field.startsWith("local_")) return@forEach
-                val language = field.removePrefix("local_")
-                if (language !in setOf("id", "en", "es", "ru", "tl") || explanation.isBlank()) return@forEach
+                // Two leaf shapes are accepted: the bare language code the table
+                // ships (`en = "..."`) and the `local_<lang>` prefix kept for
+                // older data. Without the bare form every row of the shipped
+                // asset is dropped and no explanation ever resolves.
+                val bare = field.removePrefix("local_")
+                val language = when {
+                    field.startsWith("local_") && bare in LANGUAGES -> bare
+                    field in LANGUAGES -> field
+                    else -> null
+                }
+                if (language == null || explanation.isBlank()) return@forEach
                 result["$code.$language"] = explanation
                 unpaddedCode?.let { result["$it.$language"] = explanation }
             }
-            entries["local_${CompilerConfig.AppLanguage.EN.value}"]?.let { english ->
-                if (english.isNotBlank()) {
-                    result[code] = english
-                    unpaddedCode?.let { result[it] = english }
+            val english = entries["local_${CompilerConfig.AppLanguage.EN.value}"]
+                ?: entries[CompilerConfig.AppLanguage.EN.value]
+            english?.let {
+                if (it.isNotBlank()) {
+                    result[code] = it
+                    unpaddedCode?.let { c -> result[c] = it }
                 }
             }
         }

@@ -25,12 +25,17 @@ internal object InternDat {
     private const val ASSET_PATH = "_internal.toml"
     private const val FALLBACK_PATH = "native/data/_internal.toml"
 
-    /** Language leaf keys of every symbol entry. */
-    private const val EN = "local_en"
-    private const val ID = "local_id"
-    private const val ES = "local_es"
-    private const val RU = "local_ru"
-    private const val TL = "local_tl"
+    /**
+     * Reads a language field accepting both spellings: the shipped bare code
+     * (`en = "..."`) and the older `local_en = "..."` prefix. Returning `null`
+     * means the table does not carry that language at all.
+     */
+    private fun field(fields: Map<String, String>, language: String): String? {
+        val bare = fields[language]
+        if (!bare.isNullOrBlank()) return bare
+        val prefixed = fields["local_$language"]
+        return prefixed?.takeIf { it.isNotBlank() }
+    }
 
     /** Table holding the language items, e.g. `[item.KEYWORD]`. */
     private const val ITEM_PREFIX = "item"
@@ -83,16 +88,16 @@ internal object InternDat {
             val kindName = path.removePrefix("$ITEM_PREFIX.")
             val kind = runCatching { PawnItemKind.valueOf(kindName) }.getOrNull() ?: return@forEach
             entries.forEach { (name, fields) ->
-                val description = fields[EN] ?: return@forEach
+                val description = field(fields, "en") ?: return@forEach
                 if (description.isBlank()) return@forEach
                 items += _item(
                     name = name,
                     description = description,
                     kind = kind,
-                    descriptionId = fields[ID],
-                    descriptionEs = fields[ES],
-                    descriptionRu = fields[RU],
-                    descriptionTl = fields[TL],
+                    descriptionId = field(fields, "id"),
+                    descriptionEs = field(fields, "es"),
+                    descriptionRu = field(fields, "ru"),
+                    descriptionTl = field(fields, "tl"),
                 )
             }
         }
@@ -106,17 +111,17 @@ internal object InternDat {
                 val include = path.removePrefix("$prefix.")
                 if (include.isBlank()) return@forEach
                 entries.forEach { (name, fields) ->
-                    val description = fields[EN] ?: return@forEach
+                    val description = field(fields, "en") ?: return@forEach
                     if (description.isBlank()) return@forEach
                     symbols += PawnInternalSymbol(
                         include = include,
                         kind = kind,
                         name = name,
                         description = description,
-                        descriptionId = fields[ID],
-                        descriptionEs = fields[ES],
-                        descriptionRu = fields[RU],
-                        descriptionTl = fields[TL],
+                        descriptionId = field(fields, "id"),
+                        descriptionEs = field(fields, "es"),
+                        descriptionRu = field(fields, "ru"),
+                        descriptionTl = field(fields, "tl"),
                     )
                 }
             }

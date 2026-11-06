@@ -53,15 +53,18 @@ class InternTomlTest {
             .filter { it.startsWith("\"") && it.contains("= {") }
             .toList()
         val missing = rows.flatMap { row ->
-            listOf("local_en", "local_id", "local_es", "local_ru", "local_tl")
+            // The shipped rows carry the bare language code; the `local_` prefix
+            // is accepted for older data. A language counts as present when
+            // either spelling carries a non-blank value.
+            listOf("en", "id", "es", "ru", "tl")
                 .filter { language ->
-                    Regex("$language\\s*=\\s*\"([^\"]*)\"")
+                    Regex("(?:local_)?$language\\s*=\\s*\"([^\"]*)\"")
                         .find(row)
                         ?.groupValues
                         ?.get(1)
                         .isNullOrBlank()
                 }
-                .map { language -> "$language: $row" }
+                .map { language -> "local_$language: $row" }
         }
 
         assertTrue("expected all bundled descriptions to include five languages", rows.size >= 750)
@@ -80,8 +83,8 @@ class InternTomlTest {
             }
             if (!active || !line.startsWith("\"")) continue
             val name = line.substring(1, line.indexOf('"', 1))
-            val en = Regex("local_en\\s*=\\s*\"([^\"]*)\"").find(line)?.groupValues?.get(1).orEmpty()
-            val id = Regex("local_id\\s*=\\s*\"([^\"]*)\"").find(line)?.groupValues?.get(1).orEmpty()
+            val en = Regex("(?:local_)?en\\s*=\\s*\"([^\"]*)\"").find(line)?.groupValues?.get(1).orEmpty()
+            val id = Regex("(?:local_)?id\\s*=\\s*\"([^\"]*)\"").find(line)?.groupValues?.get(1).orEmpty()
             out += Triple(name, en, id)
         }
         return out
