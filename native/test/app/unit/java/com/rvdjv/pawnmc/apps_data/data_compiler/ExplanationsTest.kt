@@ -105,7 +105,7 @@ class ExplanationsTest {
             [explain."203"]
             local_en = "Warning 203: symbol is never used: \"%s\"."
             local_id = "Simbol \"%s\" tidak digunakan."
-            "".trimIndent()
+            """.trimIndent()
         )
         assertEquals("Warning 203: symbol is never used: \"%s\".", parsed["203.en"])
         assertEquals("Simbol \"%s\" tidak digunakan.", parsed["203.id"])
