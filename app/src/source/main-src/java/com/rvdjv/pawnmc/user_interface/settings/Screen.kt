@@ -214,6 +214,7 @@ fun SettingsScreen(
         }
     }
     var showEditorBackgroundDialog by remember { mutableStateOf(false) }
+    var showAutoCloseDialog by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
     var showManualRestartDialog by remember { mutableStateOf(false) }
     var editingIncludePathIndex by remember { mutableStateOf<Int?>(null) }
@@ -637,6 +638,21 @@ fun SettingsScreen(
                         text = localizer.get("settings.editor.background.reset", appLanguage, "Reset to default"),
                         icon = Icons.Default.Refresh,
                         onClick = { viewModel.updateEditorBackgroundColor(null) }
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    NavigationRow(
+                        title = localizer.get("settings.editor.autoclose", appLanguage, "Bracket Auto-Close"),
+                        subtitle = viewModel.n_editor_auto_close.label,
+                        description = localizer.get(
+                            "settings.editor.autoclose.desc",
+                            appLanguage,
+                            viewModel.n_editor_auto_close.description
+                        ),
+                        onClick = { showAutoCloseDialog = true }
                     )
                 }
             }
@@ -1348,6 +1364,42 @@ fun SettingsScreen(
             onApply = { hex ->
                 viewModel.updateEditorBackgroundColor(hex)
                 showEditorBackgroundDialog = false
+            }
+        )
+    }
+
+    if (showAutoCloseDialog) {
+        AlertDialog(
+            onDismissRequest = { showAutoCloseDialog = false },
+            title = { Text(localizer.get("settings.editor.autoclose", appLanguage, "Bracket Auto-Close")) },
+            text = {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    CompilerConfig.EditorAutoClose.entries.forEach { mode ->
+                        RadioButtonRow(
+                            text = mode.label,
+                            selected = viewModel.n_editor_auto_close == mode,
+                            onClick = {
+                                viewModel.updateEditorAutoClose(mode)
+                                showAutoCloseDialog = false
+                            }
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = localizer.get(
+                            "settings.editor.autoclose.desc",
+                            appLanguage,
+                            viewModel.n_editor_auto_close.description
+                        ),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAutoCloseDialog = false }) {
+                    Text(localizer.get("settings.close", appLanguage, "Close"))
+                }
             }
         )
     }

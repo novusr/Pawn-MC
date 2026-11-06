@@ -51,6 +51,9 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
     var n_editor_background_color by mutableStateOf(config.n_editor_background_color)
         private set
 
+    var n_editor_auto_close by mutableStateOf(config.n_editor_auto_close)
+        private set
+
     val n_include_paths = mutableStateListOf<String>().apply {
         addAll(CompilerConfig.pruneMissingIncludePaths(config.n_include_paths))
     }
@@ -137,6 +140,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         // language through the JSON mirror and survives a reinstall.
         config.markAppLanguageSet()
         n_app_language = language
+    }
+
+    fun updateEditorAutoClose(mode: CompilerConfig.EditorAutoClose) {
+        n_editor_auto_close = mode
+        config.n_editor_auto_close = mode
     }
 
     /**

@@ -146,6 +146,25 @@ class CompilerConfig private constructor(context: Context) {
             mirrorToFile()
         }
 
+    /**
+     * Auto-close rule for brackets in the editor.
+     *
+     * `SMART` (default) inserts nothing: when the user types `(`, `}` or `]` the
+     * editor never adds the matching closer by itself, so a fast `()` or `{}`
+     * never ends up with doubled closers. The other two modes restore the
+     * classic behaviour with the condition the user described:
+     *
+     *  - `PAIR_IF_FOLLOWING`: a closer is only auto-inserted when the next typed
+     *    character is not a closing one; typing `()` quickly leaves just `()`.
+     *  - `PAIR_ALWAYS`: the closer is always inserted (legacy behaviour).
+     */
+    var n_editor_auto_close: EditorAutoClose
+        get() = EditorAutoClose.fromValue(prefs.getString(KEY_EDITOR_AUTO_CLOSE, EditorAutoClose.SMART.value))
+        set(value) {
+            prefs.edit { putString(KEY_EDITOR_AUTO_CLOSE, value.value) }
+            mirrorToFile()
+        }
+
     //
     // [custom]
     //
@@ -464,6 +483,22 @@ class CompilerConfig private constructor(context: Context) {
         }
     }
 
+    enum class EditorAutoClose(val value: String, val label: String, val description: String) {
+        /**
+         * Default: the editor never inserts a closing bracket by itself, so
+         * `(`, `(`, `(` stay a single pair however fast they are typed.
+         */
+        SMART("smart", "Off (no auto-close)", "The editor never adds the closing bracket. Typing ( or { inserts only that character."),
+        /** Closer appears unless the very next character typed is a closer itself. */
+        PAIR_IF_FOLLOWING("pair_if_following", "Smart pair", "Typing ( inserts (, but a quickly typed ) replaces the added one instead of doubling it."),
+        /** Always insert the closer; legacy behaviour. */
+        PAIR_ALWAYS("pair_always", "Always pair", "Typing ( always inserts the matching ) immediately.");
+
+        companion object {
+            fun fromValue(value: String?) = entries.find { it.value == value } ?: SMART
+        }
+    }
+
     enum class OptimizationLevel(val value: Int, val label: String, val description: String) {
         O0(0, "Disabled (-O0)", "No optimization; safest but largest output. (Default)"),
         O1(1, "Balanced (-O1)", "Default optimization pass for stable behavior."),
@@ -616,6 +651,7 @@ class CompilerConfig private constructor(context: Context) {
         private const val KEY_EXPLAIN_AUTO = "explain_output_auto"
         internal const val KEY_SEMICOLONS       = "semicolons"
         internal const val KEY_PARENTHESES      = "parentheses"
+        internal const val KEY_EDITOR_AUTO_CLOSE = "editor_auto_close"
         internal const val KEY_CUSTOM_FLAGS     = "custom_flags"
         internal const val KEY_INCLUDE_PATHS    = "include_paths"
         internal const val KEY_COMPILER_VERSION = "compiler_version"

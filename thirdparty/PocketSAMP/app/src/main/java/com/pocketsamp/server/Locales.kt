@@ -1192,6 +1192,13 @@ object Locales {
             Lang.ES to "[Error de PocketSAMP] No se pudo restaurar el servidor: {error}",
             Lang.RU to "[Ошибка PocketSAMP] Не удалось восстановить сервер: {error}",
         ),
+        "log.restore.gaveup" to mapOf(
+            Lang.ID to "[PocketSAMP] Server terus dimatikan oleh sistem. Pulih otomatis dihentikan — nyalakan manual dari Beranda.",
+            Lang.EN to "[PocketSAMP] The system keeps killing the server. Automatic recovery stopped — start it manually from Home.",
+            Lang.TL to "[PocketSAMP] Pinatay nang paulit-ulit ng system ang server. Itinigil ang auto-recovery — simulan manually sa Home.",
+            Lang.ES to "[PocketSAMP] El sistema sigue deteniendo el servidor. Se detuvo la recuperación automática; inícialo manualmente desde Inicio.",
+            Lang.RU to "[PocketSAMP] Система продолжает завершать сервер. Автовосстановление остановлено — запустите вручную с главной страницы.",
+        ),
         "log.db.starting" to mapOf(
             Lang.ID to "Menyalakan MariaDB (MySQL)...",
             Lang.EN to "Starting MariaDB (MySQL)...",

@@ -78,6 +78,7 @@ import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -183,6 +184,9 @@ fun EditorScreen(
     val localizer = remember(context) { AppLocalization.shared(context) }
     val appLanguage = remember(context) { CompilerConfig.getInstance(context).n_app_language }
     val appColorScheme = MaterialTheme.colorScheme
+    // Auto-close rule from settings, re-read when the screen re-enters so a change
+    // in Settings is picked up without touching the widget internals.
+    val autoCloseMode = remember(context) { CompilerConfig.getInstance(context).n_editor_auto_close }
     val editorScheme = remember(appColorScheme, editorBackgroundColor) {
         buildEditorScheme(appColorScheme, editorBackgroundColor)
     }
@@ -1181,6 +1185,23 @@ fun EditorScreen(
                                 }
                             )
                             DropdownMenuItem(
+                                text = { Text("Jump to Matching Bracket") },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.Code, contentDescription = null)
+                                },
+                                onClick = {
+                                    dismissAutoCompletion()
+                                    showMenu = false
+                                    editorRef?.let { editor ->
+                                        val match = findMatchingBracketPosition(editor)
+                                        if (match != null) {
+                                            editor.jumpToLine(match.first)
+                                            editor.setSelection(match.first, match.second)
+                                        }
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
                                 text = { Text(if (isWordWrap) "Disable Word Wrap" else "Enable Word Wrap") },
                                 leadingIcon = {
                                     Icon(Icons.AutoMirrored.Filled.WrapText, contentDescription = null)
@@ -1444,6 +1465,7 @@ fun EditorScreen(
                                     isLineNumberEnabled = isLineNumbers
                                     isWordwrap = isWordWrap
                                     editable = !isReadOnly
+                                    autoCloseMode = autoCloseMode
                                     setTextSize(14f)
                                     setColorScheme(editorScheme)
                                     setEditorLanguage(codeLanguage)
@@ -1499,6 +1521,8 @@ fun EditorScreen(
                                     editor.setColorScheme(editorScheme)
                                     appliedScheme.current = editorScheme
                                 }
+                                // A settings change is picked up live as well.
+                                editor.autoCloseMode = autoCloseMode
                                 // Push the buffer of the file the workspace panel
                                 // activated, or of the single file opened from the
                                 // browser. Only runs when the shown path or content
@@ -2676,6 +2700,72 @@ internal fun resolveJumpColumn(input: String?, lineLength: Int): Int =
         ?.takeIf { it > 0 && it - 1 <= lineLength }
         ?.minus(1)
         ?: 0
+
+/**
+ * Bracket characters the "Jump to Matching Bracket" action recognises.
+ * Openers jump forward to their closer, closers jump backward to their opener.
+ */
+private val BRACKET_PAIRS = mapOf(
+    '(' to ')',
+    '{' to '}',
+    '[' to ']'
+)
+
+/**
+ * Finds the bracket that matches the one at the caret and returns its
+ * `line to column` position (both 0-based), or `null` when the caret is not
+ * on a bracket or the bracket is unmatched.
+ */
+internal fun findMatchingBracketPosition(editor: CodeEditor): Pair<Int, Int>? {
+    val cursor = editor.cursor
+    val line = cursor.leftLine
+    val column = cursor.leftColumn
+    if (line < 0 || line >= editor.text.lineCount) return null
+
+    val lineText = editor.text.getLine(line).toString()
+    if (column >= lineText.length) return null
+    val start = lineText[column]
+
+    val opening = BRACKET_PAIRS[start]
+    val closing = BRACKET_PAIRS.entries.firstOrNull { it.value == start }?.key
+    if (opening == null && closing == null) return null
+
+    if (opening != null) {
+        // Forward scan: count nesting depth of the same kind of pair.
+        var depth = 0
+        for (l in line until editor.text.lineCount) {
+            val text = editor.text.getLine(l).toString()
+            val from = if (l == line) column else 0
+            for (c in from until text.length) {
+                when (text[c]) {
+                    start -> depth++
+                    opening -> {
+                        depth--
+                        if (depth == 0) return l to c
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    // Backward scan for a closer.
+    var depth = 0
+    for (l in line downTo 0) {
+        val text = editor.text.getLine(l).toString()
+        val from = if (l == line) column else text.length - 1
+        for (c in from downTo 0) {
+            when (text[c]) {
+                start -> depth++
+                closing -> {
+                    depth--
+                    if (depth == 0) return l to c
+                }
+            }
+        }
+    }
+    return null
+}
 
 /** Accepts the visible completion, or indents when no suggestion is open. */
 private fun applyTabAction(editor: CodeEditor?) {

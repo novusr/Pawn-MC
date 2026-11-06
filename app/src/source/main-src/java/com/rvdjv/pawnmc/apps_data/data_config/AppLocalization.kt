@@ -184,6 +184,9 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
          */
         private const val ASSET_PATH = "_extraction.toml"
 
+        /** Language codes the localisation tables may use as leaf fields. */
+        private val LANGUAGES = setOf("id", "en", "es", "ru", "tl")
+
         private val FALLBACK_PATHS = listOf(
             "data/_extraction.toml",
             ASSET_PATH
@@ -272,9 +275,16 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
                 val normalizedTable = normalizeKey(table)
                 if (normalizedTable.isBlank()) return@forEach
                 entries.forEach { (field, value) ->
-                    val language = field.removePrefix("local_")
-                    if (field.startsWith("local_") && language in setOf("id", "en", "es", "ru", "tl")) {
-                        result["$normalizedTable.$language"] = value
+                    // Two field shapes are accepted: the bare language code that the
+                    // `[settings.general]`-style tables ship (`id = "..."`), and the
+                    // `local_<lang>` prefix kept for the older inline-table data.
+                    // Without the bare form every entry of the asset is dropped and
+                    // the UI silently falls back to English forever.
+                    val bare = field.removePrefix("local_")
+                    if (field.startsWith("local_") && bare in LANGUAGES) {
+                        result["$normalizedTable.$bare"] = value
+                    } else if (field in LANGUAGES) {
+                        result["$normalizedTable.$field"] = value
                     }
                 }
             }

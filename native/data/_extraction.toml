@@ -610,6 +610,20 @@ tl = "Mga available na variant ng background"
 ru = "Доступные варианты фона"
 es = "Variantes de fondo disponibles"
 
+[settings.editor.autoclose]
+id = "Penutup Otomatis Bracket"
+en = "Bracket Auto-Close"
+tl = "Auto-Close ng Bracket"
+ru = "Автозакрытие скобок"
+es = "Cierre automático de corchetes"
+
+[settings.editor.autoclose.desc]
+id = "Mengatur apakah editor menambahkan pasangan penutup otomatis. Mati (bawaan): mengetik ( atau { hanya menyisipkan karakter itu sendiri, jadi () atau {} yang diketik cepat tidak pernah menghasilkan penutup ganda. Pasangan pintar: penutup disisipkan, tetapi ) atau } yang diketik langsung setelahnya memindahkan kursor, bukan menggandakan. Selalu pasang: penutup selalu disisipkan."
+en = "Controls whether the editor adds a closing bracket for you. Off (default): typing ( or { inserts only that character, so a fast () or {} never ends up with a doubled closer. Smart pair: the closer is inserted, but a ) or } typed right after it moves over instead of doubling. Always pair: the closer is always inserted."
+tl = "Kontrol kung magdaragdag ba ang editor ng panaklong para sa iyo. Off (default): ang pag-type ng ( o { ay mag-iisa lang. Smart pair: malalagay ang closer, ngunit ang ) o } na itinape pagkatapos ay lilipat, hindi magdo-doble. Always pair: lalaging ilalagay ang closer."
+ru = "Определяет, добавляет ли редактор закрывающую скобку автоматически. Выкл. (по умолчанию): ввод ( или { вставляет только этот символ, поэтому быстрый () или {} не даёт двойной скобки. Умная пара: скобка ставится, но введённая следом ) или } перемещает курсор, а не дублируется. Всегда пара: закрывающая скобка всегда ставится."
+es = "Controla si el editor añade el paréntesis de cierre. Desactivado (predeterminado): escribir ( o { inserta solo ese carácter, así que un () o {} rápido nunca termina duplicado. Par inteligente: se inserta el cierre, pero un ) o } escrito justo después mueve el cursor en lugar de duplicarse. Siempre par: el cierre se inserta siempre."
+
 [settings.editor.background.hex]
 id = "Kode warna heksadesimal"
 en = "Hex colour code"

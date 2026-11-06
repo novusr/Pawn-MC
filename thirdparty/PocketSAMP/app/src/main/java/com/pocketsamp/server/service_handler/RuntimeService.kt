@@ -72,6 +72,11 @@ class RuntimeService : Service() {
 
         private const val FALLBACK_LAN_IP = "192.168.1.186"
 
+        /** Consecutive auto-recoveries after an OS kill; reset once the server stays up. */
+        private val crashRestartAttempts = java.util.concurrent.atomic.AtomicInteger(0)
+        private const val MAX_CRASH_RESTARTS = 3
+        private const val RESTART_BACKOFF_MS = 2000L
+
         private val _lanIp = MutableStateFlow(FALLBACK_LAN_IP)
         val lanIp: StateFlow<String> = _lanIp.asStateFlow()
 
@@ -145,22 +150,38 @@ class RuntimeService : Service() {
                 updateNotification(t("notify.stopped").replace("{code}", exitCode.toString()))
             }
 
-            if (shouldBeRunning) {
-                appendLog(t("log.restoring"))
-                serviceScope.launch {
-                    delay(2000)
-                    if (prefs.getBoolean("server_running_state", false) && !serverEngine.isRunning) {
-                        try {
-                            if (serverEngine.start(serviceScope)) {
-                                updateNotification(t("notify.active").replace("{ip}", _lanIp.value))
-                                appendLog(t("log.restored"))
-                            } else {
-                                prefs.edit().putBoolean("server_running_state", false).apply()
+            // Only the OS killing the process (SIGKILL -> 137, the Phantom Process
+            // Killer / OOM case) is auto-recovered. A server that crashes on its own
+            // (code 1 and friends) or exits normally must stay down: blindly
+            // restarting turned every crash into an endless restart loop.
+            val osKilled = exitCode == 137
+            if (shouldBeRunning && osKilled) {
+                // Bound the recovery: each consecutive kill backs off longer and
+                // after several in a row the server is left stopped instead of
+                // relaunching forever.
+                val attempts = crashRestartAttempts.incrementAndGet()
+                if (attempts > MAX_CRASH_RESTARTS) {
+                    appendLog(t("log.restore.gaveup"))
+                    prefs.edit().putBoolean("server_running_state", false).apply()
+                    _serverStatus.value = Status.STOPPED
+                } else {
+                    appendLog(t("log.restoring"))
+                    serviceScope.launch {
+                        delay(RESTART_BACKOFF_MS * attempts)
+                        if (prefs.getBoolean("server_running_state", false) && !serverEngine.isRunning) {
+                            try {
+                                if (serverEngine.start(serviceScope)) {
+                                    crashRestartAttempts.set(0)
+                                    updateNotification(t("notify.active").replace("{ip}", _lanIp.value))
+                                    appendLog(t("log.restored"))
+                                } else {
+                                    prefs.edit().putBoolean("server_running_state", false).apply()
+                                    _serverStatus.value = Status.STOPPED
+                                }
+                            } catch (e: Exception) {
+                                appendLog(t("log.restore.failed").replace("{error}", e.message.orEmpty()))
                                 _serverStatus.value = Status.STOPPED
                             }
-                        } catch (e: Exception) {
-                            appendLog(t("log.restore.failed").replace("{error}", e.message.orEmpty()))
-                            _serverStatus.value = Status.STOPPED
                         }
                     }
                 }

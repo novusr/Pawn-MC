@@ -17,7 +17,17 @@ internal object ThirdUnpacker {
 
     private const val TAG = "Unpacker"
 
+    private const val TAR_HEADER_SIZE = 512
+    private const val TAR_MAGIC_OFFSET = 257
+    private const val TAR_MAGIC_LENGTH = 5
+    private val TAR_MAGICS = setOf("ustar")
+
     private fun t(key: String): String = Locales.text(Locales.current, key)
+
+    /** Logs safely: [android.util.Log] is unmocked in JVM unit tests. */
+    private fun logWarning(message: String) {
+        runCatching { Log.w(TAG, message) }.onFailure { println("WARN/$TAG: $message") }
+    }
 
     /** Unpacks [source] into [outputDir]; returns the number of files written. */
     fun extract(source: InputStream, outputDir: File, onProgress: (Long) -> Unit = {}): Int {
@@ -31,8 +41,26 @@ internal object ThirdUnpacker {
             val b2 = buffered.read()
             buffered.reset()
             val isGzip = b1 == 0x1f && b2 == 0x8b
-            if (b1 == -1 && b2 == -1) {
+            if (b1 == -1) {
                 throw IllegalArgumentException(t("log.unpack.empty"))
+            }
+            if (!isGzip) {
+                // Reject non-tar payloads early: a plain-text stream would
+                // otherwise be treated as an empty archive instead of failing.
+                buffered.mark(TAR_HEADER_SIZE)
+                val header = ByteArray(TAR_HEADER_SIZE)
+                var filled = 0
+                while (filled < TAR_HEADER_SIZE) {
+                    val read = buffered.read(header, filled, TAR_HEADER_SIZE - filled)
+                    if (read == -1) break
+                    filled += read
+                }
+                buffered.reset()
+                val isTar = filled == TAR_HEADER_SIZE &&
+                    String(header, TAR_MAGIC_OFFSET, TAR_MAGIC_LENGTH) in TAR_MAGICS
+                if (!isTar) {
+                    throw IllegalArgumentException(t("log.unpack.corrupt").replace("{reason}", "not a tar archive"))
+                }
             }
 
             val tarStream: InputStream = if (isGzip) GZIPInputStream(buffered, 64 * 1024) else buffered
@@ -49,7 +77,7 @@ internal object ThirdUnpacker {
                             val inside = target.path.startsWith(root.path + File.separator) ||
                                 target.path == root.path
                             if (!inside) {
-                                Log.w(TAG, "Skipping entry outside destination: $name")
+                                logWarning("Skipping entry outside destination: $name")
                             } else if (entry.isDirectory) {
                                 target.mkdirs()
                             } else if (entry.isSymbolicLink) {
@@ -59,7 +87,7 @@ internal object ThirdUnpacker {
                                         target.toPath(),
                                         java.nio.file.Paths.get(entry.linkName)
                                     )
-                                }.onFailure { Log.w(TAG, "Symlink skipped: $name -> ${entry.linkName}") }
+                                }.onFailure { logWarning("Symlink skipped: $name -> ${entry.linkName}") }
                             } else {
                                 target.parentFile?.mkdirs()
                                 val partial = File(target.parentFile, target.name + ".part")
