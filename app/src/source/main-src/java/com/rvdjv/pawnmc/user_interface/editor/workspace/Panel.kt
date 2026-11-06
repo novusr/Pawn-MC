@@ -167,7 +167,7 @@ fun WorkspacePanel(
         }
 
         SectionHeader(
-            title = (workspace?.name ?: "Pick a folder").uppercase(),
+            title = (workspace?.name ?: "Share a folder").uppercase(),
             subtitle = workspace?.root?.path ?: "Tap here to open a folder into this panel",
             onClose = {
                 onBeforeAction()
@@ -557,13 +557,13 @@ private fun SectionHeader(
                 .fillMaxWidth()
                 .padding(start = 12.dp, end = 4.dp, top = 2.dp, bottom = 4.dp)
         ) {
-        // The title block is clickable when there is no workspace behind it: "PICK A
-        // FOLDER" is then the picker affordance itself, not a dead label.
+        // The title block is clickable when there is no workspace behind it: "Share a folder"
+        // is then the picker affordance itself, not a dead label.
         Column(
             modifier = Modifier
                 .weight(1f)
                 .then(
-                    if (title == "PICK A FOLDER") {
+                    if (title == "Share a folder") {
                         Modifier.clickable(onClick = onOpenFolder)
                     } else {
                         Modifier

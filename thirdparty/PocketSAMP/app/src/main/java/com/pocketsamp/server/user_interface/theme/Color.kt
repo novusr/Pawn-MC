@@ -7,7 +7,7 @@ val SurfaceDark = Color(0xFF1B1C19)
 val SurfaceCard = Color(0xFF22231F)
 val SurfaceCardBorder = Color(0xFF383A33)
 
-val BgLight = Color(0xFFFAF7)
+val BgLight = Color(0xFFE9E9E7)
 val SurfaceLight = Color(0xFFFFFFFF)
 val SurfaceCardLight = Color(0xFFF3F4F1)
 val SurfaceCardBorderLight = Color(0xFFDCDDDA)

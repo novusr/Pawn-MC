@@ -383,6 +383,9 @@ fun EditorScreen(
             scope.launch {
                 val saved = workspace.saveDocument(document)
                 workspace.refreshTree()
+                // The reopen list follows the save, so an editor left right after a
+                // save reopens exactly what was stored.
+                workspace.persistOpenTabs()
                 if (saved) {
                     Toast.makeText(context, "Saved ${document.name}", Toast.LENGTH_SHORT).show()
                 }
@@ -598,6 +601,9 @@ fun EditorScreen(
         if (hasUnsavedChanges) {
             showExitDialog = true
         } else {
+            // Remember what was open before leaving, so the next entry into the
+            // editor reopens the same tabs instead of an empty session.
+            workspace.persistOpenTabs()
             onNavigateBack()
         }
     }
@@ -663,6 +669,9 @@ fun EditorScreen(
                                     workspace.openWorkspaces.forEach { openWorkspace ->
                                         openWorkspace.documents.forEach { document -> workspace.openFile(document.file, openWorkspace) }
                                     }
+                                    // The tab list is written after saving so a reopen
+                                    // matches what was just flushed to disk.
+                                    workspace.persistOpenTabs()
                                     onNavigateBack()
                                 } else {
                                     Toast.makeText(
@@ -979,6 +988,7 @@ fun EditorScreen(
                             if (hasUnsavedChanges) {
                                 showExitDialog = true
                             } else {
+                                workspace.persistOpenTabs()
                                 onNavigateBack()
                             }
                         },

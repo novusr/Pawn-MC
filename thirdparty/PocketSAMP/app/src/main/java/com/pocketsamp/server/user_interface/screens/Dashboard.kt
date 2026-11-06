@@ -470,6 +470,39 @@ fun _Dashboard(
         }
 
         Spacer(Modifier.height(2.dp))
+        // Simple notice right above the start button: when a start is refused
+        // (busy, missing runtime, no folder) the user sees a short reason instead
+        // of tapping a button that silently does nothing.
+        if (!isBusy && !isRunning) {
+            val startBlocker = when {
+                !hasStoragePermission -> t("start.blocked.storage")
+                !hasCfg -> t("start.blocked.cfg")
+                else -> null
+            }
+            if (startBlocker != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(SampThemeColors.warn.copy(alpha = 0.10f))
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(SampThemeColors.warn)
+                    )
+                    Text(
+                        text = startBlocker,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SampThemeColors.textPrimary
+                    )
+                }
+            }
+        }
         Button(
             onClick = { if (isRunning) onStopServer() else onStartServer() },
             enabled = !isBusy,

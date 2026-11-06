@@ -1111,10 +1111,9 @@ internal fun CompilerLogsSection(
                     modifier = Modifier.weight(1f, fill = false)
                 )
                 Spacer(modifier = Modifier.width(SpaceXS))
-                // The two icon buttons then the chip are pushed to the far right: the title
-                // keeps its natural width (`fill = false`) and the flexible spacer soaks up
-                // the extra room a wide screen has.
-                Spacer(modifier = Modifier.weight(1f, fill = false))
+                // All the leftover width is soaked up by the single weight spacer above,
+                // so the actions and the status chip sit flush against the trailing edge
+                // on wide screens instead of floating at the middle of the row.
                 IconButton(
                     onClick = onDownloadClick,
                     enabled = canDownload,

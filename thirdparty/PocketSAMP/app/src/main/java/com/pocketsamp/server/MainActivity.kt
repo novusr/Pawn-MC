@@ -368,6 +368,16 @@ class MainActivity : ComponentActivity() {
             return
         }
 
+        // A stale "running" flag from a previous crashed session used to make the
+        // service ignore the start request, so the button seemed dead. Reset the
+        // flag when no engine is actually alive before asking for a start.
+        val prefs = getSharedPreferences("pocketsamp_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("server_running_state", false) &&
+            RuntimeService.serverStatus.value == com.pocketsamp.server.service_handler.Status.STOPPED
+        ) {
+            prefs.edit().putBoolean("server_running_state", false).apply()
+        }
+
         val intent = Intent(this, RuntimeService::class.java).apply {
             action = RuntimeService.ACTION_START
         }

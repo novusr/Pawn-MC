@@ -214,6 +214,41 @@ class CompilerConfig private constructor(context: Context) {
     }
 
     /**
+     * Open documents of each remembered workspace, stored as
+     * `folderAbsolute|tab1|tab2` groups joined by `;`.
+     */
+    var n_workspace_open_tabs: List<List<String>>
+        get() = (prefs.getString(KEY_WORKSPACE_TABS, "") ?: "")
+            .split(';')
+            .map { group -> group.split('|').map { it.trim() }.filter { it.isNotEmpty() } }
+            .filter { it.isNotEmpty() }
+        set(value) {
+            prefs.edit {
+                putString(
+                    KEY_WORKSPACE_TABS,
+                    value.joinToString(";") { group -> group.joinToString("|") }
+                )
+            }
+            mirrorToFile()
+        }
+
+    /** Active document of each remembered workspace, stored as `folder|path` groups. */
+    var n_workspace_active_tabs: List<List<String>>
+        get() = (prefs.getString(KEY_WORKSPACE_ACTIVE, "") ?: "")
+            .split(';')
+            .map { group -> group.split('|').map { it.trim() } }
+            .filter { it.size == 2 && it.all { part -> part.isNotEmpty() } }
+        set(value) {
+            prefs.edit {
+                putString(
+                    KEY_WORKSPACE_ACTIVE,
+                    value.joinToString(";") { group -> group.joinToString("|") }
+                )
+            }
+            mirrorToFile()
+        }
+
+    /**
      * Marks "Ignore case" as having been switched on by the automatic
      * `cannot read from file` detection instead of by the user.
      *
@@ -599,6 +634,10 @@ class CompilerConfig private constructor(context: Context) {
         internal const val KEY_APP_LANGUAGE_SET = "app_language_set"
         internal const val KEY_WORKSPACE_FOLDERS = "workspace_folders"
         internal const val KEY_EDITOR_BG_COLOR = "editor_background_color"
+        /** Open documents per remembered workspace, `folder|tab1|tab2|...` groups. */
+        internal const val KEY_WORKSPACE_TABS = "workspace_open_tabs"
+        /** Active document per remembered workspace, `folder|path` groups. */
+        internal const val KEY_WORKSPACE_ACTIVE = "workspace_active_tab"
 
         fun buildOptionsFor(
             debugLevel: DebugLevel = DebugLevel.D0,

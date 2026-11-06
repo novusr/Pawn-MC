@@ -36,6 +36,12 @@ private const val FILE_CHANGE_DEBOUNCE_MS = 250L
 /** How many folders may be open at the same time. */
 const val MAX_OPEN_WORKSPACES = 3
 
+/** Upper bound of tabs reopened from a previous session, per workspace. */
+internal const val MAX_RESTORED_TABS = 20
+
+/** Delay between two sequential tab restores, so a big session opens gradually. */
+internal const val TAB_RESTORE_DELAY_MS = 120L
+
 internal fun normalizeNewPawnFileName(requestedName: String): String? {
     val name = requestedName.trim()
     if (name.isBlank() || name == "." || name == ".." || name.contains('/') || name.contains('\\')) {
@@ -248,6 +254,72 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
 
     init {
         restoreRememberedWorkspaces()
+        restoreRememberedTabs()
+    }
+
+    /** Tab-restore queue, drained one document at a time. */
+    private val pendingTabLoads = ArrayDeque<Pair<Workspace, File>>()
+
+    /**
+     * Re-opens the documents each remembered workspace had open, one at a time.
+     *
+     * The queue is drained sequentially: opening every tab at once fires several
+     * concurrent disk reads and file watchers, which on slow storage raced with
+     * each other and occasionally left a tab blank. A serial queue keeps the same
+     * result without the burst.
+     */
+    private fun restoreRememberedTabs() {
+        val store = config ?: return
+        val folders = store.n_workspace_folders
+        if (folders.isEmpty()) return
+        val tabsByFolder = store.n_workspace_open_tabs.associateBy { group -> group.first() }
+        val activeByFolder = store.n_workspace_active_tabs
+            .associate { group -> group[0] to group[1] }
+
+        workspaces.forEach { workspace ->
+            val folderKey = workspace.root.absolutePath
+            val tabs = tabsByFolder[folderKey]
+                ?.drop(1)
+                ?.filter { File(it).isFile }
+                .orEmpty()
+            tabs.take(MAX_RESTORED_TABS).forEach { path ->
+                pendingTabLoads.add(workspace to File(path))
+            }
+            activeByFolder[folderKey]?.let { path ->
+                if (File(path).isFile) workspace.activate(path)
+            }
+        }
+        drainDocumentLoadQueue()
+    }
+
+    private fun drainDocumentLoadQueue() {
+        if (pendingTabLoads.isEmpty()) return
+        val (workspace, file) = pendingTabLoads.removeFirstOrNull() ?: return
+        // Only reopen what still exists; a file deleted while the app was closed
+        // must not block the rest of the queue.
+        if (file.isFile) openFile(file, workspace)
+        if (pendingTabLoads.isNotEmpty()) {
+            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+                { drainDocumentLoadQueue() },
+                TAB_RESTORE_DELAY_MS
+            )
+        } else {
+            persistOpenTabs()
+        }
+    }
+
+    /** Persists the open tabs and the active document of every workspace. */
+    fun persistOpenTabs() {
+        val store = config ?: return
+        store.n_workspace_open_tabs = workspaces.map { workspace ->
+            listOf(workspace.root.absolutePath) +
+                workspace.documents.map { it.file.absolutePath }
+        }
+        store.n_workspace_active_tabs = workspaces.mapNotNull { workspace ->
+            workspace.activePath?.let { path ->
+                listOf(workspace.root.absolutePath, path)
+            }
+        }
     }
 
     /** Re-opens the workspace folders stored by a previous run. */

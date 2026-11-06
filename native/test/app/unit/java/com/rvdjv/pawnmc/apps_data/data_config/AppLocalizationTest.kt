@@ -64,7 +64,7 @@ class AppLocalizationTest {
             local_tl = "Bersyon ng Compiler"
             local_ru = "Версия компилятора"
             local_es = "Version del compilador"
-            "".trimIndent()
+            """.trimIndent()
         )
         assertEquals("Versi Compiler", parsed["settings.compiler.version.id"])
         assertEquals("Compiler Version", parsed["settings.compiler.version.en"])

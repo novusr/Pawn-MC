@@ -42,6 +42,16 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_DEL && deleteIndentLevel()) return true
+        // Hardware keyboards (and emulators) deliver Ctrl combos through onKeyDown
+        // first; route them through the shortcut handler so Ctrl+A/C/X/V work and the
+        // unhandled ones are consumed instead of leaking their characters into the
+        // text (the "Ctrl+A produced 0001" symptom).
+        if (event.isCtrlPressed && !event.isAltPressed && !event.isMetaPressed) {
+            if (onKeyShortcut(keyCode, event)) return true
+            // Swallow other Ctrl+key combos: releasing them unhandled would type the
+            // bare key character into the document.
+            return true
+        }
         return super.onKeyDown(keyCode, event)
     }
 
