@@ -129,9 +129,9 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
     ) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
-            val destination = createDestination()
             val uploaded = withContext(Dispatchers.IO) {
                 runCatching {
+                    val destination = createDestinationFor(root, currentDirectory, selectedFolder)
                     require(destination.isDirectory && destination.canWrite()) { t("files.read.denied") }
                     require(isWithin(root.canonicalFile, destination.canonicalFile)) { t("files.outside.root") }
                     val displayName = queryDisplayName(context, uri) ?: return@runCatching null

@@ -204,6 +204,15 @@ fun SettingsScreen(
     var showVersionDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
+    // Set when a new language is picked; a LaunchedEffect performs the recreate so
+    // the composable call site stays outside the click lambda.
+    var recreateAfterLanguageChange by remember { mutableStateOf(false) }
+    LaunchedEffect(recreateAfterLanguageChange) {
+        if (recreateAfterLanguageChange) {
+            recreateAfterLanguageChange = false
+            (LocalContext.current as? Activity)?.recreate()
+        }
+    }
     var showEditorBackgroundDialog by remember { mutableStateOf(false) }
     var showRestartDialog by remember { mutableStateOf(false) }
     var showManualRestartDialog by remember { mutableStateOf(false) }
@@ -1316,10 +1325,7 @@ fun SettingsScreen(
                             onClick = {
                                 viewModel.updateAppLanguage(language)
                                 showLanguageDialog = false
-                                // The locale is baked in at attachBaseContext, so the
-                                // whole activity has to be rebuilt for every string
-                                // resource (and every cached localizer) to follow.
-                                (LocalContext.current as? Activity)?.recreate()
+                                recreateAfterLanguageChange = true
                             }
                         )
                     }
