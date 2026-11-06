@@ -758,6 +758,20 @@ object Locales {
             Lang.ES to "Archivo",
             Lang.RU to "Файл",
         ),
+        "files.upload" to mapOf(
+            Lang.ID to "Unggah file",
+            Lang.EN to "Upload file",
+            Lang.TL to "I-upload ang file",
+            Lang.ES to "Subir archivo",
+            Lang.RU to "Загрузить файл",
+        ),
+        "files.upload.failed" to mapOf(
+            Lang.ID to "File tidak dapat diunggah.",
+            Lang.EN to "The file could not be uploaded.",
+            Lang.TL to "Hindi ma-upload ang file.",
+            Lang.ES to "No se pudo subir el archivo.",
+            Lang.RU to "Не удалось загрузить файл.",
+        ),
         "files.rename" to mapOf(
             Lang.ID to "Ganti nama",
             Lang.EN to "Rename",

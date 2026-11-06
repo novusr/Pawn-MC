@@ -76,6 +76,21 @@ class ThirdExtractor(private val context: Context) {
 
         File(mariadbDir, "bin/mariadbd").let { if (it.exists()) it.setExecutable(true, false) }
 
+        /*
+         * Host-side ecosystem binaries (QEMU translator, MariaDB support .so) ship
+         * in their own archive because they cannot be built on the device. They are
+         * unpacked into filesDir so `ThirdLauncher.findQemu` picks the translator up
+         * from `filesDir/arm64-v8a/` when the APK's jniLibs copy is missing.
+         */
+        if (archiveExists(ECOSYSTEM_ARCHIVE)) {
+            extractRuntimeArchive(ECOSYSTEM_ARCHIVE, filesDir)
+            File(filesDir, "arm64-v8a").listFiles()?.forEach { library ->
+                if (library.isFile) library.setExecutable(true, false)
+            }
+        } else {
+            onProgress(t("log.x.bundle.missing").replace("{name}", ECOSYSTEM_ARCHIVE))
+        }
+
         val daemon = File(mariadbDir, "bin/mariadbd")
         val mariadbComplete = daemon.isFile &&
             daemon.length() > 0L &&

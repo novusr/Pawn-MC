@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -116,6 +117,41 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
         entries.firstOrNull { it.file.absolutePath == selected.absolutePath }
     }
     var name by remember { mutableStateOf("") }
+
+    /*
+     * Upload: the user picks a document with the system picker, and it is copied
+     * into the create destination (the selected folder, or the one open). The
+     * picker does not write anything itself, so the file is streamed into the
+     * server folder with the same safety checks the in-app create path uses.
+     */
+    val fileUploader = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val destination = createDestination()
+            val uploaded = withContext(Dispatchers.IO) {
+                runCatching {
+                    require(destination.isDirectory && destination.canWrite()) { t("files.read.denied") }
+                    require(isWithin(root.canonicalFile, destination.canonicalFile)) { t("files.outside.root") }
+                    val displayName = queryDisplayName(context, uri) ?: return@runCatching null
+                    val target = File(destination, displayName)
+                    require(!target.exists()) { t("files.name.exists") }
+                    context.contentResolver.openInputStream(uri)?.use { input ->
+                        target.outputStream().use { output -> input.copyTo(output) }
+                    } ?: return@runCatching null
+                    target.isFile
+                }.getOrNull() == true
+            }
+            when {
+                uploaded -> {
+                    operationError = null
+                    refreshToken++
+                }
+                else -> operationError = t("files.upload.failed")
+            }
+        }
+    }
     val lifecycleOwner = context as? LifecycleOwner
 
     if (lifecycleOwner != null) {
@@ -361,6 +397,14 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                 Spacer(Modifier.size(6.dp))
                 Text(t("files.new.file"), maxLines = 1)
             }
+        }
+        OutlinedButton(
+            onClick = { fileUploader.launch(arrayOf("*/*")) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(Icons.Default.UploadFile, contentDescription = null)
+            Spacer(Modifier.size(6.dp))
+            Text(t("files.upload"), maxLines = 1)
         }
 
         Text(
@@ -713,6 +757,15 @@ private fun isWithin(root: File, candidate: File): Boolean {
     val candidatePath = candidate.canonicalPath
     return candidatePath == rootPath || candidatePath.startsWith(rootPath + File.separator)
 }
+
+/** Display name of a picker [uri], used as the uploaded file's name. */
+private fun queryDisplayName(context: android.content.Context, uri: android.net.Uri): String? =
+    runCatching {
+        context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+            if (index >= 0 && cursor.moveToFirst()) cursor.getString(index)?.takeIf { isSafeName(it) } else null
+        }
+    }.getOrNull()
 
 private fun isSafeName(name: String): Boolean =
     name.isNotBlank() && name != "." && name != ".." &&

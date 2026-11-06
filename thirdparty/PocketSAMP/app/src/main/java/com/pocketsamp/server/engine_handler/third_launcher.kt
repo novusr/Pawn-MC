@@ -80,6 +80,8 @@ internal object ThirdLauncher {
             File(nativeLibDir, "qemu-i386"),
             File(filesDir, "bin/qemu-i386"),
             File(filesDir, "bin/libqemu-i386.so"),
+            // r_ecosystem.tar.gz unpacks the translator here.
+            File(filesDir, "arm64-v8a/libqemu-i386.so"),
             File(filesDir, "rootfs_i386/bin/qemu-i386"),
             File(filesDir, "rootfs_i386/usr/bin/qemu-i386"),
             File("/system/bin/qemu-i386"),

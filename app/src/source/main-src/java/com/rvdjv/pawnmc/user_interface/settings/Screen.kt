@@ -1316,6 +1316,10 @@ fun SettingsScreen(
                             onClick = {
                                 viewModel.updateAppLanguage(language)
                                 showLanguageDialog = false
+                                // The locale is baked in at attachBaseContext, so the
+                                // whole activity has to be rebuilt for every string
+                                // resource (and every cached localizer) to follow.
+                                (LocalContext.current as? Activity)?.recreate()
                             }
                         )
                     }

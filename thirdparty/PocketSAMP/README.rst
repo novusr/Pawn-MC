@@ -46,6 +46,11 @@ The repository keeps the same archives grouped by runtime type::
     thirdparty/PocketSAMP/runtime/rootfs/r_rootfs_i386.tar.gz
     thirdparty/PocketSAMP/runtime/samp/r_samp.tar.gz
     thirdparty/PocketSAMP/runtime/mariadb/r_mariadb.tar.gz
+    thirdparty/PocketSAMP/runtime/ecosystem/r_ecosystem.tar.gz
+``ecosystem/r_ecosystem.tar.gz`` holds the host-side ARM64 native helpers that cannot
+be built on the device (the QEMU user-mode translator and its support libraries). It is
+unpacked into ``filesDir`` and the translator is picked up from there when the APK does
+not bundle it.
 The app checks each download against its expected SHA-256 digest and replaces invalid
 cached archives before extraction.
 Each archive is unpacked independently into the app's private storage, so a missing or

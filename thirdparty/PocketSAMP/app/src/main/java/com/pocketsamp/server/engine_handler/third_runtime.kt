@@ -43,6 +43,7 @@ class ThirdRuntime(private val context: Context) {
         const val ROOTFS_ARCHIVE = "r_rootfs_i386.tar.gz"
         const val SAMP_ARCHIVE = "r_samp.tar.gz"
         const val MARIADB_ARCHIVE = "r_mariadb.tar.gz"
+        const val ECOSYSTEM_ARCHIVE = "r_ecosystem.tar.gz"
 
         private val ARCHIVES = listOf(
             RuntimeArchive(
@@ -59,6 +60,11 @@ class ThirdRuntime(private val context: Context) {
                 MARIADB_ARCHIVE,
                 "mariadb/$MARIADB_ARCHIVE",
                 "e4a2b4e50830b8917af6cac7ba0d5cad17098cd9d776618068ae6448ff5d13a5"
+            ),
+            RuntimeArchive(
+                ECOSYSTEM_ARCHIVE,
+                "ecosystem/$ECOSYSTEM_ARCHIVE",
+                "f44f9886197c7e672bebe13b549db451408b625c1dfd49f328627a1b2cb668f8"
             )
         )
 
