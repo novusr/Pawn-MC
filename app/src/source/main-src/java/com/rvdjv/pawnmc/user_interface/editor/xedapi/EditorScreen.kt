@@ -1575,6 +1575,10 @@ fun EditorScreen(
                                 if (appliedLanguage.current !== codeLanguage) {
                                     editor.setEditorLanguage(codeLanguage)
                                     appliedLanguage.current = codeLanguage
+                                    // setEditorLanguage resets the symbol-pair
+                                    // matcher underneath; re-assert the toggle so
+                                    // the auto-close state survives the swap.
+                                    editor.autoCloseMode = editor.autoCloseMode
                                 }
                                 // Re-tint when the app theme (and therefore the surface
                                 // ramp) changes while the editor view is still alive.

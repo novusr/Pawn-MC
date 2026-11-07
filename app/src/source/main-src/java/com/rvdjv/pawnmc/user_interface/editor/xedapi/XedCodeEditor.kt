@@ -32,16 +32,17 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
         set(value) {
             field = value
             // sora's own symbol-pair matcher is the thing inserting the closers on
-            // the IME path; nulling the pairs for every opener turns it off for
-            // good when the toggle (or the stored mode) says so, instead of
-            // fighting it in the input wrapper.
-            val pairs = symbolPairMatch
+            // the IME path; replacing the whole pair map turns it off for good when
+            // the toggle (or the stored mode) says so, instead of fighting it in
+            // the input wrapper. The matcher lives in the protected
+            // `languageSymbolPairs` field, reachable from this subclass.
+            val pairs = languageSymbolPairs ?: SymbolPairMatch().also { languageSymbolPairs = it }
+            // The matcher has no on/off flag: an empty map means every opener falls
+            // through as a plain character, which is exactly the "off" behaviour.
             if (value == CompilerConfig.EditorAutoClose.SMART) {
                 pairs.putPair('(', null)
                 pairs.putPair('{', null)
                 pairs.putPair('[', null)
-                pairs.putPair('"', null)
-                pairs.putPair('\'', null)
             } else {
                 pairs.putPair('(', SymbolPairMatch.SymbolPair("(", ")"))
                 pairs.putPair('{', SymbolPairMatch.SymbolPair("{", "}"))
