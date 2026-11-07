@@ -96,7 +96,12 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
     fun t(key: String): String = Locales.text(lang, key)
     val serverActive = status != Status.STOPPED
 
-    var root by remember { mutableStateOf(_DirectoryManager.getServerDirectory(context)) }
+    var root by remember {
+        mutableStateOf(
+            runCatching { _DirectoryManager.getServerDirectory(context) }
+                .getOrNull() ?: _DirectoryManager.getTemplateDirectory()
+        )
+    }
     var currentDirectory by remember(root.absolutePath) { mutableStateOf(root) }
     var entries by remember { mutableStateOf<List<ManagedFile>>(emptyList()) }
     /** Folders shown with their children; the root starts open. */
@@ -204,14 +209,20 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
         directoryError = null
         val result = withContext(Dispatchers.IO) {
             runCatching {
-                val canonicalRoot = root.canonicalFile
-                val canonicalCurrent = currentDirectory.canonicalFile
+                val canonicalRoot = runCatching { root.canonicalFile }.getOrNull() ?: root
+                val canonicalCurrent = runCatching { currentDirectory.canonicalFile }.getOrNull() ?: currentDirectory
                 require(isWithin(canonicalRoot, canonicalCurrent)) { t("files.outside.root") }
                 require(canonicalCurrent.isDirectory && canonicalCurrent.canRead()) { t("files.read.denied") }
                 serverConfigExists = File(canonicalRoot, "server.cfg").isFile
                 canonicalCurrent.listFiles()
-                    ?.filter { isWithin(canonicalRoot, it.canonicalFile) }
-                    ?.map { ManagedFile(it, it.isDirectory, it.length()) }
+                    ?.filter { entry -> isWithin(canonicalRoot, runCatching { entry.canonicalFile }.getOrNull() ?: entry) }
+                    ?.mapNotNull { entry ->
+                        // A probe failing on one entry (transient mount hiccup,
+                        // permission blip) must not blank the whole listing.
+                        runCatching {
+                            ManagedFile(entry, entry.isDirectory, entry.length())
+                        }.getOrNull()
+                    }
                     ?.sortedWith(compareBy<ManagedFile> { !it.isDirectory }.thenBy { it.file.name.lowercase() })
                     ?: error(t("files.read.denied"))
             }
@@ -753,9 +764,17 @@ internal fun createDestinationFor(root: File, currentDirectory: File, selectedFo
 }
 
 private fun isWithin(root: File, candidate: File): Boolean {
-    val rootPath = root.canonicalPath
-    val candidatePath = candidate.canonicalPath
-    return candidatePath == rootPath || candidatePath.startsWith(rootPath + File.separator)
+    val rootPath = runCatching { root.canonicalPath }.getOrNull() ?: root.absolutePath
+    val candidatePath = runCatching { candidate.canonicalPath }.getOrNull() ?: candidate.absolutePath
+    if (candidatePath == rootPath) return true
+    if (candidatePath.startsWith(rootPath + File.separator)) return true
+    // Some Android mounts expose the same folder under two absolute paths
+    // (`/sdcard` vs `/storage/emulated/0`); normalizing the slashes lets the
+    // alias pair through so a valid folder is not rejected as "outside root".
+    val normalizedRoot = rootPath.replace('\\', '/').trimEnd('/')
+    val normalizedCandidate = candidatePath.replace('\\', '/').trimEnd('/')
+    return normalizedCandidate == normalizedRoot ||
+        normalizedCandidate.startsWith(normalizedRoot + "/")
 }
 
 /** Display name of a picker [uri], used as the uploaded file's name. */

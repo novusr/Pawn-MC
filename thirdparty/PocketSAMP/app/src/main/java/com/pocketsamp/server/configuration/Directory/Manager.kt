@@ -41,21 +41,17 @@ object _DirectoryManager {
             // straight to a valid folder instead of failing silently.
             if (custom.isDirectory) return custom
             prefs.edit().remove(KEY_CUSTOM_SERVER_DIR).apply()
-            com.rvdjv.pawnmc.apps_data.data_config.PathStore
-                .writePaths(getDocumentsPawnMcDir(), "filemanager", emptyList())
+            _PathStore.writePaths(getDocumentsPawnMcDir(), "filemanager", emptyList())
         }
         // Fall back to the reusable JSON mirror first (it survives an uninstall),
         // then to the extracted r_samp template folder.
-        runCatching {
-            com.rvdjv.pawnmc.apps_data.data_config.PathStore
-                .readPaths(getDocumentsPawnMcDir(), "filemanager")
-        }.getOrNull()?.let { stored ->
-            val alive = stored.filter { File(it).isDirectory }
+        val stored = _PathStore.readPaths(getDocumentsPawnMcDir(), "filemanager")
+        if (stored.isNotEmpty()) {
+            // The mirror only keeps paths that still open; a dead entry costs
+            // nothing but a failed File(...) probe, so prune it on sight.
+            val alive = stored.filter { path -> runCatching { File(path).isDirectory }.getOrDefault(false) }
             if (alive.size != stored.size) {
-                // The mirror only keeps paths that still open; a dead entry costs
-                // nothing but a failed File(...) probe, so prune it on sight.
-                com.rvdjv.pawnmc.apps_data.data_config.PathStore
-                    .writePaths(getDocumentsPawnMcDir(), "filemanager", alive)
+                _PathStore.writePaths(getDocumentsPawnMcDir(), "filemanager", alive)
             }
             alive.firstOrNull()?.let { return File(it) }
         }
@@ -86,8 +82,7 @@ object _DirectoryManager {
         val stored = prefs.edit().putString(KEY_CUSTOM_SERVER_DIR, canonical.absolutePath).commit()
         // Mirror the folder into the reusable JSON store so a reinstall keeps the
         // same File Manager target; dead paths are dropped from the mirror.
-        com.rvdjv.pawnmc.apps_data.data_config.PathStore
-            .writePaths(getDocumentsPawnMcDir(), "filemanager", listOf(canonical.absolutePath))
+        _PathStore.writePaths(getDocumentsPawnMcDir(), "filemanager", listOf(canonical.absolutePath))
         return stored
     }
 

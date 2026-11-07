@@ -341,7 +341,11 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         if (stored.isEmpty()) return
 
         val requested = stored.distinct()
-        val surviving = requested.filter { File(it).isDirectory }
+        val surviving = requested.filter { path ->
+            // canonicalPath can throw on freshly mounted folders; a plain exists
+            // probe keeps a valid folder from being pruned as "missing".
+            runCatching { File(path).isDirectory }.getOrDefault(false)
+        }
         if (surviving.size != requested.size) {
             // Dead folders cost restore IO every launch; drop them from both stores.
             store.n_workspace_folders = surviving
