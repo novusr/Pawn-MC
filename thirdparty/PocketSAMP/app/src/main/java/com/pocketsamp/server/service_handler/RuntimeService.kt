@@ -62,9 +62,13 @@ class RuntimeService : Service() {
         var isServiceRunning: Boolean = false
             private set
 
-        /** App context captured at [onCreate]; enables SQLite persistence of console lines. */
+        /** App context captured at [onCreate]; the JSONL console journal lives in its files dir. */
         @Volatile
         private var appContext: android.content.Context? = null
+
+        /** Own journal of console lines; trimmed at startup, written per line. */
+        @Volatile
+        private var journalFile: java.io.File? = null
         private val _serverStatus = MutableStateFlow(Status.STOPPED)
         val serverStatus: StateFlow<Status> = _serverStatus.asStateFlow()
 
@@ -92,11 +96,12 @@ class RuntimeService : Service() {
         fun appendLog(line: String) {
             runCatching { consoleLogSink?.invoke(line) }
             synchronized(logLock) {
-                // Every console line is persisted first — the SQLite store is the
-                // source of truth, so a UI hiccup never loses a line. The context
-                // is captured at onCreate; a null one only skips persistence.
-                appContext?.let { ctx ->
-                    com.rvdjv.pawnmc.apps_data.data_logging._pocket_store.record(ctx, line)
+                // The host (PawnMC) mirrors every line into its SQLite log via the
+                // consoleLogSink installed at launch, so this module only keeps its
+                // own lightweight JSONL journal — the module does not link PawnMC
+                // code and cannot call the host store directly.
+                journalFile?.let { file ->
+                    runCatching { file.appendText(line.replace('\n', ' ') + "\n") }
                 }
                 val current = _logFeed.value.toMutableList()
                 if (current.size > 500) {
@@ -175,6 +180,14 @@ class RuntimeService : Service() {
     override fun onCreate() {
         super.onCreate()
         appContext = applicationContext
+        journalFile = runCatching {
+            val dir = java.io.File(applicationContext.filesDir, "console_logs").apply { mkdirs() }
+            val file = java.io.File(dir, "console.jsonl")
+            // Keep the journal bounded: older lines are the host's SQLite store's
+            // job, this file only has to survive a session.
+            if (file.isFile && file.length() > 512 * 1024) file.delete()
+            file
+        }.getOrNull()
         isServiceRunning = true
         createNotificationChannel()
         startLogStreamer(serviceScope)
