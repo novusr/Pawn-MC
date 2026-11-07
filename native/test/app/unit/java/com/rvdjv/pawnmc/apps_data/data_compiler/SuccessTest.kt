@@ -25,10 +25,10 @@ class SuccessTest {
         Compiler.resetSessionState()
         val output = "error 017: undefined symbol __addressof"
         assertFalse(Compiler.shouldRecoverAddressOf("undefined symbol _addressof"))
-        assertFalse(Compiler.claimAddressOfRecovery(output, forcedMode = false, CompilerConfig.CompilerVersion.V3107))
+        // The claim is version-agnostic now: any compiler that reports the
+        // missing symbol qualifies for exactly one recovery per session.
+        assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = false, CompilerConfig.CompilerVersion.V3107))
         assertFalse(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V31011))
-        assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V3107))
-        assertFalse(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V3107))
         Compiler.resetSessionState()
         assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V3107))
     }

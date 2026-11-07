@@ -440,7 +440,11 @@ private suspend fun pawnccCommand(
             selectedVersion
         )
     ) {
-        // One-shot transient retry on 3.10.11; the forced selection stays as set.
+        // The recovery makes 3.10.11 the standing selection.
+        CompilerConfig.getInstanceOrNull()?.let { config ->
+            config.n_forced_compiler_mode = false
+            config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
+        }
         result = runCatching {
             onCompile(invocation.source, invocation.options, CompilerConfig.CompilerVersion.V31011)
         }.getOrElse { "${text("terminal.error.execution")} ${it.message.orEmpty()}" }

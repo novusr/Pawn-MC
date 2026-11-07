@@ -92,11 +92,11 @@ object Runner {
     /**
      * Claims the one-shot `__addressof` recovery.
      *
-     * The check runs against the version the compile *actually ran with*, not the
-     * stored preference, so a forced 3.10.11 that produced `undefined symbol:
-     * "__addressof"` can never drag the selection down to 3.10.7 or flip the mode
-     * off. The retry is transient as well: the settings keep their forced/auto
-     * state, only this one compile is retried on 3.10.11.
+     * The error is a hard signal that the running compiler does not provide
+     * `__addressof`, whatever version that was: the recovery switches the
+     * stored selection to 3.10.11 (the only bundled compiler that ships the
+     * symbol) and drops the forced mode, so the next compile starts on the
+     * version that actually works instead of ping-ponging back.
      */
     @Synchronized
     internal fun claimAddressOfRecovery(
@@ -104,9 +104,7 @@ object Runner {
         forcedMode: Boolean,
         compiledVersion: CompilerConfig.CompilerVersion
     ): Boolean {
-        if (!shouldRecoverAddressOf(output) || !forcedMode ||
-            compiledVersion != CompilerConfig.CompilerVersion.V3107 || ADDRO_REFIX_USED
-        ) return false
+        if (!shouldRecoverAddressOf(output) || ADDRO_REFIX_USED) return false
         ADDRO_REFIX_USED = true
         return true
     }
@@ -211,10 +209,12 @@ object Runner {
                 version
             )
         ) {
-            // One-shot, transient: the forced selection and its mode stay as the
-            // user set them. Only this compile is retried on the newer compiler,
-            // which is the one that actually provides `__addressof`.
-            Log.w("Compiler", "__addressof recovery: retried once on 3.10.11 (settings untouched)")
+            // The compiled source needs `__addressof`, which only 3.10.11 ships:
+            // make that the standing selection (and drop the forced pin) so the
+            // next compile stays on it instead of flipping back.
+            n_config.n_forced_compiler_mode = false
+            n_config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
+            Log.w("Compiler", "__addressof recovery: compiler selection moved to 3.10.11")
             val retried = compileWithVersion(
                 sourceFile,
                 n_config.buildOptions(CompilerConfig.CompilerVersion.V31011),
@@ -257,7 +257,9 @@ object Runner {
         val first = compileWithVersion(sourceFile, options, version, manualArguments = true)
         val config = CompilerConfig.getInstanceOrNull() ?: return first
         if (!claimAddressOfRecovery(first.second, config.n_forced_compiler_mode, version)) return first
-        // Transient retry only; forced mode and the selected version stay untouched.
+        // The recovery makes 3.10.11 the standing selection.
+        config.n_forced_compiler_mode = false
+        config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
         val retry = compileWithVersion(
             sourceFile,
             config.buildOptions(CompilerConfig.CompilerVersion.V31011),

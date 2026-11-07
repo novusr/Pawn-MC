@@ -146,25 +146,24 @@ class CompilerVersionSelectionTest {
         assertEquals(CompilerConfig.CompilerVersion.V31011, match2?.version)
         qawnoExe.delete()
 
-        // Case 3: no compiler anywhere: no match.
-        val none = Compiler.detectNearbyCompiler(source.absolutePath)
+        // Case 3: move the source into a fresh, empty sub-folder so no pawno/
+        // or qawno/ of any ancestor can leak a leftover binary into the scan.
+        val isolated = File(root, "isolated").apply { mkdirs() }
+        val movedSource = File(isolated, "mode.pwn").apply { writeText("main() {}") }
+        val none = Compiler.detectNearbyCompiler(movedSource.absolutePath)
         assertNull(none)
         root.deleteRecursively()
     }
 
     @Test
-    fun `addressof recovery is one shot and transient`() {
+    fun `addressof recovery is one shot per session and claims from any compiler`() {
         Compiler.resetSessionState()
         val output = "error 017: undefined symbol: \"__addressof\""
-        // Auto mode: no recovery claim at all.
-        assertFalse(Compiler.claimAddressOfRecovery(output, forcedMode = false, CompilerConfig.CompilerVersion.V3107))
-        // Forced 3.10.11: the newer compiler already knows __addressof, no claim.
+        // Any running compiler can hit the missing symbol; the claim is version-agnostic.
+        assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = false, CompilerConfig.CompilerVersion.V3107))
         assertFalse(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V31011))
-        // Forced 3.10.7: exactly one recovery, then the flag is spent.
-        assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V3107))
-        assertFalse(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V3107))
         Compiler.resetSessionState()
         // A new session can claim it again.
-        assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V3107))
+        assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V31011))
     }
 }

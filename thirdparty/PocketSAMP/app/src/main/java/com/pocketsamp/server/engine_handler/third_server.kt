@@ -183,11 +183,12 @@ class Server(private val context: Context) {
          * Execute SA-MP server via QEMU user-mode translation directly (-L provides the x86 sysroot),
          * or natively on x86/x86_64 hosts via ld-linux.so.2.
          */
+        val guestLibPath = "/usr/lib/i386-linux-gnu:/lib/i386-linux-gnu:/usr/lib:/lib:./plugins:plugins"
         val command = if (qemuBinary != null) {
             listOf(
                 qemuBinary.absolutePath,
                 "-L", rootfsDir.absolutePath,
-                "-E", "LD_LIBRARY_PATH=/usr/lib/i386-linux-gnu:/lib/i386-linux-gnu:/usr/lib:/lib:./plugins:plugins",
+                "-E", "LD_LIBRARY_PATH=$guestLibPath",
                 serverBinary.absolutePath
             )
         } else if (ldLinux != null) {
@@ -200,6 +201,27 @@ class Server(private val context: Context) {
             )
         } else {
             listOf(serverBinary.absolutePath)
+        }
+
+        /*
+         * Pre-flight the runtime libraries the guest will need. The i386 sysroot
+         * carries libstdc++/libgcc; when extraction materialized a symlink as a
+         * copy under a different name the loader used to fail with
+         * "libstdc++.so.6: cannot open shared object file" before the server
+         * even started. Log the exact miss instead of a bare exec error.
+         */
+        runCatching {
+            listOf("libstdc++.so.6", "libgcc_s.so.1", "libc.so.6", "libm.so.6").forEach { name ->
+                val found = listOf(
+                    File(rootfsDir, "usr/lib/i386-linux-gnu/$name"),
+                    File(rootfsDir, "lib/i386-linux-gnu/$name"),
+                    File(rootfsDir, "usr/lib/$name"),
+                    File(rootfsDir, "lib/$name")
+                ).any { it.exists() }
+                if (!found) {
+                    _serverLogs.tryEmit("[Runtime] Warning: $name missing from the i386 sysroot")
+                }
+            }
         }
 
         val env = mapOf(

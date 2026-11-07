@@ -81,13 +81,36 @@ internal object ThirdUnpacker {
                             } else if (entry.isDirectory) {
                                 target.mkdirs()
                             } else if (entry.isSymbolicLink) {
-                                runCatching {
+                                val linked = runCatching {
                                     java.nio.file.Files.deleteIfExists(target.toPath())
                                     java.nio.file.Files.createSymbolicLink(
                                         target.toPath(),
                                         java.nio.file.Paths.get(entry.linkName)
                                     )
-                                }.onFailure { logWarning("Symlink skipped: $name -> ${entry.linkName}") }
+                                }.isSuccess
+                                if (!linked) {
+                                    // Shared storage (FUSE) refuses symlink(2); leaving
+                                    // nothing behind makes the loader report
+                                    // "libstdc++.so.6: cannot open shared object file".
+                                    // Copy the link target's bytes instead: a real file
+                                    // always resolves where a dangling symlink would not.
+                                    val copied = runCatching {
+                                        val source = File(outputDir.canonicalFile, entry.linkName)
+                                        val resolved = if (source.isFile) source else {
+                                            File(outputDir.canonicalFile, entry.linkName.substringAfterLast('/'))
+                                        }
+                                        if (resolved.isFile) {
+                                            target.parentFile?.mkdirs()
+                                            resolved.copyTo(target, overwrite = true)
+                                            true
+                                        } else false
+                                    }.getOrDefault(false)
+                                    if (copied) {
+                                        logWarning("Symlink materialized as copy: $name -> ${entry.linkName}")
+                                    } else {
+                                        logWarning("Symlink skipped: $name -> ${entry.linkName}")
+                                    }
+                                }
                             } else {
                                 target.parentFile?.mkdirs()
                                 val partial = File(target.parentFile, target.name + ".part")

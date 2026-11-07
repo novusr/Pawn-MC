@@ -10,6 +10,7 @@ import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputConnectionWrapper
 import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import io.github.rosemoe.sora.widget.CodeEditor
+import io.github.rosemoe.sora.widget.SymbolPairMatch
 import io.github.rosemoe.sora.widget.EditorRenderer
 
 /** Separates the line and column numbers. */
@@ -28,6 +29,25 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
      */
     var autoCloseMode: CompilerConfig.EditorAutoClose =
         CompilerConfig.getInstance(context).n_editor_auto_close
+        set(value) {
+            field = value
+            // sora's own symbol-pair matcher is the thing inserting the closers on
+            // the IME path; nulling the pairs for every opener turns it off for
+            // good when the toggle (or the stored mode) says so, instead of
+            // fighting it in the input wrapper.
+            val pairs = symbolPairMatch
+            if (value == CompilerConfig.EditorAutoClose.SMART) {
+                pairs.putPair('(', null)
+                pairs.putPair('{', null)
+                pairs.putPair('[', null)
+                pairs.putPair('"', null)
+                pairs.putPair('\'', null)
+            } else {
+                pairs.putPair('(', SymbolPairMatch.SymbolPair("(", ")"))
+                pairs.putPair('{', SymbolPairMatch.SymbolPair("{", "}"))
+                pairs.putPair('[', SymbolPairMatch.SymbolPair("[", "]"))
+            }
+        }
 
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
         val connection = super.onCreateInputConnection(outAttrs) ?: return null
@@ -72,14 +92,18 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         if (keyCode == KeyEvent.KEYCODE_DEL && deleteIndentLevel()) return true
-        // Hardware keyboards (and emulators) deliver Ctrl combos through onKeyDown
-        // first; route them through the shortcut handler so Ctrl+A/C/X/V work and the
-        // unhandled ones are consumed instead of leaking their characters into the
-        // text (the "Ctrl+A produced 0001" symptom).
-        if (event.isCtrlPressed && !event.isAltPressed && !event.isMetaPressed) {
+        // Hardware keyboards type brackets through onKeyDown; route the opening
+        // ones through the bare-commit path so sora's pair expansion never runs
+        // regardless of the auto-close setting.
+        if (event.isCtrlPressed) {
             if (onKeyShortcut(keyCode, event)) return true
             // Swallow other Ctrl+key combos: releasing them unhandled would type the
             // bare key character into the document.
+            return true
+        }
+        val typed = event.unicodeChar
+        if (typed.toChar() in OPENING_SYMBOLS && autoCloseMode == CompilerConfig.EditorAutoClose.SMART) {
+            commitBareCharacter(typed.toChar())
             return true
         }
         return super.onKeyDown(keyCode, event)

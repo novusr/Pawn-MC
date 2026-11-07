@@ -57,12 +57,17 @@ class ThirdProcess(
                 try {
                     BufferedReader(InputStreamReader(proc.inputStream), 8192).use { reader ->
                         var line: String? = reader.readLine()
-                        while (line != null && isActive) {
+                        while (line != null) {
+                            // Keep draining even after cancellation: a reader that
+                            // stops early leaves the child writing into a closed
+                            // pipe, which the user sees as "write failed: EPIPE".
                             _logs.tryEmit("[$tag] $line")
                             line = reader.readLine()
                         }
                     }
                 } catch (e: Exception) {
+                    // A broken pipe on our side is only logged, never propagated:
+                    // the child exit code below is still collected normally.
                     _logs.tryEmit("[$tag] Stream closed: ${e.message}")
                 } finally {
                     val exitVal = proc.waitFor()

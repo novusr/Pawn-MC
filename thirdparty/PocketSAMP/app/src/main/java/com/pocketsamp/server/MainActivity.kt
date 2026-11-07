@@ -118,25 +118,35 @@ class MainActivity : ComponentActivity() {
                     android.util.Log.i("RuntimeDownload", line)
                     RuntimeService.appendLog("[Prepare] $line")
                 }
-            }
-            if (!ThirdRuntime.isComplete(applicationContext)) {
-                RuntimeService.appendLog(Locales.text(Locales.current, "log.archive.failed"))
-                downloadStarted = false
-                assetExtractorInitialised = false
-                return@launch
+                // A failed sync leaves the archives unusable; surface it and let
+                // the next entry into the screen retry, instead of unpacking a
+                // partial set.
+                if (!ThirdRuntime.isComplete(applicationContext)) {
+                    RuntimeService.appendLog(Locales.text(Locales.current, "log.archive.failed"))
+                    downloadStarted = false
+                    assetExtractorInitialised = false
+                    return@launch
+                }
             }
             try {
                 if (!assetExtractor.isExtracted()) {
                     assetExtractor.extractAll { progress ->
                         RuntimeService.appendLog("[Prepare] $progress")
                     }
+                    // A fresh install reports the old installed version (or none);
+                    // re-reading here flips assetExtractorInitialised without the
+                    // user having to restart the app to see the ready state.
+                    assetExtractorInitialised = assetExtractor.isExtracted()
+                    if (assetExtractorInitialised) {
+                        downloadStarted = true
+                    }
                 }
-                assetExtractorInitialised = assetExtractor.isExtracted()
-                if (!assetExtractorInitialised) {
+                if (assetExtractorInitialised) {
+                    downloadStarted = true
+                    RuntimeService.appendLog(Locales.text(Locales.current, "log.x.complete"))
+                } else {
                     RuntimeService.appendLog(Locales.text(Locales.current, "log.x.incomplete"))
                     downloadStarted = false
-                } else {
-                    RuntimeService.appendLog(Locales.text(Locales.current, "log.x.complete"))
                 }
             } catch (error: Exception) {
                 android.util.Log.e("RuntimeDownload", "Runtime initialization failed", error)
