@@ -1,17 +1,11 @@
 package com.pocketsamp.server.user_interface.screens
 
-import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,47 +15,41 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.OpenInBrowser
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
 
 /**
- * Local phpMyAdmin URL served by the bundled web stack.
+ * Local phpMyAdmin URL.
  *
- * phpMyAdmin is a server-side PHP application, so it is reached over loopback the
- * same way the SA-MP server itself is: only pages that need the Android system
- * ThirdRuntime leave this WebView.
+ * phpMyAdmin is a server-side PHP application: it needs a PHP-capable web server
+ * in front of MariaDB. This build ships the MariaDB daemon and the in-app SQL
+ * client, but not the web stack yet, so this URL is only reachable when the
+ * user has installed their own local web server.
  */
 const val LOCAL_PHPMYADMIN_URL = "http://127.0.0.1/phpmyadmin/"
 
 /**
- * Full-screen browser for phpMyAdmin.
+ * Status screen for phpMyAdmin.
  *
- * Deliberately a WebView instead of an external `ACTION_VIEW`: the page is served by
- * the local MariaDB host on loopback, and handing that to another app loses the
- * session cookie and the back stack. [onClose] pops this screen; the system back
- * gesture is routed to the same callback by the host.
+ * Honest state reporting instead of a white WebView: MariaDB running or not,
+ * this screen explains exactly what phpMyAdmin needs, offers the in-app SQL
+ * client route through the Database tab, and hands the URL to an external
+ * browser for users who do run a local web stack. [onClose] pops this screen;
+ * the system back gesture routes to the same callback.
  */
-@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun _phpMyAdmin(
     url: String = LOCAL_PHPMYADMIN_URL,
@@ -70,26 +58,9 @@ fun _phpMyAdmin(
     lang: Locales.Lang = Locales.current
 ) {
     fun t(key: String): String = Locales.text(lang, key)
-
-    var webView by remember { mutableStateOf<WebView?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-    var loadError by remember { mutableStateOf<String?>(null) }
-    var currentUrl by remember { mutableStateOf(url) }
+    val context = LocalContext.current
 
     BackHandler(enabled = true) { onClose() }
-
-    /*
-     * Release the WebView with the composable; a leaked one keeps its renderer
-     * process alive for as long as the hosting activity lives.
-     */
-    DisposableEffect(Unit) {
-        onDispose {
-            webView?.stopLoading()
-            webView?.removeAllViews()
-            webView?.destroy()
-            webView = null
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -97,7 +68,7 @@ fun _phpMyAdmin(
             .background(SampThemeColors.bg)
     ) {
         /*
-         * Compact toolbar: back to the Database tab, the URL being shown, reload.
+         * Compact toolbar: back to the Database tab, the URL being shown.
          */
         Row(
             modifier = Modifier
@@ -118,151 +89,77 @@ fun _phpMyAdmin(
                     text = t("db.phpmyadmin"),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = SampThemeColors.textPrimary,
-                    maxLines = 1
+                    color = SampThemeColors.textPrimary
                 )
                 Text(
-                    text = currentUrl,
+                    text = url,
                     fontSize = 10.sp,
-                    fontFamily = FontFamily.Monospace,
-                    color = SampThemeColors.textMuted,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    color = SampThemeColors.textMuted
                 )
             }
-            IconButton(
-                onClick = {
-                    loadError = null
-                    webView?.reload()
-                },
-                modifier = Modifier.size(38.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = t("db.phpmyadmin.reload"),
-                    tint = SampThemeColors.accent,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-
-        if (isLoading) {
-            LinearProgressIndicator(
-                modifier = Modifier.fillMaxWidth(),
-                color = SampThemeColors.accent
-            )
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
-            if (!isDbRunning) {
-                /*
-                 * Without MariaDB the page would 404/refuse; explain instead of
-                 * rendering a blank white WebView.
-                 */
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.OpenInBrowser,
-                        contentDescription = null,
-                        tint = SampThemeColors.textMuted,
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Text(
-                        text = t("db.offline.hint"),
-                        fontSize = 13.sp,
-                        color = SampThemeColors.textMuted
-                    )
-                }
-            } else {
-                AndroidView(
-                    modifier = Modifier.fillMaxSize(),
-                    factory = { context ->
-                        WebView(context).apply {
-                            settings.apply {
-                                javaScriptEnabled = true
-                                domStorageEnabled = true
-                                cacheMode = WebSettings.LOAD_DEFAULT
-                                /*
-                                 * phpMyAdmin is responsive; fitting the page width
-                                 * keeps its tables readable on a phone instead of
-                                 * forcing a zoomed-out desktop layout.
-                                 */
-                                useWideViewPort = true
-                                loadWithOverviewMode = true
-                                builtInZoomControls = true
-                                displayZoomControls = false
-                            }
-                            webViewClient = object : WebViewClient() {
-                                override fun onPageStarted(
-                                    view: WebView?,
-                                    pageUrl: String?,
-                                    favicon: Bitmap?
-                                ) {
-                                    isLoading = true
-                                    loadError = null
-                                    currentUrl = pageUrl ?: url
-                                }
-
-                                override fun onPageFinished(view: WebView?, pageUrl: String?) {
-                                    isLoading = false
-                                    currentUrl = pageUrl ?: currentUrl
-                                }
-
-                                override fun onReceivedError(
-                                    view: WebView?,
-                                    request: WebResourceRequest?,
-                                    error: WebResourceError?
-                                ) {
-                                    /*
-                                     * Only the main frame matters; a missing icon or
-                                     * asset must not blank the whole page.
-                                     */
-                                    if (request?.isForMainFrame == true) {
-                                        isLoading = false
-                                        loadError = error?.description?.toString()
-                                    }
-                                }
-                            }
-                            loadUrl(url)
-                            webView = this
-                        }
-                    },
-                    update = { view ->
-                        webView = view
-                    }
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(20.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(SampThemeColors.card)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.OpenInBrowser,
+                    contentDescription = null,
+                    tint = if (isDbRunning) SampThemeColors.accent else SampThemeColors.warn,
+                    modifier = Modifier.size(26.dp)
                 )
-
-                loadError?.let { message ->
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(SampThemeColors.card)
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                Text(
+                    text = t("db.phpmyadmin.notavailable.title"),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = SampThemeColors.textPrimary
+                )
+                Text(
+                    text = (if (isDbRunning) {
+                        t("db.phpmyadmin.notavailable.body")
+                    } else {
+                        t("db.offline.hint")
+                    }),
+                    fontSize = 11.sp,
+                    color = SampThemeColors.textMuted
+                )
+                Text(
+                    text = t("db.phpmyadmin.notavailable.sqlhint"),
+                    fontSize = 11.sp,
+                    color = SampThemeColors.textSecondary
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = {
+                            runCatching {
+                                context.startActivity(
+                                    android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
+                                        data = android.net.Uri.parse(url)
+                                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                )
+                            }
+                        },
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
                     ) {
-                        Text(
-                            text = t("db.phpmyadmin.error"),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = SampThemeColors.danger
-                        )
-                        Text(
-                            text = message,
-                            fontSize = 11.sp,
-                            fontFamily = FontFamily.Monospace,
-                            color = SampThemeColors.textMuted
-                        )
+                        Text(t("db.open.phpmyadmin.browser"), fontSize = 12.sp)
+                    }
+                    TextButton(
+                        onClick = onClose,
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(t("back.to.pawnmc"), fontSize = 12.sp)
                     }
                 }
             }
         }
     }
 }
-

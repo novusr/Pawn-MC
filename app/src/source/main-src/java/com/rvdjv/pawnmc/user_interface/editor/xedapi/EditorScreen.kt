@@ -78,6 +78,7 @@ import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Keyboard
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -187,6 +188,10 @@ fun EditorScreen(
     // Auto-close rule from settings, re-read when the screen re-enters so a change
     // in Settings is picked up without touching the widget internals.
     val autoCloseMode = remember(context) { CompilerConfig.getInstance(context).n_editor_auto_close }
+    /** Live toggle for the auto-close behaviour (mirrors the stored preference). */
+    var editorAutoCloseEnabled by remember {
+        mutableStateOf(autoCloseMode != CompilerConfig.EditorAutoClose.SMART)
+    }
     val editorScheme = remember(appColorScheme, editorBackgroundColor) {
         buildEditorScheme(appColorScheme, editorBackgroundColor)
     }
@@ -1185,6 +1190,34 @@ fun EditorScreen(
                                 }
                             )
                             DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        if (editorAutoCloseEnabled) {
+                                            if (appLanguage == CompilerConfig.AppLanguage.ID) "Matikan tutup otomatis" else "Disable auto-close brackets"
+                                        } else {
+                                            if (appLanguage == CompilerConfig.AppLanguage.ID) "Nyalakan tutup otomatis" else "Enable auto-close brackets"
+                                        }
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (editorAutoCloseEnabled) Icons.Filled.Code else Icons.Filled.Block,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    dismissAutoCompletion()
+                                    showMenu = false
+                                    editorAutoCloseEnabled = !editorAutoCloseEnabled
+                                    CompilerConfig.getInstance(context).n_editor_auto_close =
+                                        if (editorAutoCloseEnabled) {
+                                            CompilerConfig.EditorAutoClose.PAIR_ALWAYS
+                                        } else {
+                                            CompilerConfig.EditorAutoClose.SMART
+                                        }
+                                }
+                            )
+                            DropdownMenuItem(
                                 text = { Text("Jump to Matching Bracket") },
                                 leadingIcon = {
                                     Icon(Icons.Filled.Code, contentDescription = null)
@@ -1465,9 +1498,19 @@ fun EditorScreen(
                                     isLineNumberEnabled = isLineNumbers
                                     isWordwrap = isWordWrap
                                     editable = !isReadOnly
-                                    this.autoCloseMode = autoCloseMode
+                                    this.autoCloseMode =
+                                        if (editorAutoCloseEnabled && autoCloseMode == CompilerConfig.EditorAutoClose.SMART) {
+                                            CompilerConfig.EditorAutoClose.PAIR_ALWAYS
+                                        } else if (!editorAutoCloseEnabled) {
+                                            CompilerConfig.EditorAutoClose.SMART
+                                        } else {
+                                            autoCloseMode
+                                        }
                                     setTextSize(14f)
-                                    setColorScheme(editorScheme)
+                                    // Same crash guard as the update pass: the very
+                                    // first scheme install can race the editor's lazy
+                                    // internals on a re-created composition.
+                                    runCatching { setColorScheme(editorScheme) }
                                     setEditorLanguage(codeLanguage)
                                     setText(if (workspace.isWorkspaceOpen) workspace.activeDocument?.content.orEmpty() else viewModel.fileContent.orEmpty())
                                     // Reserve room for the "-<column>" suffix now
@@ -1518,11 +1561,21 @@ fun EditorScreen(
                                 // Re-tint when the app theme (and therefore the surface
                                 // ramp) changes while the editor view is still alive.
                                 if (appliedScheme.current !== editorScheme) {
-                                    editor.setColorScheme(editorScheme)
+                                    // A theme swap lands on the same frame the sora
+                                    // internals can still be re-creating their render
+                                    // queue (an `addLast` on a not-yet-created list);
+                                    // dropping one repaint is invisible, a crash is not.
+                                    runCatching { editor.setColorScheme(editorScheme) }
                                     appliedScheme.current = editorScheme
                                 }
                                 // A settings change is picked up live as well.
                                 editor.autoCloseMode = autoCloseMode
+                                editor.autoCloseMode = when {
+                                    !editorAutoCloseEnabled -> CompilerConfig.EditorAutoClose.SMART
+                                    autoCloseMode == CompilerConfig.EditorAutoClose.SMART ->
+                                        CompilerConfig.EditorAutoClose.PAIR_ALWAYS
+                                    else -> autoCloseMode
+                                }
                                 // Push the buffer of the file the workspace panel
                                 // activated, or of the single file opened from the
                                 // browser. Only runs when the shown path or content

@@ -17,6 +17,8 @@ import java.io.File
  */
 class ExplanationTableTest {
 
+    private val explainer get() = Explainer
+
     private val toml: String by lazy {
         val root = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
             .firstOrNull { File(it, "native/data/_explainer.toml").isFile }
@@ -81,7 +83,17 @@ class ExplanationTableTest {
     fun `symbol warning descriptions stay neutral until the source symbol is applied`() {
         val text = parsed["203.en"].orEmpty()
         assertTrue(text.contains("symbol is never used"))
-        assertFalse(text.contains("%s"))
+        // The table may only carry the `%s` placeholder, never a hard-coded symbol:
+        // the Explainer fills it from the quoted symbol of the compiler line, so a
+        // baked-in name would leak one message's symbol into every other line.
+        val rendered = Explainer.explanationText(
+            "warning 203: symbol is never used: \"myVar\"", text
+        )
+        assertFalse(rendered.contains("%s"))
+        assertTrue(rendered.contains("myVar"))
+        // And with no quoted symbol on the line the placeholder is dropped, not shown raw.
+        val bare = Explainer.explanationText("warning 203", text)
+        assertFalse(bare.contains("%s"))
     }
 
     @Test

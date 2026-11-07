@@ -151,6 +151,24 @@ internal fun deriveStatus(isCompiling: Boolean, lastExitCode: Int?): CompileStat
     else -> CompileStatus.ERROR
 }
 
+/** App version for the log header; blank when the package info cannot be read. */
+internal fun appVersionText(context: Context): String? = runCatching {
+    val info = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+        context.packageManager.getPackageInfo(context.packageName, 0)
+    } else {
+        @Suppress("DEPRECATION")
+        context.packageManager.getPackageInfo(context.packageName, 0)
+    }
+    info.versionName
+}.getOrNull()
+
+/**
+ * Pulls the "Compilation time: …" line out of the shown output, so the exported
+ * header carries the same duration the user saw. `null` when no compile ran yet.
+ */
+internal fun latestCompilationTimeLabel(outputText: String): String? =
+    Regex("(?i)compilation time:\\s*(.+)").find(outputText)?.groupValues?.get(1)?.trim()
+
 /** Localisation keys of the rotating taglines, in the order the table lists them. */
 internal val TAGLINE_KEYS = listOf(
     "app.tagline",
@@ -668,7 +686,19 @@ fun MainScreen(
                 scrollState = outputScrollState,
                 canDownload = !viewModel.isCompiling && viewModel.lastExitCode != null,
                 onDownloadClick = {
-                    pendingLogText = viewModel.outputText
+                    // The exported `.log` carries the enriched header block (date,
+                    // compiler version, device, compile info); the on-screen text is
+                    // left untouched.
+                    val info = com.rvdjv.pawnmc.apps_data.data_logging._log_export.HeaderInfo(
+                        compilerVersion = viewModel.getCompilerConfig().n_compiler_version.label,
+                        appVersion = appVersionText(context),
+                        sourcePath = viewModel.selectedFilePath,
+                        exitCode = viewModel.lastExitCode,
+                        durationLabel = latestCompilationTimeLabel(viewModel.outputText),
+                        lineCount = viewModel.outputText.lines().size
+                    )
+                    pendingLogText = com.rvdjv.pawnmc.apps_data.data_logging._log_export
+                        .buildHeader(info) + viewModel.outputText
                     val baseName = viewModel.selectedFilePath?.let { File(it).nameWithoutExtension }
                         ?.takeIf { it.isNotBlank() } ?: "pawnmc"
                     downloadLogLauncher.launch("$baseName.log")
@@ -679,10 +709,17 @@ fun MainScreen(
                     if (isEmpty) {
                         Toast.makeText(context, "Output is empty", Toast.LENGTH_SHORT).show()
                     } else {
-                        val clipboard =
-                            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(
-                            ClipData.newPlainText("Compilation Result", viewModel.outputText)
+                        val info = com.rvdjv.pawnmc.apps_data.data_logging._log_export.HeaderInfo(
+                            compilerVersion = viewModel.getCompilerConfig().n_compiler_version.label,
+                            appVersion = appVersionText(context),
+                            sourcePath = viewModel.selectedFilePath,
+                            exitCode = viewModel.lastExitCode,
+                            durationLabel = latestCompilationTimeLabel(viewModel.outputText),
+                            lineCount = viewModel.outputText.lines().size
+                        )
+                        com.rvdjv.pawnmc.apps_data.data_logging._log_export.copyChunked(
+                            context,
+                            com.rvdjv.pawnmc.apps_data.data_logging._log_export.buildHeader(info) + viewModel.outputText
                         )
                         Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
                     }
@@ -1265,7 +1302,7 @@ internal fun OutputPanel(
  */
 val ExplainMarkerColor = Color(0xFFF0F070)
 
-private val EXPLAIN_MARKER_REGEX = Regex("(?i)\\[explain\\]")
+private val EXPLAIN_MARKER_REGEX = Regex("(?i)\\[(explain|jelaskan|explicar|объяснение|paliwanag)\\]")
 
 /**
  * Splits [outputText] into plain runs and `[explain]` markers.

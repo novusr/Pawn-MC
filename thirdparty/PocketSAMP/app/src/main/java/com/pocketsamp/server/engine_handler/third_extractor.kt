@@ -9,6 +9,7 @@ import java.io.FileInputStream
 
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.configuration._DirectoryManager
+import com.pocketsamp.server.configuration.Reader as _Reader
 
 class ThirdExtractor(private val context: Context) {
 
@@ -32,13 +33,14 @@ class ThirdExtractor(private val context: Context) {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         val installedVersion = prefs.getInt(KEY_INSTALLED_VERSION, 0)
         val rootfsDir = File(context.filesDir, "rootfs_i386")
-        val binDir = File(context.filesDir, "bin")
         val mariadbDir = File(context.filesDir, "mariadb")
 
         val marker = File(context.filesDir, "runtime.ready")
+        // The samp template now lives in the shared storage template area.
+        val templateDir = File(_DirectoryManager.getDocumentsPawnMcDir(), "storage/template")
         installedVersion == CURRENT_VERSION &&
             marker.isFile &&
-            File(binDir, "samp03svr").isFile &&
+            File(templateDir, "samp03svr").isFile &&
             File(rootfsDir, "lib").isDirectory &&
             File(mariadbDir, "bin/mariadbd").let {
                 it.isFile && ThirdLauncher.kindOf(it) == ThirdLauncher.Kind.AARCH64
@@ -54,15 +56,13 @@ class ThirdExtractor(private val context: Context) {
         extractRuntimeArchive(ThirdRuntime.ROOTFS_ARCHIVE, rootfsDir)
 
         onProgress(t("log.x.samp"))
-        val binDir = File(filesDir, "bin").apply { mkdirs() }
-        extractRuntimeArchive(ThirdRuntime.SAMP_ARCHIVE, binDir)
-        File(binDir, "samp03svr").setExecutable(true, false)
-        File(binDir, "announce").setExecutable(true, false)
-
-        val defaultDir = _DirectoryManager.getDefaultServerDirectory()
-        if (!defaultDir.exists()) {
-            defaultDir.mkdirs()
-        }
+        // r_samp.tar.gz is unpacked into the shared storage template area
+        // (Documents/PawnMC/storage/template/), so the base gamemode project is
+        // user-visible and reusable; the File Manager defaults there when no
+        // folder has been picked yet.
+        val templateDir = File(_DirectoryManager.getDocumentsPawnMcDir(), "storage/template").apply { mkdirs() }
+        extractRuntimeArchive(ThirdRuntime.SAMP_ARCHIVE, templateDir)
+        File(templateDir, "samp03svr").setExecutable(true, false)
 
         onProgress(t("log.x.mariadb"))
         val mariadbDir = File(filesDir, "mariadb")
@@ -110,10 +110,16 @@ class ThirdExtractor(private val context: Context) {
         val renderedConfig = context.assets.open("mysql_list.cnf").bufferedReader().use { it.readText() }
         mariadbConfig.writeText(renderedConfig)
 
+        // Ship a starter server.cfg in the template folder so a base project
+        // extracted from r_samp.tar.gz starts without manual setup.
+        if (!File(templateDir, "server.cfg").isFile) {
+            runCatching { _Reader.ensureDefaultConfig(templateDir) }
+        }
+
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         prefs.edit().putInt(KEY_INSTALLED_VERSION, CURRENT_VERSION).apply()
         // The marker is written only when every archive was present and unpacked.
-        val allPresent = File(binDir, "samp03svr").isFile &&
+        val allPresent = File(templateDir, "samp03svr").isFile &&
             File(rootfsDir, "lib").isDirectory &&
             mariadbComplete
         if (allPresent) {

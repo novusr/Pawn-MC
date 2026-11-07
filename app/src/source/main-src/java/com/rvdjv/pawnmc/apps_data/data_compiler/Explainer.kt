@@ -10,7 +10,39 @@ object Explainer {
 
     private val COMPILER_MESSAGE_REGEX = Regex("""(?i)(warning|error|fatal)\s+(\d+)""")
 
-    private val SYMBOL_WARNING_REGEX = Regex("(?i)symbol is never used:\\s*(?:\"([^\"]+)\"|'([^']+)'|(\\S+))")
+    /** The `[explain]` marker prefix, localised per app language. */
+    private val EXPLAIN_PREFIX = mapOf(
+        CompilerConfig.AppLanguage.ID to "[jelaskan]",
+        CompilerConfig.AppLanguage.EN to "[explain]",
+        CompilerConfig.AppLanguage.ES to "[explicar]",
+        CompilerConfig.AppLanguage.RU to "[объяснение]",
+        CompilerConfig.AppLanguage.TL to "[paliwanag]",
+    )
+
+    /**
+     * Quote patterns of the messages that carry a symbol or a file name.
+     *
+     * The explanation tables use `%s` as a placeholder; the value comes from the
+     * quoted text of the compiler line itself, so the explainer renders real
+     * symbols ("myVariable") and real paths ("include/glue.inc") instead of a
+     * literal `%s`. Applies to `undefined symbol: "x"`, `symbol is never used:
+     * "x"`, `cannot read from file "x"`, `cannot write to file "x"` and any
+     * other message with the same shape.
+     */
+    private val QUOTED_SYMBOL_PATTERNS = listOf(
+        Regex("""(?i)undefined\s+symbol\s*:?\s*"([^"]+)""""),
+        Regex("""(?i)undefined\s+symbol\s*:?\s*'([^']+)'"""),
+        Regex("""(?i)symbol\s+is\s+never\s+used\s*:?\s*"([^"]+)""""),
+        Regex("""(?i)symbol\s+is\s+never\s+used\s*:?\s*'([^']+)'"""),
+        Regex("""(?i)cannot\s+read\s+from\s+file\s+"([^"]+)""""),
+        Regex("""(?i)cannot\s+write\s+to\s+file\s+"([^"]+)""""),
+        Regex("""(?i)cannot\s+read\s+from\s+file\s*:?\s*(\S+)"""),
+        Regex("""(?i)cannot\s+write\s+to\s+file\s*:?\s*(\S+)"""),
+        // Generic fall-back: a trailing quoted token on the message line, e.g.
+        // "tag mismatch: "x" is an integer" or unknown user messages.
+        Regex("""""([^"]+)"""""),
+        Regex("""'([^']{2,})'"""),
+    )
 
     private fun noLocalExplanation(language: CompilerConfig.AppLanguage): String = when (language) {
         CompilerConfig.AppLanguage.ID -> "Belum ada penjelasan lokal untuk pesan ini. Cek referensi error Pawn untuk detailnya."
@@ -20,12 +52,32 @@ object Explainer {
         CompilerConfig.AppLanguage.EN -> "No explanation for this one yet! Check the Pawn error reference for details."
     }
 
-    private fun explanationText(line: String, explanation: String): String {
-        val match = SYMBOL_WARNING_REGEX.find(line) ?: return explanation
-        val symbol = match.groupValues.drop(1).firstOrNull { it.isNotBlank() }?.trim()
-            ?.takeIf { it.isNotEmpty() } ?: return explanation
-        return explanation.replace("%s", symbol)
+    /**
+     * Extracts the symbol / file name the compiler line quotes and fills the
+     * `%s` placeholder of the explanation with it. A symbol is only substituted
+     * when it looks like an identifier or a path, so prose quoting (e.g. a
+     * comment quoting a sentence) does not leak into the hint.
+     */
+    internal fun explanationText(line: String, explanation: String): String {
+        if (!explanation.contains("%s")) return explanation
+        for (pattern in QUOTED_SYMBOL_PATTERNS) {
+            val match = pattern.find(line) ?: continue
+            val candidate = match.groupValues[1].trim()
+            if (candidate.isEmpty()) continue
+            return explanation.replace("%s", candidate)
+        }
+        // No usable symbol found: drop the placeholder instead of rendering a
+        // bare "%s" the reader has to interpret.
+        return explanation
+            .replace(" \"%s\"", "")
+            .replace("%s", "")
+            .replace(Regex("\\s{2,}"), " ")
+            .trim()
     }
+
+    /** Localised `[explain]` marker for [language]. */
+    internal fun explainMarker(language: CompilerConfig.AppLanguage): String =
+        EXPLAIN_PREFIX[language] ?: "[explain]"
 
     fun explainCompilerOutput(
         rawText: String,
@@ -35,6 +87,7 @@ object Explainer {
         if (rawText.isBlank()) return rawText
 
         val n_language = CompilerConfig.getInstanceOrNull()?.n_app_language ?: language
+        val marker = explainMarker(n_language)
         val outputCache = File(cacheDir, "compiler_output_cache_${System.nanoTime()}.log")
         outputCache.writeText(rawText)
 
@@ -53,7 +106,7 @@ object Explainer {
                     // Marker with explicit padding so interfaces that colourise the
                     // token by substring keep matching it even when the hint text is
                     // long enough to wrap.
-                    builder.appendLine("    [explain] $renderedExplanation")
+                    builder.appendLine("    $marker $renderedExplanation")
                 }
             }
         }

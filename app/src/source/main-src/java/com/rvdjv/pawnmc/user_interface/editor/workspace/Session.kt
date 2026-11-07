@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.PathStore
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.EditorScreen
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.EditorViewModel
 import kotlinx.coroutines.Dispatchers
@@ -320,18 +321,31 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
                 listOf(workspace.root.absolutePath, path)
             }
         }
+        // Also mirror the folder list into the reusable JSON store so a reinstall
+        // can pick the same workspaces back up.
+        val contextForStore = store.applicationContextHolder()
+        PathStore.writePaths(contextForStore, "workspace", store.n_workspace_folders)
     }
 
     /** Re-opens the workspace folders stored by a previous run. */
     private fun restoreRememberedWorkspaces() {
         val store = config ?: return
-        val stored = store.n_workspace_folders
+        var stored = store.n_workspace_folders
+        if (stored.isEmpty()) {
+            // The JSON mirror survives an uninstall where SharedPreferences does not;
+            // fall back to it so a reinstall restores the same workspaces.
+            val context = store.applicationContextHolder()
+            stored = PathStore.readPaths(context, "workspace").let(PathStore::restoreExisting)
+            if (stored.isNotEmpty()) store.n_workspace_folders = stored
+        }
         if (stored.isEmpty()) return
 
         val requested = stored.distinct()
         val surviving = requested.filter { File(it).isDirectory }
         if (surviving.size != requested.size) {
+            // Dead folders cost restore IO every launch; drop them from both stores.
             store.n_workspace_folders = surviving
+            PathStore.writePaths(store.applicationContextHolder(), "workspace", surviving)
         }
         if (surviving.isEmpty()) return
 
@@ -358,6 +372,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         }
         val workspace = newWorkspaceFor(dir) ?: return
         activateWorkspace(workspace)
+        persistOpenTabs()
         statusMessage = "Workspace opened: ${dir.name}"
     }
 

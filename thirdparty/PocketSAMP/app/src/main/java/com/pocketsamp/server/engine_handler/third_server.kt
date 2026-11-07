@@ -47,7 +47,11 @@ class Server(private val context: Context) {
         val qemuBinary = findQemuBinary(context)
         val rootfsDir = File(filesDir, "rootfs_i386")
         val sampDir = _DirectoryManager.getServerDirectory(context)
-        val serverBinary = File(filesDir, "bin/samp03svr").takeIf { it.exists() }
+        // A samp03svr placed in the File Manager-selected folder wins over the
+        // bundled one from r_samp.tar.gz, so a user-supplied binary is run as-is;
+        // without one the packaged binary keeps running.
+        val serverBinary = File(sampDir, "samp03svr").takeIf { it.exists() }
+            ?: File(filesDir, "bin/samp03svr").takeIf { it.exists() }
             ?: File(filesDir, "samp_server/samp03svr").takeIf { it.exists() }
             ?: File(sampDir, "samp03svr")
         val tempDir = File(context.cacheDir, "samp_tmp").apply { mkdirs() }

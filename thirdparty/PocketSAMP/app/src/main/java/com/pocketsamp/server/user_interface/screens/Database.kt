@@ -520,12 +520,17 @@ fun _Database(
             }
 
             /*
-             * Direct launch: phpMyAdmin in the built-in full-screen browser.
+             * Direct launch: phpMyAdmin in the built-in full-screen browser, plus
+             * an external browser hop for users who prefer their own browser.
              */
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
             Button(
                 onClick = onOpenphpMyAdmin,
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .weight(1f)
                     .height(40.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -546,6 +551,42 @@ fun _Database(
                     fontWeight = FontWeight.Bold,
                     maxLines = 1
                 )
+            }
+                OutlinedButton(
+                    onClick = {
+                        runCatching {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW)
+                                .apply {
+                                    data = android.net.Uri.parse(
+                                        com.pocketsamp.server.user_interface.screens.LOCAL_PHPMYADMIN_URL
+                                    )
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                            context.startActivity(intent)
+                        }
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(40.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = SampThemeColors.accent
+                    ),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.OpenInBrowser,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = t("db.open.phpmyadmin.browser"),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
+                }
             }
 
             /*
