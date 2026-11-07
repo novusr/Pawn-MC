@@ -575,7 +575,13 @@ fun SettingsScreen(
                             appLanguage,
                             "When forced, the version picked above is always used. When automatic, a compiler sitting next to the file you are editing is preferred whenever its version matches."
                         ),
-                        onToggleForced = { viewModel.updateForcedCompilerMode(it) },
+                        onToggleForced = {
+                            viewModel.updateForcedCompilerMode(it)
+                            // Forced/Auto changes how the next compile picks its
+                            // version; the whole process restarts so every screen
+                            // and the native layer see the new mode consistently.
+                            onRestartRequested()
+                        },
                         onClick = { showVersionDialog = true }
                     )
 
@@ -1430,11 +1436,12 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         showRestartDialog = false
+                        // `onRestartRequested` relaunches the app with a fresh task
+                        // (FLAG_ACTIVITY_CLEAR_TASK) and kills the old process, so the
+                        // new compiler library is loaded from Documents/PawnMC on the
+                        // next launch. Launching a second intent here raced with the
+                        // process exit and could resurrect a stale activity.
                         onRestartRequested()
-                        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-                        intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-                        context.startActivity(intent)
-                        onNavigateBack()
                     }
                 ) {
                     Text("Restart Now")
@@ -1505,10 +1512,14 @@ fun SettingsScreen(
                             onClick = {
                                 viewModel.updateCompilerVersion(version)
                                 showVersionDialog = false
-                                if (viewModel.isRestartRequired(version)) {
-                                    pendingVersion = version
-                                    showRestartDialog = true
-                                }
+                                // Every version is its own library in
+                                // Documents/PawnMC/library/<abi>/, and the native bridge
+                                // resolves it once per process. Restarting whenever the
+                                // selection changes keeps the loaded engine, the settings
+                                // JSON mirror and the UI consistent, instead of only
+                                // restarting when the process refuses a swap.
+                                pendingVersion = version
+                                showRestartDialog = true
                             }
                         )
                     }

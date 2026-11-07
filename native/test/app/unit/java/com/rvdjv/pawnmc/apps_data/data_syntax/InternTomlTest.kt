@@ -43,7 +43,7 @@ class InternTomlTest {
         val root = generateSequence(File(System.getProperty("user.dir"))) { it.parentFile }
             .firstOrNull { File(it, "native/data/_internal.toml").isFile }
             ?: File(System.getProperty("user.dir").orEmpty())
-        File(root, "native/data/_internal.toml").readText()
+        root?.let { File(it, "native/data/_internal.toml").readText() } ?: ""
     }
 
     @Test

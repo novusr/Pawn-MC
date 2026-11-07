@@ -12,7 +12,7 @@ class WorkspacePanelSourceTest {
          * The package folder was renamed to lower case; the old path no longer exists
          * and the read threw FileNotFoundException rather than failing an assertion.
          */
-        val source = File(root, "app/src/source/main-src/java/com/rvdjv/pawnmc/user_interface/editor/workspace/Panel.kt").readText()
+        val source = root?.let { File(it, "app/src/source/main-src/java/com/rvdjv/pawnmc/user_interface/editor/workspace/Panel.kt").readText() } ?: ""
 
         assertTrue(source.contains(".verticalScroll(outputScrollState)"))
         assertTrue(source.contains(".horizontalScroll(outputHorizontalScrollState)"))

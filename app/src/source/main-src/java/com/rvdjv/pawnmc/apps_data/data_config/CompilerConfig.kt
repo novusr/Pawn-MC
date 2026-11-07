@@ -324,11 +324,17 @@ class CompilerConfig private constructor(context: Context) {
 
     var n_forced_compiler_mode: Boolean
         get() = prefs.getBoolean(KEY_FORCED_MODE, false)
-        set(value) = prefs.edit { putBoolean(KEY_FORCED_MODE, value) }
+        set(value) {
+            prefs.edit { putBoolean(KEY_FORCED_MODE, value) }
+            mirrorToFile()
+        }
 
     var n_forced_include_path_auto: Boolean
         get() = prefs.getBoolean(KEY_FORCED_INCLUDE_PATH_AUTO, false)
-        set(value) = prefs.edit { putBoolean(KEY_FORCED_INCLUDE_PATH_AUTO, value) }
+        set(value) {
+            prefs.edit { putBoolean(KEY_FORCED_INCLUDE_PATH_AUTO, value) }
+            mirrorToFile()
+        }
 
     /**
      * Settles the compiler version for [sourcePath] before a compile.

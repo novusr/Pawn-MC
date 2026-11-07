@@ -253,13 +253,20 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     var statusMessage by mutableStateOf<String?>(null)
         private set
 
+    /** Tab-restore queue, drained one document at a time.
+     *
+     * Declared before the init block below: the block runs in declaration
+     * order, and `restoreRememberedTabs` reads this queue on the very first
+     * launch that has remembered tabs. Declaring it after `init` left the
+     * property uninitialised at that point and crashed with a
+     * NullPointerException on reopen.
+     */
+    private val pendingTabLoads = ArrayDeque<Pair<Workspace, File>>()
+
     init {
         restoreRememberedWorkspaces()
         restoreRememberedTabs()
     }
-
-    /** Tab-restore queue, drained one document at a time. */
-    private val pendingTabLoads = ArrayDeque<Pair<Workspace, File>>()
 
     /**
      * Re-opens the documents each remembered workspace had open, one at a time.
