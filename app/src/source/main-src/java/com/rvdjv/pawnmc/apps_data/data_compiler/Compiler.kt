@@ -21,12 +21,15 @@ object Compiler {
     /** Resets the compile fallback state for this session. */
     fun resetSessionState() = Runner.resetSessionState()
 
-    internal fun shouldRecoverAddressOf(output: String): Boolean = Runner.shouldRecoverAddressOf(output)
-    internal fun claimAddressOfRecovery(
-        output: String,
-        forcedMode: Boolean,
-        configuredVersion: CompilerConfig.CompilerVersion
-    ): Boolean = Runner.claimAddressOfRecovery(output, forcedMode, configuredVersion)
+    internal fun shouldRecoverAddressOf(output: String): Boolean =
+        output.contains("__addressof", ignoreCase = true)
+
+    /**
+     * Auto-switch driven purely by the compiler output: `__addressof` under
+     * 3.10.11 is ignored, under 3.10.7 the stored version becomes 3.10.11.
+     */
+    fun applyAddressOfPolicy(output: String, runningVersion: CompilerConfig.CompilerVersion) =
+        Runner.applyAddressOfPolicy(output, runningVersion)
 
     /** Loaded native compiler version, or null before the first compile. */
     fun getLoadedVersion(): CompilerConfig.CompilerVersion? = Runner.getLoadedVersion()

@@ -77,36 +77,41 @@ object Runner {
         if (forcedMode) selectedVersion else detectedVersion ?: CompilerConfig.CompilerVersion.V3107
 
     /** Resets one-shot compiler recovery state for a new app process/session. */
+    /** Resets session fallback state for a new app process/session. */
     @Synchronized
     fun resetSessionState() {
         FALL_MUTATION = false
         CONSECUTIVE_FAILURES = 0
-        ADDRO_REFIX_USED = false
     }
 
-    @Volatile
-    private var ADDRO_REFIX_USED = false
-    internal fun shouldRecoverAddressOf(output: String): Boolean =
-        output.contains("__addressof", ignoreCase = true)
-
     /**
-     * Claims the one-shot `__addressof` recovery.
+     * `__addressof` auto-switch, rewritten.
      *
-     * The error is a hard signal that the running compiler does not provide
-     * `__addressof`, whatever version that was: the recovery switches the
-     * stored selection to 3.10.11 (the only bundled compiler that ships the
-     * symbol) and drops the forced mode, so the next compile starts on the
-     * version that actually works instead of ping-ponging back.
+     * The rule is exactly two cases and nothing else:
+     *
+     *  - output mentions `__addressof` and the running compiler is 3.10.11 →
+     *    ignore; the newer compiler is the correct one, nothing to recover.
+     *  - output mentions `__addressof` and the running compiler is 3.10.7 →
+     *    the source needs the symbol only 3.10.11 ships, so the *stored*
+     *    compiler version becomes 3.10.11.
+     *
+     * There is deliberately no forced-mode condition and no automatic recompile:
+     * the next compile the user starts picks the new version up on its own.
      */
     @Synchronized
-    internal fun claimAddressOfRecovery(
-        output: String,
-        forcedMode: Boolean,
-        compiledVersion: CompilerConfig.CompilerVersion
-    ): Boolean {
-        if (!shouldRecoverAddressOf(output) || ADDRO_REFIX_USED) return false
-        ADDRO_REFIX_USED = true
-        return true
+    fun applyAddressOfPolicy(output: String, runningVersion: CompilerConfig.CompilerVersion) {
+        if (!output.contains("__addressof", ignoreCase = true)) return
+        when (runningVersion) {
+            CompilerConfig.CompilerVersion.V31011 -> return
+            CompilerConfig.CompilerVersion.V3107 -> {
+                val n_config = CompilerConfig.getInstanceOrNull() ?: return
+                n_config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
+                Log.i(
+                    "Compiler",
+                    "__addressof in output under 3.10.7; stored compiler version moved to 3.10.11"
+                )
+            }
+        }
     }
 
     /** Enables the one-shot assist toggles after a failed compile. */
@@ -203,25 +208,8 @@ object Runner {
         val n_isForced = n_config?.n_forced_compiler_mode == true
 
         val n_result = compileWithVersion(sourceFile, options, version)
-        if (n_config != null && claimAddressOfRecovery(
-                n_result.second,
-                n_config.n_forced_compiler_mode,
-                version
-            )
-        ) {
-            // The compiled source needs `__addressof`, which only 3.10.11 ships:
-            // make that the standing selection (and drop the forced pin) so the
-            // next compile stays on it instead of flipping back.
-            n_config.n_forced_compiler_mode = false
-            n_config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
-            Log.w("Compiler", "__addressof recovery: compiler selection moved to 3.10.11")
-            val retried = compileWithVersion(
-                sourceFile,
-                n_config.buildOptions(CompilerConfig.CompilerVersion.V31011),
-                CompilerConfig.CompilerVersion.V31011
-            )
-            return retried.first to "[Compiler switched to 3.10.11; retried once]\n${retried.second}"
-        }
+        // Pure auto-switch: no forced-mode condition, no automatic recompile.
+        applyAddressOfPolicy(n_result.second, version)
 
         if (!n_isForced && !FALL_MUTATION && shouldRetryWithFallback(n_result.second)) {
             val n_fallbackVersion = version.other()
@@ -248,24 +236,15 @@ object Runner {
         return n_result
     }
 
-    /** Runs the manual command, applying the same one-shot __addressof recovery once. */
+    /** Runs the manual command; the same __addressof auto-switch applies. */
     fun compileManual(
         sourceFile: String,
         options: List<String>,
         version: CompilerConfig.CompilerVersion
     ): Pair<Int, String> {
         val first = compileWithVersion(sourceFile, options, version, manualArguments = true)
-        val config = CompilerConfig.getInstanceOrNull() ?: return first
-        if (!claimAddressOfRecovery(first.second, config.n_forced_compiler_mode, version)) return first
-        // The recovery makes 3.10.11 the standing selection.
-        config.n_forced_compiler_mode = false
-        config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
-        val retry = compileWithVersion(
-            sourceFile,
-            config.buildOptions(CompilerConfig.CompilerVersion.V31011),
-            CompilerConfig.CompilerVersion.V31011
-        )
-        return retry.first to "[Compiler switched to 3.10.11; retried once]\n${retry.second}"
+        applyAddressOfPolicy(first.second, version)
+        return first
     }
 
     internal fun compilerArgumentsForManual(sourceFile: String, options: List<String>): List<String> =

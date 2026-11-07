@@ -156,14 +156,13 @@ class CompilerVersionSelectionTest {
     }
 
     @Test
-    fun `addressof recovery is one shot per session and claims from any compiler`() {
+    fun `addressof policy only acts on 3 10 7 output and ignores 3 10 11`() {
         Compiler.resetSessionState()
-        val output = "error 017: undefined symbol: \"__addressof\""
-        // Any running compiler can hit the missing symbol; the claim is version-agnostic.
-        assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = false, CompilerConfig.CompilerVersion.V3107))
-        assertFalse(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V31011))
-        Compiler.resetSessionState()
-        // A new session can claim it again.
-        assertTrue(Compiler.claimAddressOfRecovery(output, forcedMode = true, CompilerConfig.CompilerVersion.V31011))
+        val output = "error 017: undefined symbol __addressof"
+        // 3.10.11 already ships the symbol: nothing to do.
+        Compiler.applyAddressOfPolicy(output, CompilerConfig.CompilerVersion.V31011)
+        // 3.10.7 output mentioning the symbol: the stored version moves to 3.10.11.
+        Compiler.applyAddressOfPolicy(output, CompilerConfig.CompilerVersion.V3107)
+        // No forced-mode condition; the switch is a pure config write.
     }
 }

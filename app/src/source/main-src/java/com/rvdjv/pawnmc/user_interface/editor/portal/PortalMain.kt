@@ -434,24 +434,9 @@ private suspend fun pawnccCommand(
     if (Compiler.isRestartRequired(selectedVersion)) return PortalCommandResult(text("terminal.error.restart"))
     var result = runCatching { onCompile(invocation.source, invocation.options, selectedVersion) }
         .getOrElse { "${text("terminal.error.execution")} ${it.message.orEmpty()}" }
-    if (Compiler.shouldRecoverAddressOf(result) && Compiler.claimAddressOfRecovery(
-            result,
-            CompilerConfig.getInstanceOrNull()?.n_forced_compiler_mode == true,
-            selectedVersion
-        )
-    ) {
-        // The recovery makes 3.10.11 the standing selection.
-        CompilerConfig.getInstanceOrNull()?.let { config ->
-            config.n_forced_compiler_mode = false
-            config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
-        }
-        result = runCatching {
-            onCompile(invocation.source, invocation.options, CompilerConfig.CompilerVersion.V31011)
-        }.getOrElse { "${text("terminal.error.execution")} ${it.message.orEmpty()}" }
-        if (Compiler.shouldRecoverAddressOf(result)) {
-            result = "[Compiler 3.10.11 retry completed; no further retry will run]\n$result"
-        }
-    }
+    // Pure auto-switch: 3.10.7 output mentioning __addressof moves the stored
+    // selection to 3.10.11; output from 3.10.11 itself is left alone.
+    Compiler.applyAddressOfPolicy(result, selectedVersion)
     return PortalCommandResult(result)
 }
 
