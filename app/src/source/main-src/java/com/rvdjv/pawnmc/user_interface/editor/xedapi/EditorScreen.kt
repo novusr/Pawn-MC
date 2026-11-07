@@ -366,8 +366,8 @@ fun EditorScreen(
                 file == null -> Toast.makeText(
                     context, "Choose a Pawn file on local primary storage", Toast.LENGTH_LONG
                 ).show()
-                file.extension.lowercase() !in setOf("pawn", "pwn", "p", "inc") -> Toast.makeText(
-                    context, "Only .pawn, .pwn, .p, and .inc files are supported", Toast.LENGTH_LONG
+                file.extension.lowercase() !in EDITOR_OPENABLE_EXTENSIONS -> Toast.makeText(
+                    context, "Only .pawn, .pwn, .p, .inc, .txt, .log and .cfg files are supported", Toast.LENGTH_LONG
                 ).show()
                 else -> {
                     workspace.registerExternalFile(file)
@@ -2175,6 +2175,15 @@ private fun EmptyWorkspaceView(
 /** Side of the editor the floating compile button rests on. */
 private val FLOAT_MARGIN = 16.dp
 
+/**
+ * Extensions the Xed editor accepts when a file is opened into it.
+ *
+ * The compiler only ever accepts `.pawn/.pwn/.p/.inc`; the extra text formats
+ * (`.txt`, `.log`, `.cfg`) are editor-only: they can be read and edited, but a
+ * compile request against them is rejected by the main view model.
+ */
+internal val EDITOR_OPENABLE_EXTENSIONS = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg")
+
 /** Vertical gap between the stacked floating controls. */
 private val FLOAT_GAP = 10.dp
 
@@ -2675,7 +2684,7 @@ private fun EditorTabStrip(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Open Pawn file") },
+                        text = { Text("Open a file") },
                         onClick = {
                             showAddMenu = false
                             onOpenPawnFileClick()

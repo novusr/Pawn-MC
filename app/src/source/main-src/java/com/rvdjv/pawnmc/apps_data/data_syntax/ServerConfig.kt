@@ -11,8 +11,12 @@ import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
  */
 object ServerConfig {
 
-    /** Extensions of the files this language serves, without the dot. */
-    val EXTENSIONS: Set<String> = setOf("cfg")
+    /** Extensions of the files this language serves, without the dot.
+     *
+     * `.log` shares the plain key/value style of a server configuration, so the
+     * same highlighter keeps plain text readable instead of applying Pawn rules.
+     */
+    val EXTENSIONS: Set<String> = setOf("cfg", "log")
 
     /** Accepted value, used only to decorate the completion text. */
     private val VALUE_HINTS: Map<String, String> = mapOf(

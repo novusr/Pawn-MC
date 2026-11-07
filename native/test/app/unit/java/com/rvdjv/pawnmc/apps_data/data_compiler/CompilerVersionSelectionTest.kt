@@ -120,7 +120,7 @@ class CompilerVersionSelectionTest {
     fun `detection finds pawncc in pawno and qawno folders`() {
         val root = File(System.getProperty("java.io.tmpdir"), "pawnmc-select-${System.nanoTime()}")
         val source = File(File(root, "gamemodes"), "mode.pwn").apply {
-            parentFile.mkdirs()
+            parentFile?.mkdirs()
             writeText("main() {}")
         }
 

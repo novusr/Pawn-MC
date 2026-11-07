@@ -4,6 +4,7 @@ import com.rvdjv.pawnmc.apps_data.data_compiler.Names.COMPILER_BINARY_NAMES
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.INCLUDE_PATH_VARIANTS
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.STR_INCLUDE_DIR_NAME
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.STR_PAWNO_DIR_NAME
+import com.rvdjv.pawnmc.apps_data.data_compiler.Names.STR_QAWNO_DIR_NAME
 import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
 import java.io.File
 
@@ -56,6 +57,7 @@ object Detection {
         while (dir != null && depth < 6) {
             sr_root += dir
             sr_root += File(dir, STR_PAWNO_DIR_NAME)
+            sr_root += File(dir, STR_QAWNO_DIR_NAME)
             dir = dir.parentFile
             depth += 1
         }

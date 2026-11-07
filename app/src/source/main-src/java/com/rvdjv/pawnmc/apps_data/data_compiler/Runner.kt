@@ -101,6 +101,8 @@ object Runner {
     @Synchronized
     fun applyAddressOfPolicy(output: String, runningVersion: CompilerConfig.CompilerVersion) {
         if (!output.contains("__addressof", ignoreCase = true)) return
+        // In forced mode, do not auto-switch the compiler version.
+        if (CompilerConfig.getInstanceOrNull()?.n_forced_compiler_mode == true) return
         when (runningVersion) {
             CompilerConfig.CompilerVersion.V31011 -> return
             CompilerConfig.CompilerVersion.V3107 -> {
@@ -108,7 +110,8 @@ object Runner {
                 n_config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
                 Log.i(
                     "Compiler",
-                    "__addressof in output under 3.10.7; stored compiler version moved to 3.10.11"
+                    "__addressof in output under " +
+                    "3.10.7; stored compiler version moved to 3.10.11"
                 )
             }
         }
