@@ -185,12 +185,16 @@ fun EditorScreen(
     val localizer = remember(context) { AppLocalization.shared(context) }
     val appLanguage = remember(context) { CompilerConfig.getInstance(context).n_app_language }
     val appColorScheme = MaterialTheme.colorScheme
-    // Auto-close rule from settings, re-read when the screen re-enters so a change
-    // in Settings is picked up without touching the widget internals.
-    val autoCloseMode = remember(context) { CompilerConfig.getInstance(context).n_editor_auto_close }
-    /** Live toggle for the auto-close behaviour (mirrors the stored preference). */
+    // Auto-close rule from settings, re-read when the screen re-enters so a
+    // change in Settings is picked up without touching the widget internals.
+    /** Live toggle for the auto-close behaviour (drives the editor directly). */
     var editorAutoCloseEnabled by remember {
-        mutableStateOf(autoCloseMode != CompilerConfig.EditorAutoClose.SMART)
+        mutableStateOf(CompilerConfig.getInstance(context).n_editor_auto_close != CompilerConfig.EditorAutoClose.SMART)
+    }
+    // The stored mode stays available for a user who picked "Smart pair" in
+    // Settings; the toggle switches between that mode and fully-off.
+    val storedAutoCloseMode by remember {
+        mutableStateOf(CompilerConfig.getInstance(context).n_editor_auto_close)
     }
     val editorScheme = remember(appColorScheme, editorBackgroundColor) {
         buildEditorScheme(appColorScheme, editorBackgroundColor)
@@ -1215,6 +1219,23 @@ fun EditorScreen(
                                         } else {
                                             CompilerConfig.EditorAutoClose.SMART
                                         }
+                                    Toast.makeText(
+                                        context,
+                                        if (editorAutoCloseEnabled) {
+                                            if (appLanguage == CompilerConfig.AppLanguage.ID) {
+                                                "Tutup otomatis dinyalakan"
+                                            } else {
+                                                "Auto-close brackets enabled"
+                                            }
+                                        } else {
+                                            if (appLanguage == CompilerConfig.AppLanguage.ID) {
+                                                "Tutup otomatis dimatikan"
+                                            } else {
+                                                "Auto-close brackets disabled"
+                                            }
+                                        },
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             )
                             DropdownMenuItem(
@@ -1498,14 +1519,11 @@ fun EditorScreen(
                                     isLineNumberEnabled = isLineNumbers
                                     isWordwrap = isWordWrap
                                     editable = !isReadOnly
-                                    this.autoCloseMode =
-                                        if (editorAutoCloseEnabled && autoCloseMode == CompilerConfig.EditorAutoClose.SMART) {
-                                            CompilerConfig.EditorAutoClose.PAIR_ALWAYS
-                                        } else if (!editorAutoCloseEnabled) {
-                                            CompilerConfig.EditorAutoClose.SMART
-                                        } else {
-                                            autoCloseMode
-                                        }
+                                    this.autoCloseMode = when {
+                                        !editorAutoCloseEnabled -> CompilerConfig.EditorAutoClose.SMART
+                                        storedAutoCloseMode != CompilerConfig.EditorAutoClose.SMART -> storedAutoCloseMode
+                                        else -> CompilerConfig.EditorAutoClose.PAIR_ALWAYS
+                                    }
                                     setTextSize(14f)
                                     // Same crash guard as the update pass: the very
                                     // first scheme install can race the editor's lazy
@@ -1568,13 +1586,13 @@ fun EditorScreen(
                                     runCatching { editor.setColorScheme(editorScheme) }
                                     appliedScheme.current = editorScheme
                                 }
-                                // A settings change is picked up live as well.
-                                editor.autoCloseMode = autoCloseMode
+                                // The toggle decides live: off means never insert a
+                                // closer, on means the stored mode (or "Always pair"
+                                // when the stored mode is the off-flavoured SMART).
                                 editor.autoCloseMode = when {
                                     !editorAutoCloseEnabled -> CompilerConfig.EditorAutoClose.SMART
-                                    autoCloseMode == CompilerConfig.EditorAutoClose.SMART ->
-                                        CompilerConfig.EditorAutoClose.PAIR_ALWAYS
-                                    else -> autoCloseMode
+                                    storedAutoCloseMode != CompilerConfig.EditorAutoClose.SMART -> storedAutoCloseMode
+                                    else -> CompilerConfig.EditorAutoClose.PAIR_ALWAYS
                                 }
                                 // Push the buffer of the file the workspace panel
                                 // activated, or of the single file opened from the

@@ -63,6 +63,17 @@ class ThirdExtractor(private val context: Context) {
         val templateDir = File(_DirectoryManager.getDocumentsPawnMcDir(), "storage/template").apply { mkdirs() }
         extractRuntimeArchive(ThirdRuntime.SAMP_ARCHIVE, templateDir)
         File(templateDir, "samp03svr").setExecutable(true, false)
+        // Shared-storage writes (FUSE) can come out truncated; a short samp03svr
+        // would later fail with 'Exec format error' at launch. Re-extract just
+        // this binary once when it does not read as an ELF.
+        val extractedServer = File(templateDir, "samp03svr")
+        if (extractedServer.isFile &&
+            ThirdLauncher.kindOf(extractedServer) != ThirdLauncher.Kind.I386
+        ) {
+            Log.w(TAG, "Template samp03svr is not a valid i386 ELF (${extractedServer.length()} bytes); re-extracting")
+            runCatching { extractRuntimeArchive(ThirdRuntime.SAMP_ARCHIVE, templateDir) }
+            extractedServer.setExecutable(true, false)
+        }
 
         onProgress(t("log.x.mariadb"))
         val mariadbDir = File(filesDir, "mariadb")

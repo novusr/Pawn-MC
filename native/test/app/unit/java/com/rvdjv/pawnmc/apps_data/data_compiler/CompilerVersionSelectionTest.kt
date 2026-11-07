@@ -28,9 +28,10 @@ class CompilerVersionSelectionTest {
         assertFalse(v3107.matchesDetected("9.9.9", 1L, "deadbeef"))
         // Product version string alone is enough.
         assertTrue(v31011.matchesDetected("3.10.11", null, null))
-        // Size tolerance covers the pinned expected sizes.
-        assertTrue(v3107.matchesDetected(null, 28_672L, null))
-        assertTrue(v31011.matchesDetected(null, 18_944L, null))
+        // A bare size match with no product version or MD5 is never enough to
+        // attribute a version: the size window overlaps across builds.
+        assertFalse(v3107.matchesDetected(null, 28_672L, null))
+        assertFalse(v31011.matchesDetected(null, 18_944L, null))
     }
 
     @Test
@@ -124,19 +125,26 @@ class CompilerVersionSelectionTest {
         }
 
         val content = "fake-pawncc-binary-3.10.11"
-        // Case 1: pawncc.exe inside pawno/.
+        // Case 1: pawncc.exe inside pawno/. The fake binary embeds a version
+        // string the scanner reads, so a match must come from that text.
         val pawno = File(root, "pawno").apply { mkdirs() }
-        File(pawno, "pawncc.exe").writeText(content)
+        val pawnoExe = File(pawno, "pawncc.exe")
+        // Repeat the version token enough times to stay above the 20-byte
+        // minimum and carry the plain "3.10.11" the regex scans for.
+        pawnoExe.writeText((content + " ").repeat(4))
         val match1 = Compiler.detectNearbyCompiler(source.absolutePath)
-        assertTrue(match1 != null && match1.version == CompilerConfig.CompilerVersion.V31011)
-        File(pawno, "pawncc.exe").delete()
+        assertTrue("pawno/pawncc.exe should resolve", match1 != null)
+        assertEquals(CompilerConfig.CompilerVersion.V31011, match1?.version)
+        pawnoExe.delete()
 
         // Case 2: pawncc inside qawno/ (no pawno anywhere).
         val qawno = File(root, "qawno").apply { mkdirs() }
-        File(qawno, "pawncc").writeText(content)
+        val qawnoExe = File(qawno, "pawncc")
+        qawnoExe.writeText((content + " ").repeat(4))
         val match2 = Compiler.detectNearbyCompiler(source.absolutePath)
-        assertTrue(match2 != null && match2.version == CompilerConfig.CompilerVersion.V31011)
-        File(qawno, "pawncc").delete()
+        assertTrue("qawno/pawncc should resolve", match2 != null)
+        assertEquals(CompilerConfig.CompilerVersion.V31011, match2?.version)
+        qawnoExe.delete()
 
         // Case 3: no compiler anywhere: no match.
         val none = Compiler.detectNearbyCompiler(source.absolutePath)

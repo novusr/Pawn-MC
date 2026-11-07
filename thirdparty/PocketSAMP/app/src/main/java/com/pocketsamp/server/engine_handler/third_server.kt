@@ -47,12 +47,39 @@ class Server(private val context: Context) {
         val qemuBinary = findQemuBinary(context)
         val rootfsDir = File(filesDir, "rootfs_i386")
         val sampDir = _DirectoryManager.getServerDirectory(context)
+
+        /**
+         * Accepts [candidate] only when it is a plausible executable: non-empty,
+         * either a real i386 ELF or a shell wrapper script. The extracted
+         * template can hold a non-ELF placeholder named samp03svr, and handing
+         * that to the loader is the 'Exec format error' users reported.
+         */
+        fun eligibleServerBinary(candidate: File): File? {
+            if (!candidate.isFile || candidate.length() < 64) return null
+            return when (ThirdLauncher.kindOf(candidate)) {
+                ThirdLauncher.Kind.I386 -> candidate
+                ThirdLauncher.Kind.UNKNOWN -> {
+                    // A binary without an ELF header would have to be a script;
+                    // anything that reads as text (placeholder, README) is rejected.
+                    val head = runCatching {
+                        candidate.inputStream().use { input ->
+                            val bytes = ByteArray(4)
+                            val read = input.read(bytes)
+                            String(bytes, 0, read.coerceAtLeast(0), Charsets.ISO_8859_1)
+                        }
+                    }.getOrNull().orEmpty()
+                    if (head.startsWith("#!")) candidate else null
+                }
+                else -> null
+            }
+        }
+
         // A samp03svr placed in the File Manager-selected folder wins over the
-        // bundled one from r_samp.tar.gz, so a user-supplied binary is run as-is;
-        // without one the packaged binary keeps running.
-        val serverBinary = File(sampDir, "samp03svr").takeIf { it.exists() }
-            ?: File(filesDir, "bin/samp03svr").takeIf { it.exists() }
-            ?: File(filesDir, "samp_server/samp03svr").takeIf { it.exists() }
+        // bundled one from r_samp.tar.gz — but only when it is a real i386 ELF
+        // or a shell wrapper; otherwise the packaged binary keeps running.
+        val serverBinary = eligibleServerBinary(File(sampDir, "samp03svr"))
+            ?: File(filesDir, "bin/samp03svr").takeIf { ThirdLauncher.kindOf(it) == ThirdLauncher.Kind.I386 }
+            ?: File(filesDir, "samp_server/samp03svr").takeIf { ThirdLauncher.kindOf(it) == ThirdLauncher.Kind.I386 }
             ?: File(sampDir, "samp03svr")
         val tempDir = File(context.cacheDir, "samp_tmp").apply { mkdirs() }
 
