@@ -34,7 +34,13 @@ fun _Config() {
     val context = LocalContext.current
     val lang = Locales.current
     fun t(key: String): String = Locales.text(lang, key)
-    val configFile = remember { File(_DirectoryManager.getServerDirectory(context), "server.cfg") }
+    // Re-derive the config file whenever the selected folder changes: the File
+    // Manager may re-point the server directory while this screen stays open,
+    // and a stale remember() would keep editing the previous folder's file.
+    var folderToken by remember { mutableIntStateOf(0) }
+    val configFile = remember(folderToken) {
+        File(_DirectoryManager.getServerDirectory(context), "server.cfg")
+    }
     var config by remember(configFile) { mutableStateOf<Configuration?>(null) }
     var readError by remember(configFile) { mutableStateOf<String?>(null) }
     var reloadToken by remember(configFile) { mutableIntStateOf(0) }
@@ -81,7 +87,13 @@ fun _Config() {
     if (lifecycleOwner != null) {
         DisposableEffect(lifecycleOwner, configFile) {
             val observer = LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_RESUME) reloadToken++
+                if (event == Lifecycle.Event.ON_RESUME) {
+                    // The selected folder can change while the app was away (the
+                    // File Manager picker); refresh the file handle and reload.
+                    val current = File(_DirectoryManager.getServerDirectory(context), "server.cfg")
+                    if (current.absolutePath != configFile.absolutePath) folderToken++
+                    reloadToken++
+                }
             }
             lifecycleOwner.lifecycle.addObserver(observer)
             onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }

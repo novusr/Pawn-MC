@@ -77,10 +77,30 @@ class Server(private val context: Context) {
         // A samp03svr placed in the File Manager-selected folder wins over the
         // bundled one from r_samp.tar.gz — but only when it is a real i386 ELF
         // or a shell wrapper; otherwise the packaged binary keeps running.
-        val serverBinary = eligibleServerBinary(File(sampDir, "samp03svr"))
+        var serverBinary = eligibleServerBinary(File(sampDir, "samp03svr"))
             ?: File(filesDir, "bin/samp03svr").takeIf { ThirdLauncher.kindOf(it) == ThirdLauncher.Kind.I386 }
             ?: File(filesDir, "samp_server/samp03svr").takeIf { ThirdLauncher.kindOf(it) == ThirdLauncher.Kind.I386 }
             ?: File(sampDir, "samp03svr")
+
+        /*
+         * Shared-storage paths (/storage/emulated/0/...) go through FUSE, which
+         * reports exec-bit success but serves the binary through a mount that
+         * refuses the exec() syscall — the exact same binary from a /mnt/media_rw
+         * path starts fine. The workaround stages the chosen binary into private
+         * filesDir (where exec is guaranteed) and still runs it with the user's
+         * folder as the working directory.
+         */
+        val runFromPrivate = sampDir.absolutePath.startsWith("/storage/") &&
+            serverBinary.absolutePath.startsWith("/storage/")
+        if (runFromPrivate) {
+            val privateCopy = File(filesDir, "bin/samp03svr.selected")
+            runCatching {
+                serverBinary.copyTo(privateCopy, overwrite = true)
+                privateCopy.setExecutable(true, false)
+            }.onSuccess {
+                serverBinary = privateCopy
+            }.onFailure { Log.w(TAG, "Could not stage samp03svr into private storage: ${it.message}") }
+        }
         val tempDir = File(context.cacheDir, "samp_tmp").apply { mkdirs() }
 
         val isX86Host = android.os.Build.SUPPORTED_ABIS.any { it.contains("x86") }

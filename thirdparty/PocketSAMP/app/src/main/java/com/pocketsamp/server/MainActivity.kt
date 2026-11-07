@@ -271,7 +271,9 @@ class MainActivity : ComponentActivity() {
 
         val serverStatus by RuntimeService.serverStatus.collectAsState()
         val isDbRunning by RuntimeService.isDbRunning.collectAsState()
-        val logs by RuntimeService.logFeed.collectAsState()
+        // The streamed feed is the pace-limited view of the same lines; the
+        // instant feed stays for anything that needs the full snapshot.
+        val logs by RuntimeService.streamedFeed.collectAsState()
         val lanIp by RuntimeService.lanIp.collectAsState()
 
         Scaffold(

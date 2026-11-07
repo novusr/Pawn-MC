@@ -61,6 +61,10 @@ class RuntimeService : Service() {
         @Volatile
         var isServiceRunning: Boolean = false
             private set
+
+        /** App context captured at [onCreate]; enables SQLite persistence of console lines. */
+        @Volatile
+        private var appContext: android.content.Context? = null
         private val _serverStatus = MutableStateFlow(Status.STOPPED)
         val serverStatus: StateFlow<Status> = _serverStatus.asStateFlow()
 
@@ -82,21 +86,67 @@ class RuntimeService : Service() {
 
         private val logLock = Any()
 
+        /** Pending lines waiting for their paced screen tick. */
+        private val streamingBacklog = ArrayDeque<String>()
+
         fun appendLog(line: String) {
             runCatching { consoleLogSink?.invoke(line) }
             synchronized(logLock) {
+                // Every console line is persisted first — the SQLite store is the
+                // source of truth, so a UI hiccup never loses a line. The context
+                // is captured at onCreate; a null one only skips persistence.
+                appContext?.let { ctx ->
+                    com.rvdjv.pawnmc.apps_data.data_logging._pocket_store.record(ctx, line)
+                }
                 val current = _logFeed.value.toMutableList()
                 if (current.size > 500) {
                     current.removeAt(0)
                 }
                 current.add(line)
                 _logFeed.value = current
+                // Pace the on-screen stream: batch arrivals go through a backlog
+                // released a few lines per tick, so a burst (bootstrap SQL output,
+                // a gamemode printing at startup) scrolls readably instead of
+                // flashing by in one frame.
+                streamingBacklog.addLast(line)
+                if (streamingBacklog.size > 200) streamingBacklog.removeFirst()
             }
         }
+
+        /**
+         * Drains [streamingBacklog] into the UI feed at a readable cadence.
+         * Started once from [onCreate]; runs only while lines are pending.
+         */
+        fun startLogStreamer(scope: kotlinx.coroutines.CoroutineScope) {
+            scope.launch(kotlinx.coroutines.Dispatchers.Default) {
+                while (kotlinx.coroutines.currentCoroutineContext().isActive) {
+                    kotlinx.coroutines.delay(150)
+                    var released: List<String> = emptyList()
+                    synchronized(logLock) {
+                        if (streamingBacklog.isNotEmpty()) {
+                            val count = minOf(3, streamingBacklog.size)
+                            released = List(count) { streamingBacklog.removeFirst() }
+                        }
+                    }
+                    if (released.isNotEmpty()) {
+                        _streamedFeed.value = _streamedFeed.value + released
+                        if (_streamedFeed.value.size > 500) {
+                            _streamedFeed.value = _streamedFeed.value.takeLast(500)
+                        }
+                    }
+                }
+            }
+        }
+
+        /** Pace-limited feed the console screen subscribes to. */
+        private val _streamedFeed = kotlinx.coroutines.flow.MutableStateFlow<List<String>>(emptyList())
+        val streamedFeed: kotlinx.coroutines.flow.StateFlow<List<String>> = _streamedFeed.asStateFlow()
 
         fun clearLogs() {
             synchronized(logLock) {
                 _logFeed.value = emptyList()
+                _streamedFeed.value = emptyList()
+                streamingBacklog.clear()
             }
         }
     }
@@ -124,8 +174,10 @@ class RuntimeService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        appContext = applicationContext
         isServiceRunning = true
         createNotificationChannel()
+        startLogStreamer(serviceScope)
 
         assetExtractor = ThirdExtractor(this)
         serverEngine = Server(this)

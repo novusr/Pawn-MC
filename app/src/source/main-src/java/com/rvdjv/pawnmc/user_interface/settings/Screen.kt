@@ -204,8 +204,9 @@ fun SettingsScreen(
     var showVersionDialog by remember { mutableStateOf(false) }
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
-    // Set when a new language is picked; a LaunchedEffect performs the recreate so
-    // the composable call site stays outside the click lambda.
+    // Set when a new language is picked or a theme swap needs a safe recreate; a
+    // LaunchedEffect performs the recreate so the composable call site stays
+    // outside the click lambda.
     var recreateAfterLanguageChange by remember { mutableStateOf(false) }
     LaunchedEffect(recreateAfterLanguageChange) {
         if (recreateAfterLanguageChange) {
@@ -1307,7 +1308,14 @@ fun SettingsScreen(
                                 val changed = viewModel.n_app_theme != theme
                                 viewModel.updateAppTheme(theme)
                                 showThemeDialog = false
-                                if (changed) onRestartRequested()
+                                if (changed) {
+                                    // A crash trace showed the Compose view-tree
+                                    // registry racing an in-flight addLast when the
+                                    // window tore down mid-traversal on API 28; the
+                                    // recreate is deferred one frame so the current
+                                    // traversal fully drains first.
+                                    recreateAfterLanguageChange = true
+                                }
                             }
                         )
                     }
