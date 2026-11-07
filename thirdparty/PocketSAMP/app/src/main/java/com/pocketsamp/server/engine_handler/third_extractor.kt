@@ -18,7 +18,7 @@ class ThirdExtractor(private val context: Context) {
         private const val PREF_NAME = "pocketsamp_assets"
         private const val KEY_INSTALLED_VERSION = "assets_installed_version"
         /** Bump when the archive set changes. */
-        private const val CURRENT_VERSION = 12
+        private const val CURRENT_VERSION = 13
         /** The only MariaDB archive PocketSAMP uses. */
         private const val MARIADB_ARCHIVE = ThirdRuntime.MARIADB_ARCHIVE
 

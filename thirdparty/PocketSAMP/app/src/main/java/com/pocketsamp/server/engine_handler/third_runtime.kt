@@ -54,7 +54,7 @@ class ThirdRuntime(private val context: Context) {
             RuntimeArchive(
                 SAMP_ARCHIVE,
                 "samp/$SAMP_ARCHIVE",
-                "e28471239a531d5c1a40699f2a95a40129b8d087ef1c28d1c06b47ae4eb6f1b5"
+                "03601450d8bde12c93183a81204ea5dd787dc855da1dcdddde4c170806d14ddd"
             ),
             RuntimeArchive(
                 MARIADB_ARCHIVE,
