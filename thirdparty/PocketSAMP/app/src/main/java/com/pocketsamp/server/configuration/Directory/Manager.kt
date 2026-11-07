@@ -59,15 +59,41 @@ object _DirectoryManager {
     }
 
     /**
-     * `Documents/PawnMC/storage/template/`, where the extracted r_samp.tar.gz
-     * base project lives. When no folder has been picked yet the File Manager
-     * lands here instead of creating an empty default elsewhere.
+     * `Downloads/.Pawn-MC/template/`, where the extracted r_samp.tar.gz base
+     * project lives.
+     *
+     * Moved out of `Documents/PawnMC/storage/template/`: several system folder
+     * pickers refuse to open (or return an empty listing for) app-created folders
+     * under Documents, which left the File Manager staring at an empty view even
+     * though the files were there. Downloads is browsable by every picker, and the
+     * dot-prefix keeps the folder out of the way of the user's own files.
      */
     fun getTemplateDirectory(): File {
-        val dir = File(File(getDocumentsPawnMcDir(), "storage"), "template")
-        if (!dir.exists()) dir.mkdirs()
-        return dir
+        val legacy = legacyTemplateDirectory()
+        val target = templateDirectory()
+        // One-time move of an old Documents extraction so nothing is left behind.
+        if (legacy.isDirectory && !target.isDirectory) {
+            runCatching {
+                if (!legacy.renameTo(target)) {
+                    legacy.copyRecursively(target, overwrite = true)
+                    legacy.deleteRecursively()
+                }
+            }
+        }
+        if (!target.exists()) target.mkdirs()
+        return target
     }
+
+    /** The current template location, `Downloads/.Pawn-MC/template`. */
+    fun templateDirectory(): File {
+        val extStorage = Environment.getExternalStorageDirectory()
+            ?: return File("/storage/emulated/0/Download/.Pawn-MC/template")
+        return File(File(extStorage, Environment.DIRECTORY_DOWNLOADS), ".Pawn-MC/template")
+    }
+
+    /** The pre-move template location, kept only for the migration above. */
+    private fun legacyTemplateDirectory(): File =
+        File(File(getDocumentsPawnMcDir(), "storage"), "template")
 
     fun hasCustomServerDirectory(context: Context): Boolean {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -141,9 +167,13 @@ object _DirectoryManager {
         val subPath = docId.substringAfter(':', "")
         if (subPath.split('/').any { it == ".." || it == "." }) return null
 
-        if (type.equals("primary", ignoreCase = true) &&
-            (subPath.isBlank() || subPath == "Download" || subPath == "Downloads")
-        ) return null
+        /*
+         * Every primary-storage location is accepted, including the storage root
+         * itself and Downloads. The old code returned null for `primary:` with a
+         * blank/Download sub-path, which is exactly what made "storage/ to
+         * Downloads" picks flicker between "invalid path" and success depending
+         * on which tree entry the user happened to tap.
+         */
         val resolved = if ("primary".equals(type, ignoreCase = true)) {
             val basePath = Environment.getExternalStorageDirectory().absolutePath
             if (subPath.isNotEmpty()) File(basePath, subPath) else File(basePath)

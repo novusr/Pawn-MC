@@ -27,6 +27,16 @@ class SettingsActivity : ComponentActivity() {
          * and an unknown value is simply ignored instead of crashing the screen.
          */
         const val EXTRA_FOCUS_TARGET = "com.rvdjv.pawnmc.extra.SETTINGS_FOCUS"
+
+        /**
+         * Pending compiler-switch request written before the restart.
+         *
+         * A restart kills the process mid-write risk-free only when the request is
+         * on disk: this JSON holds the version and forced/auto mode the user asked
+         * for, and the next launch replays it against the live config before the
+         * first frame.
+         */
+        const val PENDING_SWITCH_FILE = "pending_compiler_switch.json"
     }
 
     override fun attachBaseContext(newBase: Context) {
@@ -41,6 +51,9 @@ class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CompilerConfig.getInstance(applicationContext)
+        // A compiler switch queued by the previous process is applied (and verified)
+        // here, before anything reads the config — see [applyPendingCompilerSwitch].
+        applyPendingCompilerSwitch()
         // Settings can be the launcher entry point, so make sure the explanation
         // table is loaded here too and not only from MainActivity.
         Explanations.load(applicationContext)
@@ -51,7 +64,7 @@ class SettingsActivity : ComponentActivity() {
                 SettingsScreen(
                     viewModel = viewModel,
                     onNavigateBack = { finish() },
-                    onRestartRequested = { restartApp() },
+                    onRestartRequested = { queueCompilerSwitchAndRestart() },
                     // Only the name travels in the intent; an unknown one resolves to
                     // `null` and the screen simply opens at the top.
                     focusTarget = intent.getStringExtra(EXTRA_FOCUS_TARGET)
@@ -59,6 +72,56 @@ class SettingsActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    /** File holding the pending switch request inside the private files dir. */
+    private fun pendingSwitchFile() = java.io.File(filesDir, PENDING_SWITCH_FILE)
+
+    /**
+     * Writes the user's requested compiler state to the temporary file, then
+     * restarts. The next launch replays it in [applyPendingCompilerSwitch].
+     */
+    private fun queueCompilerSwitchAndRestart() {
+        runCatching {
+            pendingSwitchFile().writeText(
+                org.json.JSONObject()
+                    .put("version", viewModel.n_compiler_version.value)
+                    .put("forced", viewModel.n_forced_compiler_mode)
+                    .put("requested", System.currentTimeMillis())
+                    .toString()
+            )
+        }
+        restartApp()
+    }
+
+    /**
+     * Replays a pending switch request against the live config.
+     *
+     * When the stored config already matches the request the change went through
+     * cleanly — the temporary file is deleted and nothing else happens. When it
+     * does not (a write lost to the process kill, or a system-side switch like the
+     * `__addressof` recovery overwriting it), the request is applied again so the
+     * user's choice always wins the race.
+     */
+    private fun applyPendingCompilerSwitch() {
+        val file = pendingSwitchFile()
+        if (!file.isFile) return
+        val request = runCatching {
+            val root = org.json.JSONObject(file.readText())
+            val version = CompilerConfig.CompilerVersion.fromValue(root.optString("version"))
+            val forced = root.optBoolean("forced", false)
+            Triple(version, forced, root.optLong("requested", 0L))
+        }.getOrNull()
+        file.delete()
+        val (requestedVersion, requestedForced, _) = request ?: return
+
+        val config = CompilerConfig.getInstance(applicationContext)
+        val alreadyApplied = config.n_compiler_version == requestedVersion &&
+            config.n_forced_compiler_mode == requestedForced
+        if (alreadyApplied) return
+
+        config.n_compiler_version = requestedVersion
+        config.n_forced_compiler_mode = requestedForced
     }
 
     private fun restartApp() {

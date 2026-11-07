@@ -136,6 +136,9 @@ class MainActivity : ComponentActivity() {
     // first, so nothing below has to know about the layout. Host context only:
     // listing a directory here would be IO on the first frame.
     Compiler.attachHost(applicationContext)
+    // The data layer posts its own notifications (e.g. the compiler auto-switch
+    // restart heads-up); it needs a context that outlives any single activity.
+    com.rvdjv.pawnmc.apps_data.data_config.SystemNotification.attachHost(applicationContext)
 
         // The first frame only needs the theme, which comes from SharedPreferences. Every
         // other startup task reads and parses a multi-hundred-kilobyte asset or walks the

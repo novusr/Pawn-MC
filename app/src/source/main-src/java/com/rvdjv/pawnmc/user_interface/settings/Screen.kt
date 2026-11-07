@@ -1436,11 +1436,11 @@ fun SettingsScreen(
                 TextButton(
                     onClick = {
                         showRestartDialog = false
-                        // `onRestartRequested` relaunches the app with a fresh task
-                        // (FLAG_ACTIVITY_CLEAR_TASK) and kills the old process, so the
-                        // new compiler library is loaded from Documents/PawnMC on the
-                        // next launch. Launching a second intent here raced with the
-                        // process exit and could resurrect a stale activity.
+                        // `onRestartRequested` writes the pending compiler
+                        // switch (version + forced/auto) to a temporary file,
+                        // then relaunches the app with a fresh task; the next
+                        // launch replays and verifies the switch before the
+                        // first frame.
                         onRestartRequested()
                     }
                 ) {

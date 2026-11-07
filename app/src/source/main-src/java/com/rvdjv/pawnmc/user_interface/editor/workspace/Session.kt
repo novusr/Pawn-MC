@@ -278,7 +278,14 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
      */
     private fun restoreRememberedTabs() {
         val store = config ?: return
-        val folders = store.n_workspace_folders
+        // After a reinstall the folder list itself only lives in the JSON mirror,
+        // and restoreRememberedWorkspaces refills `n_workspace_folders` from it;
+        // read the store here too so the tabs are not skipped when the prefs copy
+        // arrived later or through a different path.
+        val folders = store.n_workspace_folders.ifEmpty {
+            PathStore.readPaths(store.applicationContextHolder(), "workspace")
+                .let(PathStore::restoreExisting)
+        }
         if (folders.isEmpty()) return
         val tabsByFolder = store.n_workspace_open_tabs.associateBy { group -> group.first() }
         val activeByFolder = store.n_workspace_active_tabs

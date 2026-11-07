@@ -51,9 +51,18 @@ fun buildFilePickerIntent(): Intent {
     return intent
 }
 
-/** Downloads folder of the primary shared storage, where the picker starts. */
+/**
+ * Downloads folder of the primary shared storage, where the picker starts.
+ *
+ * Falling back to `content://com.android.externalstorage.documents/document/primary:`
+ * (the storage root) when the Downloads document id is rejected by the provider —
+ * a null initial uri made some pickers open in a random or empty place, which the
+ * user reported as "the folder shows nothing".
+ */
 private fun downloadsInitialUri(): Uri? = runCatching {
     Uri.parse("content://com.android.externalstorage.documents/document/primary%3ADownload")
+}.getOrNull() ?: runCatching {
+    Uri.parse("content://com.android.externalstorage.documents/document/primary:")
 }.getOrNull()
 
 /**
@@ -71,25 +80,38 @@ suspend fun resolveTreeToFile(context: Context, treeUri: Uri): File? =
 suspend fun resolveDocumentToFile(context: Context, uri: Uri): File? =
     withContext(Dispatchers.IO) {
         val id = runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull() ?: return@withContext null
-        if (!id.startsWith("primary:")) return@withContext null
-        val relative = id.removePrefix("primary:")
-        if (relative.isBlank() || relative.split('/').any { it == ".." || it == "." }) return@withContext null
+        val prefix = id.substringBefore(':', "").lowercase()
+        val relative = id.substringAfter(':', "")
+        if (prefix != "primary") return@withContext null
+        if (relative.split('/').any { it == ".." || it == "." }) return@withContext null
         val root = File("/storage/emulated/0").canonicalFile
+        // A bare `primary:` document id (the storage root itself) maps to the root;
+        // previously this returned null and the pick read as "invalid path".
+        if (relative.isBlank()) return@withContext root.takeIf { it.isDirectory }
         val file = File(root, relative).canonicalFile
         file.takeIf { it.isFile && it.path.startsWith(root.path + File.separator) }
     }
 
 private fun resolveTree(resolver: ContentResolver, treeUri: Uri): File? {
     val documentId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull() ?: return null
-    if (!documentId.startsWith("primary:")) return null
 
-    val segments = documentId.removePrefix("primary:").split('/').filter { it.isNotEmpty() }
-    if (segments.isEmpty()) return null
+    val prefix = documentId.substringBefore(':', "").lowercase()
+    val relative = documentId.substringAfter(':', "")
 
-    val relative = segments.joinToString(File.separator)
+    val segments = relative.split('/').filter { it.isNotEmpty() }
+
     val root = File("/storage/emulated/0").canonicalFile
+    val candidate = when (prefix) {
+        // Primary storage: root itself (empty relative) or a subfolder.
+        "primary" -> if (segments.isEmpty()) root else File(root, segments.joinToString(File.separator))
+        // Removable media: /storage/<volume>/<subpath>; a bare volume root is valid too.
+        else -> {
+            val volume = "/storage/$prefix"
+            if (segments.isEmpty()) File(volume) else File(volume, segments.joinToString(File.separator))
+        }
+    }
     if (relative.split(File.separatorChar).any { it == ".." || it == "." }) return null
-    val candidate = runCatching { File(root, relative).canonicalFile }.getOrNull() ?: return null
-    if (!candidate.path.startsWith(root.path + File.separator)) return null
-    return candidate.takeIf { it.isDirectory && it.canRead() }
+    val resolved = runCatching { candidate.canonicalFile }.getOrNull() ?: return null
+    if (!resolved.isDirectory || !resolved.canRead()) return null
+    return resolved
 }

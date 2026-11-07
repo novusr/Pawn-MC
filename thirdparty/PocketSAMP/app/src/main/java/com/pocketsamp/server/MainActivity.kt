@@ -381,6 +381,12 @@ class MainActivity : ComponentActivity() {
             return
         }
 
+        // "KASIH BAHAN BAKAR" also kicks the runtime download/extraction off when
+        // the archives are not ready yet: the service repeats the same check, but
+        // starting here means the progress log fills in while the user watches the
+        // dashboard instead of after a silent first tick.
+        startRuntimeDownload()
+
         // A stale "running" flag from a previous crashed session used to make the
         // service ignore the start request, so the button seemed dead. Reset the
         // flag when no engine is actually alive before asking for a start.

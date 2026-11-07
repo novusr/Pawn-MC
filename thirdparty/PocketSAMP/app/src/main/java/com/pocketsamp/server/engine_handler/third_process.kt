@@ -24,6 +24,18 @@ class ThirdProcess(
     )
     val logs: SharedFlow<String> = _logs.asSharedFlow()
 
+    /**
+     * Drops the replayed history.
+     *
+     * The flow replays the last 100 lines to every new collector; without this
+     * reset a restart of the server re-broadcast the previous run's tail — the
+     * ambiguous "write pipe failed" style lines the user saw at the top of the
+     * console before the fresh samp03svr output arrived.
+     */
+    fun resetHistory() {
+        _logs.resetReplayCache()
+    }
+
     val isRunning: Boolean
         get() = process?.isAlive == true
 

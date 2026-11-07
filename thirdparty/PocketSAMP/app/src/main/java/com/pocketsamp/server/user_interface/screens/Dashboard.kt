@@ -69,6 +69,7 @@ import com.pocketsamp.server.configuration.Reader
 import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.service_handler.Status
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
+import kotlinx.coroutines.delay
 import java.io.File
 
 @Composable
@@ -279,10 +280,9 @@ fun _Dashboard(
                 detail = t("spec.arch.note"),
                 modifier = Modifier.weight(1f)
             )
-            RuntimeMetric(
-                title = t("spec.ram.title"),
-                value = "~150 MB",
-                detail = t("spec.ram.note"),
+            RamProfileMetric(
+                isServerRunning = isRunning,
+                lang = lang,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -634,6 +634,54 @@ private fun ConnectionAddress(
             color = SampThemeColors.textSecondary
         )
     }
+}
+
+/**
+ * Live RAM readout of the device.
+ *
+ * Refreshes every 11 seconds while the server is running and once on entry
+ * otherwise, so the numbers track what the OS actually reports rather than a
+ * hardcoded estimate.
+ */
+@Composable
+private fun RamProfileMetric(isServerRunning: Boolean, lang: Locales.Lang, modifier: Modifier = Modifier) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var profile by remember { mutableStateOf(readRamProfile(context, lang)) }
+
+    androidx.compose.runtime.LaunchedEffect(isServerRunning) {
+        while (true) {
+            profile = readRamProfile(context, lang)
+            // A running server churns memory (QEMU translation cache, MariaDB
+            // buffers), so it is the only state worth polling continuously.
+            delay(if (isServerRunning) 11_000L else Long.MAX_VALUE)
+        }
+    }
+
+    RuntimeMetric(
+        title = Locales.text(lang, "spec.ram.title"),
+        value = profile.headline,
+        detail = profile.detail,
+        modifier = modifier
+    )
+}
+
+private data class RamProfile(val headline: String, val detail: String)
+
+private fun readRamProfile(context: android.content.Context, lang: Locales.Lang): RamProfile {
+    fun t(key: String): String = Locales.text(lang, key)
+    val activityManager = context.getSystemService(android.content.Context.ACTIVITY_SERVICE)
+        as? android.app.ActivityManager
+        ?: return RamProfile("~150 MB", t("spec.ram.note"))
+    val memoryInfo = android.app.ActivityManager.MemoryInfo()
+    activityManager.getMemoryInfo(memoryInfo)
+    val totalMb = memoryInfo.totalMem / (1024L * 1024L)
+    val availableMb = memoryInfo.availMem / (1024L * 1024L)
+    val usedMb = (totalMb - availableMb).coerceAtLeast(0L)
+    val percent = if (totalMb > 0) (usedMb * 100 / totalMb).coerceIn(0, 100) else 0L
+    return RamProfile(
+        headline = "$availableMb MB ${t("spec.ram.free")}",
+        detail = "$usedMb / ${totalMb} MB (${percent}%) " + t("spec.ram.note")
+    )
 }
 
 @Composable

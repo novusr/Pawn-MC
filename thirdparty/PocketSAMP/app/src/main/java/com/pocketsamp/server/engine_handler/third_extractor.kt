@@ -36,8 +36,9 @@ class ThirdExtractor(private val context: Context) {
         val mariadbDir = File(context.filesDir, "mariadb")
 
         val marker = File(context.filesDir, "runtime.ready")
-        // The samp template now lives in the shared storage template area.
-        val templateDir = File(_DirectoryManager.getDocumentsPawnMcDir(), "storage/template")
+        // The samp template now lives in Downloads/.Pawn-MC/template (the shared
+        // template location moved out of Documents, see _DirectoryManager).
+        val templateDir = _DirectoryManager.templateDirectory()
         installedVersion == CURRENT_VERSION &&
             marker.isFile &&
             File(templateDir, "samp03svr").isFile &&
@@ -57,10 +58,10 @@ class ThirdExtractor(private val context: Context) {
 
         onProgress(t("log.x.samp"))
         // r_samp.tar.gz is unpacked into the shared storage template area
-        // (Documents/PawnMC/storage/template/), so the base gamemode project is
+        // (Downloads/.Pawn-MC/template/), so the base gamemode project is
         // user-visible and reusable; the File Manager defaults there when no
         // folder has been picked yet.
-        val templateDir = File(_DirectoryManager.getDocumentsPawnMcDir(), "storage/template").apply { mkdirs() }
+        val templateDir = _DirectoryManager.templateDirectory().apply { mkdirs() }
         extractRuntimeArchive(ThirdRuntime.SAMP_ARCHIVE, templateDir)
         File(templateDir, "samp03svr").setExecutable(true, false)
         // Shared-storage writes (FUSE) can come out truncated; a short samp03svr

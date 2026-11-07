@@ -715,7 +715,24 @@ fun EditorScreen(
                     TextButton(
                         onClick = {
                             showExitDialog = false
-                            onNavigateBack()
+                            scope.launch {
+                                // Discard rolls every dirty buffer back to what is
+                                // already on disk, so the file keeps its original
+                                // content; only Save commits the edits.
+                                workspace.openWorkspaces.forEach { target ->
+                                    target.documents.filter { it.isDirty }.forEach { document ->
+                                        runCatching {
+                                            document.updateContent(document.file.readText())
+                                            document.markSaved()
+                                        }
+                                    }
+                                }
+                                if (!viewModel.isTemporaryFile && viewModel.hasUnsavedChanges) {
+                                    viewModel.loadFile()
+                                }
+                                workspace.persistOpenTabs()
+                                onNavigateBack()
+                            }
                         },
                         modifier = Modifier.testTag("dialog_discard_button")
                     ) {

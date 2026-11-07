@@ -36,6 +36,19 @@ class Server(private val context: Context) {
     val isRunning: Boolean
         get() = processRunner.isRunning
 
+    /**
+     * Library path of the staged private runtime, or an empty string when the
+     * server folder is not on shared storage (nothing was staged).
+     */
+    private fun privateRuntimeLibraryPath(filesDir: File): String {
+        val staged = File(filesDir, "bin/private_samp")
+        if (!staged.isDirectory) return ""
+        return listOf(
+            "${staged.absolutePath}/usr/lib/i386-linux-gnu",
+            "${staged.absolutePath}/lib/i386-linux-gnu"
+        ).filter { File(it).isDirectory }.joinToString(":")
+    }
+
     private fun findQemuBinary(context: Context): File? = ThirdLauncher.findQemu(context)
 
     fun start(scope: CoroutineScope): Boolean {
@@ -100,6 +113,35 @@ class Server(private val context: Context) {
             }.onSuccess {
                 serverBinary = privateCopy
             }.onFailure { Log.w(TAG, "Could not stage samp03svr into private storage: ${it.message}") }
+        }
+
+        /*
+         * Full private staging: when the server folder itself lives on shared
+         * storage, everything the loader touches at startup (the dynamic linker,
+         * libstdc++/libgcc, the plugin .so files) goes through FUSE as well. FUSE
+         * mmap/exec is flaky on some vendor kernels — the same setup from a
+         * private path starts every time — so when the working folder is on
+         * /storage the loader tree is mirrored into filesDir and the process runs
+         * entirely from private storage with only the gamemode files left shared.
+         */
+        if (sampDir.absolutePath.startsWith("/storage/")) {
+            runCatching {
+                val privateRoot = File(filesDir, "bin/private_samp").apply { mkdirs() }
+                listOf("lib", "usr/lib").forEach { relative ->
+                    val source = File(rootfsDir, relative)
+                    if (source.isDirectory) {
+                        source.copyRecursively(File(privateRoot, relative), overwrite = true)
+                    }
+                }
+                val plugins = File(sampDir, "plugins")
+                if (plugins.isDirectory) {
+                    val privatePlugins = File(privateRoot, "plugins").apply { mkdirs() }
+                    plugins.listFiles()?.filter { it.isFile && it.extension.equals("so", true) }
+                        ?.forEach { plugin ->
+                            runCatching { plugin.copyTo(File(privatePlugins, plugin.name), overwrite = true) }
+                        }
+                }
+            }.onFailure { Log.w(TAG, "Private runtime staging failed: ${it.message}") }
         }
         val tempDir = File(context.cacheDir, "samp_tmp").apply { mkdirs() }
 
@@ -246,7 +288,17 @@ class Server(private val context: Context) {
 
         val env = mapOf(
             "TMPDIR" to tempDir.absolutePath,
-            "LD_LIBRARY_PATH" to "${rootfsDir.absolutePath}/usr/lib/i386-linux-gnu:${rootfsDir.absolutePath}/lib/i386-linux-gnu:${sampDir.absolutePath}/plugins",
+            // When a private mirror of the sysroot exists (staged above for a
+            // /storage working folder), the private copy leads the search path:
+            // the loader then never mmaps ELF files through FUSE, which is where
+            // the random "cannot open shared object file"/Exec format errors
+            // came from.
+            "LD_LIBRARY_PATH" to listOf(
+                privateRuntimeLibraryPath(filesDir),
+                "${rootfsDir.absolutePath}/usr/lib/i386-linux-gnu",
+                "${rootfsDir.absolutePath}/lib/i386-linux-gnu",
+                "${sampDir.absolutePath}/plugins"
+            ).filter { it.isNotBlank() }.joinToString(":"),
             "HOME" to sampDir.absolutePath,
             "USER" to "root"
         )
@@ -273,6 +325,19 @@ class Server(private val context: Context) {
          */
         startLogTailer(File(sampDir, "server_log.txt"), scope)
         return true
+    }
+
+    /**
+     * Drops the server log replay cache.
+     *
+     * The flow replays the last 100 lines to every new collector; without this
+     * reset a restart re-broadcast the previous run's tail — the ambiguous
+     * "Stream/write pipe failed" style lines the user saw at the top of the
+     * console before the fresh samp03svr output arrived.
+     */
+    fun resetLogHistory() {
+        processRunner.resetHistory()
+        _serverLogs.resetReplayCache()
     }
 
     private fun startLogTailer(logFile: File, scope: CoroutineScope) {

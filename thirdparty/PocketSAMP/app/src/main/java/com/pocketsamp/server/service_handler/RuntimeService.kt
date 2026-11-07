@@ -363,6 +363,9 @@ class RuntimeService : Service() {
                 }
         }
         clearLogs()
+        // Fresh console: drop the previous run's replayed lines so stale "Stream
+        // closed"/pipe noise from the last session never leads the new log.
+        serverEngine.resetLogHistory()
         _serverStatus.value = Status.STARTING
         acquireLocks()
 

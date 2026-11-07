@@ -5,6 +5,7 @@ import com.rvdjv.pawnmc.apps_data.data_compiler.Names.AUTO_FALLBACK_ERROR_THRESH
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.SSCANF_NO_NICE_FEATURES_FLAG
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.STR_PAWNCC_BINARY_NAME
 import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.SystemNotification
 import com.rvdjv.pawnmc.apps_data.data_library.LibraryStore
 import com.rvdjv.pawnmc.apps_data.data_logging._compiler_store
 import java.io.File
@@ -100,18 +101,31 @@ object Runner {
      */
     @Synchronized
     fun applyAddressOfPolicy(output: String, runningVersion: CompilerConfig.CompilerVersion) {
-        if (!output.contains("__addressof", ignoreCase = true)) return
+        // The message travels in several spellings across compiler releases:
+        // `undefined symbol "__addressof"`, `undefined symbol __addressof`, or the
+        // symbol reference inside a `__addressof(...)` call trace. Match any of them.
+        val n_hit = output.contains("__addressof", ignoreCase = true) ||
+            Regex("(?i)undefined\\s+symbol\\s+\"?_?_?addressof\"?").containsMatchIn(output)
+        if (!n_hit) return
         // In forced mode, do not auto-switch the compiler version.
         if (CompilerConfig.getInstanceOrNull()?.n_forced_compiler_mode == true) return
         when (runningVersion) {
             CompilerConfig.CompilerVersion.V31011 -> return
             CompilerConfig.CompilerVersion.V3107 -> {
                 val n_config = CompilerConfig.getInstanceOrNull() ?: return
+                if (n_config.n_compiler_version != CompilerConfig.CompilerVersion.V3107) return
+                // The setter writes both SharedPreferences and the JSON mirror in
+                // Documents/PawnMC/config/, so the switch survives a restart.
                 n_config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
                 Log.i(
                     "Compiler",
                     "__addressof in output under " +
                     "3.10.7; stored compiler version moved to 3.10.11"
+                )
+                SystemNotification.restartNeeded(
+                    SystemNotification.contextOrNull(),
+                    CompilerConfig.CompilerVersion.V3107.label,
+                    CompilerConfig.CompilerVersion.V31011.label
                 )
             }
         }
@@ -212,6 +226,8 @@ object Runner {
 
         val n_result = compileWithVersion(sourceFile, options, version)
         // Pure auto-switch: no forced-mode condition, no automatic recompile.
+        // Run on the parsed text; the parse no longer drops the first line, so
+        // an `undefined "__addressof"` on line one reaches the recovery here.
         applyAddressOfPolicy(n_result.second, version)
 
         if (!n_isForced && !FALL_MUTATION && shouldRetryWithFallback(n_result.second)) {
@@ -374,10 +390,14 @@ object Runner {
     /** Parses the compiler exit code and the text output produced by the native runner. */
     private fun parseCompilerOutput(output: String): Pair<Int, String> {
         val n_match = EXIT_CODE_REGEX.find(output)
-
-        val n_exitCode = n_match?.groupValues?.get(1)?.toIntOrNull() ?: -1
+        if (n_match == null) {
+            // No exit-code banner: the raw text *is* the output. Trimming a line
+            // here used to swallow the first error (an `undefined "__addressof"`
+            // on line one was cut off and the recovery never saw it).
+            return -1 to output
+        }
+        val n_exitCode = n_match.groupValues[1].toIntOrNull() ?: -1
         val n_actualOutput = output.substringAfter('\n', "")
-
         return n_exitCode to n_actualOutput
     }
 
