@@ -1,11 +1,11 @@
-package com.rvdjv.pawnmc.apps_data.data_compiler
+﻿package com.rvdjv.pawnmc.apps_data.data_compiler
 
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.COMPILER_BINARY_NAMES
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.INCLUDE_PATH_VARIANTS
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.STR_INCLUDE_DIR_NAME
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.STR_PAWNO_DIR_NAME
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.STR_QAWNO_DIR_NAME
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import java.io.File
 
 /**
@@ -16,7 +16,7 @@ object Detection {
     private val PRODUCT_VERSION_REGEX = """\b\d+\.\d+\.\d+\b""".toRegex()
 
     data class NearbyCompilerMatch(
-        val version: CompilerConfig.CompilerVersion,
+        val version: ContentConfig.CompilerVersion,
         val filePath: String,
         val productVersion: String?,
         val sizeBytes: Long,
@@ -24,15 +24,15 @@ object Detection {
     )
 
     private data class CompilerMetadata(
-        val version: CompilerConfig.CompilerVersion?,
+        val version: ContentConfig.CompilerVersion?,
         val productVersion: String?,
         val sizeBytes: Long,
         val md5: String?
     )
 
     /** Nearby compiler version mapped to a supported PawnMC version, or null. */
-    fun detectCompilerVersionForFile(sourceFile: String): CompilerConfig.CompilerVersion? {
-        val n_config = CompilerConfig.getInstanceOrNull()
+    fun detectCompilerVersionForFile(sourceFile: String): ContentConfig.CompilerVersion? {
+        val n_config = ContentConfig.getInstanceOrNull()
         if (n_config?.n_forced_compiler_mode == true) {
             return null
         }
@@ -94,7 +94,7 @@ object Detection {
     /** Selects one existing conventional include folder, or the stable `include/` fallback. */
     fun discoverRelevantIncludePaths(sourceFile: String, knownPaths: List<String> = emptyList()): List<String> {
         val known = knownPaths.asSequence()
-            .map { CompilerConfig.includePathKey(it) }
+            .map { ContentConfig.includePathKey(it) }
             .filter { it.isNotBlank() && it != "/" }
             .toSet()
 
@@ -122,8 +122,8 @@ object Detection {
             .firstOrNull { candidate -> runCatching { candidate.isDirectory }.getOrDefault(false) }
             ?: File(projectRoot, STR_INCLUDE_DIR_NAME)
 
-        val normalizedPath = CompilerConfig.normalPath(selectedInclude.absolutePath)
-        val key = CompilerConfig.includePathKey(normalizedPath)
+        val normalizedPath = ContentConfig.normalPath(selectedInclude.absolutePath)
+        val key = ContentConfig.includePathKey(normalizedPath)
         return if (key.isBlank() || key == "/" || key in known) emptyList() else listOf(normalizedPath)
     }
 
@@ -143,8 +143,8 @@ object Detection {
             null
         }
 
-        val n_version = CompilerConfig.CompilerVersion.entries.firstOrNull { it.matchesDetected(n_productVersion, n_sizeBytes, n_md5) }
-            ?: CompilerConfig.CompilerVersion.entries.firstOrNull {
+        val n_version = ContentConfig.CompilerVersion.entries.firstOrNull { it.matchesDetected(n_productVersion, n_sizeBytes, n_md5) }
+            ?: ContentConfig.CompilerVersion.entries.firstOrNull {
                 it.nearestSupportedEquivalent(n_productVersion, n_sizeBytes, n_md5) != null
             }?.nearestSupportedEquivalent(n_productVersion, n_sizeBytes, n_md5)
         return CompilerMetadata(n_version, n_productVersion, n_sizeBytes, n_md5)

@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.editor.workspace
+﻿package com.rvdjv.pawnmc.user_interface.editor.workspace
 
 import android.content.Context
 import android.os.Build
@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_config.PathStore
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.EditorScreen
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.EditorViewModel
@@ -216,8 +216,8 @@ data class WorkspaceSearchHit(
  */
 class WorkspaceSession(context: Context? = null) : ViewModel() {
 
-    private val config: CompilerConfig? =
-        context?.let { CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(it) }
+    private val config: ContentConfig? =
+        context?.let { ContentConfig.getInstanceOrNull() ?: ContentConfig.getInstance(it) }
 
     private val workspaces = mutableStateListOf<Workspace>()
     private val scanning = mutableStateListOf<Workspace>()

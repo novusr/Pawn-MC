@@ -1,6 +1,6 @@
-package com.rvdjv.pawnmc.apps_data.data_syntax
+﻿package com.rvdjv.pawnmc.apps_data.data_syntax
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 
 /**
  * SA-MP `server.cfg` vocabulary shared by the highlighter and the completion popup.
@@ -196,16 +196,16 @@ object ServerConfig {
 
     fun isGamemode(word: String): Boolean = gamemodePattern.matches(word)
 
-    fun descriptionFor(word: String, language: CompilerConfig.AppLanguage): String {
+    fun descriptionFor(word: String, language: ContentConfig.AppLanguage): String {
         if (isGamemode(word)) return gamemodeDescription(word, language)
         val english = DESCRIPTIONS[word] ?: return ""
-        return if (language == CompilerConfig.AppLanguage.ID) INDONESIAN[word] ?: english else english
+        return if (language == ContentConfig.AppLanguage.ID) INDONESIAN[word] ?: english else english
     }
 
-    private fun gamemodeDescription(word: String, language: CompilerConfig.AppLanguage): String {
+    private fun gamemodeDescription(word: String, language: ContentConfig.AppLanguage): String {
         val index = word.removePrefix("gamemode").toInt()
         val english = "Loads script slot $index. Repeat counts keep one script in several slots."
-        if (language != CompilerConfig.AppLanguage.ID) return english
+        if (language != ContentConfig.AppLanguage.ID) return english
         return "Memuat skrip pada slot $index. Jumlah pengulangan menaruh satu skrip di beberapa slot."
     }
 
@@ -220,7 +220,7 @@ object ServerConfig {
 
     fun completions(
         prefix: String,
-        language: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+        language: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
     ): List<String> {
         val query = prefix.trim().lowercase()
         if (query.isEmpty()) return emptyList()

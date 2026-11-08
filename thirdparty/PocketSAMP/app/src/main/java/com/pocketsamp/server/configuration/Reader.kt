@@ -79,4 +79,24 @@ object Reader {
             key in knownKeys
         }
     }
+
+    /**
+     * Raw `key -> value` pairs of [file], last occurrence wins, for the
+     * read-only configuration information screen. Comments, blank lines and
+     * `echo` banners are skipped; duplicate keys keep the value the server
+     * itself would use (the last one).
+     */
+    fun readRawValues(file: File): Map<String, String> {
+        if (!file.isFile) return emptyMap()
+        val values = linkedMapOf<String, String>()
+        file.forEachLine { line ->
+            val trimmed = line.trim()
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) return@forEachLine
+            if (trimmed.startsWith("echo", ignoreCase = true)) return@forEachLine
+            val parts = trimmed.split(Regex("\\s+"), limit = 2)
+            if (parts.size < 2) return@forEachLine
+            values[parts[0].lowercase()] = parts[1]
+        }
+        return values
+    }
 }

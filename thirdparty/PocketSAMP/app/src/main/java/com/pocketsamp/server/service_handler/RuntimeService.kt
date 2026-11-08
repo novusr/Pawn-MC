@@ -238,11 +238,15 @@ class RuntimeService : Service() {
             val shouldBeRunning = prefs.getBoolean("server_running_state", false)
             fun t(key: String): String = Locales.text(Locales.current, key)
 
-            if (exitCode == 137) {
+            // 137 = SIGKILL (Phantom Process Killer / OOM); 139 = SIGSEGV, which
+            // on emulated QEMU-i386 runs is nearly always the same OS-side kill
+            // surfacing as a faulted exit — both carry the recovery advice.
+            if (exitCode == 137 || exitCode == 139) {
                 appendLog(t("notify.exit137.log"))
                 appendLog(t("log.exit137.fix1"))
                 appendLog(t("log.exit137.fix2"))
                 appendLog(t("log.exit137.fix3"))
+                if (exitCode == 139) appendLog(t("log.exit139.note"))
                 updateNotification(t("notify.exit137"))
             } else {
                 appendLog(t("log.exited").replace("{code}", exitCode.toString()))
@@ -265,11 +269,12 @@ class RuntimeService : Service() {
                 updateNotification(t("notify.stopped").replace("{code}", exitCode.toString()))
             }
 
-            // Only the OS killing the process (SIGKILL -> 137, the Phantom Process
-            // Killer / OOM case) is auto-recovered. A server that crashes on its own
-            // (code 1 and friends) or exits normally must stay down: blindly
-            // restarting turned every crash into an endless restart loop.
-            val osKilled = exitCode == 137
+            // Only the OS killing the process (SIGKILL -> 137, or SIGSEGV -> 139
+            // which on the QEMU run usually traces back to the same OS-side kill)
+            // is auto-recovered. A server that exits cleanly on its own
+            // (code 1 and friends) must stay down: blindly restarting turned every
+            // crash into an endless restart loop.
+            val osKilled = exitCode == 137 || exitCode == 139
             if (shouldBeRunning && osKilled) {
                 // Bound the recovery: each consecutive kill backs off longer and
                 // after several in a row the server is left stopped instead of

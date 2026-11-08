@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.theme
+﻿package com.rvdjv.pawnmc.user_interface.theme
 
 import android.app.Activity
 import android.os.Build
@@ -94,11 +94,11 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 @Composable
-fun resolveDarkTheme(theme: com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig.AppTheme): Boolean {
+fun resolveDarkTheme(theme: com.rvdjv.pawnmc.apps_data.data_config.ContentConfig.AppTheme): Boolean {
     return when (theme) {
-        com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig.AppTheme.SYSTEM -> isSystemInDarkTheme()
-        com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig.AppTheme.LIGHT -> false
-        com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig.AppTheme.DARK -> true
+        com.rvdjv.pawnmc.apps_data.data_config.ContentConfig.AppTheme.SYSTEM -> isSystemInDarkTheme()
+        com.rvdjv.pawnmc.apps_data.data_config.ContentConfig.AppTheme.LIGHT -> false
+        com.rvdjv.pawnmc.apps_data.data_config.ContentConfig.AppTheme.DARK -> true
     }
 }
 

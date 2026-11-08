@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.editor.workspace
+﻿package com.rvdjv.pawnmc.user_interface.editor.workspace
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,7 +53,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.rvdjv.pawnmc.user_interface.main.explainHighlightedText
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -112,7 +112,7 @@ fun WorkspacePanel(
 ) {
     val context = LocalContext.current
     val isIndonesian = remember(context) {
-        CompilerConfig.getInstance(context).n_app_language == CompilerConfig.AppLanguage.ID
+        ContentConfig.getInstance(context).n_app_language == ContentConfig.AppLanguage.ID
     }
     val workspace = session.activeWorkspace
     val tree = workspace?.tree
@@ -683,7 +683,7 @@ private fun OpenEditorRow(
 
         if (isDirty) {
             Text(
-                text = "●",
+                text = "•",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -762,8 +762,8 @@ private fun CreateEntryMenu(
     onCreateFolder: () -> Unit
 ) {
     val context = LocalContext.current
-    val appLanguage = remember(context) { CompilerConfig.getInstance(context).n_app_language }
-    val isIndonesian = appLanguage == CompilerConfig.AppLanguage.ID
+    val appLanguage = remember(context) { ContentConfig.getInstance(context).n_app_language }
+    val isIndonesian = appLanguage == ContentConfig.AppLanguage.ID
     var expanded by remember(directory) { mutableStateOf(false) }
     Box {
         IconButton(
@@ -838,7 +838,7 @@ private fun FileRow(
 
         if (isDirty) {
             Text(
-                text = "●",
+                text = "•",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
             )

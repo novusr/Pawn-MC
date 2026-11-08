@@ -1,6 +1,6 @@
-package com.rvdjv.pawnmc.apps_data.data_compiler
+﻿package com.rvdjv.pawnmc.apps_data.data_compiler
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -18,8 +18,8 @@ class CompilerVersionSelectionTest {
     /** The MD5s and sizes pinned in the version table. */
     @Test
     fun `matchesDetected honours md5 product version and size`() {
-        val v3107 = CompilerConfig.CompilerVersion.V3107
-        val v31011 = CompilerConfig.CompilerVersion.V31011
+        val v3107 = ContentConfig.CompilerVersion.V3107
+        val v31011 = ContentConfig.CompilerVersion.V31011
 
         // Exact MD5 wins even with no other metadata.
         assertTrue(v3107.matchesDetected(null, null, "a48e04d28e8cb77e0361ecb4dced2501"))
@@ -38,29 +38,29 @@ class CompilerVersionSelectionTest {
     fun `nearestSupportedEquivalent maps near versions and unknown md5s`() {
         // 3.10.9 / 3.10.10 map forward to 3.10.11; 3.10.8 maps back to 3.10.7.
         assertEquals(
-            CompilerConfig.CompilerVersion.V31011,
-            CompilerConfig.CompilerVersion.V3107.nearestSupportedEquivalent("3.10.10", null, null)
+            ContentConfig.CompilerVersion.V31011,
+            ContentConfig.CompilerVersion.V3107.nearestSupportedEquivalent("3.10.10", null, null)
         )
         assertEquals(
-            CompilerConfig.CompilerVersion.V3107,
-            CompilerConfig.CompilerVersion.V31011.nearestSupportedEquivalent("3.10.8", null, null)
+            ContentConfig.CompilerVersion.V3107,
+            ContentConfig.CompilerVersion.V31011.nearestSupportedEquivalent("3.10.8", null, null)
         )
         // Known third-party pawncc MD5s.
         assertEquals(
-            CompilerConfig.CompilerVersion.V31011,
-            CompilerConfig.CompilerVersion.V3107.nearestSupportedEquivalent(
+            ContentConfig.CompilerVersion.V31011,
+            ContentConfig.CompilerVersion.V3107.nearestSupportedEquivalent(
                 null, null, "ce6bd3ae0fb9fba27bb8189adf0c0fab"
             )
         )
         assertEquals(
-            CompilerConfig.CompilerVersion.V3107,
-            CompilerConfig.CompilerVersion.V31011.nearestSupportedEquivalent(
+            ContentConfig.CompilerVersion.V3107,
+            ContentConfig.CompilerVersion.V31011.nearestSupportedEquivalent(
                 null, null, "f28ab0d8b1ccbcc448b26e3255f4abb8"
             )
         )
         // Nothing to go on: null.
         assertNull(
-            CompilerConfig.CompilerVersion.V3107.nearestSupportedEquivalent(null, null, null)
+            ContentConfig.CompilerVersion.V3107.nearestSupportedEquivalent(null, null, null)
         )
     }
 
@@ -68,29 +68,29 @@ class CompilerVersionSelectionTest {
     fun `forced mode pins the selected version regardless of detection`() {
         // Forced + selected 3.10.11 with a detected 3.10.7 nearby: stay at 3.10.11.
         assertEquals(
-            CompilerConfig.CompilerVersion.V31011,
+            ContentConfig.CompilerVersion.V31011,
             Runner.compilerVersionForMode(
                 forcedMode = true,
-                selectedVersion = CompilerConfig.CompilerVersion.V31011,
-                detectedVersion = CompilerConfig.CompilerVersion.V3107
+                selectedVersion = ContentConfig.CompilerVersion.V31011,
+                detectedVersion = ContentConfig.CompilerVersion.V3107
             )
         )
         // Forced + selected 3.10.7 with a detected 3.10.11 nearby: stay at 3.10.7.
         assertEquals(
-            CompilerConfig.CompilerVersion.V3107,
+            ContentConfig.CompilerVersion.V3107,
             Runner.compilerVersionForMode(
                 forcedMode = true,
-                selectedVersion = CompilerConfig.CompilerVersion.V3107,
-                detectedVersion = CompilerConfig.CompilerVersion.V31011
+                selectedVersion = ContentConfig.CompilerVersion.V3107,
+                detectedVersion = ContentConfig.CompilerVersion.V31011
             )
         )
         // Forced mode never downgrades: even when nothing was detected the
         // selection holds.
         assertEquals(
-            CompilerConfig.CompilerVersion.V31011,
+            ContentConfig.CompilerVersion.V31011,
             Runner.compilerVersionForMode(
                 forcedMode = true,
-                selectedVersion = CompilerConfig.CompilerVersion.V31011,
+                selectedVersion = ContentConfig.CompilerVersion.V31011,
                 detectedVersion = null
             )
         )
@@ -99,18 +99,18 @@ class CompilerVersionSelectionTest {
     @Test
     fun `auto mode prefers the detected version and falls back to the default`() {
         assertEquals(
-            CompilerConfig.CompilerVersion.V3107,
+            ContentConfig.CompilerVersion.V3107,
             Runner.compilerVersionForMode(
                 forcedMode = false,
-                selectedVersion = CompilerConfig.CompilerVersion.V31011,
-                detectedVersion = CompilerConfig.CompilerVersion.V3107
+                selectedVersion = ContentConfig.CompilerVersion.V31011,
+                detectedVersion = ContentConfig.CompilerVersion.V3107
             )
         )
         assertEquals(
-            CompilerConfig.CompilerVersion.V3107,
+            ContentConfig.CompilerVersion.V3107,
             Runner.compilerVersionForMode(
                 forcedMode = false,
-                selectedVersion = CompilerConfig.CompilerVersion.V31011,
+                selectedVersion = ContentConfig.CompilerVersion.V31011,
                 detectedVersion = null
             )
         )
@@ -134,7 +134,7 @@ class CompilerVersionSelectionTest {
         pawnoExe.writeText((content + " ").repeat(4))
         val match1 = Compiler.detectNearbyCompiler(source.absolutePath)
         assertTrue("pawno/pawncc.exe should resolve", match1 != null)
-        assertEquals(CompilerConfig.CompilerVersion.V31011, match1?.version)
+        assertEquals(ContentConfig.CompilerVersion.V31011, match1?.version)
         pawnoExe.delete()
 
         // Case 2: pawncc inside qawno/ (no pawno anywhere).
@@ -143,7 +143,7 @@ class CompilerVersionSelectionTest {
         qawnoExe.writeText((content + " ").repeat(4))
         val match2 = Compiler.detectNearbyCompiler(source.absolutePath)
         assertTrue("qawno/pawncc should resolve", match2 != null)
-        assertEquals(CompilerConfig.CompilerVersion.V31011, match2?.version)
+        assertEquals(ContentConfig.CompilerVersion.V31011, match2?.version)
         qawnoExe.delete()
 
         // Case 3: move the source into a fresh, empty sub-folder so no pawno/
@@ -160,9 +160,9 @@ class CompilerVersionSelectionTest {
         Compiler.resetSessionState()
         val output = "error 017: undefined symbol __addressof"
         // 3.10.11 already ships the symbol: nothing to do.
-        Compiler.applyAddressOfPolicy(output, CompilerConfig.CompilerVersion.V31011)
+        Compiler.applyAddressOfPolicy(output, ContentConfig.CompilerVersion.V31011)
         // 3.10.7 output mentioning the symbol: the stored version moves to 3.10.11.
-        Compiler.applyAddressOfPolicy(output, CompilerConfig.CompilerVersion.V3107)
+        Compiler.applyAddressOfPolicy(output, ContentConfig.CompilerVersion.V3107)
         // No forced-mode condition; the switch is a pure config write.
     }
 }

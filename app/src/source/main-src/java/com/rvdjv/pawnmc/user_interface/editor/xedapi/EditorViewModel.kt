@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.editor.xedapi
+﻿package com.rvdjv.pawnmc.user_interface.editor.xedapi
 
 import android.content.Context
 import android.net.Uri
@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspaceSession
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,7 +26,7 @@ class EditorViewModel(
 
     private val appContext = context?.applicationContext
     private val config = appContext?.let {
-        CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(it)
+        ContentConfig.getInstanceOrNull() ?: ContentConfig.getInstance(it)
     }
 
     /** Single file opened from the app, outside any workspace. */
@@ -306,7 +306,7 @@ class EditorViewModelFactoryForActivity(context: Context) : ViewModelProvider.Fa
 
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(EditorViewModel::class.java)) {
-            val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(appContext)
+            val config = ContentConfig.getInstanceOrNull() ?: ContentConfig.getInstance(appContext)
             val path = config.n_last_selected_file_path.orEmpty()
             val uri = config.n_last_selected_file_uri?.let { Uri.parse(it) }
             return modelClass.cast(EditorViewModel(path, appContext, uri))

@@ -444,28 +444,16 @@ fun _Dashboard(
                         color = SampThemeColors.danger
                     )
                 }
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
-                        onClick = { folderPickerLauncher.launch(pocketsampFolderPickerIntent()) },
-                        enabled = status == Status.STOPPED,
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.FolderOpen, contentDescription = null)
-                        Spacer(Modifier.size(8.dp))
-                        Text(t("folder.pick"), maxLines = 1)
-                    }
-                    OutlinedButton(
-                        onClick = {
-                            currentServerDir = _DirectoryManager.resetToDefaultDirectory(context)
-                            Toast.makeText(context, t("folder.reset.done"), Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text(t("folder.reset"), maxLines = 1)
-                    }
-                }
+                // Folder selection moved out of the dashboard: the File Manager owns
+                // picking (its reset button lives beside the run control), so the
+                // home page only shows the active folder as information.
+                Text(
+                    text = t("folder.current").replace("{dir}", currentServerDir.absolutePath),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SampThemeColors.textSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
 

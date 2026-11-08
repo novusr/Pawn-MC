@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.apps_data.data_config
+﻿package com.rvdjv.pawnmc.apps_data.data_config
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -8,7 +8,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
 
-class CompilerConfigTest {
+class ContentConfigTest {
 
     @get:Rule
     val temporaryFolder = TemporaryFolder()
@@ -23,7 +23,7 @@ class CompilerConfigTest {
             "com.android/MyServer/includes/"
         )
 
-        val result = CompilerConfig.dedupePaths(input)
+        val result = ContentConfig.dedupePaths(input)
 
         assertEquals(
             listOf(
@@ -44,7 +44,7 @@ class CompilerConfigTest {
             "/storage/emulated/0/samp/gamemodes/../pawno/include",
             "/storage/emulated/0/samp/qawno/include"
         )
-        val deduped = CompilerConfig.dedupePaths(paths)
+        val deduped = ContentConfig.dedupePaths(paths)
         assertEquals(2, deduped.size)
         assertEquals("/storage/emulated/0/samp/pawno/include/", deduped[0])
         assertEquals("/storage/emulated/0/samp/qawno/include/", deduped[1])
@@ -54,19 +54,19 @@ class CompilerConfigTest {
     fun containsIncludePath_rejectsSameFolderRegardlessOfCaseAndTrailingSlash() {
         val existing = listOf("/storage/emulated/0/samp/jagung/")
 
-        assertTrue(CompilerConfig.containsIncludePath(existing, "/storage/emulated/0/samp/jagung"))
-        assertTrue(CompilerConfig.containsIncludePath(existing, "/storage/emulated/0/SAMP/Jagung/"))
-        assertFalse(CompilerConfig.containsIncludePath(existing, "/storage/emulated/0/samp/jagung2/"))
+        assertTrue(ContentConfig.containsIncludePath(existing, "/storage/emulated/0/samp/jagung"))
+        assertTrue(ContentConfig.containsIncludePath(existing, "/storage/emulated/0/SAMP/Jagung/"))
+        assertFalse(ContentConfig.containsIncludePath(existing, "/storage/emulated/0/samp/jagung2/"))
     }
 
     @Test
     fun pruneMissingIncludePaths_removesDuplicatesInStoredList() {
         val root = temporaryFolder.newFolder("pawnmc_prune_dupe")
         val alive = File(root, "include").apply { mkdirs() }
-        val path = CompilerConfig.normalPath(alive.absolutePath)
+        val path = ContentConfig.normalPath(alive.absolutePath)
 
-        val survivors = CompilerConfig.pruneMissingIncludePaths(
-            listOf(path, CompilerConfig.normalPath(alive.absolutePath).uppercase())
+        val survivors = ContentConfig.pruneMissingIncludePaths(
+            listOf(path, ContentConfig.normalPath(alive.absolutePath).uppercase())
         )
 
         assertEquals(listOf(path), survivors)
@@ -79,15 +79,15 @@ class CompilerConfigTest {
         val dead = File(root, "gamemodes").apply { mkdirs() }
 
         val stored = listOf(
-            CompilerConfig.normalPath(alive.absolutePath),
-            CompilerConfig.normalPath(dead.absolutePath)
+            ContentConfig.normalPath(alive.absolutePath),
+            ContentConfig.normalPath(dead.absolutePath)
         )
 
         dead.delete()
 
-        val survivors = CompilerConfig.pruneMissingIncludePaths(stored)
+        val survivors = ContentConfig.pruneMissingIncludePaths(stored)
 
-        assertEquals(listOf(CompilerConfig.normalPath(alive.absolutePath)), survivors)
+        assertEquals(listOf(ContentConfig.normalPath(alive.absolutePath)), survivors)
     }
 
     @Test
@@ -96,52 +96,52 @@ class CompilerConfigTest {
         val fallback = File(root, "include")
         val missingOther = File(root, "gamemodes")
 
-        val survivors = CompilerConfig.pruneMissingIncludePaths(
+        val survivors = ContentConfig.pruneMissingIncludePaths(
             listOf(
-                CompilerConfig.normalPath(fallback.absolutePath),
-                CompilerConfig.normalPath(missingOther.absolutePath)
+                ContentConfig.normalPath(fallback.absolutePath),
+                ContentConfig.normalPath(missingOther.absolutePath)
             )
         )
 
         assertFalse(fallback.exists())
-        assertEquals(listOf(CompilerConfig.normalPath(fallback.absolutePath)), survivors)
+        assertEquals(listOf(ContentConfig.normalPath(fallback.absolutePath)), survivors)
     }
 
     @Test
     fun isCompactEncodingFlag_matchesEverySpellingOfTheToggle() {
-        assertTrue(CompilerConfig.isCompactEncodingFlag("-C+"))
-        assertTrue(CompilerConfig.isCompactEncodingFlag("-C-"))
-        assertFalse(CompilerConfig.isCompactEncodingFlag("-C"))
-        assertFalse(CompilerConfig.isCompactEncodingFlag("-C++"))
+        assertTrue(ContentConfig.isCompactEncodingFlag("-C+"))
+        assertTrue(ContentConfig.isCompactEncodingFlag("-C-"))
+        assertFalse(ContentConfig.isCompactEncodingFlag("-C"))
+        assertFalse(ContentConfig.isCompactEncodingFlag("-C++"))
     }
 
     @Test
     fun isVerbosityFlag_matchesBothSpellingsOfTheLevel() {
-        assertTrue(CompilerConfig.isVerbosityFlag("-v0"))
-        assertTrue(CompilerConfig.isVerbosityFlag("-v=0"))
-        assertTrue(CompilerConfig.isVerbosityFlag("-v2"))
-        assertTrue(CompilerConfig.isVerbosityFlag("-v=2"))
-        assertFalse(CompilerConfig.isVerbosityFlag("-v"))
-        assertFalse(CompilerConfig.isVerbosityFlag("-verbosity"))
+        assertTrue(ContentConfig.isVerbosityFlag("-v0"))
+        assertTrue(ContentConfig.isVerbosityFlag("-v=0"))
+        assertTrue(ContentConfig.isVerbosityFlag("-v2"))
+        assertTrue(ContentConfig.isVerbosityFlag("-v=2"))
+        assertFalse(ContentConfig.isVerbosityFlag("-v"))
+        assertFalse(ContentConfig.isVerbosityFlag("-verbosity"))
     }
 
     @Test
     fun isWarning217Flag_matchesOnlyTheLooseIndentationSilencer() {
-        assertTrue(CompilerConfig.isWarning217Flag("-w217"))
-        assertTrue(CompilerConfig.isWarning217Flag("-w=217"))
-        assertFalse(CompilerConfig.isWarning217Flag("-w218"))
-        assertFalse(CompilerConfig.isWarning217Flag("-w219"))
-        assertFalse(CompilerConfig.isWarning217Flag("-w17"))
-        assertFalse(CompilerConfig.isWarning217Flag("-w"))
+        assertTrue(ContentConfig.isWarning217Flag("-w217"))
+        assertTrue(ContentConfig.isWarning217Flag("-w=217"))
+        assertFalse(ContentConfig.isWarning217Flag("-w218"))
+        assertFalse(ContentConfig.isWarning217Flag("-w219"))
+        assertFalse(ContentConfig.isWarning217Flag("-w17"))
+        assertFalse(ContentConfig.isWarning217Flag("-w"))
     }
 
     @Test
     fun isWarning200Flag_matchesOnlyTheSymbolTruncatedSilencer() {
-        assertTrue(CompilerConfig.isWarning200Flag("-w200"))
-        assertTrue(CompilerConfig.isWarning200Flag("-w=200"))
-        assertFalse(CompilerConfig.isWarning200Flag("-w201"))
-        assertFalse(CompilerConfig.isWarning200Flag("-w202"))
-        assertFalse(CompilerConfig.isWarning200Flag("-w17"))
-        assertFalse(CompilerConfig.isWarning200Flag("-w"))
+        assertTrue(ContentConfig.isWarning200Flag("-w200"))
+        assertTrue(ContentConfig.isWarning200Flag("-w=200"))
+        assertFalse(ContentConfig.isWarning200Flag("-w201"))
+        assertFalse(ContentConfig.isWarning200Flag("-w202"))
+        assertFalse(ContentConfig.isWarning200Flag("-w17"))
+        assertFalse(ContentConfig.isWarning200Flag("-w"))
     }
 }

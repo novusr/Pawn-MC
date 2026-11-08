@@ -1,6 +1,6 @@
-package com.rvdjv.pawnmc.user_interface.editor.syntax
+﻿package com.rvdjv.pawnmc.user_interface.editor.syntax
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_syntax.ServerConfig
 import io.github.rosemoe.sora.lang.Language
 import java.io.File
@@ -21,7 +21,7 @@ object CodeLanguages {
      */
     fun forFile(
         file: File?,
-        appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+        appLanguage: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
     ): Language = if (isServerConfig(file)) {
         ServerConfigLanguage(appLanguage)
     } else {

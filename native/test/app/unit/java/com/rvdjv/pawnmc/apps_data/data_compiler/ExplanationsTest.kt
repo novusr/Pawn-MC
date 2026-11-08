@@ -1,9 +1,9 @@
-package com.rvdjv.pawnmc.apps_data.data_compiler
+﻿package com.rvdjv.pawnmc.apps_data.data_compiler
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 
 /**
  * Regression tests for the `data/_explainer.toml` parser.
@@ -63,23 +63,23 @@ class ExplanationsTest {
 
         assertEquals(
             "Titik masuk program tidak ditemukan.",
-            Explanations.resolve(parsed, "013", CompilerConfig.AppLanguage.ID)
+            Explanations.resolve(parsed, "013", ContentConfig.AppLanguage.ID)
         )
         assertEquals(
             "No se encontro el punto de entrada.",
-            Explanations.resolve(parsed, "013", CompilerConfig.AppLanguage.ES)
+            Explanations.resolve(parsed, "013", ContentConfig.AppLanguage.ES)
         )
         assertEquals(
             "No entry point was found.",
-            Explanations.resolve(parsed, "013", CompilerConfig.AppLanguage.EN)
+            Explanations.resolve(parsed, "013", ContentConfig.AppLanguage.EN)
         )
         assertEquals(
             "Undefined symbol.",
-            Explanations.resolve(parsed, "017", CompilerConfig.AppLanguage.ID)
+            Explanations.resolve(parsed, "017", ContentConfig.AppLanguage.ID)
         )
         assertEquals(
             "Undefined symbol.",
-            Explanations.resolve(parsed, "017", CompilerConfig.AppLanguage.ES)
+            Explanations.resolve(parsed, "017", ContentConfig.AppLanguage.ES)
         )
     }
 

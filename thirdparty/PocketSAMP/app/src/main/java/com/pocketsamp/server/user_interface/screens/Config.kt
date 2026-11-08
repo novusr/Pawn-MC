@@ -1,6 +1,5 @@
 package com.pocketsamp.server.user_interface.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -19,68 +18,74 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.pocketsamp.server.Locales
-import com.pocketsamp.server.configuration.Configuration
+import com.pocketsamp.server.configuration.ConfigParameters
 import com.pocketsamp.server.configuration.Reader
-import com.pocketsamp.server.configuration.Writer
 import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+/**
+ * Configuration information screen (read-only).
+ *
+ * Formerly an editor: the fields could be typed and a Save button rewrote
+ * `server.cfg`. Editing the config from the app proved more hazard than help —
+ * a mistyped port or rcon password broke the next launch silently — so the
+ * screen is now purely informative: every `server.cfg` parameter this runner
+ * understands, with its accepted value shape and (when the file exists) the
+ * value currently set. Changes are made by editing `server.cfg` itself in the
+ * Xed Editor.
+ */
 @Composable
 fun _Config() {
     val context = LocalContext.current
     val lang = Locales.current
     fun t(key: String): String = Locales.text(lang, key)
+
     // Re-derive the config file whenever the selected folder changes: the File
-    // Manager may re-point the server directory while this screen stays open,
-    // and a stale remember() would keep editing the previous folder's file.
+    // Manager may re-point the server directory while this screen stays open.
     var folderToken by remember { mutableIntStateOf(0) }
     val configFile = remember(folderToken) {
         File(_DirectoryManager.getServerDirectory(context), "server.cfg")
     }
-    var config by remember(configFile) { mutableStateOf<Configuration?>(null) }
+    var rawValues by remember(configFile) { mutableStateOf<Map<String, String>>(emptyMap()) }
+    var fileExists by remember(configFile) { mutableStateOf(configFile.isFile) }
     var readError by remember(configFile) { mutableStateOf<String?>(null) }
-    var reloadToken by remember(configFile) { mutableIntStateOf(0) }
-    var saveError by remember(configFile) { mutableStateOf<String?>(null) }
-    var hostname by remember(config) { mutableStateOf(config?.hostname.orEmpty()) }
-    var port by remember(config) { mutableStateOf(config?.port?.toString().orEmpty()) }
-    var maxPlayers by remember(config) { mutableStateOf(config?.maxPlayers?.toString().orEmpty()) }
-    var rconPassword by remember(config) { mutableStateOf(config?.rconPassword.orEmpty()) }
-    var gamemode by remember(config) { mutableStateOf(config?.gamemode.orEmpty()) }
-    var filterscripts by remember(config) { mutableStateOf(config?.filterscripts.orEmpty()) }
-    var plugins by remember(config) { mutableStateOf(config?.plugins.orEmpty()) }
-    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(configFile, reloadToken) {
+    /*
+     * Fully lazy: nothing is read while the user is on the dashboard, console or
+     * files tab. The read fires (a) the first time this screen is visited and
+     * (b) on every re-entry into the screen, but a re-read only publishes new
+     * state when the file content actually changed — a metadata fingerprint
+     * (size + lastModified + first read's content hash) guards the assignment,
+     * so hovering over the tab costs one stat call, not a parse.
+     */
+    var fingerprint by remember(configFile) { mutableStateOf<Int?>(null) }
+
+    suspend fun reloadIfChanged() {
+        val stat = withContext(Dispatchers.IO) {
+            runCatching { Triple(configFile.isFile, configFile.length(), configFile.lastModified()) }
+        }.getOrNull() ?: Triple(false, 0L, 0L)
+        val candidate = stat.hashCode()
+        if (candidate == fingerprint) return
         val result = withContext(Dispatchers.IO) {
-            runCatching {
-                // A missing server.cfg is not an error: the runner still needs the
-                // shipped defaults visible and editable before anything is written.
-                Reader.readOrDefault(configFile.parentFile ?: configFile)
-            }
+            runCatching { Reader.readRawValues(configFile) }
         }
         result.onSuccess {
-            if (config == null || it != config) {
-                // Reset only when the file actually changed, so typing while the screen
-                // reloads on resume does not wipe the field being edited.
-                hostname = it.hostname
-                port = it.port.toString()
-                maxPlayers = it.maxPlayers.toString()
-                rconPassword = it.rconPassword
-                gamemode = it.gamemode
-                filterscripts = it.filterscripts
-                plugins = it.plugins
-            }
-            config = it
+            rawValues = it
+            fileExists = stat.first
             readError = null
-            saveError = null
+            fingerprint = candidate
         }.onFailure {
-            config = Configuration()
-            readError = it.message ?: t("config.read.failed")
+            rawValues = emptyMap()
+            readError = it.message ?: Locales.text(lang, "config.read.failed")
+            fingerprint = candidate
         }
+    }
+
+    LaunchedEffect(configFile) {
+        reloadIfChanged()
     }
 
     val lifecycleOwner = context as? LifecycleOwner
@@ -89,10 +94,9 @@ fun _Config() {
             val observer = LifecycleEventObserver { _, event ->
                 if (event == Lifecycle.Event.ON_RESUME) {
                     // The selected folder can change while the app was away (the
-                    // File Manager picker); refresh the file handle and reload.
+                    // File Manager picker); refresh the file handle.
                     val current = File(_DirectoryManager.getServerDirectory(context), "server.cfg")
                     if (current.absolutePath != configFile.absolutePath) folderToken++
-                    reloadToken++
                 }
             }
             lifecycleOwner.lifecycle.addObserver(observer)
@@ -109,79 +113,25 @@ fun _Config() {
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(t("config.title"), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = SampThemeColors.textPrimary, maxLines = 1)
-                Text(t("config.subtitle"), fontSize = 12.sp, color = SampThemeColors.textSecondary, maxLines = 1)
-            }
-            Button(
-                enabled = config != null,
-                onClick = {
-                    val parsedPort = port.toIntOrNull()
-                    val parsedMaxPlayers = maxPlayers.toIntOrNull()
-                    if (parsedPort == null || parsedPort !in 1..65535 ||
-                        parsedMaxPlayers == null || parsedMaxPlayers !in 1..1000
-                    ) {
-                        saveError = t("config.validation")
-                        return@Button
-                    }
-                    val updated = config!!.copy(
-                        hostname = hostname,
-                        port = parsedPort,
-                        maxPlayers = parsedMaxPlayers,
-                        rconPassword = rconPassword,
-                        gamemode = gamemode,
-                        filterscripts = filterscripts,
-                        plugins = plugins
-                    )
-                    // The file write runs off the main thread; the scope here is the
-                    // composable's lifecycle, which is what the previous inline call lacked.
-                    scope.launch {
-                        val result = runCatching {
-                            withContext(Dispatchers.IO) {
-                                configFile.parentFile?.mkdirs()
-                                Writer.write(updated, configFile)
-                            }
-                        }
-                        result.onSuccess {
-                            config = updated
-                            saveError = null
-                            Toast.makeText(context, t("config.saved"), Toast.LENGTH_SHORT).show()
-                        }.onFailure {
-                            saveError = it.message ?: t("config.save.failed")
-                        }
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = SampThemeColors.accent,
-                    contentColor = SampThemeColors.bg
-                ),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
-            ) {
-                Text(t("config.save"), fontSize = 13.sp, fontWeight = FontWeight.Bold)
-            }
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(t("config.title"), fontSize = 18.sp, fontWeight = FontWeight.Bold, color = SampThemeColors.textPrimary, maxLines = 1)
+            Text(t("config.subtitle.info"), fontSize = 12.sp, color = SampThemeColors.textSecondary)
         }
 
-        if (!configFile.isFile) {
+        if (!fileExists) {
             ConfigNotice(t("config.defaults"))
         }
         readError?.let { error -> ConfigNotice("${t("config.read.failed")}: $error") }
-        saveError?.let { ConfigNotice(it) }
 
-        ConfigField(label = t("config.field.hostname"), value = hostname, onValueChange = { hostname = it }, enabled = config != null)
-        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            ConfigField(label = t("config.field.port"), value = port, onValueChange = { port = it }, modifier = Modifier.weight(1f), enabled = config != null)
-            ConfigField(label = t("config.field.maxplayers"), value = maxPlayers, onValueChange = { maxPlayers = it }, modifier = Modifier.weight(1f), enabled = config != null)
+        // One row per known parameter: name, accepted value shape, and the value
+        // currently written in this folder's server.cfg (dash when unset).
+        ConfigParameters.INFO.forEach { entry ->
+            ConfigInfoRow(
+                key = entry.key,
+                accepted = entry.accepted,
+                current = rawValues[entry.key]
+            )
         }
-        ConfigField(label = t("config.field.rcon"), value = rconPassword, onValueChange = { rconPassword = it }, enabled = config != null)
-        ConfigField(label = t("config.field.gamemode"), value = gamemode, onValueChange = { gamemode = it }, hint = t("config.hint.gamemode"), enabled = config != null)
-        ConfigField(label = t("config.field.filterscripts"), value = filterscripts, onValueChange = { filterscripts = it }, hint = t("config.hint.filterscripts"), enabled = config != null)
-        ConfigField(label = t("config.field.plugins"), value = plugins, onValueChange = { plugins = it }, hint = t("config.hint.plugins"), enabled = config != null)
         Spacer(modifier = Modifier.height(52.dp))
     }
 }
@@ -192,35 +142,39 @@ private fun ConfigNotice(text: String) {
 }
 
 @Composable
-private fun ConfigField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    hint: String? = null,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = SampThemeColors.textSecondary, maxLines = 1)
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            enabled = enabled,
+private fun ConfigInfoRow(key: String, accepted: String, current: String?) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(SampThemeColors.card, RoundedCornerShape(10.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            textStyle = LocalTextStyle.current.copy(
-                fontFamily = FontFamily.Monospace,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                key,
                 fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = FontFamily.Monospace,
                 color = SampThemeColors.textPrimary
-            ),
-            singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = SampThemeColors.accent,
-                unfocusedBorderColor = SampThemeColors.cardBorder,
-                focusedContainerColor = SampThemeColors.card,
-                unfocusedContainerColor = SampThemeColors.card
-            ),
-            shape = RoundedCornerShape(10.dp)
+            )
+            Text(
+                accepted,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                color = SampThemeColors.textMuted
+            )
+        }
+        Text(
+            current?.takeIf { it.isNotBlank() } ?: "-",
+            fontSize = 12.sp,
+            fontFamily = FontFamily.Monospace,
+            color = if (current.isNullOrBlank()) SampThemeColors.textMuted else SampThemeColors.accent,
+            maxLines = 1
         )
-        if (hint != null) Text(hint, fontSize = 11.sp, color = SampThemeColors.textMuted)
     }
 }

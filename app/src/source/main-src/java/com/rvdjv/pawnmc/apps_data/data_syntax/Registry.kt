@@ -1,6 +1,6 @@
-package com.rvdjv.pawnmc.apps_data.data_syntax
+﻿package com.rvdjv.pawnmc.apps_data.data_syntax
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 
 enum class PawnItemKind {
     KEYWORD,
@@ -21,12 +21,12 @@ data class _item(
     val descriptionRu: String? = null,
     val descriptionTl: String? = null,
 ) {
-    fun descriptionFor(language: CompilerConfig.AppLanguage): String = when (language) {
-        CompilerConfig.AppLanguage.ID -> descriptionId ?: description
-        CompilerConfig.AppLanguage.ES -> descriptionEs ?: description
-        CompilerConfig.AppLanguage.RU -> descriptionRu ?: description
-        CompilerConfig.AppLanguage.TL -> descriptionTl ?: description
-        CompilerConfig.AppLanguage.EN -> description
+    fun descriptionFor(language: ContentConfig.AppLanguage): String = when (language) {
+        ContentConfig.AppLanguage.ID -> descriptionId ?: description
+        ContentConfig.AppLanguage.ES -> descriptionEs ?: description
+        ContentConfig.AppLanguage.RU -> descriptionRu ?: description
+        ContentConfig.AppLanguage.TL -> descriptionTl ?: description
+        ContentConfig.AppLanguage.EN -> description
     }
 }
 
@@ -158,7 +158,7 @@ object PawnRegistry {
 
     fun getCompletions(
         prefix: String,
-        language: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+        language: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
     ): List<_item> {
         val query = prefix.trim()
         if (query.isEmpty()) return emptyList()

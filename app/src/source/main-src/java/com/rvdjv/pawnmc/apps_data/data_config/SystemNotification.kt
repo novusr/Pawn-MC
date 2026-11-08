@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.apps_data.data_config
+﻿package com.rvdjv.pawnmc.apps_data.data_config
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -14,9 +14,9 @@ import androidx.core.content.ContextCompat
  * One-shot system notifications for compiler-layer events.
  *
  * The compiler layer cannot import the UI package, so this helper lives next to
- * [CompilerConfig] and reuses the same icon. It posts:
+ * [ContentConfig] and reuses the same icon. It posts:
  *
- *  - `restart_needed` — the stored compiler version changed on its own (the
+ *  - `restart_needed` - the stored compiler version changed on its own (the
  *    `__addressof` auto-recovery, for example) and the loaded engine still
  *    matches the old version until the app restarts.
  */
@@ -66,7 +66,7 @@ object SystemNotification {
     /**
      * Posts the "compiler changed, restart to apply" notification.
      *
-     * A no-op when there is no host context yet or notifications are not granted —
+     * A no-op when there is no host context yet or notifications are not granted -
      * the switch itself is already written, the notification is only the heads-up.
      */
     fun restartNeeded(context: Context?, fromVersion: String, toVersion: String) {
@@ -93,7 +93,7 @@ object SystemNotification {
             .setStyle(
                 NotificationCompat.BigTextStyle()
                     .bigText("$fromVersion became $toVersion automatically. Restart PawnMC so the new " +
-                        "compiler is loaded — the current session is still running the old one.")
+                        "compiler is loaded - the current session is still running the old one.")
             )
             .setContentIntent(contentIntent)
             .setAutoCancel(true)

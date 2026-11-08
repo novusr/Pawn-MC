@@ -1,6 +1,6 @@
-package com.rvdjv.pawnmc.apps_data.data_syntax
+﻿package com.rvdjv.pawnmc.apps_data.data_syntax
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -29,11 +29,11 @@ class ServerConfigTest {
             assertTrue("no value hint: $directive", ServerConfig.valueHintFor(directive) != null)
             assertTrue(
                 "no description: $directive",
-                ServerConfig.descriptionFor(directive, CompilerConfig.AppLanguage.EN).isNotBlank()
+                ServerConfig.descriptionFor(directive, ContentConfig.AppLanguage.EN).isNotBlank()
             )
             assertTrue(
                 "no Indonesian description: $directive",
-                ServerConfig.descriptionFor(directive, CompilerConfig.AppLanguage.ID).isNotBlank()
+                ServerConfig.descriptionFor(directive, ContentConfig.AppLanguage.ID).isNotBlank()
             )
         }
     }
@@ -42,7 +42,7 @@ class ServerConfigTest {
     fun `descriptions are specific rather than a generic placeholder`() {
         // A real description names a concrete effect; the old placeholder text did not.
         requiredDirectives.forEach { directive ->
-            val text = ServerConfig.descriptionFor(directive, CompilerConfig.AppLanguage.EN)
+            val text = ServerConfig.descriptionFor(directive, ContentConfig.AppLanguage.EN)
             assertFalse(
                 "$directive still has placeholder text",
                 text.contains("include set", ignoreCase = true) || text.length < 20
@@ -79,8 +79,8 @@ class ServerConfigTest {
 
     @Test
     fun `indonesian descriptions differ from english`() {
-        val english = ServerConfig.descriptionFor("maxplayers", CompilerConfig.AppLanguage.EN)
-        val indonesian = ServerConfig.descriptionFor("maxplayers", CompilerConfig.AppLanguage.ID)
+        val english = ServerConfig.descriptionFor("maxplayers", ContentConfig.AppLanguage.EN)
+        val indonesian = ServerConfig.descriptionFor("maxplayers", ContentConfig.AppLanguage.ID)
         assertTrue(english.isNotBlank())
         assertTrue(indonesian.isNotBlank())
         assertTrue(english != indonesian)

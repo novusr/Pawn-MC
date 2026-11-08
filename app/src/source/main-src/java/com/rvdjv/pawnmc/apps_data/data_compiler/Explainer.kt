@@ -1,6 +1,6 @@
 package com.rvdjv.pawnmc.apps_data.data_compiler
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import java.io.File
 
 /**
@@ -12,11 +12,11 @@ object Explainer {
 
     /** The `[explain]` marker prefix, localised per app language. */
     private val EXPLAIN_PREFIX = mapOf(
-        CompilerConfig.AppLanguage.ID to "[jelaskan]",
-        CompilerConfig.AppLanguage.EN to "[explain]",
-        CompilerConfig.AppLanguage.ES to "[explicar]",
-        CompilerConfig.AppLanguage.RU to "[объяснение]",
-        CompilerConfig.AppLanguage.TL to "[paliwanag]",
+        ContentConfig.AppLanguage.ID to "[jelaskan]",
+        ContentConfig.AppLanguage.EN to "[explain]",
+        ContentConfig.AppLanguage.ES to "[explicar]",
+        ContentConfig.AppLanguage.RU to "[obyasnenie]",
+        ContentConfig.AppLanguage.TL to "[paliwanag]",
     )
 
     /**
@@ -44,12 +44,12 @@ object Explainer {
         Regex("""'([^']{2,})'"""),
     )
 
-    private fun noLocalExplanation(language: CompilerConfig.AppLanguage): String = when (language) {
-        CompilerConfig.AppLanguage.ID -> "Belum ada penjelasan lokal untuk pesan ini. Cek referensi error Pawn untuk detailnya."
-        CompilerConfig.AppLanguage.ES -> "¡Vaya! Aún no tenemos una explicación para este mensaje. Consulta la referencia de errores de Pawn."
-        CompilerConfig.AppLanguage.RU -> "Пока не нашли объяснение для этого сообщения. Подробности есть в справочнике ошибок Pawn."
-        CompilerConfig.AppLanguage.TL -> "Wala pang paliwanag para sa mensaheng ito. Tingnan ang Pawn error reference para sa detalye."
-        CompilerConfig.AppLanguage.EN -> "No explanation for this one yet! Check the Pawn error reference for details."
+    private fun noLocalExplanation(language: ContentConfig.AppLanguage): String = when (language) {
+        ContentConfig.AppLanguage.ID -> "Belum ada penjelasan lokal untuk pesan ini. Cek referensi error Pawn untuk detailnya."
+        ContentConfig.AppLanguage.ES -> "¡Vaya! Aún no tenemos una explicación para este mensaje. Consulta la referencia de errores de Pawn."
+        ContentConfig.AppLanguage.RU -> "Poka ne nashli obyasnenie dlya etogo soobshcheniya. Podrobnosti est v spravochnike oshibok Pawn."
+        ContentConfig.AppLanguage.TL -> "Wala pang paliwanag para sa mensaheng ito. Tingnan ang Pawn error reference para sa detalye."
+        ContentConfig.AppLanguage.EN -> "No explanation for this one yet! Check the Pawn error reference for details."
     }
 
     /**
@@ -76,7 +76,7 @@ object Explainer {
     }
 
     /** Localised `[explain]` marker for [language]. */
-    internal fun explainMarker(language: CompilerConfig.AppLanguage): String =
+    internal fun explainMarker(language: ContentConfig.AppLanguage): String =
         EXPLAIN_PREFIX[language] ?: "[explain]"
 
     /**
@@ -84,7 +84,7 @@ object Explainer {
      *
      * Read with the same quoted-symbol patterns the explanation fill uses
      * ([QUOTED_SYMBOL_PATTERNS]), so the recovery decision and the text the user
-     * sees are derived from one reading of the compiler output — a message the
+     * sees are derived from one reading of the compiler output - a message the
      * explainer recognises is exactly the message the switch acts on.
      */
     internal fun explainsUndefinedSymbol(output: String, symbol: String): Boolean {
@@ -111,11 +111,11 @@ object Explainer {
     fun explainCompilerOutput(
         rawText: String,
         cacheDir: File,
-        language: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+        language: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
     ): String {
         if (rawText.isBlank()) return rawText
 
-        val n_language = CompilerConfig.getInstanceOrNull()?.n_app_language ?: language
+        val n_language = ContentConfig.getInstanceOrNull()?.n_app_language ?: language
         val marker = explainMarker(n_language)
         val outputCache = File(cacheDir, "compiler_output_cache_${System.nanoTime()}.log")
         outputCache.writeText(rawText)

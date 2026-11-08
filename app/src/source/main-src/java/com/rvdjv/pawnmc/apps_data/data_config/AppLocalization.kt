@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.apps_data.data_config
+﻿package com.rvdjv.pawnmc.apps_data.data_config
 
 import android.content.Context
 import android.content.res.Configuration
@@ -126,7 +126,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         map
     }
 
-    fun get(key: String, language: CompilerConfig.AppLanguage, fallback: String = key): String {
+    fun get(key: String, language: ContentConfig.AppLanguage, fallback: String = key): String {
         val normalizedKey = normalizeKey(key)
         val languageKey = "$normalizedKey.${language.value}"
         val direct = entries[languageKey]
@@ -136,25 +136,25 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
 
         // Value or phrase-based fallback
         when (language) {
-            CompilerConfig.AppLanguage.ID -> {
+            ContentConfig.AppLanguage.ID -> {
                 enToIdMap[normalizedKey.lowercase()]?.let { return it }
                 enToIdMap[fallback.trim().lowercase()]?.let { return it }
             }
-            CompilerConfig.AppLanguage.ES -> {
+            ContentConfig.AppLanguage.ES -> {
                 enToEsMap[normalizedKey.lowercase()]?.let { return it }
                 enToEsMap[fallback.trim().lowercase()]?.let { return it }
             }
-            CompilerConfig.AppLanguage.RU -> {
+            ContentConfig.AppLanguage.RU -> {
                 enToRuMap[normalizedKey.lowercase()]?.let { return it }
                 enToRuMap[fallback.trim().lowercase()]?.let { return it }
             }
             // Tagalog has no phrase table yet; the .tl entries in the TOML data cover it
             // and the English fallback below remains the last resort.
-            CompilerConfig.AppLanguage.TL -> {
+            ContentConfig.AppLanguage.TL -> {
                 enToTlMap[normalizedKey.lowercase()]?.let { return it }
                 enToTlMap[fallback.trim().lowercase()]?.let { return it }
             }
-            CompilerConfig.AppLanguage.EN -> {
+            ContentConfig.AppLanguage.EN -> {
                 idToEnMap[normalizedKey.lowercase()]?.let { return it }
                 esToEnMap[normalizedKey.lowercase()]?.let { return it }
                 ruToEnMap[normalizedKey.lowercase()]?.let { return it }
@@ -169,7 +169,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         return fallback
     }
 
-    fun translate(baseKey: String, language: CompilerConfig.AppLanguage, fallback: String): String {
+    fun translate(baseKey: String, language: ContentConfig.AppLanguage, fallback: String): String {
         return get(baseKey, language, fallback)
     }
 
@@ -204,7 +204,7 @@ class AppLocalization private constructor(private val entries: Map<String, Strin
         @Volatile
         private var cached: AppLocalization? = null
 
-        fun localizedContext(context: Context, language: CompilerConfig.AppLanguage): Context {
+        fun localizedContext(context: Context, language: ContentConfig.AppLanguage): Context {
             val locale = Locale.forLanguageTag(language.localeTag())
             Locale.setDefault(locale)
             val configuration = Configuration(context.resources.configuration).apply {

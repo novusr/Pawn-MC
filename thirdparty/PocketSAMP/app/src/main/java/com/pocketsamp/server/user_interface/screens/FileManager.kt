@@ -103,6 +103,8 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
         )
     }
     var currentDirectory by remember(root.absolutePath) { mutableStateOf(root) }
+    // Confirmation gate for the return-to-startpoint button.
+    var showResetConfirm by remember { mutableStateOf(false) }
     var entries by remember { mutableStateOf<List<ManagedFile>>(emptyList()) }
     /** Folders shown with their children; the root starts open. */
     var expandedPaths by remember(root.absolutePath) { mutableStateOf(setOf(root.absolutePath)) }
@@ -339,6 +341,15 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
             IconButton(onClick = { refreshToken++ }) {
                 Icon(Icons.Default.Refresh, contentDescription = t("files.refresh"), tint = SampThemeColors.accent)
             }
+            // Return-to-startpoint: re-points the server folder at the template
+            // extraction, with a confirmation dialog first because the current
+            // working folder is left behind.
+            IconButton(
+                enabled = !serverActive,
+                onClick = { showResetConfirm = true }
+            ) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("files.reset.root"), tint = SampThemeColors.accent)
+            }
             IconButton(
                 enabled = !serverActive,
                 onClick = { folderPicker.launch(pocketsampFolderPickerIntent()) }
@@ -528,6 +539,30 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
     }
 
     val activeAction = action
+
+    // Confirmation before the server folder is re-pointed at the template.
+    if (showResetConfirm) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirm = false },
+            title = { Text(t("files.reset.title")) },
+            text = {
+                Text(t("files.reset.text").replace("{dir}", selectedFolder?.absolutePath ?: currentDirectory.absolutePath))
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showResetConfirm = false
+                    val reset = _DirectoryManager.resetToDefaultDirectory(context)
+                    selectedFolder = reset
+                    currentDirectory = reset
+                    refreshToken++
+                }) { Text(t("files.reset.confirm")) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetConfirm = false }) { Text(t("perm.close")) }
+            }
+        )
+    }
+
     if (activeAction != null) {
         val deleting = activeAction == FileAction.DELETE
         AlertDialog(

@@ -53,7 +53,7 @@ internal object HelpContent {
         Locales.Lang.EN -> "A short guide to setting up and using PocketSAMP."
         Locales.Lang.TL -> "Uy! Ito ang maikling gabay sa PocketSAMP. Relax lang, basahin bawat bahagi — ilang minuto lang lahat."
         Locales.Lang.ES -> "¡Hola! Esta es la guía corta de PocketSAMP. Sin prisa, lee una sección a la vez — todo toma un par de minutos."
-        Locales.Lang.RU -> "Привет! Это короткое руководство по PocketSAMP. Не спешите, читайте по одному разделу — всё займёт пару минут."
+        Locales.Lang.RU -> "Privet! Eto korotkoe rukovodstvo po PocketSAMP. Ne speshite, chitajte po odnomu razdelu — vsyo zajmyot paru minut."
     }
 
     fun footer(lang: Locales.Lang): String = when (lang) {
@@ -61,7 +61,7 @@ internal object HelpContent {
         Locales.Lang.EN -> "If the server has a problem, check the Console messages."
         Locales.Lang.TL -> "Kung may hindi pa malinaw, buksan ang Console at basahin ang log: halos lahat ng problema ng server makikita doon."
         Locales.Lang.ES -> "Si algo sigue rare, abre Console y lee el registro: casi todos los problemas del servidor se ven ahí."
-        Locales.Lang.RU -> "Если что-то всё ещё не так, откройте Console и прочитайте журнал: почти все проблемы сервера видны там."
+        Locales.Lang.RU -> "Esli chto-to vsyo eshchyo ne tak, otkrojte Console i prochitajte zhurnal: pochti vse problemy servera vidny tam."
     }
 
     fun sections(lang: Locales.Lang): List<HelpSection> = when (lang) {
@@ -237,51 +237,51 @@ internal object HelpContent {
         Locales.Lang.RU -> listOf(
             HelpSection(
                 "dashboard",
-                "Главный экран",
-                "Здесь сервер запускается и останавливается.\n\n" +
-                    "Первая карточка — адрес Local (127.0.0.1) для игры на этом телефоне, ниже адрес LAN " +
-                    "для друзей в той же Wi-Fi/hotspot сети. Нажмите на адрес, чтобы скопировать.\n\n" +
-                    "Кнопка внизу — Start/Stop. Без server.cfg runner всё равно использует значения по " +
-                    "умолчанию (PocketSAMP/PawnMC Runner, порт 7777, 20 игроков, rcon234) и создаёт файл при первом запуске."
+                "Glavnyj ekran",
+                "Zdes server zapuskaetsya i ostanavlivaetsya.\n\n" +
+                    "Pervaya kartochka — adres Local (127.0.0.1) dlya igry na etom telefone, nizhe adres LAN " +
+                    "dlya druzej v toj zhe Wi-Fi/hotspot seti. Nazhmite na adres, chtoby skopirovat.\n\n" +
+                    "Knopka vnizu — Start/Stop. Bez server.cfg runner vsyo ravno ispolzuet znacheniya po " +
+                    "umolchaniyu (PocketSAMP/PawnMC Runner, port 7777, 20 igrokov, rcon234) i sozdayot fajl pri pervom zapuske."
             ),
             HelpSection(
                 "console",
-                "Консоль",
-                "Здесь видно всё, что сообщает сервер: запуск, загруженные плагины и ошибку, из-за " +
-                    "которой не загрузился gamemode.\n\n" +
-                    "Если что-то не так, смотрите сюда: красная строка обычно и есть причина. Очистка " +
-                    "вида не удаляет старые журналы с устройства."
+                "Konsol",
+                "Zdes vidno vsyo, chto soobshchaet server: zapusk, zagruzhennye plaginy i oshibku, iz-za " +
+                    "kotoroj ne zagruzilsya gamemode.\n\n" +
+                    "Esli chto-to ne tak, smotrite syuda: krasnaya stroka obychno i est prichina. Ochistka " +
+                    "vida ne udalyaet starye zhurnaly s ustrojstva."
             ),
             HelpSection(
                 "files",
                 "File Manager",
-                "Здесь наводят порядок в файлах сервера. Папки раскрываются прямо в списке, как в " +
-                    "workspace Xed Editor, поэтому вложенное содержимое видно сразу.\n\n" +
-                    "Сначала выберите папку, чтобы создать файл или папку внутри неё; без выбора новый " +
-                    "элемент попадает в открытую сейчас папку.\n\n" +
-                    "Edit открывает файл в Xed, Open workspace передаёт папку редактору."
+                "Zdes navodyat poryadok v fajlakh servera. Papki raskryvayutsya pryamo v spiske, kak v " +
+                    "workspace Xed Editor, poetomu vlozhennoe soderzhimoe vidno srazu.\n\n" +
+                    "Snachala vyberite papku, chtoby sozdat fajl ili papku vnutri neyo; bez vybora novyj " +
+                    "element popadaet v otkrytuyu sejchas papku.\n\n" +
+                    "Edit otkryvaet fajl v Xed, Open workspace peredayot papku redaktoru."
             ),
             HelpSection(
                 "database",
-                "База данных",
-                "Движок MariaDB работает вместе с сервером. Здесь можно создавать базы, смотреть " +
-                    "таблицы, выполнять SQL и импортировать .sql.\n\n" +
-                    "Обычная учётная запись — root без пароля; смените её, если gamemode требует другое."
+                "Baza dannykh",
+                "Dvizhok MariaDB rabotaet vmeste s serverom. Zdes mozhno sozdavat bazy, smotret " +
+                    "tablitsy, vypolnyat SQL i importirovat .sql.\n\n" +
+                    "Obychnaya uchyotnaya zapis — root bez parolya; smenite eyo, esli gamemode trebuet drugoe."
             ),
             HelpSection(
                 "crashes",
-                "Журналы сбоев",
-                "Если приложение внезапно закрылось, полный отчёт лежит здесь. Откройте детали, " +
-                    "скопируйте важное и отправьте разработчику.\n\n" +
-                    "Старые отчёты можно удалить, чтобы список оставался коротким."
+                "Zhurnaly sboev",
+                "Esli prilozhenie vnezapno zakrylos, polnyj otchyot lezhit zdes. Otkrojte detali, " +
+                    "skopirujte vazhnoe i otpravte razrabotchiku.\n\n" +
+                    "Starye otchyoty mozhno udalit, chtoby spisok ostavalsya korotkim."
             ),
             HelpSection(
                 "config",
-                "Конфигурация",
-                "Редактор server.cfg: hostname, порт, максимум игроков, пароль RCON, gamemode, " +
-                    "filterscripts и plugins.\n\n" +
-                    "Если файла ещё нет, показаны значения runner по умолчанию. Нажмите Save, чтобы " +
-                    "записать их в папку сервера."
+                "Konfiguratsiya",
+                "Redaktor server.cfg: hostname, port, maksimum igrokov, parol RCON, gamemode, " +
+                    "filterscripts i plugins.\n\n" +
+                    "Esli fajla eshchyo net, pokazany znacheniya runner po umolchaniyu. Nazhmite Save, chtoby " +
+                    "zapisat ikh v papku servera."
             )
         )
     }

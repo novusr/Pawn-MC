@@ -101,7 +101,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
 import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_runtime.PocketSampGateway
 import com.rvdjv.pawnmc.BuildConfig
 
@@ -133,7 +133,7 @@ internal val SpaceXL = 32.dp
 internal val CardShape = RoundedCornerShape(20.dp)
 internal val PillShape = RoundedCornerShape(28.dp)
 internal val ActionButtonHeight = 48.dp
-internal const val OUTPUT_PLACEHOLDER = "Ah, another project — a breath of fresh air everyone will inhale whether they asked for it or not.\n"
+internal const val OUTPUT_PLACEHOLDER = "Ah, another project - a breath of fresh air everyone will inhale whether they asked for it or not.\n"
 internal val OutputPanelHeight = 240.dp
 internal fun shouldRestoreLastSelectedFile(workspaceAvailable: Boolean): Boolean = !workspaceAvailable
 
@@ -163,7 +163,7 @@ internal fun appVersionText(context: Context): String? = runCatching {
 }.getOrNull()
 
 /**
- * Pulls the "Compilation time: …" line out of the shown output, so the exported
+ * Pulls the "Compilation time: ..." line out of the shown output, so the exported
  * header carries the same duration the user saw. `null` when no compile ran yet.
  */
 internal fun latestCompilationTimeLabel(outputText: String): String? =
@@ -187,7 +187,7 @@ internal val TAGLINE_KEYS = listOf(
  */
 internal fun randomTagline(
     localizer: AppLocalization?,
-    appLanguage: CompilerConfig.AppLanguage,
+    appLanguage: ContentConfig.AppLanguage,
     seed: Long = System.currentTimeMillis(),
 ): String {
     if (localizer == null) return "Compiling ideas on the go."
@@ -690,7 +690,7 @@ fun MainScreen(
                     // compiler version, device, compile info); the on-screen text is
                     // left untouched.
                     val info = com.rvdjv.pawnmc.apps_data.data_logging._log_export.HeaderInfo(
-                        compilerVersion = viewModel.getCompilerConfig().n_compiler_version.label,
+                        compilerVersion = viewModel.getContentConfig().n_compiler_version.label,
                         appVersion = appVersionText(context),
                         sourcePath = viewModel.selectedFilePath,
                         exitCode = viewModel.lastExitCode,
@@ -710,7 +710,7 @@ fun MainScreen(
                         Toast.makeText(context, "Output is empty", Toast.LENGTH_SHORT).show()
                     } else {
                         val info = com.rvdjv.pawnmc.apps_data.data_logging._log_export.HeaderInfo(
-                            compilerVersion = viewModel.getCompilerConfig().n_compiler_version.label,
+                            compilerVersion = viewModel.getContentConfig().n_compiler_version.label,
                             appVersion = appVersionText(context),
                             sourcePath = viewModel.selectedFilePath,
                             exitCode = viewModel.lastExitCode,
@@ -791,7 +791,7 @@ internal fun ScreenHeader(
     onToggleActions: () -> Unit = {},
     isCompiling: Boolean = false,
     localizer: AppLocalization? = null,
-    appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+    appLanguage: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -933,7 +933,7 @@ private fun HeaderActionButton(
 private fun HeaderActionsToggleButton(
     expanded: Boolean,
     localizer: AppLocalization?,
-    appLanguage: CompilerConfig.AppLanguage,
+    appLanguage: ContentConfig.AppLanguage,
     onToggle: () -> Unit
 ) {
     IconButton(
@@ -957,7 +957,7 @@ private fun HeaderActionsToggleButton(
 @Composable
 internal fun CompilingBlockedNotice(
     localizer: AppLocalization,
-    appLanguage: CompilerConfig.AppLanguage,
+    appLanguage: ContentConfig.AppLanguage,
     isCompiling: Boolean,
     onDismiss: () -> Unit
 ) {
@@ -1011,7 +1011,7 @@ internal fun CompileActionCard(
     onChangeFileClick: () -> Unit,
     onCompileClick: () -> Unit,
     localizer: AppLocalization? = null,
-    appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN,
+    appLanguage: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -1112,12 +1112,12 @@ internal fun CompilerLogsSection(
     onDownloadClick: () -> Unit = {},
     onCopyClick: () -> Unit,
     localizer: AppLocalization? = null,
-    appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+    appLanguage: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
 ) {
     Column {
         // The header is overflow-safe on high-DPI screens: the title is capped at two
         // lines with ellipsis, so when the localized label grows too long (e.g. the
-        // Russian "Вот результат компиляции:" at font scale 1.3+) it wraps or clips
+        // Russian label 'Rezultat kompilyatsii' at font scale 1.3+) it wraps or clips
         // instead of pushing the actions row and the status chip off screen.
         //
         // A second guard for the same DPI problem: the actions (download/copy chip) are
@@ -1302,7 +1302,10 @@ internal fun OutputPanel(
  */
 val ExplainMarkerColor = Color(0xFFF0F070)
 
-private val EXPLAIN_MARKER_REGEX = Regex("(?i)\\[(explain|jelaskan|explicar|объяснение|paliwanag)\\]")
+// The brackets are escaped so they are literals, not a character class — an
+// unescaped `[...]` matched every single letter of the marker alphabet and
+// painted random words of the console output yellow.
+private val EXPLAIN_MARKER_REGEX = Regex("\\[[a-z]+\\]", RegexOption.IGNORE_CASE)
 
 /**
  * Splits [outputText] into plain runs and `[explain]` markers.

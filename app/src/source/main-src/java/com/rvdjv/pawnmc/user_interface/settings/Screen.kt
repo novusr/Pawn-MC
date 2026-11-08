@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.settings
+﻿package com.rvdjv.pawnmc.user_interface.settings
 
 import android.app.Activity
 import android.content.Context
@@ -97,7 +97,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_update.UpdateManager
 import com.rvdjv.pawnmc.apps_data.data_update.UpdateStatus
 import com.rvdjv.pawnmc.user_interface.main.SettingsTarget
@@ -220,7 +220,7 @@ fun SettingsScreen(
     var showManualRestartDialog by remember { mutableStateOf(false) }
     var editingIncludePathIndex by remember { mutableStateOf<Int?>(null) }
     var addingIncludePath by remember { mutableStateOf(false) }
-    var pendingVersion by remember { mutableStateOf<CompilerConfig.CompilerVersion?>(null) }
+    var pendingVersion by remember { mutableStateOf<ContentConfig.CompilerVersion?>(null) }
     var updateStatus by remember { mutableStateOf("Checking for updates...") }
     var updateReady by remember { mutableStateOf(false) }
     var isCheckingUpdates by remember { mutableStateOf(false) }
@@ -290,7 +290,7 @@ fun SettingsScreen(
                         throw IllegalStateException("No compatible Android package exists in the latest release.")
                     }
                     val hasValidApk = downloaded != null && downloaded.isFile && downloaded.length() > 0L
-                    val packageLabel = if (updateManager.isNougatBuild()) "Nougat (Android 7/8)" else "Newer (Android 8–15)"
+                    val packageLabel = if (updateManager.isNougatBuild()) "Nougat (Android 7/8)" else "Newer (Android 8-15)"
                     updateStatus = if (hasValidApk) "Update available: $latestVersion ($packageLabel)" else "Update available, but no compatible package is attached"
                     lastReleaseInfo = release?.releaseUrl
                     releaseNotesMarkdown = release?.bodyMarkdown.orEmpty().ifBlank { "No release notes provided." }
@@ -710,7 +710,7 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 16.dp)
                     ) {
-                        val entries = CompilerConfig.DebugLevel.entries
+                        val entries = ContentConfig.DebugLevel.entries
                         val maxIndex = (entries.size - 1).coerceAtLeast(1)
                         val currentIndex = entries.indexOf(viewModel.n_debug_level).coerceIn(0, maxIndex)
 
@@ -761,8 +761,8 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 16.dp)
                     ) {
-                        val entries = CompilerConfig.optimizationLevelsFor(viewModel.n_compiler_version)
-                        val selectedOptimizationLevel = CompilerConfig.effectiveOptimizationLevel(
+                        val entries = ContentConfig.optimizationLevelsFor(viewModel.n_compiler_version)
+                        val selectedOptimizationLevel = ContentConfig.effectiveOptimizationLevel(
                             viewModel.n_compiler_version,
                             viewModel.n_optimization_level
                         )
@@ -792,7 +792,7 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        if (viewModel.n_compiler_version == CompilerConfig.CompilerVersion.V3107) {
+                        if (viewModel.n_compiler_version == ContentConfig.CompilerVersion.V3107) {
                             Text(
                                 text = localizer.get(
                                     "settings.option.optimization.v3107.notice",
@@ -1302,7 +1302,7 @@ fun SettingsScreen(
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     // Compact list, same slim rows as the language dialog.
-                    CompilerConfig.AppTheme.entries.forEach { theme ->
+                    ContentConfig.AppTheme.entries.forEach { theme ->
                         RadioButtonRow(
                             text = localizer.get(
                                 "settings.theme.option.${theme.value}.label",
@@ -1344,7 +1344,7 @@ fun SettingsScreen(
                     // Compact list: each language is a single slim row (label + native
                     // name only, no descriptions or dividers) so the dialog stays
                     // small and scannable. Indonesian is part of the entries.
-                    CompilerConfig.AppLanguage.entries.forEach { language ->
+                    ContentConfig.AppLanguage.entries.forEach { language ->
                         RadioButtonRow(
                             text = localizer.get(
                                 "settings.language.option.${language.value}.label",
@@ -1388,7 +1388,7 @@ fun SettingsScreen(
             title = { Text(localizer.get("settings.editor.autoclose", appLanguage, "Bracket Auto-Close")) },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    CompilerConfig.EditorAutoClose.entries.forEach { mode ->
+                    ContentConfig.EditorAutoClose.entries.forEach { mode ->
                         RadioButtonRow(
                             text = mode.label,
                             selected = viewModel.n_editor_auto_close == mode,
@@ -1501,7 +1501,7 @@ fun SettingsScreen(
             },
             text = {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    CompilerConfig.CompilerVersion.entries.forEach { version ->
+                    ContentConfig.CompilerVersion.entries.forEach { version ->
                         RadioButtonRow(
                             text = localizer.get(
                                 "settings.compiler.version.${version.value.filter(Char::isDigit)}.label",
@@ -1869,7 +1869,7 @@ fun NavigationRow(
 @Composable
 private fun EditorBackgroundDialog(
     initialHex: String?,
-    language: CompilerConfig.AppLanguage,
+    language: ContentConfig.AppLanguage,
     context: Context,
     onDismiss: () -> Unit,
     onApply: (String?) -> Unit
@@ -2037,7 +2037,7 @@ private val EditorBackgroundPresets = listOf(
 /**
  * Validates a typed `#RRGGBB` value from the editor-background picker.
  *
- * Mirrors `CompilerConfig.normalizeEditorBackgroundColor`, which lives on the config
+ * Mirrors `ContentConfig.normalizeEditorBackgroundColor`, which lives on the config
  * instance rather than in the companion object, so it is not reachable from the UI
  * layer without a view model instance.
  *
@@ -2067,8 +2067,8 @@ private fun hexToArgb(hex: String): Int =
 /**
  * Section a [SettingsTarget] belongs to.
  *
- * Several guide-card entries point at the same section — language, theme and the compiler
- * version all live in the general card — so this is a many-to-one mapping rather than a
+ * Several guide-card entries point at the same section - language, theme and the compiler
+ * version all live in the general card - so this is a many-to-one mapping rather than a
  * one-to-one enum, and the screen registers its offsets against the *section* keys that
  * appear here.
  */

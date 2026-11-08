@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.settings
+﻿package com.rvdjv.pawnmc.user_interface.settings
 
 import android.content.Intent
 import android.content.Context
@@ -7,7 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_compiler.Explanations
 import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
 import com.rvdjv.pawnmc.apps_data.data_update.UpdateManager
@@ -22,8 +22,8 @@ class SettingsActivity : ComponentActivity() {
          * Value of [SettingsTarget] the screen should scroll to on open.
          *
          * The enum name travels as a string rather than as a serialised enum so the
-         * activity stays constructible from any caller — the settings guide card, an
-         * intent filter, a shell test — without that caller having to import the enum,
+         * activity stays constructible from any caller - the settings guide card, an
+         * intent filter, a shell test - without that caller having to import the enum,
          * and an unknown value is simply ignored instead of crashing the screen.
          */
         const val EXTRA_FOCUS_TARGET = "com.rvdjv.pawnmc.extra.SETTINGS_FOCUS"
@@ -40,7 +40,7 @@ class SettingsActivity : ComponentActivity() {
     }
 
     override fun attachBaseContext(newBase: Context) {
-        val language = CompilerConfig.getInstance(newBase).n_app_language
+        val language = ContentConfig.getInstance(newBase).n_app_language
         super.attachBaseContext(AppLocalization.localizedContext(newBase, language))
     }
 
@@ -50,9 +50,9 @@ class SettingsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        CompilerConfig.getInstance(applicationContext)
+        ContentConfig.getInstance(applicationContext)
         // A compiler switch queued by the previous process is applied (and verified)
-        // here, before anything reads the config — see [applyPendingCompilerSwitch].
+        // here, before anything reads the config - see [applyPendingCompilerSwitch].
         applyPendingCompilerSwitch()
         // Settings can be the launcher entry point, so make sure the explanation
         // table is loaded here too and not only from MainActivity.
@@ -98,7 +98,7 @@ class SettingsActivity : ComponentActivity() {
      * Replays a pending switch request against the live config.
      *
      * When the stored config already matches the request the change went through
-     * cleanly — the temporary file is deleted and nothing else happens. When it
+     * cleanly - the temporary file is deleted and nothing else happens. When it
      * does not (a write lost to the process kill, or a system-side switch like the
      * `__addressof` recovery overwriting it), the request is applied again so the
      * user's choice always wins the race.
@@ -108,14 +108,14 @@ class SettingsActivity : ComponentActivity() {
         if (!file.isFile) return
         val request = runCatching {
             val root = org.json.JSONObject(file.readText())
-            val version = CompilerConfig.CompilerVersion.fromValue(root.optString("version"))
+            val version = ContentConfig.CompilerVersion.fromValue(root.optString("version"))
             val forced = root.optBoolean("forced", false)
             Triple(version, forced, root.optLong("requested", 0L))
         }.getOrNull()
         file.delete()
         val (requestedVersion, requestedForced, _) = request ?: return
 
-        val config = CompilerConfig.getInstance(applicationContext)
+        val config = ContentConfig.getInstance(applicationContext)
         val alreadyApplied = config.n_compiler_version == requestedVersion &&
             config.n_forced_compiler_mode == requestedForced
         if (alreadyApplied) return

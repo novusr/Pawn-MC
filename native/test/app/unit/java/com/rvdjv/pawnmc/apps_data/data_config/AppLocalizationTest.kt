@@ -7,27 +7,27 @@ import org.junit.Test
 class AppLocalizationTest {
     @Test
     fun `language values should resolve to supported options`() {
-        assertEquals(CompilerConfig.AppLanguage.ID, CompilerConfig.AppLanguage.fromValue("id"))
-        assertEquals(CompilerConfig.AppLanguage.EN, CompilerConfig.AppLanguage.fromValue("en"))
-        assertEquals(CompilerConfig.AppLanguage.ID, CompilerConfig.AppLanguage.fromValue("in"))
-        assertEquals(CompilerConfig.AppLanguage.ID, CompilerConfig.AppLanguage.fromValue("IN"))
-        assertEquals(CompilerConfig.AppLanguage.ID, CompilerConfig.AppLanguage.fromValue("unknown"))
-        assertEquals(CompilerConfig.AppLanguage.ES, CompilerConfig.AppLanguage.fromValue("es"))
-        assertEquals(CompilerConfig.AppLanguage.ES, CompilerConfig.AppLanguage.fromValue("ES"))
-        assertEquals(CompilerConfig.AppLanguage.ES, CompilerConfig.AppLanguage.fromValue("es-AR"))
-        assertEquals(CompilerConfig.AppLanguage.ES, CompilerConfig.AppLanguage.fromValue("es_AR"))
-        assertEquals(CompilerConfig.AppLanguage.RU, CompilerConfig.AppLanguage.fromValue("ru"))
-        assertEquals(CompilerConfig.AppLanguage.RU, CompilerConfig.AppLanguage.fromValue("RU"))
-        assertEquals(CompilerConfig.AppLanguage.RU, CompilerConfig.AppLanguage.fromValue("ru-RU"))
-        assertEquals(CompilerConfig.AppLanguage.RU, CompilerConfig.AppLanguage.fromValue("ru_RU"))
+        assertEquals(ContentConfig.AppLanguage.ID, ContentConfig.AppLanguage.fromValue("id"))
+        assertEquals(ContentConfig.AppLanguage.EN, ContentConfig.AppLanguage.fromValue("en"))
+        assertEquals(ContentConfig.AppLanguage.ID, ContentConfig.AppLanguage.fromValue("in"))
+        assertEquals(ContentConfig.AppLanguage.ID, ContentConfig.AppLanguage.fromValue("IN"))
+        assertEquals(ContentConfig.AppLanguage.ID, ContentConfig.AppLanguage.fromValue("unknown"))
+        assertEquals(ContentConfig.AppLanguage.ES, ContentConfig.AppLanguage.fromValue("es"))
+        assertEquals(ContentConfig.AppLanguage.ES, ContentConfig.AppLanguage.fromValue("ES"))
+        assertEquals(ContentConfig.AppLanguage.ES, ContentConfig.AppLanguage.fromValue("es-AR"))
+        assertEquals(ContentConfig.AppLanguage.ES, ContentConfig.AppLanguage.fromValue("es_AR"))
+        assertEquals(ContentConfig.AppLanguage.RU, ContentConfig.AppLanguage.fromValue("ru"))
+        assertEquals(ContentConfig.AppLanguage.RU, ContentConfig.AppLanguage.fromValue("RU"))
+        assertEquals(ContentConfig.AppLanguage.RU, ContentConfig.AppLanguage.fromValue("ru-RU"))
+        assertEquals(ContentConfig.AppLanguage.RU, ContentConfig.AppLanguage.fromValue("ru_RU"))
     }
 
     @Test
     fun `every language maps to a BCP-47 tag`() {
-        assertEquals("id", CompilerConfig.AppLanguage.ID.localeTag())
-        assertEquals("en", CompilerConfig.AppLanguage.EN.localeTag())
-        assertEquals("es-AR", CompilerConfig.AppLanguage.ES.localeTag())
-        assertEquals("ru", CompilerConfig.AppLanguage.RU.localeTag())
+        assertEquals("id", ContentConfig.AppLanguage.ID.localeTag())
+        assertEquals("en", ContentConfig.AppLanguage.EN.localeTag())
+        assertEquals("es-AR", ContentConfig.AppLanguage.ES.localeTag())
+        assertEquals("ru", ContentConfig.AppLanguage.RU.localeTag())
     }
 
     @Test
@@ -62,7 +62,7 @@ class AppLocalizationTest {
             local_id = "Versi Compiler"
             local_en = "Compiler Version"
             local_tl = "Bersyon ng Compiler"
-            local_ru = "Версия компилятора"
+            local_ru = "Ð’ÐµÑ€ÑÐ¸Ñ ÐºÐ¾Ð¼Ð¿Ð¸Ð»ÑÑ‚Ð¾Ñ€Ð°"
             local_es = "Version del compilador"
             """.trimIndent()
         )
@@ -93,14 +93,14 @@ class AppLocalizationTest {
         val localizer = constructor.newInstance(parsed)
 
         // Key-based translation
-        assertEquals("Umum", localizer.get("settings.general", CompilerConfig.AppLanguage.ID))
-        assertEquals("General", localizer.get("settings.general", CompilerConfig.AppLanguage.EN))
+        assertEquals("Umum", localizer.get("settings.general", ContentConfig.AppLanguage.ID))
+        assertEquals("General", localizer.get("settings.general", ContentConfig.AppLanguage.EN))
 
         // Phrase / word-based translation
-        assertEquals("Umum", localizer.get("General", CompilerConfig.AppLanguage.ID))
-        assertEquals("Bahasa", localizer.get("Language", CompilerConfig.AppLanguage.ID))
-        assertEquals("Pengaturan", localizer.get("Settings", CompilerConfig.AppLanguage.ID))
-        assertEquals("Settings", localizer.get("Pengaturan", CompilerConfig.AppLanguage.EN))
+        assertEquals("Umum", localizer.get("General", ContentConfig.AppLanguage.ID))
+        assertEquals("Bahasa", localizer.get("Language", ContentConfig.AppLanguage.ID))
+        assertEquals("Pengaturan", localizer.get("Settings", ContentConfig.AppLanguage.ID))
+        assertEquals("Settings", localizer.get("Pengaturan", ContentConfig.AppLanguage.EN))
     }
 
     @Test
@@ -129,15 +129,15 @@ class AppLocalizationTest {
         }
 
         // Key-based translation
-        assertEquals("General", localizer.get("settings.general", CompilerConfig.AppLanguage.ES))
+        assertEquals("General", localizer.get("settings.general", ContentConfig.AppLanguage.ES))
 
         // Phrase / word-based translation
-        assertEquals("Idioma", localizer.get("Language", CompilerConfig.AppLanguage.ES))
-        assertEquals("Configuracion", localizer.get("Settings", CompilerConfig.AppLanguage.ES))
+        assertEquals("Idioma", localizer.get("Language", ContentConfig.AppLanguage.ES))
+        assertEquals("Configuracion", localizer.get("Settings", ContentConfig.AppLanguage.ES))
 
         // English still recovers from both Indonesian and Spanish source text
-        assertEquals("Settings", localizer.get("Pengaturan", CompilerConfig.AppLanguage.EN))
-        assertEquals("Settings", localizer.get("Configuracion", CompilerConfig.AppLanguage.EN))
+        assertEquals("Settings", localizer.get("Pengaturan", ContentConfig.AppLanguage.EN))
+        assertEquals("Settings", localizer.get("Configuracion", ContentConfig.AppLanguage.EN))
     }
 
     @Test
@@ -148,19 +148,19 @@ class AppLocalizationTest {
             local_id = "Umum"
             local_en = "General"
             local_es = "General"
-            local_ru = "Основные"
+            local_ru = "Osnovnye"
 
             [settings.language]
             local_id = "Bahasa"
             local_en = "Language"
             local_es = "Idioma"
-            local_ru = "Язык"
+            local_ru = "Yazyk"
 
             [settings.title]
             local_id = "Pengaturan"
             local_en = "Settings"
             local_es = "Configuracion"
-            local_ru = "Настройки"
+            local_ru = "konfiguratsiya"
             """.trimIndent()
         ).let { parsed ->
             val constructor = AppLocalization::class.java.getDeclaredConstructor(Map::class.java)
@@ -169,14 +169,14 @@ class AppLocalizationTest {
         }
 
         // Key-based translation
-        assertEquals("Основные", localizer.get("settings.general", CompilerConfig.AppLanguage.RU))
+        assertEquals("osnovnye", localizer.get("settings.general", ContentConfig.AppLanguage.RU))
 
         // Phrase / word-based translation
-        assertEquals("Язык", localizer.get("Language", CompilerConfig.AppLanguage.RU))
-        assertEquals("Настройки", localizer.get("Settings", CompilerConfig.AppLanguage.RU))
+        assertEquals("Yazyk", localizer.get("Language", ContentConfig.AppLanguage.RU))
+        assertEquals("nastroyki¸", localizer.get("Settings", ContentConfig.AppLanguage.RU))
 
         // English recovers from Russian source text as well
-        assertEquals("Settings", localizer.get("Настройки", CompilerConfig.AppLanguage.EN))
+        assertEquals("Settings", localizer.get("nastroyki", ContentConfig.AppLanguage.EN))
     }
 
     @Test
@@ -195,11 +195,11 @@ class AppLocalizationTest {
 
         assertEquals(
             "Debug paling terperinci; optimisasi otomatis dinonaktifkan.",
-            localizer.get("settings.option.debug.level.3.desc", CompilerConfig.AppLanguage.ID)
+            localizer.get("settings.option.debug.level.3.desc", ContentConfig.AppLanguage.ID)
         )
         assertEquals(
             "Most detailed debugging; optimization is disabled automatically.",
-            localizer.get("settings.option.debug.level.3.desc", CompilerConfig.AppLanguage.EN)
+            localizer.get("settings.option.debug.level.3.desc", ContentConfig.AppLanguage.EN)
         )
     }
 }

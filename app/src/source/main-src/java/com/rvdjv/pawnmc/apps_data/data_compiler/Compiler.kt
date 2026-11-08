@@ -1,6 +1,6 @@
-package com.rvdjv.pawnmc.apps_data.data_compiler
+﻿package com.rvdjv.pawnmc.apps_data.data_compiler
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import java.io.File
 
 /**
@@ -13,9 +13,9 @@ object Compiler {
 
     internal fun compilerVersionForMode(
         forcedMode: Boolean,
-        selectedVersion: CompilerConfig.CompilerVersion,
-        detectedVersion: CompilerConfig.CompilerVersion?
-    ): CompilerConfig.CompilerVersion =
+        selectedVersion: ContentConfig.CompilerVersion,
+        detectedVersion: ContentConfig.CompilerVersion?
+    ): ContentConfig.CompilerVersion =
         Runner.compilerVersionForMode(forcedMode, selectedVersion, detectedVersion)
 
     /** Resets the compile fallback state for this session. */
@@ -28,11 +28,11 @@ object Compiler {
      * Auto-switch driven purely by the compiler output: `__addressof` under
      * 3.10.11 is ignored, under 3.10.7 the stored version becomes 3.10.11.
      */
-    fun applyAddressOfPolicy(output: String, runningVersion: CompilerConfig.CompilerVersion) =
+    fun applyAddressOfPolicy(output: String, runningVersion: ContentConfig.CompilerVersion) =
         Runner.applyAddressOfPolicy(output, runningVersion)
 
     /** Loaded native compiler version, or null before the first compile. */
-    fun getLoadedVersion(): CompilerConfig.CompilerVersion? = Runner.getLoadedVersion()
+    fun getLoadedVersion(): ContentConfig.CompilerVersion? = Runner.getLoadedVersion()
 
     /**
      * Points the compiler at `Documents/PawnMC/library/`, where the per-ABI archive is
@@ -44,7 +44,7 @@ object Compiler {
     fun libraryDirectory(): File? = Runner.libraryDirectory()
 
     /** True when switching to [requestedVersion] needs an app restart. */
-    fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean =
+    fun isRestartRequired(requestedVersion: ContentConfig.CompilerVersion): Boolean =
         Runner.isRestartRequired(requestedVersion)
 
     /** True when the error count in [output] reaches the fallback [threshold]. */
@@ -55,7 +55,7 @@ object Compiler {
     internal fun extractErrorCount(output: String): Int = Runner.extractErrorCount(output)
 
     /** Nearby compiler version mapped to a supported PawnMC version, or null. */
-    fun detectCompilerVersionForFile(sourceFile: String): CompilerConfig.CompilerVersion? =
+    fun detectCompilerVersionForFile(sourceFile: String): ContentConfig.CompilerVersion? =
         Detection.detectCompilerVersionForFile(sourceFile)
 
     /** Best nearby compiler match for [sourceFile], or null. */
@@ -96,14 +96,14 @@ object Compiler {
     fun compile(
         sourceFile: String,
         options: List<String> = emptyList(),
-        version: CompilerConfig.CompilerVersion = CompilerConfig.CompilerVersion.V3107
+        version: ContentConfig.CompilerVersion = ContentConfig.CompilerVersion.V3107
     ): Pair<Int, String> = Runner.compile(sourceFile, options, version)
 
     /** Runs a console-specified pawncc invocation without GUI options or automatic fallback. */
     fun compileManual(
         sourceFile: String,
         options: List<String>,
-        version: CompilerConfig.CompilerVersion
+        version: ContentConfig.CompilerVersion
     ): Pair<Int, String> = Runner.compileManual(sourceFile, options, version)
 
     internal fun compilerArgumentsForManual(sourceFile: String, options: List<String>): List<String> =
@@ -111,19 +111,19 @@ object Compiler {
 
     internal fun compilerOptionsForVersion(
         options: List<String>,
-        version: CompilerConfig.CompilerVersion
+        version: ContentConfig.CompilerVersion
     ): List<String> = Runner.compilerOptionsForVersion(options, version)
 
     internal fun compilerArgumentsForVersion(
         sourceFile: String,
         options: List<String>,
-        version: CompilerConfig.CompilerVersion
+        version: ContentConfig.CompilerVersion
     ): List<String> = Runner.compilerArgumentsForVersion(sourceFile, options, version)
 
     fun explainCompilerOutput(
         rawText: String,
         cacheDir: File,
-        language: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+        language: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
     ): String = Explainer.explainCompilerOutput(rawText, cacheDir, language)
 
     /**

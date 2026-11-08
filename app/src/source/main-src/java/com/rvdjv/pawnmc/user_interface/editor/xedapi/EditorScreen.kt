@@ -142,7 +142,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
 import com.rvdjv.pawnmc.user_interface._Icons
 import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.user_interface.editor.workspace.MAX_OPEN_WORKSPACES
 import com.rvdjv.pawnmc.user_interface.editor.workspace.OpenDocument
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspaceSession
@@ -183,18 +183,18 @@ fun EditorScreen(
     // Shared across screens so the localisation asset is read and parsed only once
     // per process; the main screen also warms it up in the background.
     val localizer = remember(context) { AppLocalization.shared(context) }
-    val appLanguage = remember(context) { CompilerConfig.getInstance(context).n_app_language }
+    val appLanguage = remember(context) { ContentConfig.getInstance(context).n_app_language }
     val appColorScheme = MaterialTheme.colorScheme
     // Auto-close rule from settings, re-read when the screen re-enters so a
     // change in Settings is picked up without touching the widget internals.
     /** Live toggle for the auto-close behaviour (drives the editor directly). */
     var editorAutoCloseEnabled by remember {
-        mutableStateOf(CompilerConfig.getInstance(context).n_editor_auto_close != CompilerConfig.EditorAutoClose.SMART)
+        mutableStateOf(ContentConfig.getInstance(context).n_editor_auto_close != ContentConfig.EditorAutoClose.SMART)
     }
     // The stored mode stays available for a user who picked "Smart pair" in
     // Settings; the toggle switches between that mode and fully-off.
     val storedAutoCloseMode by remember {
-        mutableStateOf(CompilerConfig.getInstance(context).n_editor_auto_close)
+        mutableStateOf(ContentConfig.getInstance(context).n_editor_auto_close)
     }
     val editorScheme = remember(appColorScheme, editorBackgroundColor) {
         buildEditorScheme(appColorScheme, editorBackgroundColor)
@@ -257,6 +257,17 @@ fun EditorScreen(
     var noticeMessage by remember { mutableStateOf<String?>(null) }
     var isQuickSymbolBarVisible by remember { mutableStateOf(true) }
 
+    /**
+     * Master toggle for the whole floating-button stack.
+     *
+     * Off hides every floating control — Developer Portal, orientation,
+     * workspace panel, the rectangle toolbar, the compile button — leaving only
+     * the code canvas. Toggled from the overflow menu ("Hide floating buttons"),
+     * because a clean reading surface was the one thing the editor could not
+     * offer while four buttons floated over it.
+     */
+    var floatingButtonsHidden by remember { mutableStateOf(false) }
+
     var searchQuery by remember { mutableStateOf("") }
     var replaceQuery by remember { mutableStateOf("") }
     var showReplaceRow by remember { mutableStateOf(false) }
@@ -295,7 +306,7 @@ fun EditorScreen(
     // whatever orientation the activity reports by default (portrait).
     var isLandscapeForced by remember { mutableStateOf(false) }
     var pawnConsoleVersion by remember {
-        mutableStateOf(CompilerConfig.CompilerVersion.V3107)
+        mutableStateOf(ContentConfig.CompilerVersion.V3107)
     }
     var explorerWidth by remember { mutableFloatStateOf(320f) }
     var toolPanelMode by remember { mutableStateOf<ToolPanelMode?>(null) }
@@ -533,14 +544,14 @@ fun EditorScreen(
         AlertDialog(
             onDismissRequest = { showNewFileDialog = false },
             title = {
-                Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "File Kode Baru" else "New Code File")
+                Text(if (appLanguage == ContentConfig.AppLanguage.ID) "File Kode Baru" else "New Code File")
             },
             text = {
                 OutlinedTextField(
                     value = newFileName,
                     onValueChange = { newFileName = it },
                     label = {
-                        Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Nama file" else "File name")
+                        Text(if (appLanguage == ContentConfig.AppLanguage.ID) "Nama file" else "File name")
                     },
                     placeholder = { Text("Server.pwn") },
                     singleLine = true,
@@ -572,13 +583,13 @@ fun EditorScreen(
     if (showNewFolderDialog) {
         AlertDialog(
             onDismissRequest = { showNewFolderDialog = false },
-            title = { Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Folder Baru" else "New Folder") },
+            title = { Text(if (appLanguage == ContentConfig.AppLanguage.ID) "Folder Baru" else "New Folder") },
             text = {
                 OutlinedTextField(
                     value = newFolderName,
                     onValueChange = { newFolderName = it },
                     label = {
-                        Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Nama folder" else "Folder name")
+                        Text(if (appLanguage == ContentConfig.AppLanguage.ID) "Nama folder" else "Folder name")
                     },
                     placeholder = { Text("gamemodes") },
                     singleLine = true,
@@ -632,21 +643,21 @@ fun EditorScreen(
         AlertDialog(
             onDismissRequest = { noticeMessage = null },
             title = { Text(when (appLanguage) {
-                CompilerConfig.AppLanguage.ID -> "Informasi"
-                CompilerConfig.AppLanguage.ES -> "Informacion"
-                CompilerConfig.AppLanguage.RU -> "Уведомление"
-                CompilerConfig.AppLanguage.TL -> "Abiso"
-                CompilerConfig.AppLanguage.EN -> "Notice"
+                ContentConfig.AppLanguage.ID -> "Informasi"
+                ContentConfig.AppLanguage.ES -> "Informacion"
+                ContentConfig.AppLanguage.RU -> "informatsiya"
+                ContentConfig.AppLanguage.TL -> "Abiso"
+                ContentConfig.AppLanguage.EN -> "Notice"
             }) },
             text = { Text(message) },
             confirmButton = {
                 TextButton(onClick = { noticeMessage = null }) {
                     Text(when (appLanguage) {
-                        CompilerConfig.AppLanguage.ID -> "Tutup"
-                        CompilerConfig.AppLanguage.ES -> "Cerrar"
-                        CompilerConfig.AppLanguage.RU -> "Закрыть"
-                        CompilerConfig.AppLanguage.TL -> "Isara"
-                        CompilerConfig.AppLanguage.EN -> "Dismiss"
+                        ContentConfig.AppLanguage.ID -> "Tutup"
+                        ContentConfig.AppLanguage.ES -> "Cerrar"
+                        ContentConfig.AppLanguage.RU -> "Zakryt"
+                        ContentConfig.AppLanguage.TL -> "Isara"
+                        ContentConfig.AppLanguage.EN -> "Dismiss"
                     })
                 }
             }
@@ -757,7 +768,7 @@ fun EditorScreen(
         AlertDialog(
             onDismissRequest = { showJumpDialog = false },
             title = {
-                Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Lompat ke Posisi" else "Jump to Position")
+                Text(if (appLanguage == ContentConfig.AppLanguage.ID) "Lompat ke Posisi" else "Jump to Position")
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -765,7 +776,7 @@ fun EditorScreen(
                         value = lineInput,
                         onValueChange = { lineInput = it.filter { ch -> ch.isDigit() } },
                         label = {
-                            Text(if (appLanguage == CompilerConfig.AppLanguage.ID) "Nomor baris" else "Line number")
+                            Text(if (appLanguage == ContentConfig.AppLanguage.ID) "Nomor baris" else "Line number")
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true
@@ -778,9 +789,9 @@ fun EditorScreen(
                     ) {
                         Text(
                             if (showColumnInput) {
-                                if (appLanguage == CompilerConfig.AppLanguage.ID) "Sembunyikan Kolom" else "Hide Column"
+                                if (appLanguage == ContentConfig.AppLanguage.ID) "Sembunyikan Kolom" else "Hide Column"
                             } else {
-                                if (appLanguage == CompilerConfig.AppLanguage.ID) "Tampilkan Kolom" else "Show Column"
+                                if (appLanguage == ContentConfig.AppLanguage.ID) "Tampilkan Kolom" else "Show Column"
                             }
                         )
                     }
@@ -790,7 +801,7 @@ fun EditorScreen(
                             onValueChange = { columnInput = it.filter { ch -> ch.isDigit() } },
                             label = {
                                 Text(
-                                    if (appLanguage == CompilerConfig.AppLanguage.ID) "Kolom (opsional)" else "Column (optional)"
+                                    if (appLanguage == ContentConfig.AppLanguage.ID) "Kolom (opsional)" else "Column (optional)"
                                 )
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -1189,6 +1200,28 @@ fun EditorScreen(
                                 }
                             )
                             DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        if (floatingButtonsHidden) {
+                                            if (appLanguage == ContentConfig.AppLanguage.ID) "Tampilkan tombol mengambang" else "Show floating buttons"
+                                        } else {
+                                            if (appLanguage == ContentConfig.AppLanguage.ID) "Sembunyikan tombol mengambang" else "Hide floating buttons"
+                                        }
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (floatingButtonsHidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    dismissAutoCompletion()
+                                    showMenu = false
+                                    floatingButtonsHidden = !floatingButtonsHidden
+                                }
+                            )
+                            DropdownMenuItem(
                                 text = { Text("Select All") },
                                 leadingIcon = {
                                     Icon(Icons.Filled.SelectAll, contentDescription = null)
@@ -1214,9 +1247,9 @@ fun EditorScreen(
                                 text = {
                                     Text(
                                         if (editorAutoCloseEnabled) {
-                                            if (appLanguage == CompilerConfig.AppLanguage.ID) "Matikan tutup otomatis" else "Disable auto-close brackets"
+                                            if (appLanguage == ContentConfig.AppLanguage.ID) "Matikan tutup otomatis" else "Disable auto-close brackets"
                                         } else {
-                                            if (appLanguage == CompilerConfig.AppLanguage.ID) "Nyalakan tutup otomatis" else "Enable auto-close brackets"
+                                            if (appLanguage == ContentConfig.AppLanguage.ID) "Nyalakan tutup otomatis" else "Enable auto-close brackets"
                                         }
                                     )
                                 },
@@ -1230,22 +1263,22 @@ fun EditorScreen(
                                     dismissAutoCompletion()
                                     showMenu = false
                                     editorAutoCloseEnabled = !editorAutoCloseEnabled
-                                    CompilerConfig.getInstance(context).n_editor_auto_close =
+                                    ContentConfig.getInstance(context).n_editor_auto_close =
                                         if (editorAutoCloseEnabled) {
-                                            CompilerConfig.EditorAutoClose.PAIR_ALWAYS
+                                            ContentConfig.EditorAutoClose.PAIR_ALWAYS
                                         } else {
-                                            CompilerConfig.EditorAutoClose.SMART
+                                            ContentConfig.EditorAutoClose.SMART
                                         }
                                     Toast.makeText(
                                         context,
                                         if (editorAutoCloseEnabled) {
-                                            if (appLanguage == CompilerConfig.AppLanguage.ID) {
+                                            if (appLanguage == ContentConfig.AppLanguage.ID) {
                                                 "Tutup otomatis dinyalakan"
                                             } else {
                                                 "Auto-close brackets enabled"
                                             }
                                         } else {
-                                            if (appLanguage == CompilerConfig.AppLanguage.ID) {
+                                            if (appLanguage == ContentConfig.AppLanguage.ID) {
                                                 "Tutup otomatis dimatikan"
                                             } else {
                                                 "Auto-close brackets disabled"
@@ -1537,9 +1570,9 @@ fun EditorScreen(
                                     isWordwrap = isWordWrap
                                     editable = !isReadOnly
                                     this.autoCloseMode = when {
-                                        !editorAutoCloseEnabled -> CompilerConfig.EditorAutoClose.SMART
-                                        storedAutoCloseMode != CompilerConfig.EditorAutoClose.SMART -> storedAutoCloseMode
-                                        else -> CompilerConfig.EditorAutoClose.PAIR_ALWAYS
+                                        !editorAutoCloseEnabled -> ContentConfig.EditorAutoClose.SMART
+                                        storedAutoCloseMode != ContentConfig.EditorAutoClose.SMART -> storedAutoCloseMode
+                                        else -> ContentConfig.EditorAutoClose.PAIR_ALWAYS
                                     }
                                     setTextSize(14f)
                                     // Same crash guard as the update pass: the very
@@ -1611,9 +1644,9 @@ fun EditorScreen(
                                 // closer, on means the stored mode (or "Always pair"
                                 // when the stored mode is the off-flavoured SMART).
                                 editor.autoCloseMode = when {
-                                    !editorAutoCloseEnabled -> CompilerConfig.EditorAutoClose.SMART
-                                    storedAutoCloseMode != CompilerConfig.EditorAutoClose.SMART -> storedAutoCloseMode
-                                    else -> CompilerConfig.EditorAutoClose.PAIR_ALWAYS
+                                    !editorAutoCloseEnabled -> ContentConfig.EditorAutoClose.SMART
+                                    storedAutoCloseMode != ContentConfig.EditorAutoClose.SMART -> storedAutoCloseMode
+                                    else -> ContentConfig.EditorAutoClose.PAIR_ALWAYS
                                 }
                                 // Push the buffer of the file the workspace panel
                                 // activated, or of the single file opened from the
@@ -1786,10 +1819,15 @@ fun EditorScreen(
                             .padding(12.dp)
                     )
                 }
-                FloatingRoundAction(
-                    size = PANEL_BUTTON_SIZE,
-                    icon = Icons.Filled.Extension,
-                    contentDescription = "Open the Developer Portal",
+
+            // Master gate: when hidden, the whole floating stack (Developer Portal,
+            // orientation, workspace toggle, rectangle toolbar, compile button)
+            // disappears and the canvas is left clean.
+            if (!floatingButtonsHidden) {
+            FloatingRoundAction(
+                size = PANEL_BUTTON_SIZE,
+                icon = Icons.Filled.Extension,
+                contentDescription = "Open the Developer Portal",
                     testTag = "editor_terminal_toggle",
                     tint = FLOAT_TINT_PORTAL,
                     isActive = isPawnTerminalVisible,
@@ -1929,6 +1967,7 @@ fun EditorScreen(
                     },
                     modifier = Modifier.align(Alignment.TopStart)
                 )
+            }
 
                 if (isPawnTerminalVisible) {
                     val terminalSource = if (workspace.isWorkspaceOpen) {
@@ -2064,7 +2103,7 @@ private class LanguageHolder {
 @Composable
 private fun EditorAboutDialog(
     localizer: AppLocalization,
-    language: CompilerConfig.AppLanguage,
+    language: ContentConfig.AppLanguage,
     onDismiss: () -> Unit
 ) {
     val items = listOf(

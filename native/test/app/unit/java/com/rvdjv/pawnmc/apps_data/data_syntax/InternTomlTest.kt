@@ -1,6 +1,6 @@
 package com.rvdjv.pawnmc.apps_data.data_syntax
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -21,21 +21,21 @@ class InternTomlTest {
         val parsed = InternDat.parse(
             """
             [item.KEYWORD]
-            "stock" = { local_en = "English item", local_id = "Item Indonesia", local_es = "Item espanol", local_ru = "Элемент по-русски", local_tl = "Item sa Tagalog" }
+            "stock" = { local_en = "English item", local_id = "Item Indonesia", local_es = "Item espanol", local_ru = "Element po-russki", local_tl = "Item sa Tagalog" }
 
             [native."a_samp.inc"]
-            "SendClientMessage" = { local_en = "English native", local_id = "Native Indonesia", local_es = "Native espanol", local_ru = "Функция по-русски", local_tl = "Native sa Tagalog" }
+            "SendClientMessage" = { local_en = "English native", local_id = "Native Indonesia", local_es = "Native espanol", local_ru = "Funktsiya po-russki", local_tl = "Native sa Tagalog" }
             """.trimIndent()
         )
 
         val item = parsed.items.single()
-        assertEquals("Item espanol", item.descriptionFor(CompilerConfig.AppLanguage.ES))
-        assertEquals("Элемент по-русски", item.descriptionFor(CompilerConfig.AppLanguage.RU))
-        assertEquals("Item sa Tagalog", item.descriptionFor(CompilerConfig.AppLanguage.TL))
+        assertEquals("Item espanol", item.descriptionFor(ContentConfig.AppLanguage.ES))
+        assertEquals("Element po-russki", item.descriptionFor(ContentConfig.AppLanguage.RU))
+        assertEquals("Item sa Tagalog", item.descriptionFor(ContentConfig.AppLanguage.TL))
 
         val symbol = parsed.symbols.single()
         assertEquals("Native espanol", symbol.descriptionEs)
-        assertEquals("Функция по-русски", symbol.descriptionRu)
+        assertEquals("Funktsiya po-russki", symbol.descriptionRu)
         assertEquals("Native sa Tagalog", symbol.descriptionTl)
     }
 

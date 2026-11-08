@@ -178,9 +178,14 @@ class MainActivity : ComponentActivity() {
                 downloadStarted = true
             } else {
                 assetExtractorInitialised = false
+                // Auto-prepare on entry: the archives download and unpack in the
+                // background right away, so the console already shows `[Prepare]`
+                // lines without the user having to press KASIH BAHAN BAKAR first.
                 if (hasAllFilesAccess.value) startRuntimeDownload()
             }
         }
+        // No permission yet: the permissionObserver flips the state on ON_RESUME
+        // and starts the runtime download from there.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)

@@ -237,6 +237,48 @@ class Server(private val context: Context) {
                 }
             }
 
+            /*
+             * The `gamemode0` line has to name an .amx that exists in
+             * `gamemodes/`: SA-MP exits 1 right after "Loaded N plugins" when
+             * the gamemode is missing, with nothing in server_log.txt — the
+             * silent-death report. Clamp the line to what is on disk the same
+             * way the plugins line is handled.
+             */
+            val availableModes = File(sampDir, "gamemodes")
+                .listFiles()
+                ?.filter { it.isFile && it.extension.equals("amx", true) }
+                ?.map { it.nameWithoutExtension }
+                .orEmpty()
+            if (availableModes.isNotEmpty()) {
+                val currentMode = cfgContent
+                    .lineSequence()
+                    .firstOrNull { it.trim().startsWith("gamemode0", ignoreCase = true) }
+                    ?.trim()
+                    ?.split(Regex("\\s+"))
+                    ?.getOrNull(1)
+                if (currentMode == null || availableModes.none { it.equals(currentMode, true) }) {
+                    val modeLine = "gamemode0 ${availableModes.first()}"
+                    cfgContent = if (cfgContent.contains(Regex("(?i)^\\s*gamemode0\\s", RegexOption.MULTILINE))) {
+                        cfgContent.replace(Regex("(?i)^\\s*gamemode0\\s+.*$", RegexOption.MULTILINE), modeLine)
+                    } else {
+                        "$modeLine\n$cfgContent"
+                    }
+                    modified = true
+                    scope.launch {
+                        _serverLogs.emit(t("log.tuning.gamemode").replace("{mode}", availableModes.first()))
+                    }
+                }
+            } else {
+                if (cfgContent.contains(Regex("(?i)^\\s*gamemode0\\s+\\S", RegexOption.MULTILINE))) {
+                    cfgContent = cfgContent.replace(
+                        Regex("(?i)^\\s*gamemode0\\s+.*$", RegexOption.MULTILINE),
+                        "# gamemode0 removed: the gamemodes folder holds no .amx"
+                    )
+                    modified = true
+                    scope.launch { _serverLogs.emit(t("log.tuning.gamemode.none")) }
+                }
+            }
+
             if (cfgContent.contains(Regex("""(?i)^\s*lanmode\s+0""", RegexOption.MULTILINE))) {
                 cfgContent = cfgContent.replace(Regex("""(?i)^\s*lanmode\s+0""", RegexOption.MULTILINE), "lanmode 1")
                 modified = true

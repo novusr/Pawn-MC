@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.filebrowser
+﻿package com.rvdjv.pawnmc.user_interface.filebrowser
 
 import android.os.Environment
 import androidx.compose.foundation.background
@@ -46,7 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import java.io.File
 import java.text.DecimalFormat
 
@@ -93,7 +93,7 @@ fun FileBrowserDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val config = remember { CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context) }
+    val config = remember { ContentConfig.getInstanceOrNull() ?: ContentConfig.getInstance(context) }
     val rootPath = remember { Environment.getExternalStorageDirectory().absolutePath }
 
     fun listEntries(dir: File): List<FileEntry> {

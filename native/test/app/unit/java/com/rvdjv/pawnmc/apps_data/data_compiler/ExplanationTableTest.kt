@@ -1,6 +1,6 @@
 package com.rvdjv.pawnmc.apps_data.data_compiler
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -52,9 +52,9 @@ class ExplanationTableTest {
     @Test
     fun `every compiler code has each supported localization`() {
         val languages = listOf(
-            CompilerConfig.AppLanguage.ES,
-            CompilerConfig.AppLanguage.RU,
-            CompilerConfig.AppLanguage.TL,
+            ContentConfig.AppLanguage.ES,
+            ContentConfig.AppLanguage.RU,
+            ContentConfig.AppLanguage.TL,
         )
         val missing = languages.flatMap { language ->
             compilerCodes.filter { parsed["${padded(it)}.${language.value}"].isNullOrBlank() }
@@ -66,9 +66,9 @@ class ExplanationTableTest {
     @Test
     fun `existing Spanish Russian and Tagalog explanations remain localized`() {
         val translations = mapOf(
-            CompilerConfig.AppLanguage.ES to "Símbolo no definido",
-            CompilerConfig.AppLanguage.RU to "не определён",
-            CompilerConfig.AppLanguage.TL to "Hindi defined ang symbol",
+            ContentConfig.AppLanguage.ES to "Símbolo no definido",
+            ContentConfig.AppLanguage.RU to "Ð½Ðµ Ð¾Ð¿Ñ€ÐµÐ´ÐµÐ»Ñ‘Ð½",
+            ContentConfig.AppLanguage.TL to "Hindi defined ang symbol",
         )
         translations.forEach { (language, expected) ->
             val explanation = Explanations.resolve(parsed, "017", language).orEmpty()
@@ -103,8 +103,8 @@ class ExplanationTableTest {
             assertNotNull("stripped $code", parsed["${code.trimStart('0')}.en"])
             assertNotNull("padded $code", parsed["$code.en"])
         }
-        assertTrue(Explanations.resolve(parsed, "13", CompilerConfig.AppLanguage.EN).orEmpty().isNotBlank())
-        assertTrue(Explanations.resolve(parsed, "013", CompilerConfig.AppLanguage.ID).orEmpty().isNotBlank())
+        assertTrue(Explanations.resolve(parsed, "13", ContentConfig.AppLanguage.EN).orEmpty().isNotBlank())
+        assertTrue(Explanations.resolve(parsed, "013", ContentConfig.AppLanguage.ID).orEmpty().isNotBlank())
     }
 
     @Test

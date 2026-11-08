@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.main
+﻿package com.rvdjv.pawnmc.user_interface.main
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -18,13 +18,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 
 /**
  * The one entry in the settings map that has no setting of its own.
  *
- * [target] is what a tap should focus in Settings. Most rows are a leaf — a switch or a
- * dialog — but the compiler version and the include-path list are sections a user may want
+ * [target] is what a tap should focus in Settings. Most rows are a leaf - a switch or a
+ * dialog - but the compiler version and the include-path list are sections a user may want
  * to be dropped straight onto, so the id travels with the row instead of being inferred
  * from the position in the list.
  */
@@ -58,7 +58,7 @@ enum class SettingsTarget {
  * configurable at all: the main screen is a file picker and a Compile button, and Settings
  * is a single icon in a collapsed corner menu. Rather than a static "look at Settings"
  * banner, each row names a real capability and carries the id of the section it belongs to,
- * so tapping a row opens Settings *at that section* — which is why the Settings screen grew
+ * so tapping a row opens Settings *at that section* - which is why the Settings screen grew
  * a scroll target in the same change.
  *
  * It is deliberately *not* called a developer portal: the in-editor Developer Portal is a
@@ -73,7 +73,7 @@ enum class SettingsTarget {
 internal fun SettingsPromoCard(
     onEntryClick: (SettingsTarget) -> Unit,
     localizer: AppLocalization? = null,
-    appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN,
+    appLanguage: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN,
     modifier: Modifier = Modifier
 ) {
     fun text(key: String, fallback: String): String =

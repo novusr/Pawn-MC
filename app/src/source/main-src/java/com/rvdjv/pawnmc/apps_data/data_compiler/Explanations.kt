@@ -1,8 +1,8 @@
-package com.rvdjv.pawnmc.apps_data.data_compiler
+﻿package com.rvdjv.pawnmc.apps_data.data_compiler
 
 import android.content.Context
 import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_config.TomlData
 import java.io.File
 
@@ -74,7 +74,7 @@ object Explanations {
     /** Explanation for [code], or `null` when the code is not documented locally. */
     fun explanationFor(
         code: String,
-        language: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+        language: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
     ): String? {
         ensureLoaded()
         return resolve(cached.orEmpty(), code, language)
@@ -89,12 +89,12 @@ object Explanations {
     internal fun resolve(
         explanations: Map<String, String>,
         code: String,
-        language: CompilerConfig.AppLanguage
+        language: ContentConfig.AppLanguage
     ): String? {
         val normalizedCode = code.trim()
         return explanations["$normalizedCode.${language.value}"]
             ?: explanations[normalizedCode]
-            ?: explanations["$normalizedCode.${CompilerConfig.AppLanguage.EN.value}"]
+            ?: explanations["$normalizedCode.${ContentConfig.AppLanguage.EN.value}"]
     }
 
     private fun readFromFileSystem(): String? =
@@ -134,8 +134,8 @@ object Explanations {
                 result["$code.$language"] = explanation
                 unpaddedCode?.let { result["$it.$language"] = explanation }
             }
-            val english = entries["local_${CompilerConfig.AppLanguage.EN.value}"]
-                ?: entries[CompilerConfig.AppLanguage.EN.value]
+            val english = entries["local_${ContentConfig.AppLanguage.EN.value}"]
+                ?: entries[ContentConfig.AppLanguage.EN.value]
             english?.let {
                 if (it.isNotBlank()) {
                     result[code] = it

@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.editor.portal
+﻿package com.rvdjv.pawnmc.user_interface.editor.portal
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
@@ -70,7 +70,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.roundToInt
@@ -86,13 +86,13 @@ private data class PortalEntry(
 @Composable
 internal fun DeveloperPortal(
     context: Context,
-    language: CompilerConfig.AppLanguage,
+    language: ContentConfig.AppLanguage,
     activeSource: File?,
     workspaceRoot: File?,
-    selectedVersion: CompilerConfig.CompilerVersion,
-    onVersionChange: (CompilerConfig.CompilerVersion) -> Unit,
+    selectedVersion: ContentConfig.CompilerVersion,
+    onVersionChange: (ContentConfig.CompilerVersion) -> Unit,
     onClose: () -> Unit,
-    onCompile: suspend (File, List<String>, CompilerConfig.CompilerVersion) -> String
+    onCompile: suspend (File, List<String>, ContentConfig.CompilerVersion) -> String
 ) {
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -331,12 +331,12 @@ private suspend fun runCommandAndUpdateTranscript(
     commandLine: String,
     isAutomatic: Boolean,
     context: Context,
-    language: CompilerConfig.AppLanguage,
+    language: ContentConfig.AppLanguage,
     activeSource: File?,
     workspaceRoot: File?,
-    selectedVersion: CompilerConfig.CompilerVersion,
-    onVersionChange: (CompilerConfig.CompilerVersion) -> Unit,
-    onCompile: suspend (File, List<String>, CompilerConfig.CompilerVersion) -> String,
+    selectedVersion: ContentConfig.CompilerVersion,
+    onVersionChange: (ContentConfig.CompilerVersion) -> Unit,
+    onCompile: suspend (File, List<String>, ContentConfig.CompilerVersion) -> String,
     entries: MutableList<PortalEntry>,
     setRunning: (Boolean) -> Unit,
     onCommandFinished: (String, Boolean) -> Unit
@@ -365,12 +365,12 @@ private data class PortalCommandResult(
 private suspend fun executeCommand(
     commandLine: String,
     context: Context,
-    language: CompilerConfig.AppLanguage,
+    language: ContentConfig.AppLanguage,
     activeSource: File?,
     workspaceRoot: File?,
-    selectedVersion: CompilerConfig.CompilerVersion,
-    onVersionChange: (CompilerConfig.CompilerVersion) -> Unit,
-    onCompile: suspend (File, List<String>, CompilerConfig.CompilerVersion) -> String,
+    selectedVersion: ContentConfig.CompilerVersion,
+    onVersionChange: (ContentConfig.CompilerVersion) -> Unit,
+    onCompile: suspend (File, List<String>, ContentConfig.CompilerVersion) -> String,
     clearTranscript: () -> Unit
 ): PortalCommandResult {
     val tokens = PortalCommandParser.tokenize(commandLine)
@@ -379,7 +379,7 @@ private suspend fun executeCommand(
     val text: (String) -> String = { key -> PortalText.get(context, key, language) }
     return when (command) {
         "help" -> PortalCommandResult(text("terminal.help"))
-        "docs" -> PortalCommandResult(text("terminal.docs"), markdown = true)
+        "docs" -> PortalCommandResult(PortalDocs.content(language), markdown = true)
         "clear", "celar" -> {
             clearTranscript()
             PortalCommandResult("", record = false)
@@ -400,14 +400,14 @@ private suspend fun executeCommand(
 
 private fun switchCommand(
     tokens: List<String>,
-    selectedVersion: CompilerConfig.CompilerVersion,
-    onVersionChange: (CompilerConfig.CompilerVersion) -> Unit,
+    selectedVersion: ContentConfig.CompilerVersion,
+    onVersionChange: (ContentConfig.CompilerVersion) -> Unit,
     text: (String) -> String
 ): PortalCommandResult {
     val requested = when (tokens.getOrNull(1)?.removePrefix("3.10.")) {
         null -> selectedVersion.other()
-        "7" -> CompilerConfig.CompilerVersion.V3107
-        "11" -> CompilerConfig.CompilerVersion.V31011
+        "7" -> ContentConfig.CompilerVersion.V3107
+        "11" -> ContentConfig.CompilerVersion.V31011
         else -> null
     }
     if (tokens.size > 2 || requested == null) return PortalCommandResult(text("terminal.error.switch"))
@@ -423,8 +423,8 @@ private suspend fun pawnccCommand(
     tokens: List<String>,
     activeSource: File?,
     workspaceRoot: File?,
-    selectedVersion: CompilerConfig.CompilerVersion,
-    onCompile: suspend (File, List<String>, CompilerConfig.CompilerVersion) -> String,
+    selectedVersion: ContentConfig.CompilerVersion,
+    onCompile: suspend (File, List<String>, ContentConfig.CompilerVersion) -> String,
     text: (String) -> String
 ): PortalCommandResult {
     if (tokens.size == 1) return PortalCommandResult(text("terminal.pawncc.usage"))
@@ -450,7 +450,7 @@ private fun listFilesCommand(activeSource: File?, workspaceRoot: File?): PortalC
 private fun whichCommand(
     tokens: List<String>,
     context: Context,
-    selectedVersion: CompilerConfig.CompilerVersion
+    selectedVersion: ContentConfig.CompilerVersion
 ): PortalCommandResult {
     val target = tokens.getOrNull(1)
     val output = when (target?.lowercase()) {
@@ -477,7 +477,7 @@ private fun deviceInfoCommand(): PortalCommandResult = PortalCommandResult(build
 
 private fun versionCommand(
     context: Context,
-    selectedVersion: CompilerConfig.CompilerVersion
+    selectedVersion: ContentConfig.CompilerVersion
 ): PortalCommandResult {
     val packageInfo = runCatching {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {

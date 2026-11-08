@@ -1,6 +1,6 @@
-package com.rvdjv.pawnmc.apps_data.data_compiler
+﻿package com.rvdjv.pawnmc.apps_data.data_compiler
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -25,7 +25,7 @@ class FailTest {
 
     @Test
     fun `returns the other compiler version`() {
-        assertEquals(CompilerConfig.CompilerVersion.V31011, CompilerConfig.CompilerVersion.V3107.other())
-        assertEquals(CompilerConfig.CompilerVersion.V3107, CompilerConfig.CompilerVersion.V31011.other())
+        assertEquals(ContentConfig.CompilerVersion.V31011, ContentConfig.CompilerVersion.V3107.other())
+        assertEquals(ContentConfig.CompilerVersion.V3107, ContentConfig.CompilerVersion.V31011.other())
     }
 }

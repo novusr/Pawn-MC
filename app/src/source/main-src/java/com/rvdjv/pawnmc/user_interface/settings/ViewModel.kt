@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.settings
+﻿package com.rvdjv.pawnmc.user_interface.settings
 
 import android.content.Context
 import androidx.compose.runtime.getValue
@@ -8,9 +8,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 
-class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
+class SettingsViewModel(private val config: ContentConfig) : ViewModel() {
 
     var n_compiler_version by mutableStateOf(config.n_compiler_version)
         private set
@@ -55,7 +55,7 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         private set
 
     val n_include_paths = mutableStateListOf<String>().apply {
-        addAll(CompilerConfig.pruneMissingIncludePaths(config.n_include_paths))
+        addAll(ContentConfig.pruneMissingIncludePaths(config.n_include_paths))
     }
 
     /**
@@ -78,17 +78,17 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         includePathExtensionNotice = normalized
     }
 
-    fun updateCompilerVersion(version: CompilerConfig.CompilerVersion) {
+    fun updateCompilerVersion(version: ContentConfig.CompilerVersion) {
         n_compiler_version = version
         config.n_compiler_version = version
     }
 
-    fun updateDebugLevel(level: CompilerConfig.DebugLevel) {
+    fun updateDebugLevel(level: ContentConfig.DebugLevel) {
         n_debug_level = level
         config.n_debug_level = level
     }
 
-    fun updateOptimizationLevel(level: CompilerConfig.OptimizationLevel) {
+    fun updateOptimizationLevel(level: ContentConfig.OptimizationLevel) {
         n_optimization_level = level
         config.n_optimization_level = level
     }
@@ -128,21 +128,21 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         config.n_forced_include_path_auto = enabled
     }
 
-    fun updateAppTheme(theme: CompilerConfig.AppTheme) {
+    fun updateAppTheme(theme: ContentConfig.AppTheme) {
         n_app_theme = theme
         config.n_app_theme = theme
     }
 
-    fun updateAppLanguage(language: CompilerConfig.AppLanguage) {
+    fun updateAppLanguage(language: ContentConfig.AppLanguage) {
         config.n_app_language = language
         // Marks the language as user-chosen so the first-launch device-locale
-        // detection can never overwrite this choice — the marker travels with the
+        // detection can never overwrite this choice - the marker travels with the
         // language through the JSON mirror and survives a reinstall.
         config.markAppLanguageSet()
         n_app_language = language
     }
 
-    fun updateEditorAutoClose(mode: CompilerConfig.EditorAutoClose) {
+    fun updateEditorAutoClose(mode: ContentConfig.EditorAutoClose) {
         n_editor_auto_close = mode
         config.n_editor_auto_close = mode
     }
@@ -164,10 +164,10 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
      * the caller can skip the write entirely instead of re-filtering the whole list.
      */
     fun addIncludePath(path: String): Boolean {
-        val normalizedPath = CompilerConfig.normalizeIncludePathInput(path)
+        val normalizedPath = ContentConfig.normalizeIncludePathInput(path)
         if (normalizedPath.isBlank()) return false
 
-        if (CompilerConfig.containsIncludePath(n_include_paths, normalizedPath)) return false
+        if (ContentConfig.containsIncludePath(n_include_paths, normalizedPath)) return false
 
         val file = java.io.File(normalizedPath)
         if (!runCatching { file.isDirectory }.getOrDefault(false)) return false
@@ -184,14 +184,14 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
      */
     fun updateIncludePathAt(index: Int, newPath: String): Boolean {
         if (index !in n_include_paths.indices) return false
-        val normalized = CompilerConfig.normalizeIncludePathInput(newPath)
+        val normalized = ContentConfig.normalizeIncludePathInput(newPath)
         if (normalized.isBlank()) {
             removeIncludePathAt(index)
             return false
         }
 
         val others = n_include_paths.filterIndexed { i, _ -> i != index }
-        if (CompilerConfig.containsIncludePath(others, normalized)) return false
+        if (ContentConfig.containsIncludePath(others, normalized)) return false
 
         val file = java.io.File(normalized)
         if (!runCatching { file.isDirectory }.getOrDefault(false)) return false
@@ -217,7 +217,7 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
      */
     fun pruneMissingIncludePaths(): Int {
         val before = n_include_paths.toList()
-        val survivors = CompilerConfig.pruneMissingIncludePaths(before)
+        val survivors = ContentConfig.pruneMissingIncludePaths(before)
         if (survivors.size == before.size) return 0
 
         n_include_paths.clear()
@@ -226,11 +226,11 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
         return before.size - survivors.size
     }
 
-    fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean {
+    fun isRestartRequired(requestedVersion: ContentConfig.CompilerVersion): Boolean {
         return Compiler.isRestartRequired(requestedVersion)
     }
 
-    fun getLoadedVersion(): CompilerConfig.CompilerVersion? {
+    fun getLoadedVersion(): ContentConfig.CompilerVersion? {
         return Compiler.getLoadedVersion()
     }
 }
@@ -238,7 +238,7 @@ class SettingsViewModel(private val config: CompilerConfig) : ViewModel() {
 class SettingsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
-            val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context)
+            val config = ContentConfig.getInstanceOrNull() ?: ContentConfig.getInstance(context)
             // `Class.cast` checks the type instead of an unchecked `as T`, so a wrong
             // model class fails at the factory rather than at the first use.
             return modelClass.cast(SettingsViewModel(config))

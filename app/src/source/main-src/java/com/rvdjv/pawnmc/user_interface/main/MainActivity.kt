@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.main
+﻿package com.rvdjv.pawnmc.user_interface.main
 
 import android.Manifest
 import android.content.Intent
@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.rvdjv.pawnmc.apps_data.data_compiler.Explanations
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
 import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
 import com.rvdjv.pawnmc.apps_data.data_library.LibraryStore
@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
         // On a fresh install the device locale decides the starting language, so
         // even the very first frame is already localised. A set marker (or any
         // later launch) leaves the Settings language untouched.
-        val config = CompilerConfig.getInstance(newBase)
+        val config = ContentConfig.getInstance(newBase)
         config.applyDeviceLocaleOnFirstLaunch(newBase)
         val language = config.n_app_language
         super.attachBaseContext(AppLocalization.localizedContext(newBase, language))
@@ -147,7 +147,7 @@ class MainActivity : ComponentActivity() {
         // required for it to render, and the loaders fall back to loading on demand if a
         // screen asks for a table before this finishes.
         startupScope.launch {
-            val config = CompilerConfig.getInstance(applicationContext)
+            val config = ContentConfig.getInstance(applicationContext)
             // Include paths can point at folders the user deleted or an unmounted SD card.
             // Drop them once on startup so the list never shows dead entries and the
             // compiler is not handed stale -i values.
@@ -171,7 +171,7 @@ class MainActivity : ComponentActivity() {
             UpdateManager(applicationContext).ensureVersionFileWritten()
         }
 
-        val config = CompilerConfig.getInstance(applicationContext)
+        val config = ContentConfig.getInstance(applicationContext)
         enableEdgeToEdge()
         // PocketSAMP is embedded in this process on the modern flavor; its global crash
         // handler is installed before the runtime UI can be opened, and its console is
@@ -335,7 +335,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        CompilerConfig.reloadFromFile(applicationContext)
+        ContentConfig.reloadFromFile(applicationContext)
         viewModel.refreshTheme()
         viewModel.refreshLanguage()
         viewModel.refreshEditorBackgroundColor()

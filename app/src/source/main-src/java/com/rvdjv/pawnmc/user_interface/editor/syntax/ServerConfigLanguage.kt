@@ -1,7 +1,7 @@
-package com.rvdjv.pawnmc.user_interface.editor.syntax
+﻿package com.rvdjv.pawnmc.user_interface.editor.syntax
 
 import android.os.Bundle
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_syntax.ServerConfig
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
@@ -22,7 +22,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch
  * The vocabulary lives in [ServerConfig] so the directive list stays in one place.
  */
 class ServerConfigLanguage(
-    private val appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+    private val appLanguage: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
 ) : Language {
 
     private companion object {
@@ -97,7 +97,7 @@ class ServerConfigLanguage(
             // Inside a value only the directive name is inserted; outside one the value
             // hint follows it, so a half-written key becomes a complete line.
             val insertion = if (inValue) directive else usage
-            val completion = SimpleCompletionItem(directive, "$usage — $description", prefix.length, insertion)
+            val completion = SimpleCompletionItem(directive, "$usage - $description", prefix.length, insertion)
             completion.kind(CompletionItemKind.Property)
             publisher.addItem(completion)
         }

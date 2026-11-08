@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.main
+﻿package com.rvdjv.pawnmc.user_interface.main
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
@@ -12,7 +12,7 @@ import java.io.IOException
 import com.rvdjv.pawnmc.apps_data.data_compiler.CaseConversion
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
 import com.rvdjv.pawnmc.apps_data.data_compiler.Runner
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 class MainViewModel(
-    private val config: CompilerConfig,
+    private val config: ContentConfig,
     private val appDirectory: File = File("."),
     private val context: Context? = null
 ) : ViewModel() {
@@ -184,7 +184,7 @@ class MainViewModel(
     var isCompiling by mutableStateOf(false)
         private set
 
-    var outputText by mutableStateOf("Ah, another project — a breath of fresh air everyone will inhale whether they asked for it or not.\n")
+    var outputText by mutableStateOf("Ah, another project - a breath of fresh air everyone will inhale whether they asked for it or not.\n")
         private set
 
     var hasCompilerOutput by mutableStateOf(false)
@@ -193,10 +193,10 @@ class MainViewModel(
     var lastExitCode by mutableStateOf<Int?>(null)
         private set
 
-    private var detectedCompilerVersionCache: CompilerConfig.CompilerVersion? = null
+    private var detectedCompilerVersionCache: ContentConfig.CompilerVersion? = null
     private var detectedCompilerSourcePath: String? = null
     private val configPreferenceListener = android.content.SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
-        if (key == CompilerConfig.KEY_IGNORE_CASE) n_ignore_case = config.n_ignore_case
+        if (key == ContentConfig.KEY_IGNORE_CASE) n_ignore_case = config.n_ignore_case
     }
 
     init {
@@ -422,7 +422,7 @@ class MainViewModel(
                 // when the metadata on disk has not already produced exactly this result;
                 // detection hashes the whole compiler binary, so repeating it on every
                 // launch is pure duplicated IO.
-                val n_detected: CompilerConfig.CompilerVersion?
+                val n_detected: ContentConfig.CompilerVersion?
                 if (config.n_forced_compiler_mode) {
                     n_detected = null
                 } else {
@@ -470,7 +470,7 @@ class MainViewModel(
     private data class DetectionResult(
         val currentPaths: List<String>,
         val autoIncludePaths: List<String>,
-        val detectedVersion: CompilerConfig.CompilerVersion?
+        val detectedVersion: ContentConfig.CompilerVersion?
     )
 
     /**
@@ -482,9 +482,9 @@ class MainViewModel(
      * file in the same process cannot produce a different answer.
      */
     private fun cachedDetection(
-        config: CompilerConfig,
+        config: ContentConfig,
         sourcePath: String?
-    ): CompilerConfig.CompilerVersion? =
+    ): ContentConfig.CompilerVersion? =
         detectedCompilerVersionCache.takeIf { it != null && detectedCompilerSourcePath == sourcePath }
 
     /**
@@ -499,7 +499,7 @@ class MainViewModel(
         // A path typed with a script extension (`.pawn`, `.pwn`, `.p`, `.inc`) is cleaned
         // up first. This never cancels the compilation: an existing source file keeps its
         // extension, only a path that does not exist gets the extension removed.
-        val sourcePath = CompilerConfig.resolveCompilePath(path)
+        val sourcePath = ContentConfig.resolveCompilePath(path)
         if (isPreparingFilesystem) {
             outputText = "Wait for the ignore-case conversion to finish before compiling.\n"
             return
@@ -572,7 +572,7 @@ class MainViewModel(
         }
     }
 
-    fun getCompilerConfig(): CompilerConfig = config
+    fun getContentConfig(): ContentConfig = config
 
     /**
      * Registers [path] as the file to compile and queues the compilation.
@@ -612,7 +612,7 @@ class MainViewModel(
 class MainViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            val config = CompilerConfig.getInstanceOrNull() ?: CompilerConfig.getInstance(context)
+            val config = ContentConfig.getInstanceOrNull() ?: ContentConfig.getInstance(context)
             // `Class.cast` is the checked form of `as T`: it throws here instead of
             // leaving an unchecked warning and a potential caller-side ClassCastException.
             // The starter workspace is rooted on the app's shared data directory so the

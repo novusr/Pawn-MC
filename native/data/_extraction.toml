@@ -12,35 +12,35 @@
 id = "Pengaturan"
 en = "Settings"
 tl = "Mga Setting"
-ru = "Настройки"
+ru = "Nastrojki"
 es = "Configuracion"
 
 [settings.general]
 id = "Umum"
 en = "General"
 tl = "Pangkalahatan"
-ru = "Основные"
+ru = "Osnovnye"
 es = "General"
 
 [settings.general.desc]
 id = "Preferensi dasar yang dipakai di seluruh aplikasi: bahasa antarmuka, tema tampilan, dan compiler yang dipakai untuk membangun skrip."
 en = "Core preferences applied across the whole app: interface language, colour theme, and which compiler is used to build your scripts."
 tl = "Pangunahing kagustuhan para sa buong app: wika ng interface, tema ng kulay, at kung aling compiler ang gagamitin para sa mga script mo."
-ru = "Основные параметры, применяемые ко всему приложению: язык интерфейса, цветовая тема и компилятор, используемый для сборки скриптов."
+ru = "Osnovnye parametry, primenyaemye ko vsemu prilozheniyu: yazyk interfejsa, tsvetovaya tema i kompilyator, ispolzuemyj dlya sborki skriptov."
 es = "Preferencias basicas que se aplican a toda la app: idioma de la interfaz, tema de color y que compilador se usa para construir tus scripts."
 
 [settings.compiler.version]
 id = "Versi Compiler"
 en = "Compiler Version"
 tl = "Bersyon ng Compiler"
-ru = "Версия компилятора"
+ru = "Versiya kompilyatora"
 es = "Version del compilador"
 
 [settings.compiler.version.desc]
 id = "Pilih rilis pawncc yang dipakai saat kompilasi. Berpindah versi memuat ulang pustaka compiler, jadi aplikasi perlu dimulai ulang setelah berubah."
 en = "Chooses which pawncc release performs the compilation. Switching versions reloads the compiler library, so the app has to restart once the change is applied."
 tl = "Pinipili kung aling release ng pawncc ang gagamitin sa kompilasyon. Nagre-reload ang compiler library kapag pinalitan ang bersyon, kaya dapat i-restart ang app kapag nailapat na ang pagbabago."
-ru = "Определяет, какая версия pawncc выполняет компиляцию. Смена версии перезагружает библиотеку компилятора, поэтому после применения изменения приложение нужно перезапустить."
+ru = "Opredelyaet, kakaya versiya pawncc vypolnyaet kompilyatsiyu. Smena versii perezagruzhaet biblioteku kompilyatora, poetomu posle primeneniya izmeneniya prilozhenie nuzhno perezapustit."
 es = "Elige que version de pawncc realiza la compilacion. Cambiar de version recarga la libreria del compilador, asi que la app tiene que reiniciarse una vez aplicado el cambio."
 
 [settings.compiler.version.3107.label]
@@ -54,7 +54,7 @@ es = "Pawn 3.10.7"
 id = "Versi stabil"
 en = "Stable release"
 tl = "Stable na release"
-ru = "Стабильный выпуск"
+ru = "Stabilnyj vypusk"
 es = "Version estable"
 
 [settings.compiler.version.31011.label]
@@ -68,497 +68,497 @@ es = "Pawn 3.10.11"
 id = "Rilis yang lebih baru"
 en = "Newer release"
 tl = "Mas bagong release"
-ru = "Более новый выпуск"
+ru = "Bolee novyj vypusk"
 es = "Version mas reciente"
 
 [settings.compiler.forced.desc]
 id = "Saat dipaksa, versi yang dipilih di atas selalu dipakai. Saat otomatis, compiler di dekat berkas yang sedang diedit lebih diprioritaskan bila versinya cocok."
 en = "When forced, the version picked above is always used. When automatic, a compiler sitting next to the file you are editing is preferred whenever its version matches."
 tl = "Kapag forced, laging ginagamit ang bersyong napili sa itaas. Kapag automatic, mas pinipili ang compiler na katabi ng file na ine-edit mo kung tugma ang bersyon nito."
-ru = "При принудительном режиме всегда используется версия, выбранная выше. В автоматическом режиме предпочтение отдаётся компилятору рядом с редактируемым файлом, если его версия подходит."
+ru = "Pri prinuditelnom rezhime vsegda ispolzuetsya versiya, vybrannaya vyshe. V avtomaticheskom rezhime predpochtenie otdayotsya kompilyatoru ryadom s redaktiruemym fajlom, esli ego versiya podkhodit."
 es = "Cuando es forzado, siempre se usa la version elegida arriba. Cuando es automatico, se prefiere el compilador que esta junto al archivo que estas editando siempre que su version coincida."
 
 [settings.language]
 id = "Bahasa"
 en = "Language"
 tl = "Wika"
-ru = "Язык"
+ru = "Yazyk"
 es = "Idioma"
 
 [settings.language.desc]
 id = "Bahasa untuk semua teks antarmuka, termasuk pesan compiler dan uraian pengaturan."
 en = "Language used for every piece of interface text, including compiler messages and settings descriptions."
 tl = "Wikang gagamitin sa lahat ng teksto ng interface, kasama ang mga mensahe ng compiler at paglalarawan ng setting."
-ru = "Язык для всего текста интерфейса, включая сообщения компилятора и описания настроек."
+ru = "Yazyk dlya vsego teksta interfejsa, vklyuchaya soobshcheniya kompilyatora i opisaniya nastroek."
 es = "Idioma que se usa para todo el texto de la interfaz, incluidos los mensajes del compilador y las descripciones de la configuracion."
 
 [settings.language.option.id.label]
 id = "Bahasa Indonesia"
 en = "Indonesian"
 tl = "Indonesian"
-ru = "Индонезийский"
+ru = "Indonezijskij"
 es = "Indonesio"
 
 [settings.language.option.id.desc]
 id = "Gunakan Bahasa Indonesia untuk antarmuka aplikasi."
 en = "Use Indonesian for the app interface."
 tl = "Gamitin ang Indonesian para sa interface ng app."
-ru = "Использовать индонезийский для интерфейса приложения."
+ru = "Ispolzovat indonezijskij dlya interfejsa prilozheniya."
 es = "Usar indonesio para la interfaz de la app."
 
 [settings.language.option.en.label]
 id = "Bahasa Inggris"
 en = "English (EN/US)"
 tl = "English (EN/US)"
-ru = "Английский (EN/US)"
+ru = "Anglijskij (EN/US)"
 es = "Ingles (EN/US)"
 
 [settings.language.option.en.desc]
 id = "Gunakan Bahasa Inggris untuk antarmuka aplikasi."
 en = "Use English for the app interface."
 tl = "Gamitin ang English para sa interface ng app."
-ru = "Использовать английский для интерфейса приложения."
+ru = "Ispolzovat anglijskij dlya interfejsa prilozheniya."
 es = "Usar ingles para la interfaz de la app."
 
 [settings.language.option.es.label]
 id = "Spanyol Argentina"
 en = "Spanish (Argentina)"
 tl = "Spanish (Argentina)"
-ru = "Испанский (Аргентина)"
+ru = "Ispanskij (Argentina)"
 es = "Espanol (AR)"
 
 [settings.language.option.es.desc]
 id = "Gunakan bahasa Spanyol Argentina untuk antarmuka aplikasi."
 en = "Use Argentine Spanish for the app interface."
 tl = "Gamitin ang Spanish (Argentina) para sa interface ng app."
-ru = "Использовать аргентинский испанский для интерфейса приложения."
+ru = "Ispolzovat argentinskij ispanskij dlya interfejsa prilozheniya."
 es = "Usa espanol rioplatense para la interfaz de la app."
 
 [settings.language.option.ru.label]
 id = "Bahasa Rusia"
 en = "Russian"
 tl = "Russian"
-ru = "Русский"
+ru = "Russkij"
 es = "Ruso"
 
 [settings.language.option.ru.desc]
 id = "Gunakan bahasa Rusia untuk antarmuka aplikasi."
 en = "Use Russian for the app interface."
 tl = "Gamitin ang Russian para sa interface ng app."
-ru = "Использовать русский для интерфейса приложения."
+ru = "Ispolzovat russkij dlya interfejsa prilozheniya."
 es = "Usar ruso para la interfaz de la app."
 
 [settings.language.selector]
 id = "Pilih Bahasa"
 en = "Select Language"
 tl = "Piliin ang Wika"
-ru = "Выбор языка"
+ru = "Vybor yazyka"
 es = "Seleccionar idioma"
 
 [main.output.download.action]
 id = "Unduh log output"
 en = "Download output log"
 tl = "I-download ang output log"
-ru = "Скачать журнал вывода"
+ru = "Skachat zhurnal vyvoda"
 es = "Descargar el log de salida"
 
 [main.output.download.success]
 id = "Log berhasil diunduh"
 en = "Log downloaded successfully"
 tl = "Matagumpay na-download ang log"
-ru = "Журнал успешно скачан"
+ru = "Zhurnal uspeshno skachan"
 es = "Log descargado correctamente"
 
 [main.output.download.failed]
 id = "Gagal mengunduh log"
 en = "Failed to download log"
 tl = "Nabigong i-download ang log"
-ru = "Не удалось скачать журнал"
+ru = "Ne udalos skachat zhurnal"
 es = "No se pudo descargar el log"
 
 [settings.theme]
 id = "Tema"
 en = "Theme"
 tl = "Tema"
-ru = "Тема"
+ru = "Tema"
 es = "Tema"
 
 [settings.theme.desc]
 id = "Mengatur apakah aplikasi mengikuti tema sistem, selalu terang, atau selalu gelap. Pilihan ini juga menentukan latar editor PawnMC."
 en = "Controls whether the app follows the system theme, or is pinned to light or dark. This choice also drives the editor background."
 tl = "Tinutukoy kung susundin ng app ang tema ng sistema, o naka-pin sa maliwanag o madilim. Ito rin ang basehan ng background ng editor."
-ru = "Определяет, следует ли приложение системной теме или всегда использует светлую либо тёмную. Этот выбор также задаёт фон редактора PawnMC."
+ru = "Opredelyaet, sleduet li prilozhenie sistemnoj teme ili vsegda ispolzuet svetluyu libo tyomnuyu. Etot vybor takzhe zadayot fon redaktora PawnMC."
 es = "Controla si la app sigue el tema del sistema o queda fija en claro u oscuro. Esta eleccion tambien define el fondo del editor PawnMC."
 
 [settings.theme.option.system.label]
 id = "Ikuti Sistem"
 en = "System Default"
 tl = "Default ng Sistema"
-ru = "Как в системе"
+ru = "Kak v sisteme"
 es = "Predeterminado del sistema"
 
 [settings.theme.option.system.desc]
 id = "Ikuti tema terang atau gelap perangkat."
 en = "Follow the device's light or dark theme."
 tl = "Sundin ang maliwanag o madilim na tema ng device."
-ru = "Следовать светлой или тёмной теме устройства."
+ru = "Sledovat svetloj ili tyomnoj teme ustrojstva."
 es = "Sigue el tema claro u oscuro del dispositivo."
 
 [settings.theme.option.light.label]
 id = "Terang"
 en = "Light"
 tl = "Maliwanag"
-ru = "Светлая"
+ru = "Svetlaya"
 es = "Claro"
 
 [settings.theme.option.light.desc]
 id = "Selalu gunakan tema terang."
 en = "Always use the light theme."
 tl = "Laging gamitin ang maliwanag na tema."
-ru = "Всегда использовать светлую тему."
+ru = "Vsegda ispolzovat svetluyu temu."
 es = "Usar siempre el tema claro."
 
 [settings.theme.option.dark.label]
 id = "Gelap"
 en = "Dark"
 tl = "Madilim"
-ru = "Тёмная"
+ru = "Tyomnaya"
 es = "Oscuro"
 
 [settings.theme.option.dark.desc]
 id = "Selalu gunakan tema gelap."
 en = "Always use the dark theme."
 tl = "Laging gamitin ang madilim na tema."
-ru = "Всегда использовать тёмную тему."
+ru = "Vsegda ispolzovat tyomnuyu temu."
 es = "Usar siempre el tema oscuro."
 
 [settings.theme.selector]
 id = "Pilih Tema"
 en = "Select Theme"
 tl = "Piliin ang Tema"
-ru = "Выбор темы"
+ru = "Vybor temy"
 es = "Seleccionar tema"
 
 [settings.compiler.options]
 id = "Opsi Compiler"
 en = "Compiler Options"
 tl = "Mga Opsyon ng Compiler"
-ru = "Параметры компилятора"
+ru = "Parametry kompilyatora"
 es = "Opciones del compilador"
 
 [settings.compiler.options.desc]
 id = "Flag yang diteruskan langsung ke pawncc saat membangun skrip. Perubahan di sini berlaku pada kompilasi berikutnya."
 en = "Flags passed straight through to pawncc when a script is built. Changes here take effect on the next compilation."
 tl = "Mga flag na direktang ipinapasa sa pawncc kapag binubuo ang script. Nalalapat ang mga pagbabago dito sa susunod na kompilasyon."
-ru = "Флаги, которые напрямую передаются pawncc при сборке скрипта. Изменения здесь вступают в силу при следующей компиляции."
+ru = "Flagi, kotorye napryamuyu peredayutsya pawncc pri sborke skripta. Izmeneniya zdes vstupayut v silu pri sleduyushchej kompilyatsii."
 es = "Flags que se pasan directamente a pawncc al construir un script. Los cambios aqui se aplican en la proxima compilacion."
 
 [settings.option.semicolons]
 id = "Titik Koma Wajib"
 en = "Mandatory Semicolons"
 tl = "Kailangang Semicolon"
-ru = "Обязательные точки с запятой"
+ru = "Obyazatelnye tochki s zapyatoj"
 es = "Punto y coma obligatorio"
 
 [settings.option.semicolons.desc]
 id = "Wajibkan titik koma di akhir setiap pernyataan"
 en = "Require semicolons at the end of statements"
 tl = "Kailangan ng semicolon sa dulo ng bawat statement"
-ru = "Требовать точку с запятой в конце операторов"
+ru = "Trebovat tochku s zapyatoj v kontse operatorov"
 es = "Exigir punto y coma al final de las sentencias"
 
 [settings.option.parentheses]
 id = "Tanda Kurung Wajib"
 en = "Mandatory Parentheses"
 tl = "Kailangang Parenthesis"
-ru = "Обязательные скобки"
+ru = "Obyazatelnye skobki"
 es = "Parentesis obligatorios"
 
 [settings.option.parentheses.desc]
 id = "Wajibkan tanda kurung pada pernyataan kontrol"
 en = "Require parentheses in control statements"
 tl = "Kailangan ng parenthesis sa control statements"
-ru = "Требовать скобки в управляющих операторах"
+ru = "Trebovat skobki v upravlyayushchikh operatorakh"
 es = "Exigir parentesis en las sentencias de control"
 
 [settings.option.debug]
 id = "Tingkat Debug"
 en = "Debug Level"
 tl = "Antas ng Debug"
-ru = "Уровень отладки"
+ru = "Uroven otladki"
 es = "Nivel de depuracion"
 
 [settings.option.debug.desc]
 id = "Menentukan berapa banyak informasi debug dan pemeriksaan runtime yang dibangkitkan compiler. Level lebih tinggi menambah pemeriksaan tetapi memperlambat dan memperbesar hasil."
 en = "Controls how much debug information and runtime checking the compiler generates. Higher levels add more checks at the cost of build time and a larger output file."
 tl = "Tinutukoy kung gaano karaming debug information at runtime checking ang gagawin ng compiler. Mas mataas na antas, mas maraming check, pero mas matagal ang build at mas malaki ang output."
-ru = "Определяет, сколько отладочной информации и проверок во время выполнения генерирует компилятор. Более высокие уровни добавляют проверки ценой времени сборки и размера выходного файла."
+ru = "Opredelyaet, skolko otladochnoj informatsii i proverok vo vremya vypolneniya generiruet kompilyator. Bolee vysokie urovni dobavlyayut proverki tsenoj vremeni sborki i razmera vykhodnogo fajla."
 es = "Define cuanta informacion de depuracion y comprobacion en tiempo de ejecucion genera el compilador. Los niveles mas altos agregan comprobaciones a costa de tiempo de compilacion y un archivo de salida mas grande."
 
 [settings.option.debug.level.0.label]
 id = "Nonaktif (-d0)"
 en = "Disabled (-d0)"
 tl = "Naka-off (-d0)"
-ru = "Отключено (-d0)"
+ru = "Otklyucheno (-d0)"
 es = "Desactivado (-d0)"
 
 [settings.option.debug.level.0.desc]
 id = "Tidak menyertakan simbol debug atau validasi runtime."
 en = "No debug symbols or runtime validation."
 tl = "Walang debug symbol o runtime validation."
-ru = "Без символов отладки и проверок во время выполнения."
+ru = "Bez simvolov otladki i proverok vo vremya vypolneniya."
 es = "Sin simbolos de depuracion ni validacion en tiempo de ejecucion."
 
 [settings.option.debug.level.1.label]
 id = "Validasi Runtime (-d1)"
 en = "Runtime Validation (-d1)"
 tl = "Pagpapatunay sa Runtime (-d1)"
-ru = "Проверки во время выполнения (-d1)"
+ru = "Proverki vo vremya vypolneniya (-d1)"
 es = "Validacion en tiempo de ejecucion (-d1)"
 
 [settings.option.debug.level.1.desc]
 id = "Memeriksa batas array tanpa menyertakan simbol debug."
 en = "Checks array bounds without including debug symbols."
 tl = "Sinusuri ang hangganan ng array nang walang debug symbol."
-ru = "Проверяет границы массивов без включения символов отладки."
+ru = "Proveryaet granitsy massivov bez vklyucheniya simvolov otladki."
 es = "Comprueba los limites de los arrays sin incluir simbolos de depuracion."
 
 [settings.option.debug.level.2.label]
 id = "Debug Lengkap (-d2)"
 en = "Full Debugging (-d2)"
 tl = "Buong Debugging (-d2)"
-ru = "Полная отладка (-d2)"
+ru = "Polnaya otladka (-d2)"
 es = "Depuracion completa (-d2)"
 
 [settings.option.debug.level.2.desc]
 id = "Menyertakan informasi debug lengkap dan pemeriksaan runtime."
 en = "Includes full debug information and runtime checks."
 tl = "Kasama ang buong debug information at runtime checks."
-ru = "Включает полную отладочную информацию и проверки во время выполнения."
+ru = "Vklyuchaet polnuyu otladochnuyu informatsiyu i proverki vo vremya vypolneniya."
 es = "Incluye informacion de depuracion completa y comprobaciones en tiempo de ejecucion."
 
 [settings.option.debug.level.3.label]
 id = "Debug Maksimal (-d3)"
 en = "Maximum Debug (-d3)"
 tl = "Pinakamataas na Debug (-d3)"
-ru = "Максимальная отладка (-d3)"
+ru = "Maksimalnaya otladka (-d3)"
 es = "Depuracion maxima (-d3)"
 
 [settings.option.debug.level.3.desc]
 id = "Debug paling terperinci; optimisasi otomatis dinonaktifkan."
 en = "Most detailed debugging; optimization is disabled automatically."
 tl = "Pinakadetalyadong debugging; awtomatikong naka-off ang optimization."
-ru = "Наиболее подробная отладка; оптимизация отключается автоматически."
+ru = "Naibolee podrobnaya otladka; optimizatsiya otklyuchaetsya avtomaticheski."
 es = "Depuracion mas detallada; la optimizacion se desactiva automaticamente."
 
 [settings.option.optimization]
 id = "Tingkat Optimasi"
 en = "Optimization Level"
 tl = "Antas ng Optimization"
-ru = "Уровень оптимизации"
+ru = "Uroven optimizatsii"
 es = "Nivel de optimizacion"
 
 [settings.option.optimization.desc]
 id = "Menentukan seberapa agresif compiler menyederhanakan bytecode. Optimasi lebih tinggi menghasilkan AMX yang lebih kecil dan lebih cepat, tetapi menyulitkan penelusuran debug."
 en = "Determines how aggressively the compiler simplifies the bytecode. Higher levels yield a smaller and faster AMX, but make debugging traces harder to follow."
 tl = "Tinutukoy kung gaano kalakas ang pagpapasimple ng compiler sa bytecode. Mas mataas na antas, mas maliit at mas mabilis ang AMX, pero mas mahirap sundan ang debugging trace."
-ru = "Определяет, насколько агрессивно компилятор упрощает байткод. Более высокие уровни дают меньший и быстрый AMX, но затрудняют разбор отладочных трасс."
+ru = "Opredelyaet, naskolko agressivno kompilyator uproshchaet bajtkod. Bolee vysokie urovni dayut menshij i bystryj AMX, no zatrudnyayut razbor otladochnykh trass."
 es = "Define que tan agresivamente el compilador simplifica el bytecode. Los niveles mas altos producen un AMX mas chico y mas rapido, pero hacen mas dificil seguir una traza de depuracion."
 
 [settings.option.optimization.level.0.label]
 id = "Nonaktif (-O0)"
 en = "Disabled (-O0)"
 tl = "Naka-off (-O0)"
-ru = "Отключено (-O0)"
+ru = "Otklyucheno (-O0)"
 es = "Desactivado (-O0)"
 
 [settings.option.optimization.level.0.desc]
 id = "Tidak melakukan optimisasi; paling aman tetapi ukuran hasil terbesar."
 en = "No optimization; safest, but produces the largest output."
 tl = "Walang optimization; pinakaligtas, pero pinakamalaki ang output."
-ru = "Без оптимизации; самый безопасный вариант, но даёт самый большой выход."
+ru = "Bez optimizatsii; samyj bezopasnyj variant, no dayot samyj bolshoj vykhod."
 es = "Sin optimizacion; la opcion mas segura, pero genera la salida mas grande."
 
 [settings.option.optimization.level.1.label]
 id = "Seimbang (-O1)"
 en = "Balanced (-O1)"
 tl = "Balanse (-O1)"
-ru = "Сбалансированный (-O1)"
+ru = "Sbalansirovannyj (-O1)"
 es = "Equilibrado (-O1)"
 
 [settings.option.optimization.level.1.desc]
 id = "Optimisasi standar yang menjaga stabilitas."
 en = "Default optimization pass for stable builds."
 tl = "Default na optimization pass para sa stable na build."
-ru = "Стандартный проход оптимизации для стабильных сборок."
+ru = "Standartnyj prokhod optimizatsii dlya stabilnykh sborok."
 es = "Pasada de optimizacion estandar para compilaciones estables."
 
 [settings.option.optimization.level.2.label]
 id = "Agresif (-O2)"
 en = "Aggressive (-O2)"
 tl = "Masyadong Malakas (-O2)"
-ru = "Агрессивный (-O2)"
+ru = "Agressivnyj (-O2)"
 es = "Agresivo (-O2)"
 
 [settings.option.optimization.level.2.desc]
 id = "Optimisasi maksimum untuk kecepatan dan ukuran."
 en = "Maximum optimization for speed and size."
 tl = "Pinakamataas na optimization para sa bilis at laki."
-ru = "Максимальная оптимизация скорости и размера."
+ru = "Maksimalnaya optimizatsiya skorosti i razmera."
 es = "Optimizacion maxima para velocidad y tamano."
 
 [settings.option.optimization.v3107.notice]
 id = "Optimisasi agresif (-O2) hanya tersedia dengan Pawn 3.10.11."
 en = "Aggressive optimization (-O2) is available with Pawn 3.10.11."
 tl = "Ang aggressive optimization (-O2) ay available sa Pawn 3.10.11."
-ru = "Агрессивная оптимизация (-O2) доступна только с Pawn 3.10.11."
+ru = "Agressivnaya optimizatsiya (-O2) dostupna tolko s Pawn 3.10.11."
 es = "La optimizacion agresiva (-O2) esta disponible con Pawn 3.10.11."
 
 [settings.option.ignorecase]
 id = "Abaikan Huruf Besar/Kecil"
 en = "Filesystem"
 tl = "Sistema ng File"
-ru = "Файловая система"
+ru = "Fajlovaya sistema"
 es = "Sistema de archivos"
 
 [settings.option.ignorecase.desc]
 id = "Mencoba memperbaiki akar masalah 'cannot read from file: ...' akibat perbedaan format filesystem Android dan Windows."
 en = "Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."
 tl = "Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."
-ru = "Пытается устранить первопричину ошибок 'cannot read from file: ...', вызванных различиями в форматах файловых систем Android и Windows."
+ru = "Pytaetsya ustranit pervoprichinu oshibok 'cannot read from file: ...', vyzvannykh razlichiyami v formatakh fajlovykh sistem Android i Windows."
 es = "Intenta solucionar la causa raíz de los errores 'cannot read from file: ...' provocados por las diferencias entre los formatos de los sistemas de archivos de Android y Windows."
 
 [settings.option.explain]
 id = "Lihat Penjelasan"
 en = "Explain Output"
 tl = "Ipaliwanag ang Output"
-ru = "Объяснять вывод"
+ru = "Obyasnyat vyvod"
 es = "Explicar la salida"
 
 [settings.option.explain.desc]
 id = "Tambahkan penjelasan yang mudah dipahami di samping peringatan, pesan error, dan pesan fatal."
 en = "Add human-readable explanations next to warnings, errors, and fatal messages extracted from the compiler log."
 tl = "Magdag ng paliwanag sa simpleng salita sa tabi ng bawat warning, error, at fatal na mensahe mula sa compiler log."
-ru = "Добавляет понятные пояснения рядом с предупреждениями, ошибками и фатальными сообщениями, извлечёнными из журнала компилятора."
+ru = "Dobavlyaet ponyatnye poyasneniya ryadom s preduprezhdeniyami, oshibkami i fatalnymi soobshcheniyami, izvlechyonnymi iz zhurnala kompilyatora."
 es = "Agrega explicaciones legibles junto a las advertencias, errores y mensajes fatales extraidos del log del compilador."
 
 [settings.option.customflags]
 id = "Flag Kustom"
 en = "Custom Flags"
 tl = "Mga Custom na Flag"
-ru = "Свои флаги"
+ru = "Svoi flagi"
 es = "Flags personalizados"
 
 [settings.option.customflags.desc]
 id = "Parameter compiler tambahan, dipisahkan spasi"
 en = "Extra compiler parameters, space separated"
 tl = "Karagdagang parameter ng compiler, paghiwalayin ng space"
-ru = "Дополнительные параметры компилятора, разделённые пробелами"
+ru = "Dopolnitelnye parametry kompilyatora, razdelyonnye probelami"
 es = "Parametros adicionales del compilador, separados por espacios"
 
 [settings.include.paths]
 id = "Path Include"
 en = "Include Paths"
 tl = "Mga Path ng Include"
-ru = "Пути include"
+ru = "Puti include"
 es = "Rutas de include"
 
 [settings.include.paths.desc]
 id = "Daftar folder yang ditelusuri compiler saat menyelesaikan #include. Path yang tidak ada lagi akan dibuang otomatis saat aplikasi dibuka."
 en = "Folders the compiler searches when resolving #include. Paths that no longer exist are pruned automatically on app start."
 tl = "Mga folder na hinahanap ng compiler kapag nire-resolve ang #include. Awtomatikong tinatanggal ang path na wala na kapag binuksan ang app."
-ru = "Папки, которые компилятор просматривает при разрешении #include. Несуществующие пути автоматически удаляются при запуске приложения."
+ru = "Papki, kotorye kompilyator prosmatrivaet pri razreshenii #include. Nesushchestvuyushchie puti avtomaticheski udalyayutsya pri zapuske prilozheniya."
 es = "Carpetas que el compilador revisa al resolver los #include. Las rutas que ya no existen se eliminan solas al iniciar la app."
 
 [settings.updates]
 id = "Pembaruan"
 en = "Updates"
 tl = "Mga Update"
-ru = "Обновления"
+ru = "Obnovleniya"
 es = "Actualizaciones"
 
 [settings.updates.desc]
 id = "Memeriksa rilis baru di GitHub dan mengunduh paket yang sesuai dengan varian Android PawnMC ke Documents/Pawn-MC. Setelah ZIP diekstrak, pemasangan atau pembaruan dilakukan lewat dialog sistem Android; aplikasi lama tidak dihapus otomatis."
 en = "Checks GitHub for a newer release and downloads the Android-flavor package to Documents/Pawn-MC. After extracting the ZIP, installation or updating is handled by Android's system installer; the existing app is never uninstalled automatically."
 tl = "Tinitingnan ang GitHub para sa mas bagong release at dina-download ang package na angkop sa Android flavor ng PawnMC papunta sa Documents/Pawn-MC. Pagkatapos i-extract ang ZIP, ang system installer ng Android ang bahala sa pag-install o pag-update; hindi awtomatikong ia-uninstall ang kasalukuyang app."
-ru = "Проверяет GitHub на наличие новой версии и загружает пакет для соответствующего варианта Android в Documents/Pawn-MC. После распаковки ZIP установкой или обновлением занимается системный установщик Android; приложение не удаляется автоматически."
+ru = "Proveryaet GitHub na nalichie novoj versii i zagruzhaet paket dlya sootvetstvuyushchego varianta Android v Documents/Pawn-MC. Posle raspakovki ZIP ustanovkoj ili obnovleniem zanimaetsya sistemnyj ustanovshchik Android; prilozhenie ne udalyaetsya avtomaticheski."
 es = "Busca una version nueva en GitHub y descarga el paquete para la variante de Android correspondiente a Documents/Pawn-MC. Tras extraer el ZIP, el instalador del sistema Android se encarga de instalar o actualizar la app; la aplicacion existente nunca se desinstala automaticamente."
 
 [settings.about]
 id = "Tentang"
 en = "About"
 tl = "Tungkol"
-ru = "О приложении"
+ru = "O prilozhenii"
 es = "Acerca de"
 
 [settings.about.desc]
 id = "Informasi versi aplikasi dan tautan ke repositori sumber."
 en = "Application version information and a link to the source repository."
 tl = "Impormasyon ng bersyon ng application at link sa source repository."
-ru = "Сведения о версии приложения и ссылка на репозиторий исходного кода."
+ru = "Svedeniya o versii prilozheniya i ssylka na repozitorij iskhodnogo koda."
 es = "Informacion de la version de la app y un enlace al repositorio del codigo fuente."
 
 [settings.about.version]
 id = "Versi Aplikasi"
 en = "App Version"
 tl = "Bersyon ng App"
-ru = "Версия приложения"
+ru = "Versiya prilozheniya"
 es = "Version de la app"
 
 [settings.about.version.desc]
 id = "Versi rilis PawnMC yang sedang terpasang di perangkat ini."
 en = "The PawnMC release currently installed on this device."
 tl = "Ang release ng PawnMC na naka-install sa device na ito."
-ru = "Выпуск PawnMC, установленный на этом устройстве."
+ru = "Vypusk PawnMC, ustanovlennyj na etom ustrojstve."
 es = "La version de PawnMC instalada actualmente en este dispositivo."
 
 [settings.about.github]
 id = "Lihat di GitHub"
 en = "View on GitHub"
 tl = "Tingnan sa GitHub"
-ru = "Открыть на GitHub"
+ru = "Otkryt na GitHub"
 es = "Ver en GitHub"
 
 [settings.about.github.desc]
 id = "Buka repositori sumber resmi untuk melihat riwayat rilis, melaporkan masalah, atau menyalin dan membangun sendiri."
 en = "Opens the official source repository for release history, issue reports, and self-hosting instructions."
 tl = "Binubuksan ang opisyal na source repository para sa history ng release, pag-uulat ng isyu, at gabay sa self-hosting."
-ru = "Открывает официальный репозиторий исходного кода с историей выпусков, отчётами об ошибках и инструкциями по самостоятельной сборке."
+ru = "Otkryvaet ofitsialnyj repozitorij iskhodnogo koda s istoriej vypuskov, otchyotami ob oshibkakh i instruktsiyami po samostoyatelnoj sborke."
 es = "Abre el repositorio oficial del codigo fuente para ver el historial de versiones, reportar problemas o compilarlo por tu cuenta."
 
 [settings.about.restart]
 id = "Mulai Ulang Aplikasi"
 en = "Restart Application"
 tl = "I-restart ang Application"
-ru = "Перезапустить приложение"
+ru = "Perezapustit prilozhenie"
 es = "Reiniciar la aplicacion"
 
 [settings.about.restart.desc]
 id = "Menutup lalu membuka kembali PawnMC agar seluruh pengaturan diterapkan dari awal. Proses kompilasi yang sedang berjalan akan dibatalkan."
 en = "Closes and reopens PawnMC so every setting is applied from scratch. A compilation that is currently running is cancelled."
 tl = "Isinasara at binubuksang muli ang PawnMC para mailapat mula sa umpisa ang bawat setting. Kinakansela ang kompilasyong tumatakbo."
-ru = "Закрывает и снова открывает PawnMC, чтобы все настройки применились с самого начала. Идущая компиляция отменяется."
+ru = "Zakryvaet i snova otkryvaet PawnMC, chtoby vse nastrojki primenilis s samogo nachala. Idushchaya kompilyatsiya otmenyaetsya."
 es = "Cierra y vuelve a abrir PawnMC para que todos los ajustes se apliquen desde cero. Se cancela la compilacion que este en ejecucion."
 
 [settings.restart.confirm.title]
 id = "Mulai Ulang Aplikasi"
 en = "Restart Application"
 tl = "I-restart ang Application"
-ru = "Перезапустить приложение"
+ru = "Perezapustit prilozhenie"
 es = "Reiniciar la aplicacion"
 
 [settings.restart.confirm.text]
 id = "PawnMC akan segera ditutup lalu dibuka kembali. Simpan dulu berkas yang sedang dibuka di PawnMC Editor, karena proses kompilasi yang sedang berjalan akan dibatalkan. Apakah Anda ingin memulai ulang sekarang?"
 en = "PawnMC will close and reopen immediately. Save any open file in the PawnMC Editor first, because a compilation that is currently running is cancelled. Would you like to restart now?"
 tl = "Isasara at bubuksang muli agad ang PawnMC. I-save muna ang bukas na file sa PawnMC Editor, dahil kinakansela ang kompilasyong tumatakbo. Gusto mo bang i-restart ngayon?"
-ru = "PawnMC закроется и сразу откроется снова. Сначала сохраните открытые файлы в PawnMC Editor, поскольку идущая компиляция будет отменена. Перезапустить сейчас?"
+ru = "PawnMC zakroetsya i srazu otkroetsya snova. Snachala sokhranite otkrytye fajly v PawnMC Editor, poskolku idushchaya kompilyatsiya budet otmenena. Perezapustit sejchas?"
 es = "PawnMC se va a cerrar y abrir de inmediato. Guarda primero cualquier archivo abierto en el PawnMC Editor, porque se cancela la compilacion que este en ejecucion. Queres reiniciar ahora?"
 
 [settings.restart.confirm.button]
 id = "Mulai Ulang Sekarang"
 en = "Restart Now"
 tl = "I-restart Ngayon"
-ru = "Перезапустить сейчас"
+ru = "Perezapustit sejchas"
 es = "Reiniciar ahora"
 
 [settings.editor]
@@ -572,175 +572,175 @@ es = "PawnMC Editor"
 id = "Preferensi tampilan untuk editor kode bawaan. Perubahan langsung diterapkan ke editor yang sedang terbuka."
 en = "Appearance preferences for the built-in code editor. Changes apply to the open editor immediately."
 tl = "Kagustuhan sa itsura ng built-in na code editor. Agad na nalalapat sa bukas na editor ang mga pagbabago."
-ru = "Параметры внешнего вида встроенного редактора кода. Изменения сразу применяются к открытому редактору."
+ru = "Parametry vneshnego vida vstroennogo redaktora koda. Izmeneniya srazu primenyayutsya k otkrytomu redaktoru."
 es = "Preferencias de apariencia del editor de codigo integrado. Los cambios se aplican de inmediato al editor abierto."
 
 [settings.editor.background]
 id = "Latar Editor"
 en = "Editor Background"
 tl = "Background ng Editor"
-ru = "Фон редактора"
+ru = "Fon redaktora"
 es = "Fondo del editor"
 
 [settings.editor.background.desc]
 id = "Pilih warna latar editor. Bawaan mengikuti tema aplikasi, sedangkan warna khusus menggantikannya sepenuhnya."
 en = "Pick the editor canvas colour. The default follows the app theme; a custom pick replaces it completely."
 tl = "Piliin ang kulay ng canvas ng editor. Susunod ang default sa tema ng app; ang custom na pinili ang ganap na gagamitin."
-ru = "Выберите цвет полотна редактора. По умолчанию он следует теме приложения; собственный цвет полностью его заменяет."
+ru = "Vyberite tsvet polotna redaktora. Po umolchaniyu on sleduet teme prilozheniya; sobstvennyj tsvet polnostyu ego zamenyaet."
 es = "Elegi el color del lienzo del editor. El predeterminado sigue el tema de la app; un color personalizado lo reemplaza por completo."
 
 [settings.editor.background.default]
 id = "Bawaan"
 en = "Default"
 tl = "Karaniwan"
-ru = "По умолчанию"
+ru = "Po umolchaniyu"
 es = "Predeterminado"
 
 [settings.editor.background.reset]
 id = "Kembalikan ke bawaan"
 en = "Reset to default"
 tl = "Ibalik sa default"
-ru = "Сбросить к значению по умолчанию"
+ru = "Sbrosit k znacheniyu po umolchaniyu"
 es = "Restablecer al predeterminado"
 
 [settings.editor.background.presets]
 id = "Varian latar yang tersedia"
 en = "Available background variants"
 tl = "Mga available na variant ng background"
-ru = "Доступные варианты фона"
+ru = "Dostupnye varianty fona"
 es = "Variantes de fondo disponibles"
 
 [settings.editor.autoclose]
 id = "Penutup Otomatis Bracket"
 en = "Bracket Auto-Close"
 tl = "Auto-Close ng Bracket"
-ru = "Автозакрытие скобок"
+ru = "Avtozakrytie skobok"
 es = "Cierre automático de corchetes"
 
 [settings.editor.autoclose.desc]
 id = "Mengatur apakah editor menambahkan pasangan penutup otomatis. Mati (bawaan): mengetik ( atau { hanya menyisipkan karakter itu sendiri, jadi () atau {} yang diketik cepat tidak pernah menghasilkan penutup ganda. Pasangan pintar: penutup disisipkan, tetapi ) atau } yang diketik langsung setelahnya memindahkan kursor, bukan menggandakan. Selalu pasang: penutup selalu disisipkan."
 en = "Controls whether the editor adds a closing bracket for you. Off (default): typing ( or { inserts only that character, so a fast () or {} never ends up with a doubled closer. Smart pair: the closer is inserted, but a ) or } typed right after it moves over instead of doubling. Always pair: the closer is always inserted."
 tl = "Kontrol kung magdaragdag ba ang editor ng panaklong para sa iyo. Off (default): ang pag-type ng ( o { ay mag-iisa lang. Smart pair: malalagay ang closer, ngunit ang ) o } na itinape pagkatapos ay lilipat, hindi magdo-doble. Always pair: lalaging ilalagay ang closer."
-ru = "Определяет, добавляет ли редактор закрывающую скобку автоматически. Выкл. (по умолчанию): ввод ( или { вставляет только этот символ, поэтому быстрый () или {} не даёт двойной скобки. Умная пара: скобка ставится, но введённая следом ) или } перемещает курсор, а не дублируется. Всегда пара: закрывающая скобка всегда ставится."
+ru = "Opredelyaet, dobavlyaet li redaktor zakryvayushchuyu skobku avtomaticheski. Vykl. (po umolchaniyu): vvod ( ili { vstavlyaet tolko etot simvol, poetomu bystryj () ili {} ne dayot dvojnoj skobki. Umnaya para: skobka stavitsya, no vvedyonnaya sledom ) ili } peremeshchaet kursor, a ne dubliruetsya. Vsegda para: zakryvayushchaya skobka vsegda stavitsya."
 es = "Controla si el editor añade el paréntesis de cierre. Desactivado (predeterminado): escribir ( o { inserta solo ese carácter, así que un () o {} rápido nunca termina duplicado. Par inteligente: se inserta el cierre, pero un ) o } escrito justo después mueve el cursor en lugar de duplicarse. Siempre par: el cierre se inserta siempre."
 
 [settings.editor.background.hex]
 id = "Kode warna heksadesimal"
 en = "Hex colour code"
 tl = "Hex na colour code"
-ru = "Hex-код цвета"
+ru = "Hex-kod tsveta"
 es = "Codigo de color hexadecimal"
 
 [settings.editor.background.invalid]
 id = "Kode warna tidak valid, gunakan format #RRGGBB"
 en = "Invalid colour code, expected the #RRGGBB format"
 tl = "Di-wastong colour code, dapat #RRGGBB ang format"
-ru = "Некорректный код цвета, ожидается формат #RRGGBB"
+ru = "Nekorrektnyj kod tsveta, ozhidaetsya format #RRGGBB"
 es = "Codigo de color invalido, se esperaba el formato #RRGGBB"
 
 [settings.include.pruned]
 id = "Path include yang tidak ada lagi telah dihapus"
 en = "Include paths that no longer exist were removed"
 tl = "Inalis ang mga include path na wala na"
-ru = "Несуществующие пути include были удалены"
+ru = "Nesushchestvuyushchie puti include byli udaleny"
 es = "Se eliminaron las rutas de include que ya no existen"
 
 [settings.include.rejected]
 id = "Path sudah terdaftar atau folder tidak ditemukan"
 en = "Path already added or folder not found"
 tl = "Naidagdag na ang path o wala ang folder"
-ru = "Путь уже добавлен или папка не найдена"
+ru = "Put uzhe dobavlen ili papka ne najdena"
 es = "La ruta ya estaba agregada o no se encontro la carpeta"
 
 [settings.include.add]
 id = "Tambah Path Include"
 en = "Add Include Path"
 tl = "Magdag ng Include Path"
-ru = "Добавить путь include"
+ru = "Dobavit put include"
 es = "Agregar ruta de include"
 
 [settings.include.empty]
 id = "Belum ada path include yang dikonfigurasi"
 en = "No include paths configured"
 tl = "Walang naka-configure na include path"
-ru = "Пути include не настроены"
+ru = "Puti include ne nastroeny"
 es = "No hay rutas de include configuradas"
 
 [settings.updates.check]
 id = "Periksa Pembaruan"
 en = "Check for updates"
 tl = "Maghanap ng update"
-ru = "Проверить обновления"
+ru = "Proverit obnovleniya"
 es = "Buscar actualizaciones"
 
 [settings.updates.ready]
 id = "Perbarui PawnMC"
 en = "Update PawnMC"
 tl = "I-update ang PawnMC"
-ru = "Обновить PawnMC"
+ru = "Obnovit PawnMC"
 es = "Actualizar PawnMC"
 
 [settings.updates.latest]
 id = "Anda menggunakan versi terbaru"
 en = "You're on the latest version"
 tl = "Nasa pinakabagong bersyon ka na"
-ru = "У вас установлена последняя версия"
+ru = "U vas ustanovlena poslednyaya versiya"
 es = "Estas usando la version mas reciente"
 
 [main.busy.notice]
 id = "Pengaturan, PawnMC Editor, dan PocketSAMP sementara tidak tersedia sampai proses kompilasi selesai."
 en = "Settings, PawnMC Editor, and PocketSAMP are temporarily unavailable until compilation is complete."
 tl = "Pansamantalang hindi available ang Settings, PawnMC Editor, at PocketSAMP hanggang matapos ang kompilasyon."
-ru = "Настройки, PawnMC Editor и PocketSAMP временно недоступны до завершения компиляции."
+ru = "Nastrojki, PawnMC Editor i PocketSAMP vremenno nedostupny do zaversheniya kompilyatsii."
 es = "Configuracion, PawnMC Editor y PocketSAMP no estan disponibles hasta que termine la compilacion."
 
 [main.busy.completed]
 id = "Kompilasi selesai. Pengaturan, PawnMC Editor, dan PocketSAMP tersedia kembali."
 en = "Compilation finished. Settings, PawnMC Editor, and PocketSAMP are available again."
 tl = "Tapos na ang kompilasyon. Available na muli ang Settings, PawnMC Editor, at PocketSAMP."
-ru = "Компиляция завершена. Настройки, PawnMC Editor и PocketSAMP снова доступны."
+ru = "Kompilyatsiya zavershena. Nastrojki, PawnMC Editor i PocketSAMP snova dostupny."
 es = "Compilacion terminada. Configuracion, PawnMC Editor y PocketSAMP vuelven a estar disponibles."
 
 [main.busy.dismiss]
 id = "Tutup pemberitahuan kompilasi"
 en = "Dismiss compilation notice"
 tl = "Isara ang abiso ng kompilasyon"
-ru = "Закрыть уведомление о компиляции"
+ru = "Zakryt uvedomlenie o kompilyatsii"
 es = "Cerrar el aviso de compilacion"
 
 [main.busy.toast]
 id = "Pengaturan, editor, dan PocketSAMP tidak tersedia saat proses kompilasi berjalan"
 en = "Settings, editor, and PocketSAMP are unavailable while compiling"
 tl = "Hindi available ang settings, editor, at PocketSAMP habang nagko-compile"
-ru = "Настройки, редактор и PocketSAMP недоступны во время компиляции"
+ru = "Nastrojki, redaktor i PocketSAMP nedostupny vo vremya kompilyatsii"
 es = "Configuracion, editor y PocketSAMP no estan disponibles mientras se compila"
 
 [main.pocketsamp.launch_failed]
 id = "PocketSAMP tidak dapat dibuka di build ini."
 en = "PocketSAMP could not be opened in this build."
 tl = "Hindi mabuksan ang PocketSAMP sa build na ito."
-ru = "Не удалось открыть PocketSAMP в этой сборке."
+ru = "Ne udalos otkryt PocketSAMP v etoj sborke."
 es = "No se pudo abrir PocketSAMP en esta compilacion."
 
 [settings.include.paths.notice.title]
 id = "Catatan"
 en = "Note"
 tl = "Paalala"
-ru = "Примечание"
+ru = "Primechanie"
 es = "Nota"
 
 [settings.include.paths.notice.desc]
 id = "Saat file dipilih, PawnMC memilih satu folder include dengan urutan 'pawno/include', 'qawno/include', lalu 'includes'."
 en = "When a file is selected, PawnMC chooses one include folder in this order: 'pawno/include', 'qawno/include', then 'includes'."
 tl = "Kapag may napiling file, pumipili ang PawnMC ng isang include folder sa ganitong ayos: 'pawno/include', 'qawno/include', tapos 'includes'."
-ru = "При выборе файла PawnMC выбирает одну папку include в таком порядке: 'pawno/include', 'qawno/include', затем 'includes'."
+ru = "Pri vybore fajla PawnMC vybiraet odnu papku include v takom poryadke: 'pawno/include', 'qawno/include', zatem 'includes'."
 es = "Cuando se elige un archivo, PawnMC selecciona una carpeta de include en este orden: 'pawno/include', 'qawno/include' y luego 'includes'."
 
 [settings.include.extension.stripped]
 id = "Ekstensi script (.pawn, .pwn, .p, .inc) dihapus otomatis dan path disimpan sebagai:"
 en = "The script extension (.pawn, .pwn, .p, .inc) was removed automatically and the path was saved as:"
 tl = "Awtomatikong inalis ang extension ng script (.pawn, .pwn, .p, .inc) at na-save ang path bilang:"
-ru = "Расширение скрипта (.pawn, .pwn, .p, .inc) было автоматически удалено, а путь сохранён как:"
+ru = "Rasshirenie skripta (.pawn, .pwn, .p, .inc) bylo avtomaticheski udaleno, a put sokhranyon kak:"
 es = "La extension del script (.pawn, .pwn, .p, .inc) se elimino automaticamente y la ruta se guardo como:"
 
 [settings.include.extension.list]
@@ -752,548 +752,548 @@ es = ".pawn, .pwn, .p, .inc"
 
 [app.name]
 id = "PawnMC"
-en = "PawnMC"
-tl = "PawnMC"
-ru = "PawnMC"
-es = "PawnMC"
+en = "PawnEMC"
+tl = "PawnTMC"
+ru = "PawnRMC"
+es = "PawnESMC"
 
 [app.tagline]
-id = "Menyusun ide saat bepergian."
-en = "Compiling ideas on the go."
-tl = "Nagko-compile ng mga ideya kahit saan."
-ru = "Компилируем идеи на ходу."
-es = "Compilando ideas donde estes."
+id = "Ngetik dulu, error belakangan."
+en = "Type first, panic later."
+tl = "Type muna, panic mamaya."
+ru = "Pishi, panikuy potom."
+es = "Escribe, entra en pánico."
 
 [app.tagline.2]
-id = "Kode kecilmu, dunia besarmu."
-en = "Small scripts, big worlds."
-tl = "Maliliit na script, malalaking mundo."
-ru = "Маленькие скрипты — большие миры."
-es = "Scripts pequenos, mundos grandes."
+id = "Edit sini, error sana."
+en = "Edit here, errors there."
+tl = "Edit dito, error doon."
+ru = "Redaktiruy zdes, oshibki tam."
+es = "Edita aquí, errores allá."
 
 [app.tagline.3]
-id = "Tulis, kompilasi, jalankan."
-en = "Write it, compile it, run it."
-tl = "Isulat, i-compile, patakbuhin."
-ru = "Напиши, скомпилируй, запусти."
-es = "Escribelo, compila, ejecuta."
+id = "Compile, pura-pura berhasil."
+en = "Compile, pretend it worked."
+tl = "Compile, kunwari gumana."
+ru = "Kompiliruy, budto rabotaet."
+es = "Compila, finge que funciona."
 
 [app.tagline.4]
-id = "Pawn di genggamanmu."
-en = "Pawn, right in your pocket."
-tl = "Pawn, nasa bulsa mo lang."
-ru = "Pawn прямо в кармане."
-es = "Pawn, directo en tu bolsillo."
+id = "Pawn di HP, error."
+en = "Pawn in your pocket, bugs."
+tl = "Pawn sa bulsa, bugs."
+ru = "Pawn v karmane, oshibki."
+es = "Pawn en tu bolsillo, fallos."
 
 [main.header.expand]
 id = "Tampilkan menu"
 en = "Show menu"
 tl = "Ipakita ang menu"
-ru = "Показать меню"
+ru = "Pokazat menyu"
 es = "Mostrar el menu"
 
 [main.header.pocketsamp]
 id = "Server PocketSAMP"
 en = "PocketSAMP server"
 tl = "Server ng PocketSAMP"
-ru = "Сервер PocketSAMP"
+ru = "Server PocketSAMP"
 es = "Servidor PocketSAMP"
 
 [main.file.browse]
 id = "Pilih Berkas"
 en = "Browse File"
 tl = "Pumili ng File"
-ru = "Выбрать файл"
+ru = "Vybrat fajl"
 es = "Elegir archivo"
 
 [main.output.title]
 id = "periksa pelan-pelan."
 en = "read it through."
 tl = "basahin ito nang buo."
-ru = "прочти не спеша."
+ru = "prochti ne spesha."
 es = "léela con calma."
 
 [main.output.actions]
 id = "Aksi"
 en = "Actions"
 tl = "Mga Aksyon"
-ru = "Действия"
+ru = "Dejstviya"
 es = "Acciones"
 
 [main.fab.portal]
 id = "Buka panduan setelan"
 en = "Open the settings guide"
 tl = "Buksan ang gabay sa settings"
-ru = "Открыть гид по настройкам"
+ru = "Otkryt gid po nastrojkam"
 es = "Abrir la guía de ajustes"
 
 [main.header.collapse]
 id = "Sembunyikan menu"
 en = "Hide menu"
 tl = "Itago ang menu"
-ru = "Скрыть меню"
+ru = "Skryt menyu"
 es = "Ocultar el menu"
 
 [main.perm.grand.title]
 id = "Izin Grand Permissions Dibutuhkan!"
 en = "Grand Permissions Required!"
 tl = "Kailangan ang All Files Access!"
-ru = "Требуются Grand Permissions!"
+ru = "Trebuyutsya Grand Permissions!"
 es = "Se necesitan permisos totales!"
 
 [main.perm.grand.desc]
 id = "Izin Semua Berkas (Grand Permissions) diperlukan PawnMC agar bisa mengompilasi berkas pawn dan menulis hasil amx ke lokasi mana pun. Izin ini juga penting karena jika aplikasi dicopot pemasangannya (uninstall), konfigurasi sebelumnya dapat dipulihkan kembali saat aplikasi dipasang ulang."
 en = "PawnMC needs Grand Permissions (All files access) so it can compile pawn files and write the amx output anywhere. This permission is also important because, if the application is uninstalled, your previous configurations can be restored when the application is reinstalled."
 tl = "Kailangan ng PawnMC ang All files access para makapag-compile ng pawn file at makapagsulat ng amx output kahit saan. Mahalaga rin ito dahil kung ma-uninstall ang app, maibabalik ang dating configuration kapag ini-install muli."
-ru = "PawnMC нужны Grand Permissions (доступ ко всем файлам), чтобы компилировать файлы pawn и записывать вывод amx в любое место. Это разрешение также важно, поскольку при удалении приложения ваши предыдущие настройки могут быть восстановлены при повторной установке."
+ru = "PawnMC nuzhny Grand Permissions (dostup ko vsem fajlam), chtoby kompilirovat fajly pawn i zapisyvat vyvod amx v lyuboe mesto. Eto razreshenie takzhe vazhno, poskolku pri udalenii prilozheniya vashi predydushchie nastrojki mogut byt vosstanovleny pri povtornoj ustanovke."
 es = "PawnMC necesita Permisos Totales (acceso a todos los archivos) para poder compilar archivos pawn y escribir la salida amx donde le indiques. Este permiso también es importante porque, si se desinstala la aplicación, tus configuraciones anteriores se podrán restaurar al reinstalarla."
 
 [main.perm.grand.grant]
 id = "Beri Izin"
 en = "Grant"
 tl = "Payagan"
-ru = "Предоставить"
+ru = "Predostavit"
 es = "Otorgar"
 
 [main.perm.grand.later]
 id = "Nanti"
 en = "Not now"
 tl = "Mamaya na"
-ru = "Не сейчас"
+ru = "Ne sejchas"
 es = "Ahora no"
 
 [settings.close]
 id = "Tutup"
 en = "Close"
 tl = "Isara"
-ru = "Закрыть"
+ru = "Zakryt"
 es = "Cerrar"
 
 [settings.cancel]
 id = "Batal"
 en = "Cancel"
 tl = "Kanselahin"
-ru = "Отмена"
+ru = "Otmena"
 es = "Cancelar"
 
 [settings.save]
 id = "Simpan"
 en = "Save"
 tl = "I-save"
-ru = "Сохранить"
+ru = "Sokhranit"
 es = "Guardar"
 
 [settings.back]
 id = "Kembali"
 en = "Back"
 tl = "Bumalik"
-ru = "Назад"
+ru = "Nazad"
 es = "Volver"
 
 [editor.quickkeys.hide]
 id = "Sembunyikan Tombol Cepat"
 en = "Hide Quick Keys"
 tl = "Itago ang Quick Keys"
-ru = "Скрыть быстрые клавиши"
+ru = "Skryt bystrye klavishi"
 es = "Ocultar teclas rapidas"
 
 [editor.quickkeys.show]
 id = "Tampilkan Tombol Cepat"
 en = "Show Quick Keys"
 tl = "Ipakita ang Quick Keys"
-ru = "Показать быстрые клавиши"
+ru = "Pokazat bystrye klavishi"
 es = "Mostrar teclas rapidas"
 
 [editor.about.menu]
-id = "Tentang PawnMC Editor"
-en = "About PawnMC Editor"
-tl = "Tungkol sa PawnMC Editor"
-ru = "О PawnMC Editor"
-es = "Acerca de PawnMC Editor"
+id = "Tentang Xed Editor"
+en = "About Xed Editor"
+tl = "Tungkol sa Xed Editor"
+ru = "O Xed Editor"
+es = "Acerca de Xed Editor"
 
 [editor.about.title]
-id = "Tentang PawnMC Editor"
-en = "About PawnMC Editor"
-tl = "Tungkol sa PawnMC Editor"
-ru = "О PawnMC Editor"
-es = "Acerca de PawnMC Editor"
+id = "Tentang Xed Editor"
+en = "About Xed Editor"
+tl = "Tungkol sa Xed Editor"
+ru = "O Xed Editor"
+es = "Acerca de Xed Editor"
 
 [editor.about.intro]
-id = "PawnMC adalah editor kode Pawn dengan syntax highlighting, saran kode, alat workspace, dan kompilasi langsung."
-en = "PawnMC is a Pawn code editor with syntax highlighting, completion, workspace tools, and direct compilation."
-tl = "Ang PawnMC ay Pawn code editor na may syntax highlighting, completion, workspace tools, at direktang kompilasyon."
-ru = "PawnMC — редактор кода Pawn с подсветкой синтаксиса, автодополнением, инструментами workspace и прямой компиляцией."
-es = "PawnMC es un editor de codigo Pawn con resaltado de sintaxis, autocompletado, herramientas de workspace y compilacion directa."
+id = "Xed adalah editor kode Pawn dengan syntax highlighting, saran kode, alat workspace, dan kompilasi langsung."
+en = "Xed is a Pawn code editor with syntax highlighting, completion, workspace tools, and direct compilation."
+tl = "Ang Xed ay Pawn code editor na may syntax highlighting, completion, workspace tools, at direktang kompilasyon."
+ru = "Xed — redaktor koda Pawn s podsvetkoj sintaksisa, avtodopolneniem, instrumentami workspace i pryamoj kompilyatsiej."
+es = "Xed es un editor de codigo Pawn con resaltado de sintaxis, autocompletado, herramientas de workspace y compilacion directa."
 
 [editor.about.close]
 id = "Tutup"
 en = "Close"
 tl = "Isara"
-ru = "Закрыть"
+ru = "Zakryt"
 es = "Cerrar"
 
 [editor.about.back.title]
 id = "Kembali"
 en = "Back"
 tl = "Bumalik"
-ru = "Назад"
+ru = "Nazad"
 es = "Volver"
 
 [editor.about.back.desc]
 id = "Kembali ke pemilihan berkas dan layar compiler."
 en = "Return to the file selection and compiler screen."
 tl = "Bumalik sa screen ng pagpili ng file at compiler."
-ru = "Вернуться к выбору файла и экрану компилятора."
+ru = "Vernutsya k vyboru fajla i ekranu kompilyatora."
 es = "Vuelve a la seleccion de archivos y a la pantalla del compilador."
 
 [editor.about.undo.title]
 id = "Urungkan"
 en = "Undo"
 tl = "I-undo"
-ru = "Отменить"
+ru = "Otmenit"
 es = "Deshacer"
 
 [editor.about.undo.desc]
 id = "Urungkan perubahan terakhir."
 en = "Undo the most recent edit."
 tl = "I-undo ang pinakabagong edit."
-ru = "Отменить последнее изменение."
+ru = "Otmenit poslednee izmenenie."
 es = "Deshace la ultima edicion."
 
 [editor.about.redo.title]
 id = "Ulangi"
 en = "Redo"
 tl = "I-redo"
-ru = "Повторить"
+ru = "Povtorit"
 es = "Rehacer"
 
 [editor.about.redo.desc]
 id = "Pulihkan perubahan terakhir yang diurungkan."
 en = "Restore the most recently undone edit."
 tl = "Ibalik ang pinakahuling na-undo na edit."
-ru = "Восстановить последнее отменённое изменение."
+ru = "Vosstanovit poslednee otmenyonnoe izmenenie."
 es = "Restaura la ultima edicion deshecha."
 
 [editor.about.options.title]
 id = "Opsi Editor"
 en = "Editor options"
 tl = "Mga opsyon ng editor"
-ru = "Параметры редактора"
+ru = "Parametry redaktora"
 es = "Opciones del editor"
 
 [editor.about.options.desc]
 id = "Buka workspace, alat pencarian dan penggantian, kontrol tampilan, tombol cepat, dan halaman Tentang."
 en = "Open workspace, search and replace tools, view controls, quick keys, and this About page."
 tl = "Buksan ang workspace, search at replace, view controls, quick keys, at ang About page na ito."
-ru = "Открыть workspace, инструменты поиска и замены, настройки вида, быстрые клавиши и эту страницу «О программе»."
+ru = "Otkryt workspace, instrumenty poiska i zameny, nastrojki vida, bystrye klavishi i etu stranitsu «O programme»."
 es = "Abre el workspace, las herramientas de buscar y reemplazar, los controles de vista, las teclas rapidas y esta pagina Acerca de."
 
 [editor.about.open_workspace.title]
 id = "Buka Folder Workspace"
 en = "Open Workspace Folder"
 tl = "Buksan ang Workspace Folder"
-ru = "Открыть папку workspace"
+ru = "Otkryt papku workspace"
 es = "Abrir carpeta de workspace"
 
 [editor.about.open_workspace.desc]
 id = "Pilih folder lokal dan telusuri berkasnya di panel workspace."
 en = "Choose a local folder and browse its files in the workspace panel."
 tl = "Pumili ng lokal na folder at tingnan ang mga file nito sa workspace panel."
-ru = "Выберите локальную папку и просматривайте её файлы на панели workspace."
+ru = "Vyberite lokalnuyu papku i prosmatrivajte eyo fajly na paneli workspace."
 es = "Elegi una carpeta local y explora sus archivos en el panel del workspace."
 
 [editor.about.close_workspace.title]
 id = "Tutup Workspace"
 en = "Close Workspace"
 tl = "Isara ang Workspace"
-ru = "Закрыть workspace"
+ru = "Zakryt workspace"
 es = "Cerrar el workspace"
 
 [editor.about.close_workspace.desc]
 id = "Tutup workspace aktif tanpa menutup workspace lain yang masih terbuka."
 en = "Close the active workspace while keeping other open workspaces available."
 tl = "Isara ang aktibong workspace habang nananatiling available ang ibang bukas na workspace."
-ru = "Закрывает активный workspace, оставляя другие открытые workspace доступными."
+ru = "Zakryvaet aktivnyj workspace, ostavlyaya drugie otkrytye workspace dostupnymi."
 es = "Cierra el workspace activo dejando disponibles los demas workspaces abiertos."
 
 [editor.about.close_all.title]
 id = "Tutup Semua Workspace"
 en = "Close All Workspaces"
 tl = "Isara Lahat ng Workspace"
-ru = "Закрыть все workspace"
+ru = "Zakryt vse workspace"
 es = "Cerrar todos los workspaces"
 
 [editor.about.close_all.desc]
 id = "Tutup semua workspace yang sedang terbuka di editor."
 en = "Close every workspace currently open in the editor."
 tl = "Isara lahat ng workspace na bukas sa editor."
-ru = "Закрывает все workspace, открытые в редакторе."
+ru = "Zakryvaet vse workspace, otkrytye v redaktore."
 es = "Cierra todos los workspaces que estan abiertos en el editor."
 
 [editor.about.search_workspace.title]
 id = "Cari di Workspace"
 en = "Search in Workspace"
 tl = "Maghanap sa Workspace"
-ru = "Поиск в workspace"
+ru = "Poisk v workspace"
 es = "Buscar en el workspace"
 
 [editor.about.search_workspace.desc]
 id = "Cari teks di seluruh berkas dalam workspace aktif."
 en = "Find text across files in the active workspace."
 tl = "Maghanap ng teksto sa mga file ng aktibong workspace."
-ru = "Ищет текст по всем файлам активного workspace."
+ru = "Ishchet tekst po vsem fajlam aktivnogo workspace."
 es = "Busca texto en todos los archivos del workspace activo."
 
 [editor.about.replace_file.title]
 id = "Ganti Kata per Berkas"
 en = "Replace Words per File"
 tl = "Palitan ang Salita sa Bawat File"
-ru = "Замена слов в файле"
+ru = "Zamena slov v fajle"
 es = "Reemplazar palabras por archivo"
 
 [editor.about.replace_file.desc]
 id = "Ganti kecocokan di berkas saat ini, satu kemunculan atau semuanya."
 en = "Replace matches in the current file, one occurrence or all at once."
 tl = "Palitan ang tugma sa kasalukuyang file, isa-isa o sabay-sabay."
-ru = "Заменяет совпадения в текущем файле: одно или все сразу."
+ru = "Zamenyaet sovpadeniya v tekushchem fajle: odno ili vse srazu."
 es = "Reemplaza las coincidencias del archivo actual, una sola o todas."
 
 [editor.about.replace_workspace.title]
 id = "Ganti Kata di Semua Berkas"
 en = "Replace Words All Files"
 tl = "Palitan ang Salita sa Lahat ng File"
-ru = "Замена слов во всех файлах"
+ru = "Zamena slov vo vsekh fajlakh"
 es = "Reemplazar palabras en todos los archivos"
 
 [editor.about.replace_workspace.desc]
 id = "Ganti teks yang cocok di seluruh berkas workspace."
 en = "Replace matching text across the workspace files."
 tl = "Palitan ang tugmang teksto sa mga file ng workspace."
-ru = "Заменяет совпадающий текст во всех файлах workspace."
+ru = "Zamenyaet sovpadayushchij tekst vo vsekh fajlakh workspace."
 es = "Reemplaza el texto coincidente en todos los archivos del workspace."
 
 [editor.about.workspace_panel.title]
 id = "Tampilkan atau Sembunyikan Panel Workspace"
 en = "Show or Hide Workspace Panel"
 tl = "Ipakita o Itago ang Workspace Panel"
-ru = "Показать или скрыть панель workspace"
+ru = "Pokazat ili skryt panel workspace"
 es = "Mostrar u ocultar el panel de workspace"
 
 [editor.about.workspace_panel.desc]
 id = "Tampilkan atau sembunyikan panel berisi berkas terbuka, folder, dan hasil pencarian."
 en = "Toggle the panel containing open files, folders, and search results."
 tl = "Ipakita o itago ang panel ng bukas na file, folder, at resulta ng paghahanap."
-ru = "Показывает или скрывает панель с открытыми файлами, папками и результатами поиска."
+ru = "Pokazyvaet ili skryvaet panel s otkrytymi fajlami, papkami i rezultatami poiska."
 es = "Muestra u oculta el panel con los archivos abiertos, las carpetas y los resultados de busqueda."
 
 [editor.about.select_all.title]
 id = "Pilih Semua"
 en = "Select All"
 tl = "Piliin Lahat"
-ru = "Выделить всё"
+ru = "Vydelit vsyo"
 es = "Seleccionar todo"
 
 [editor.about.select_all.desc]
 id = "Pilih seluruh teks di berkas saat ini."
 en = "Select all text in the current file."
 tl = "Piliin ang lahat ng teksto sa kasalukuyang file."
-ru = "Выделяет весь текст в текущем файле."
+ru = "Vydelyaet ves tekst v tekushchem fajle."
 es = "Selecciona todo el texto del archivo actual."
 
 [editor.about.jump.title]
 id = "Lompat ke Baris"
 en = "Jump to Line"
 tl = "Pumunta sa Linya"
-ru = "Перейти к строке"
+ru = "Perejti k stroke"
 es = "Ir a la linea"
 
 [editor.about.jump.desc]
 id = "Pindahkan kursor langsung ke nomor baris tertentu."
 en = "Move the cursor directly to a line number."
 tl = "Ilipat ang cursor diretso sa isang numero ng linya."
-ru = "Перемещает курсор напрямую к номеру строки."
+ru = "Peremeshchaet kursor napryamuyu k nomeru stroki."
 es = "Mueve el cursor directo a un numero de linea."
 
 [editor.about.wrap.title]
 id = "Bungkus Baris"
 en = "Word Wrap"
 tl = "Pagsasaayos ng Word Wrap"
-ru = "Перенос слов"
+ru = "Perenos slov"
 es = "Ajuste de linea"
 
 [editor.about.wrap.desc]
 id = "Aktifkan atau nonaktifkan pembungkusan baris."
 en = "Turn line wrapping on or off."
 tl = "I-on o i-off ang pag-wrap ng linya."
-ru = "Включает или отключает перенос строк."
+ru = "Vklyuchaet ili otklyuchaet perenos strok."
 es = "Activa o desactiva el ajuste de linea."
 
 [editor.about.read_only.title]
 id = "Mode Hanya Baca"
 en = "Read-Only Mode"
 tl = "Read-Only na Mode"
-ru = "Режим только для чтения"
+ru = "Rezhim tolko dlya chteniya"
 es = "Modo solo lectura"
 
 [editor.about.read_only.desc]
 id = "Cegah pengeditan sampai mode edit diaktifkan kembali."
 en = "Prevent edits until editing is enabled again."
 tl = "Pigilan ang pag-edit hanggang ma-enable muli."
-ru = "Запрещает редактирование, пока режим редактирования не будет включён снова."
+ru = "Zapreshchaet redaktirovanie, poka rezhim redaktirovaniya ne budet vklyuchyon snova."
 es = "Impide editar hasta que se vuelva a habilitar la edicion."
 
 [editor.about.line_numbers.title]
 id = "Nomor Baris"
 en = "Line Numbers"
 tl = "Mga Numero ng Linya"
-ru = "Номера строк"
+ru = "Nomera strok"
 es = "Numeros de linea"
 
 [editor.about.line_numbers.desc]
 id = "Tampilkan atau sembunyikan nomor baris dan kolom saat ini."
 en = "Show or hide line numbers and the current column."
 tl = "Ipakita o itago ang numero ng linya at kasalukuyang column."
-ru = "Показывает или скрывает номера строк и текущий столбец."
+ru = "Pokazyvaet ili skryvaet nomera strok i tekushchij stolbets."
 es = "Muestra u oculta los numeros de linea y la columna actual."
 
 [editor.about.quickkeys_toggle.title]
 id = "Tombol Cepat"
 en = "Quick Keys Toggle"
 tl = "Toggle ng Quick Keys"
-ru = "Переключение быстрых клавиш"
+ru = "Pereklyuchenie bystrykh klavish"
 es = "Alternar teclas rapidas"
 
 [editor.about.quickkeys_toggle.desc]
 id = "Tampilkan atau sembunyikan bar bawah berisi TAB, simbol, dan angka."
 en = "Show or hide the bottom row with TAB, symbols, and digits."
 tl = "Ipakita o itago ang ilalim na hilera ng TAB, simbolo, at numero."
-ru = "Показывает или скрывает нижний ряд с TAB, символами и цифрами."
+ru = "Pokazyvaet ili skryvaet nizhnij ryad s TAB, simvolami i tsiframi."
 es = "Muestra u oculta la fila de abajo con TAB, simbolos y numeros."
 
 [editor.about.about.title]
-id = "Tentang PawnMC Editor"
-en = "About PawnMC Editor"
-tl = "Tungkol sa PawnMC Editor"
-ru = "О PawnMC Editor"
-es = "Acerca de PawnMC Editor"
+id = "Tentang Xed Editor"
+en = "About Xed Editor"
+tl = "Tungkol sa Xed Editor"
+ru = "O Xed Editor"
+es = "Acerca de Xed Editor"
 
 [editor.about.about.desc]
-id = "Buka panduan alat dan kontrol editor PawnMC ini."
-en = "Open this guide to the PawnMC editor tools and controls."
-tl = "Buksan ang gabay na ito sa mga tool at kontrol ng PawnMC editor."
-ru = "Открыть это руководство по инструментам и элементам управления редактора PawnMC."
-es = "Abre esta guia de las herramientas y controles del editor PawnMC."
+id = "Buka panduan alat dan kontrol editor Xed ini."
+en = "Open this guide to the Xed editor tools and controls."
+tl = "Buksan ang gabay na ito sa mga tool at kontrol ng Xed editor."
+ru = "Otkryt eto rukovodstvo po instrumentam i elementam upravleniya redaktora Xed."
+es = "Abre esta guia de las herramientas y controles del editor Xed."
 
 [editor.about.search_file.title]
 id = "Cari di Berkas"
 en = "Search in File"
 tl = "Maghanap sa File"
-ru = "Поиск в файле"
+ru = "Poisk v fajle"
 es = "Buscar en el archivo"
 
 [editor.about.search_file.desc]
 id = "Cari teks di berkas saat ini dan berpindah di antara hasilnya."
 en = "Find text in the current file and move between matches."
 tl = "Maghanap ng teksto sa kasalukuyang file at lumipat sa pagitan ng mga tugma."
-ru = "Ищет текст в текущем файле и переходит между совпадениями."
+ru = "Ishchet tekst v tekushchem fajle i perekhodit mezhdu sovpadeniyami."
 es = "Busca texto en el archivo actual y se mueve entre las coincidencias."
 
 [editor.about.open_folder.title]
 id = "Buka Folder"
 en = "Open Folder"
 tl = "Buksan ang Folder"
-ru = "Открыть папку"
+ru = "Otkryt papku"
 es = "Abrir carpeta"
 
 [editor.about.open_folder.desc]
 id = "Pilih folder workspace dari toolbar mengambang."
 en = "Choose a workspace folder from the floating toolbar."
 tl = "Pumili ng workspace folder mula sa floating toolbar."
-ru = "Выберите папку workspace из всплывающей панели."
+ru = "Vyberite papku workspace iz vsplyvayushchej paneli."
 es = "Elegi una carpeta de workspace desde la barra flotante."
 
 [editor.about.save.title]
 id = "Simpan"
 en = "Save"
 tl = "I-save"
-ru = "Сохранить"
+ru = "Sokhranit"
 es = "Guardar"
 
 [editor.about.save.desc]
 id = "Simpan berkas aktif."
 en = "Save the active file."
 tl = "I-save ang aktibong file."
-ru = "Сохранить активный файл."
+ru = "Sokhranit aktivnyj fajl."
 es = "Guarda el archivo activo."
 
 [editor.about.save_as_all.title]
 id = "Simpan Sebagai atau Simpan Semua"
 en = "Save As or Save All"
 tl = "I-save Bilang o I-save Lahat"
-ru = "Сохранить как или сохранить все"
+ru = "Sokhranit kak ili sokhranit vse"
 es = "Guardar como o guardar todo"
 
 [editor.about.save_as_all.desc]
 id = "Simpan berkas saat ini dengan nama baru, atau simpan semua berkas workspace yang berubah."
 en = "Save the current file under a new name, or save all modified workspace files."
 tl = "I-save ang kasalukuyang file sa bagong pangalan, o i-save lahat ng binagong file sa workspace."
-ru = "Сохранить текущий файл под новым именем или сохранить все изменённые файлы workspace."
+ru = "Sokhranit tekushchij fajl pod novym imenem ili sokhranit vse izmenyonnye fajly workspace."
 es = "Guarda el archivo actual con un nombre nuevo, o guarda todos los archivos modificados del workspace."
 
 [editor.about.compile.title]
 id = "Kompilasi"
 en = "Compile"
 tl = "I-compile"
-ru = "Компилировать"
+ru = "Kompilirovat"
 es = "Compilar"
 
 [editor.about.compile.desc]
 id = "Simpan perubahan workspace yang terbuka lalu kompilasi berkas Pawn aktif."
 en = "Save open workspace changes and compile the active Pawn file."
 tl = "I-save ang mga pagbabago sa workspace at i-compile ang aktibong Pawn file."
-ru = "Сохранить открытые изменения workspace и скомпилировать активный файл Pawn."
+ru = "Sokhranit otkrytye izmeneniya workspace i skompilirovat aktivnyj fajl Pawn."
 es = "Guarda los cambios abiertos del workspace y compila el archivo Pawn activo."
 
 [editor.about.explorer.title]
 id = "Tombol Panel Workspace"
 en = "Workspace Panel Button"
 tl = "Button ng Workspace Panel"
-ru = "Кнопка панели workspace"
+ru = "Knopka paneli workspace"
 es = "Boton del panel de workspace"
 
 [editor.about.explorer.desc]
 id = "Tampilkan atau sembunyikan panel workspace mengambang."
 en = "Show or hide the floating workspace panel."
 tl = "Ipakita o itago ang floating workspace panel."
-ru = "Показывает или скрывает всплывающую панель workspace."
+ru = "Pokazyvaet ili skryvaet vsplyvayushchuyu panel workspace."
 es = "Muestra u oculta el panel de workspace flotante."
 
 [editor.about.tabs.title]
 id = "Tab Berkas"
 en = "File Tabs"
 tl = "Mga Tab ng File"
-ru = "Вкладки файлов"
+ru = "Vkladki fajlov"
 es = "Pestanas de archivos"
 
 [editor.about.tabs.desc]
 id = "Beralih antarberkas terbuka atau tutup berkas melalui tab-nya."
 en = "Switch between open files or close a file from its tab."
 tl = "Lumipat sa pagitan ng bukas na file o isara ang file mula sa tab nito."
-ru = "Переключайтесь между открытыми файлами или закрывайте файл по его вкладке."
+ru = "Pereklyuchajtes mezhdu otkrytymi fajlami ili zakryvajte fajl po ego vkladke."
 es = "Cambia entre archivos abiertos o cierra un archivo desde su pestana."
 
 [editor.about.new_tab.title]
 id = "Tambah atau Buka Berkas"
 en = "Add or Open File"
 tl = "Magdag o Buksan ang File"
-ru = "Добавить или открыть файл"
+ru = "Dobavit ili otkryt fajl"
 es = "Agregar o abrir archivo"
 
 [editor.about.new_tab.desc]
 id = "Buka panel workspace atau pilih folder lain."
 en = "Open the workspace panel or choose another folder."
 tl = "Buksan ang workspace panel o pumili ng ibang folder."
-ru = "Открыть панель workspace или выбрать другую папку."
+ru = "Otkryt panel workspace ili vybrat druguyu papku."
 es = "Abre el panel del workspace o elegi otra carpeta."
 
 [editor.about.tab_key.title]
@@ -1307,21 +1307,21 @@ es = "TAB"
 id = "Masukkan satu tingkat indentasi pada posisi kursor."
 en = "Insert one indentation level at the cursor."
 tl = "Maglagay ng isang antas ng indentation sa cursor."
-ru = "Вставляет один уровень отступа в позицию курсора."
+ru = "Vstavlyaet odin uroven otstupa v pozitsiyu kursora."
 es = "Inserta un nivel de indentacion en la posicion del cursor."
 
 [editor.about.symbol_keys.title]
 id = "Tombol Simbol dan Angka"
 en = "Symbol and Number Keys"
 tl = "Mga Symbol at Numero"
-ru = "Клавиши символов и цифр"
+ru = "Klavishi simvolov i tsifr"
 es = "Teclas de simbolos y numeros"
 
 [editor.about.symbol_keys.desc]
 id = "Masukkan kurung kurawal, tanda kurung, kurung siku, tanda baca, atau angka pada posisi kursor."
 en = "Insert braces, parentheses, brackets, punctuation, or digits at the cursor."
 tl = "Maglagay ng brace, parenthesis, bracket, bantas, o numero sa cursor."
-ru = "Вставляет скобки, кавычки, знаки препинания или цифры в позицию курсора."
+ru = "Vstavlyaet skobki, kavychki, znaki prepinaniya ili tsifry v pozitsiyu kursora."
 es = "Inserta llaves, parentesis, corchetes, signos de puntuacion o numeros en la posicion del cursor."
 
 
@@ -1329,180 +1329,180 @@ es = "Inserta llaves, parentesis, corchetes, signos de puntuacion o numeros en l
 id = "Pengaturan"
 en = "Settings"
 tl = "Mga Setting"
-ru = "Настройки"
+ru = "Nastrojki"
 es = "Ajustes"
 
 [main.promo.subtitle]
 id = "Ketuk salah satu entri untuk membuka Pengaturan langsung ke bagiannya."
 en = "Tap any entry to open Settings at that section."
 tl = "I-tap ang anumang entry para buksan ang Settings sa seksyong iyon."
-ru = "Нажмите на любой пункт, чтобы открыть настройки в этом разделе."
+ru = "Nazhmite na lyuboj punkt, chtoby otkryt nastrojki v etom razdele."
 es = "Toca cualquier entrada para abrir Ajustes en esa seccion."
 
 [main.promo.language.title]
 id = "Bahasa"
 en = "Language"
 tl = "Wika"
-ru = "Язык"
+ru = "Yazyk"
 es = "Idioma"
 
 [main.promo.language.desc]
 id = "Indonesia, Inggris, Spanyol (Argentina), atau Rusia untuk seluruh antarmuka."
 en = "Indonesian, English, Spanish (Argentina) or Russian for the entire interface."
 tl = "Indonesian, English, Spanish (Argentina), Russian, o Tagalog para sa buong interface."
-ru = "Индонезийский, английский, испанский (Аргентина) или русский для всего интерфейса."
+ru = "Indonezijskij, anglijskij, ispanskij (Argentina) ili russkij dlya vsego interfejsa."
 es = "Indones, ingles, espanol (Argentina) o ruso para toda la interfaz."
 
 [main.promo.compiler.title]
 id = "Versi compiler"
 en = "Compiler version"
 tl = "Bersyon ng compiler"
-ru = "Версия компилятора"
+ru = "Versiya kompilyatora"
 es = "Version del compilador"
 
 [main.promo.compiler.desc]
 id = "Bangun dengan Pawn 3.10.7 atau 3.10.11, dan atur apakah pawncc di samping skripmu lebih diutamakan daripada yang bawaan."
 en = "Build with Pawn 3.10.7 or 3.10.11, and choose whether a pawncc next to your script wins over the bundled one."
 tl = "Mag-build gamit ang Pawn 3.10.7 o 3.10.11, at piliin kung mas gagamitin ang pawncc na katabi ng script mo kaysa sa bundled."
-ru = "Собирайте на Pawn 3.10.7 или 3.10.11 и решайте, имеет ли pawncc рядом со скриптом приоритет над встроенным."
+ru = "Sobirajte na Pawn 3.10.7 ili 3.10.11 i reshajte, imeet li pawncc ryadom so skriptom prioritet nad vstroennym."
 es = "Compila con Pawn 3.10.7 o 3.10.11 y elige si un pawncc junto a tu script tiene prioridad sobre el incluido."
 
 [main.promo.options.title]
 id = "Opsi compiler"
 en = "Compiler options"
 tl = "Mga opsyon ng compiler"
-ru = "Параметры компилятора"
+ru = "Parametry kompilyatora"
 es = "Opciones del compilador"
 
 [main.promo.options.desc]
 id = "Tingkat debug, optimasi, titik koma dan tanda kurung wajib, plus flag pawncc tambahan lain yang kamu butuhkan."
 en = "Debug level, optimization, mandatory semicolons and parentheses, plus any extra pawncc flag you need."
 tl = "Debug level, optimization, kailangang semicolon at parenthesis, at anumang karagdagang pawncc flag na kailangan mo."
-ru = "Уровень отладки, оптимизация, обязательные точки с запятой и скобки, плюс любые дополнительные флаги pawncc."
+ru = "Uroven otladki, optimizatsiya, obyazatelnye tochki s zapyatoj i skobki, plyus lyubye dopolnitelnye flagi pawncc."
 es = "Nivel de depuracion, optimizacion, punto y coma y parentesis obligatorios, mas cualquier flag extra de pawncc que necesites."
 
 [main.promo.includes.title]
 id = "Path include"
 en = "Include paths"
 tl = "Mga path ng include"
-ru = "Пути include"
+ru = "Puti include"
 es = "Rutas de includes"
 
 [main.promo.includes.desc]
 id = "Arahkan compiler ke folder include proyekmu; pawno/include dan gamemodes ditemukan otomatis."
 en = "Point the compiler at your project's include folder; pawno/include and gamemodes are found automatically."
 tl = "Ituro sa compiler ang include folder ng project mo; awtomatikong hinahanap ang pawno/include at gamemodes."
-ru = "Укажите компилятору папку include вашего проекта; pawno/include и gamemodes находятся автоматически."
+ru = "Ukazhite kompilyatoru papku include vashego proekta; pawno/include i gamemodes nakhodyatsya avtomaticheski."
 es = "Apunta el compilador a la carpeta de includes de tu proyecto; pawno/include y gamemodes se detectan automaticamente."
 
 [main.promo.ignorecase.title]
 id = "Sistem berkas"
 en = "Filesystem"
 tl = "Sistema ng File"
-ru = "Файловая система"
+ru = "Fajlovaya sistema"
 es = "Sistema de archivos"
 
 [main.promo.ignorecase.desc]
 id = "Cadangkan sebuah folder lalu ubah namanya dan referensi #include-nya menjadi huruf kecil sekali jalan, untuk proyek yang ditulis di Windows."
 en = "Back a folder up and lowercase its names and #include references once, for projects written on Windows."
 tl = "I-backup ang isang folder at gawing lowercase ang mga pangalan at #include reference nito nang isang beses, para sa project na ginawa sa Windows."
-ru = "Сделайте резервную копию папки и один раз приведите её имена и ссылки #include к нижнему регистру — для проектов, написанных на Windows."
+ru = "Sdelajte rezervnuyu kopiyu papki i odin raz privedite eyo imena i ssylki #include k nizhnemu registru — dlya proektov, napisannykh na Windows."
 es = "Haz una copia de seguridad de una carpeta y pasa sus nombres y referencias #include a minusculas una sola vez, para proyectos escritos en Windows."
 
 [main.promo.explain.title]
 id = "Lihat Penjelasan"
 en = "Explain output"
 tl = "Ipaliwanag ang output"
-ru = "Объяснение вывода"
+ru = "Obyasnenie vyvoda"
 es = "Explicar la salida"
 
 [main.promo.explain.desc]
 id = "Beri anotasi berupa penjelasan bahasa sederhana pada setiap peringatan, error, dan pesan fatal."
 en = "Annotate every warning, error and fatal message with a plain-language explanation."
 tl = "Lagyan ng paliwanag sa simpleng salita ang bawat warning, error, at fatal na mensahe."
-ru = "Снабжает каждое предупреждение, ошибку и фатальное сообщение пояснением простым языком."
+ru = "Snabzhaet kazhdoe preduprezhdenie, oshibku i fatalnoe soobshchenie poyasneniem prostym yazykom."
 es = "Anota cada advertencia, error y mensaje fatal con una explicacion en lenguaje sencillo."
 
 [main.promo.editor.title]
 id = "Tampilan editor"
 en = "Editor appearance"
 tl = "Itsura ng editor"
-ru = "Вид редактора"
+ru = "Vid redaktora"
 es = "Apariencia del editor"
 
 [main.promo.editor.desc]
 id = "Pilih warna kanvas kode, atau biarkan mengikuti tema aplikasi."
 en = "Pick the code canvas colour, or let it follow the app theme."
 tl = "Piliin ang kulay ng code canvas, o hayaang sumunod sa tema ng app."
-ru = "Выберите цвет полотна кода или пусть он следует теме приложения."
+ru = "Vyberite tsvet polotna koda ili pust on sleduet teme prilozheniya."
 es = "Elige el color del lienzo del codigo, o deja que siga el tema de la app."
 
 [main.promo.updates.title]
 id = "Pembaruan"
 en = "Updates"
 tl = "Mga Update"
-ru = "Обновления"
+ru = "Obnovleniya"
 es = "Actualizaciones"
 
 [main.promo.updates.desc]
 id = "Periksa GitHub untuk rilis yang lebih baru dan pasang tanpa keluar dari aplikasi."
 en = "Check GitHub for a newer release and install it without leaving the app."
 tl = "Maghanap sa GitHub ng mas bagong release at i-install nang hindi umaalis sa app."
-ru = "Проверьте GitHub на новый релиз и установите его, не выходя из приложения."
+ru = "Proverte GitHub na novyj reliz i ustanovite ego, ne vykhodya iz prilozheniya."
 es = "Consulta GitHub para ver si hay un lanzamiento nuevo e instálalo sin salir de la app."
 
 [main.promo.theme.title]
 id = "Tema"
 en = "Theme"
 tl = "Tema"
-ru = "Тема"
+ru = "Tema"
 es = "Tema"
 
 [main.promo.theme.desc]
 id = "Ikuti tema sistem Android, atau kunci PawnMC ke mode terang atau gelap."
 en = "Follow the Android system theme, or pin PawnMC to light or dark."
 tl = "Sundin ang tema ng Android, o i-pin ang PawnMC sa maliwanag o madilim."
-ru = "Следуйте системной теме Android или закрепите PawnMC в светлом или тёмном режиме."
+ru = "Sledujte sistemnoj teme Android ili zakrepite PawnMC v svetlom ili tyomnom rezhime."
 es = "Sigue el tema del sistema Android, o fija PawnMC en claro u oscuro."
 
 [main.promo.about.title]
 id = "Tentang dan diagnostik"
 en = "About and diagnostics"
 tl = "Tungkol at diagnostics"
-ru = "О программе и диагностика"
+ru = "O programme i diagnostika"
 es = "Acerca de y diagnostico"
 
 [main.promo.about.desc]
 id = "Versi terpasang, repositori sumber, dan rangkaian self-test bawaan."
 en = "Installed version, source repository, and the built-in self-test suite."
 tl = "Naka-install na bersyon, source repository, at ang built-in na self-test."
-ru = "Установленная версия, исходный репозиторий и встроенный набор самопроверок."
+ru = "Ustanovlennaya versiya, iskhodnyj repozitorij i vstroennyj nabor samoproverok."
 es = "Version instalada, repositorio fuente y la suite de autopruebas integrada."
 
 [main.promo.forcestop.title]
 id = "Mulai ulang aplikasi"
 en = "Restart the app"
 tl = "I-restart ang app"
-ru = "Перезапустить приложение"
+ru = "Perezapustit prilozhenie"
 es = "Reiniciar la aplicacion"
 
 [main.promo.forcestop.desc]
 id = "Buka kembali PawnMC agar perubahan versi compiler diterapkan dari awal."
 en = "Reopen PawnMC so a compiler-version change is applied from scratch."
 tl = "Buksan muli ang PawnMC para mailapat mula sa umpisa ang pagbabago ng bersyon ng compiler."
-ru = "Заново откройте PawnMC, чтобы изменение версии компилятора применилось с нуля."
+ru = "Zanovo otkrojte PawnMC, chtoby izmenenie versii kompilyatora primenilos s nulya."
 es = "Reabre PawnMC para que el cambio de version del compilador se aplique desde cero."
 
 [main.promo.storage.title]
 id = "Lokasi workspace"
 en = "Workspace location"
 tl = "Lokasyon ng workspace"
-ru = "Расположение workspace"
+ru = "Raspolozhenie workspace"
 es = "Ubicacion del workspace"
 
 [main.promo.storage.desc]
 id = "Setelan dan workspace awalmu tersimpan di folder PawnMC pada penyimpanan bersama, jadi bisa diedit di luar aplikasi."
 en = "Your settings and starter workspace live in the PawnMC folder on shared storage, so you can edit them outside the app."
 tl = "Nasa folder ng PawnMC sa shared storage ang settings at starter workspace mo, kaya mae-edit mo ito kahit labas ng app."
-ru = "Ваши настройки и стартовый workspace лежат в папке PawnMC на общем хранилище, поэтому их можно править вне приложения."
+ru = "Vashi nastrojki i startovyj workspace lezhat v papke PawnMC na obshchem khranilishche, poetomu ikh mozhno pravit vne prilozheniya."
 es = "Tus ajustes y workspace inicial viven en la carpeta PawnMC del almacen compartido, asi que puedes editarlos fuera de la app."

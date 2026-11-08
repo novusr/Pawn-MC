@@ -4,7 +4,7 @@ import android.os.Bundle
 import com.rvdjv.pawnmc.apps_data.data_syntax._item
 import com.rvdjv.pawnmc.apps_data.data_syntax.PawnItemKind
 import com.rvdjv.pawnmc.apps_data.data_syntax.PawnRegistry
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import io.github.rosemoe.sora.lang.EmptyLanguage
 import io.github.rosemoe.sora.lang.Language
 import io.github.rosemoe.sora.lang.analysis.AnalyzeManager
@@ -20,7 +20,7 @@ import io.github.rosemoe.sora.widget.SymbolPairMatch
 
 /** Syntax highlighting and completion for the editor. */
 class CodeLanguage(
-    private val appLanguage: CompilerConfig.AppLanguage = CompilerConfig.AppLanguage.EN
+    private val appLanguage: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
 ) : Language {
 
     private companion object {
@@ -116,11 +116,11 @@ class CodeLanguage(
         localFunctions: List<LocalFunction>
     ) {
         val localFunctionDescription = when (appLanguage) {
-            CompilerConfig.AppLanguage.ID -> "Dideklarasikan di berkas ini"
-            CompilerConfig.AppLanguage.ES -> "Declarada en este archivo"
-            CompilerConfig.AppLanguage.RU -> "Объявлено в этом файле"
-            CompilerConfig.AppLanguage.TL -> "Idineklara sa file na ito"
-            CompilerConfig.AppLanguage.EN -> "Declared in this file"
+            ContentConfig.AppLanguage.ID -> "Dideklarasikan di berkas ini"
+            ContentConfig.AppLanguage.ES -> "Declarada en este archivo"
+            ContentConfig.AppLanguage.RU -> "«Obyavleno v etom fajle»"
+            ContentConfig.AppLanguage.TL -> "Idineklara sa file na ito"
+            ContentConfig.AppLanguage.EN -> "Declared in this file"
         }
         val matchingItems = PawnRegistry.getCompletions(prefix, appLanguage) + localFunctions
             .filter { it.name.startsWith(prefix, ignoreCase = true) }

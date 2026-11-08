@@ -95,7 +95,7 @@ class UpdateManagerTest {
             {
               "tag_name": "v1.5.100",
               "html_url": "https://github.com/novusr/Pawn-MC/releases/tag/v1.5.100",
-              "body": "# Changelog\n\n- Исправлена ошибка\n\n**important**",
+              "body": "# Changelog\n\n- Ispravlena oshibka\n\n**important**",
               "assets": [
                 {
                   "name": "pawnmc-1.5.100-debug.apk",
@@ -113,7 +113,7 @@ class UpdateManagerTest {
         assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.newerArchiveUrl)
         assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isNougatBuild = true))
         assertEquals("https://example.com/pawnmc-1.5.100-debug.apk", release.archiveUrl(isNougatBuild = false))
-        assertTrue(release.bodyMarkdown.contains("Исправлена ошибка"))
+        assertTrue(release.bodyMarkdown.contains("Ispravlena oshibka"))
         assertTrue(release.bodyMarkdown.contains("important"))
     }
 }

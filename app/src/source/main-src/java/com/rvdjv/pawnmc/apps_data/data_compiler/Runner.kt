@@ -1,10 +1,10 @@
-package com.rvdjv.pawnmc.apps_data.data_compiler
+﻿package com.rvdjv.pawnmc.apps_data.data_compiler
 
 import android.util.Log
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.AUTO_FALLBACK_ERROR_THRESHOLD
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.SSCANF_NO_NICE_FEATURES_FLAG
 import com.rvdjv.pawnmc.apps_data.data_compiler.Names.STR_PAWNCC_BINARY_NAME
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_config.SystemNotification
 import com.rvdjv.pawnmc.apps_data.data_library.LibraryStore
 import com.rvdjv.pawnmc.apps_data.data_logging._compiler_store
@@ -21,7 +21,7 @@ import java.io.File
  */
 object Runner {
 
-    private var INITIALIZED_VER: CompilerConfig.CompilerVersion? = null
+    private var INITIALIZED_VER: ContentConfig.CompilerVersion? = null
     private var IS_INITIALIZED = false
     private var FALL_MUTATION = false
 
@@ -67,15 +67,15 @@ object Runner {
 
     /** True when auto-detection and fallback switching are disabled by the user. */
     fun isForcedModeEnabled(): Boolean {
-        return CompilerConfig.getInstanceOrNull()?.n_forced_compiler_mode == true
+        return ContentConfig.getInstanceOrNull()?.n_forced_compiler_mode == true
     }
 
     internal fun compilerVersionForMode(
         forcedMode: Boolean,
-        selectedVersion: CompilerConfig.CompilerVersion,
-        detectedVersion: CompilerConfig.CompilerVersion?
-    ): CompilerConfig.CompilerVersion =
-        if (forcedMode) selectedVersion else detectedVersion ?: CompilerConfig.CompilerVersion.V3107
+        selectedVersion: ContentConfig.CompilerVersion,
+        detectedVersion: ContentConfig.CompilerVersion?
+    ): ContentConfig.CompilerVersion =
+        if (forcedMode) selectedVersion else detectedVersion ?: ContentConfig.CompilerVersion.V3107
 
     /** Resets one-shot compiler recovery state for a new app process/session. */
     /** Resets session fallback state for a new app process/session. */
@@ -97,22 +97,22 @@ object Runner {
      *  2. the running compiler is 3.10.7;
      *  3. the compiler mode is Auto, not Forced.
      *
-     * Anything else — forced mode, a non-3.10.7 run, output without the symbol —
+     * Anything else - forced mode, a non-3.10.7 run, output without the symbol -
      * leaves the stored version untouched.
      */
     @Synchronized
-    fun applyAddressOfPolicy(output: String, runningVersion: CompilerConfig.CompilerVersion) {
+    fun applyAddressOfPolicy(output: String, runningVersion: ContentConfig.CompilerVersion) {
         if (output.isBlank()) return
 
-        val n_config = CompilerConfig.getInstanceOrNull() ?: return
+        val n_config = ContentConfig.getInstanceOrNull() ?: return
 
-        // Condition 3 — Auto mode only.
+        // Condition 3 - Auto mode only.
         if (n_config.n_forced_compiler_mode) return
 
-        // Condition 2 — the run that produced this output was 3.10.7.
-        if (runningVersion != CompilerConfig.CompilerVersion.V3107) return
+        // Condition 2 - the run that produced this output was 3.10.7.
+        if (runningVersion != ContentConfig.CompilerVersion.V3107) return
 
-        // Condition 1 — read the symbol the way the explainer reads it: the
+        // Condition 1 - read the symbol the way the explainer reads it: the
         // quoted-symbol regexes from [Explainer.QUOTED_SYMBOL_PATTERNS] plus the
         // unquoted spelling, so `undefined symbol "__addressof"`,
         // `undefined symbol '__addressof'` and a bare `__addressof(` all hit.
@@ -120,10 +120,10 @@ object Runner {
             output.contains("__addressof", ignoreCase = true)
         if (!n_undefinedAddressOf) return
 
-        if (n_config.n_compiler_version != CompilerConfig.CompilerVersion.V3107) return
+        if (n_config.n_compiler_version != ContentConfig.CompilerVersion.V3107) return
         // The setter writes both SharedPreferences and the JSON mirror in
         // Documents/PawnMC/config/, so the switch survives a restart.
-        n_config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
+        n_config.n_compiler_version = ContentConfig.CompilerVersion.V31011
         Log.i(
             "Compiler",
             "__addressof undefined under 3.10.7 in Auto mode; " +
@@ -131,14 +131,14 @@ object Runner {
         )
         SystemNotification.restartNeeded(
             SystemNotification.contextOrNull(),
-            CompilerConfig.CompilerVersion.V3107.label,
-            CompilerConfig.CompilerVersion.V31011.label
+            ContentConfig.CompilerVersion.V3107.label,
+            ContentConfig.CompilerVersion.V31011.label
         )
     }
 
     /** Enables the one-shot assist toggles after a failed compile. */
     private fun applyAutomaticFailureToggles(exitCode: Int, output: String) {
-        val n_config = CompilerConfig.getInstanceOrNull() ?: return
+        val n_config = ContentConfig.getInstanceOrNull() ?: return
 
         if (exitCode == 0) {
             CONSECUTIVE_FAILURES = 0
@@ -168,7 +168,7 @@ object Runner {
      * the archive was never unpacked) the call reports failure and the compile
      * returns an explicit error instead of an `UnsatisfiedLinkError`.
      */
-    private fun ensureInitialized(version: CompilerConfig.CompilerVersion): Boolean {
+    private fun ensureInitialized(version: ContentConfig.CompilerVersion): Boolean {
         val n_host = HOST
         if (n_host == null) {
             Log.e("Compiler", "No host context; cannot locate ${version.libraryName}")
@@ -196,7 +196,7 @@ object Runner {
     }
 
     /** Loaded native compiler version, or null before the first compile. */
-    fun getLoadedVersion(): CompilerConfig.CompilerVersion? = INITIALIZED_VER
+    fun getLoadedVersion(): ContentConfig.CompilerVersion? = INITIALIZED_VER
 
     /**
      * True when switching to [requestedVersion] cannot be honoured in this process.
@@ -205,7 +205,7 @@ object Runner {
      * `library/<abi>/` and the bridge only re-points at it. This stays only for the case
      * where there is no host context at all and therefore no folder to load from.
      */
-    fun isRestartRequired(requestedVersion: CompilerConfig.CompilerVersion): Boolean =
+    fun isRestartRequired(requestedVersion: ContentConfig.CompilerVersion): Boolean =
         HOST == null && IS_INITIALIZED && INITIALIZED_VER != requestedVersion
 
     /** True when the error count in [output] reaches the fallback [threshold]. */
@@ -224,9 +224,9 @@ object Runner {
     fun compile(
         sourceFile: String,
         options: List<String> = emptyList(),
-        version: CompilerConfig.CompilerVersion = CompilerConfig.CompilerVersion.V3107
+        version: ContentConfig.CompilerVersion = ContentConfig.CompilerVersion.V3107
     ): Pair<Int, String> {
-        val n_config = CompilerConfig.getInstanceOrNull()
+        val n_config = ContentConfig.getInstanceOrNull()
         val n_isForced = n_config?.n_forced_compiler_mode == true
 
         val n_result = compileWithVersion(sourceFile, options, version)
@@ -264,7 +264,7 @@ object Runner {
     fun compileManual(
         sourceFile: String,
         options: List<String>,
-        version: CompilerConfig.CompilerVersion
+        version: ContentConfig.CompilerVersion
     ): Pair<Int, String> {
         val first = compileWithVersion(sourceFile, options, version, manualArguments = true)
         applyAddressOfPolicy(first.second, version)
@@ -280,15 +280,15 @@ object Runner {
 
     internal fun compilerOptionsForVersion(
         options: List<String>,
-        version: CompilerConfig.CompilerVersion
+        version: ContentConfig.CompilerVersion
     ): List<String> {
         val normalized = mutableListOf<String>()
         var hasSscanfFlag = false
         val versionSafeOptions = if (
-            version == CompilerConfig.CompilerVersion.V3107 &&
-            options.any { CompilerConfig.isO2OptimizationFlag(it) }
+            version == ContentConfig.CompilerVersion.V3107 &&
+            options.any { ContentConfig.isO2OptimizationFlag(it) }
         ) {
-            options.filterNot { CompilerConfig.isOptimizationFlag(it) } + "-O=1"
+            options.filterNot { ContentConfig.isOptimizationFlag(it) } + "-O=1"
         } else {
             options
         }
@@ -306,17 +306,17 @@ object Runner {
         // Quiet run: unless the arguments already name a verbosity level, the native
         // run is silenced behind the scenes with `-v0` (the mirror of the default in
         // `buildOptionsFor` for console-style invocations that skip the GUI options).
-        if (normalized.none { CompilerConfig.isVerbosityFlag(it) }) {
+        if (normalized.none { ContentConfig.isVerbosityFlag(it) }) {
             normalized += "-v0"
         }
-        if (version != CompilerConfig.CompilerVersion.V3107) return normalized
+        if (version != ContentConfig.CompilerVersion.V3107) return normalized
         return normalized.filterNot { it == SSCANF_NO_NICE_FEATURES_FLAG } + SSCANF_NO_NICE_FEATURES_FLAG
     }
 
     internal fun compilerArgumentsForVersion(
         sourceFile: String,
         options: List<String>,
-        version: CompilerConfig.CompilerVersion
+        version: ContentConfig.CompilerVersion
     ): List<String> = buildList {
         add(STR_PAWNCC_BINARY_NAME)
         add(sourceFile)
@@ -327,7 +327,7 @@ object Runner {
     private fun compileWithVersion(
         sourceFile: String,
         options: List<String>,
-        version: CompilerConfig.CompilerVersion,
+        version: ContentConfig.CompilerVersion,
         manualArguments: Boolean = false
     ): Pair<Int, String> {
         // The archive is unpacked at startup; a missing or wrong-ABI file gets one
@@ -348,7 +348,7 @@ object Runner {
         Log.d("Compiler", "Compiling with: ${INITIALIZED_VER?.label}")
 
         // Automatic assists last exactly one compile.
-        val n_config = CompilerConfig.getInstanceOrNull()
+        val n_config = ContentConfig.getInstanceOrNull()
         if (n_config?.n_explain_auto == true) {
             Log.i("Compiler", "Auto-assist: dropping the temporary Explain output instruction")
             n_config.n_explain_output = false
@@ -374,7 +374,7 @@ object Runner {
         runCatching {
             val n_source = File(sourceFile)
             _compiler_store.record(
-                CompilerConfig.getInstance().applicationContextHolder(),
+                ContentConfig.getInstance().applicationContextHolder(),
                 _compiler_store.Entry(
                     timestamp = n_startTime,
                     sourcePath = sourceFile,

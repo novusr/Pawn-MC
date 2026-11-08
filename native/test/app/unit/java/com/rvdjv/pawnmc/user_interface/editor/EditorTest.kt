@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.editor
+﻿package com.rvdjv.pawnmc.user_interface.editor
 
 import com.rvdjv.pawnmc.apps_data.data_syntax.PawnRegistry
 import com.rvdjv.pawnmc.apps_data.data_syntax.InternDat
@@ -16,7 +16,7 @@ import com.rvdjv.pawnmc.user_interface.editor.xedapi.EditorViewModel
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.LINE_COLUMN_SEPARATOR
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.cursorPositionLabel
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.resolveJumpColumn
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.user_interface.main.shouldRestoreLastSelectedFile
 import kotlinx.coroutines.Dispatchers as CoroutineDispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -576,12 +576,12 @@ class EditorTest {
         val function = dataset.items.first { it.name == "print" }
         val untranslated = dataset.items.first { it.name == "stock" }
 
-        assertEquals("Mendeklarasikan variabel lokal atau global", keyword.descriptionFor(CompilerConfig.AppLanguage.ID))
-        assertEquals("Declares a local or global variable", keyword.descriptionFor(CompilerConfig.AppLanguage.EN))
-        assertEquals("Mencetak teks biasa", function.descriptionFor(CompilerConfig.AppLanguage.ID))
-        assertEquals("Description without translation", untranslated.descriptionFor(CompilerConfig.AppLanguage.ID))
-        assertEquals("Declares a local or global variable", keyword.descriptionFor(CompilerConfig.AppLanguage.ES))
-        assertEquals("Prints a plain string", function.descriptionFor(CompilerConfig.AppLanguage.ES))
-        assertEquals("Description without translation", untranslated.descriptionFor(CompilerConfig.AppLanguage.ES))
+        assertEquals("Mendeklarasikan variabel lokal atau global", keyword.descriptionFor(ContentConfig.AppLanguage.ID))
+        assertEquals("Declares a local or global variable", keyword.descriptionFor(ContentConfig.AppLanguage.EN))
+        assertEquals("Mencetak teks biasa", function.descriptionFor(ContentConfig.AppLanguage.ID))
+        assertEquals("Description without translation", untranslated.descriptionFor(ContentConfig.AppLanguage.ID))
+        assertEquals("Declares a local or global variable", keyword.descriptionFor(ContentConfig.AppLanguage.ES))
+        assertEquals("Prints a plain string", function.descriptionFor(ContentConfig.AppLanguage.ES))
+        assertEquals("Description without translation", untranslated.descriptionFor(ContentConfig.AppLanguage.ES))
     }
 }

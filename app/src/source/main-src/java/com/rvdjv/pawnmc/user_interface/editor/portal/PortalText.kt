@@ -1,7 +1,7 @@
-package com.rvdjv.pawnmc.user_interface.editor.portal
+﻿package com.rvdjv.pawnmc.user_interface.editor.portal
 
 import android.content.Context
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_config.TomlData
 
 /**
@@ -15,7 +15,7 @@ internal object PortalText {
     private var cached: Map<String, String>? = null
 
     /** Looks up [key] for [language], falling back to English and then to the key. */
-    fun get(context: Context, key: String, language: CompilerConfig.AppLanguage): String {
+    fun get(context: Context, key: String, language: ContentConfig.AppLanguage): String {
         val entries = cached ?: synchronized(this) {
             cached ?: runCatching {
                 context.applicationContext.assets.open(ASSET_PATH)

@@ -1,6 +1,6 @@
-package com.rvdjv.pawnmc.apps_data.data_compiler
+﻿package com.rvdjv.pawnmc.apps_data.data_compiler
 
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.user_interface.main.MainViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -29,25 +29,25 @@ class SuccessTest {
 
     @Test
     fun `returns the other compiler version`() {
-        assertEquals(CompilerConfig.CompilerVersion.V31011, CompilerConfig.CompilerVersion.V3107.other())
-        assertEquals(CompilerConfig.CompilerVersion.V3107, CompilerConfig.CompilerVersion.V31011.other())
+        assertEquals(ContentConfig.CompilerVersion.V31011, ContentConfig.CompilerVersion.V3107.other())
+        assertEquals(ContentConfig.CompilerVersion.V3107, ContentConfig.CompilerVersion.V31011.other())
     }
 
     @Test
     fun `forced compiler keeps the configured version instead of detection or fallback`() {
         assertEquals(
-            CompilerConfig.CompilerVersion.V31011,
+            ContentConfig.CompilerVersion.V31011,
             Compiler.compilerVersionForMode(
                 forcedMode = true,
-                selectedVersion = CompilerConfig.CompilerVersion.V31011,
-                detectedVersion = CompilerConfig.CompilerVersion.V3107
+                selectedVersion = ContentConfig.CompilerVersion.V31011,
+                detectedVersion = ContentConfig.CompilerVersion.V3107
             )
         )
         assertEquals(
-            CompilerConfig.CompilerVersion.V3107,
+            ContentConfig.CompilerVersion.V3107,
             Compiler.compilerVersionForMode(
                 forcedMode = false,
-                selectedVersion = CompilerConfig.CompilerVersion.V31011,
+                selectedVersion = ContentConfig.CompilerVersion.V31011,
                 detectedVersion = null
             )
         )
@@ -55,16 +55,16 @@ class SuccessTest {
 
     @Test
     fun `matches detected compiler metadata by product version and size`() {
-        assertTrue(CompilerConfig.CompilerVersion.V31011.matchesDetected(CompilerConfig.STR_V31011, 19_000L, null))
-        assertTrue(CompilerConfig.CompilerVersion.V31011.matchesDetected(null, null, "9044b9ef65658c79851b4e2e249e5c75"))
-        assertTrue(CompilerConfig.CompilerVersion.V3107.matchesDetected(null, 28_000L, "a48e04d28e8cb77e0361ecb4dced2501"))
+        assertTrue(ContentConfig.CompilerVersion.V31011.matchesDetected(ContentConfig.STR_V31011, 19_000L, null))
+        assertTrue(ContentConfig.CompilerVersion.V31011.matchesDetected(null, null, "9044b9ef65658c79851b4e2e249e5c75"))
+        assertTrue(ContentConfig.CompilerVersion.V3107.matchesDetected(null, 28_000L, "a48e04d28e8cb77e0361ecb4dced2501"))
         assertEquals(
-            CompilerConfig.CompilerVersion.V31011,
-            CompilerConfig.CompilerVersion.V3107.nearestSupportedEquivalent(null, 18_944L, null)
+            ContentConfig.CompilerVersion.V31011,
+            ContentConfig.CompilerVersion.V3107.nearestSupportedEquivalent(null, 18_944L, null)
         )
         assertEquals(
-            CompilerConfig.CompilerVersion.V3107,
-            CompilerConfig.CompilerVersion.V31011.nearestSupportedEquivalent(null, 28_672L, null)
+            ContentConfig.CompilerVersion.V3107,
+            ContentConfig.CompilerVersion.V31011.nearestSupportedEquivalent(null, 28_672L, null)
         )
     }
 
@@ -75,7 +75,7 @@ class SuccessTest {
         val compilerFile = File(pawnoDir, "pawncc.exe")
         val sourceFile = File(root, "Server.pwn")
         val compilerBytes = ByteArray(18_944)
-        CompilerConfig.STR_V31011.toByteArray(Charsets.UTF_16LE).copyInto(compilerBytes)
+        ContentConfig.STR_V31011.toByteArray(Charsets.UTF_16LE).copyInto(compilerBytes)
 
         pawnoDir.mkdirs()
         compilerFile.writeBytes(compilerBytes)
@@ -87,8 +87,8 @@ class SuccessTest {
                 .digest(compilerBytes)
                 .joinToString("") { "%02x".format(it) }
 
-            assertEquals(CompilerConfig.CompilerVersion.V31011, detected?.version)
-            assertEquals(CompilerConfig.STR_V31011, detected?.productVersion)
+            assertEquals(ContentConfig.CompilerVersion.V31011, detected?.version)
+            assertEquals(ContentConfig.STR_V31011, detected?.productVersion)
             assertEquals(compilerFile.absolutePath, detected?.filePath)
             assertEquals(expectedMd5, detected?.md5)
         } finally {
@@ -98,12 +98,12 @@ class SuccessTest {
 
     @Test
     fun `build options include optimization level`() {
-        val options = CompilerConfig.buildOptionsFor(
-            optimizationLevel = CompilerConfig.OptimizationLevel.O2,
+        val options = ContentConfig.buildOptionsFor(
+            optimizationLevel = ContentConfig.OptimizationLevel.O2,
             mandatorySemicolons = true,
             mandatoryParentheses = true,
             customFlags = "-v=0",
-            compilerVersion = CompilerConfig.CompilerVersion.V31011
+            compilerVersion = ContentConfig.CompilerVersion.V31011
         )
 
         /*
@@ -118,32 +118,32 @@ class SuccessTest {
 
     @Test
     fun `optimization level two is restricted to pawn 3 10 11`() {
-        val version3107Options = CompilerConfig.buildOptionsFor(
-            optimizationLevel = CompilerConfig.OptimizationLevel.O2,
+        val version3107Options = ContentConfig.buildOptionsFor(
+            optimizationLevel = ContentConfig.OptimizationLevel.O2,
             customFlags = "-O2 -O=2 -v=0",
-            compilerVersion = CompilerConfig.CompilerVersion.V3107
+            compilerVersion = ContentConfig.CompilerVersion.V3107
         )
         assertTrue(version3107Options.contains("-O=1"))
-        assertFalse(version3107Options.any { CompilerConfig.isO2OptimizationFlag(it) })
+        assertFalse(version3107Options.any { ContentConfig.isO2OptimizationFlag(it) })
         assertEquals(
-            CompilerConfig.OptimizationLevel.O1,
-            CompilerConfig.effectiveOptimizationLevel(
-                CompilerConfig.CompilerVersion.V3107,
-                CompilerConfig.OptimizationLevel.O2
+            ContentConfig.OptimizationLevel.O1,
+            ContentConfig.effectiveOptimizationLevel(
+                ContentConfig.CompilerVersion.V3107,
+                ContentConfig.OptimizationLevel.O2
             )
         )
         assertEquals(
             listOf(
-                CompilerConfig.OptimizationLevel.O0,
-                CompilerConfig.OptimizationLevel.O1
+                ContentConfig.OptimizationLevel.O0,
+                ContentConfig.OptimizationLevel.O1
             ),
-            CompilerConfig.optimizationLevelsFor(CompilerConfig.CompilerVersion.V3107)
+            ContentConfig.optimizationLevelsFor(ContentConfig.CompilerVersion.V3107)
         )
         assertEquals(
-            CompilerConfig.OptimizationLevel.O2,
-            CompilerConfig.effectiveOptimizationLevel(
-                CompilerConfig.CompilerVersion.V31011,
-                CompilerConfig.OptimizationLevel.O2
+            ContentConfig.OptimizationLevel.O2,
+            ContentConfig.effectiveOptimizationLevel(
+                ContentConfig.CompilerVersion.V31011,
+                ContentConfig.OptimizationLevel.O2
             )
         )
     }
@@ -152,10 +152,10 @@ class SuccessTest {
     fun `fallback argument normalization removes o2 for pawn 3 10 7`() {
         val options = Compiler.compilerOptionsForVersion(
             listOf("-O=2", "-O2", "-d=3"),
-            CompilerConfig.CompilerVersion.V3107
+            ContentConfig.CompilerVersion.V3107
         )
 
-        assertFalse(options.any { CompilerConfig.isO2OptimizationFlag(it) })
+        assertFalse(options.any { ContentConfig.isO2OptimizationFlag(it) })
         assertTrue(options.contains("-O=1"))
     }
 
@@ -165,7 +165,7 @@ class SuccessTest {
 
         val options3107 = Compiler.compilerOptionsForVersion(
             options,
-            CompilerConfig.CompilerVersion.V3107
+            ContentConfig.CompilerVersion.V3107
         )
         assertEquals(
             options + "SSCANF_NO_NICE_FEATURES=1",
@@ -174,14 +174,14 @@ class SuccessTest {
 
         val options31011 = Compiler.compilerOptionsForVersion(
             options,
-            CompilerConfig.CompilerVersion.V31011
+            ContentConfig.CompilerVersion.V31011
         )
         assertEquals(options, options31011)
 
         val compilerArguments = Compiler.compilerArgumentsForVersion(
             "/project/main.pwn",
             options,
-            CompilerConfig.CompilerVersion.V3107
+            ContentConfig.CompilerVersion.V3107
         )
         assertEquals("pawncc", compilerArguments.first())
         assertEquals("/project/main.pwn", compilerArguments[1])
@@ -202,14 +202,14 @@ class SuccessTest {
     fun `console-style options get the quiet verbosity behind the scenes`() {
         val options = Compiler.compilerOptionsForVersion(
             listOf("-d=3"),
-            CompilerConfig.CompilerVersion.V31011
+            ContentConfig.CompilerVersion.V31011
         )
 
         assertTrue(options.contains("-v0"))
 
         val overridden = Compiler.compilerOptionsForVersion(
             listOf("-d=3", "-v1"),
-            CompilerConfig.CompilerVersion.V31011
+            ContentConfig.CompilerVersion.V31011
         )
 
         assertTrue(overridden.contains("-v1"))
@@ -228,11 +228,11 @@ class SuccessTest {
 
         assertEquals(
             listOf("-i=/project/include", "-v=0", "SSCANF_NO_NICE_FEATURES=1"),
-            Compiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V3107)
+            Compiler.compilerOptionsForVersion(options, ContentConfig.CompilerVersion.V3107)
         )
         assertEquals(
             listOf("-i=/project/include", "SSCANF_NO_NICE_FEATURES=1", "-v=0"),
-            Compiler.compilerOptionsForVersion(options, CompilerConfig.CompilerVersion.V31011)
+            Compiler.compilerOptionsForVersion(options, ContentConfig.CompilerVersion.V31011)
         )
     }
 
@@ -274,24 +274,24 @@ class SuccessTest {
 
         try {
             assertEquals(
-                listOf(CompilerConfig.normalPath(File(root, "pawno/include").absolutePath)),
+                listOf(ContentConfig.normalPath(File(root, "pawno/include").absolutePath)),
                 Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
             )
 
             File(root, "pawno/include").delete()
             assertEquals(
-                listOf(CompilerConfig.normalPath(File(root, "qawno/include").absolutePath)),
+                listOf(ContentConfig.normalPath(File(root, "qawno/include").absolutePath)),
                 Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
             )
 
             File(root, "qawno/include").delete()
             assertEquals(
-                listOf(CompilerConfig.normalPath(File(root, "includes").absolutePath)),
+                listOf(ContentConfig.normalPath(File(root, "includes").absolutePath)),
                 Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath)
             )
 
             File(root, "includes").delete()
-            val fallback = CompilerConfig.normalPath(File(root, "include").absolutePath)
+            val fallback = ContentConfig.normalPath(File(root, "include").absolutePath)
             assertEquals(listOf(fallback), Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath))
             assertFalse(File(fallback).exists())
         } finally {
@@ -308,7 +308,7 @@ class SuccessTest {
         File(root, "qawno/include").mkdirs()
 
         try {
-            val known = listOf(CompilerConfig.normalPath(File(root, "qawno/include").absolutePath))
+            val known = listOf(ContentConfig.normalPath(File(root, "qawno/include").absolutePath))
             val paths = Compiler.discoverRelevantIncludePaths(sourceFile.absolutePath, known)
 
             assertTrue(paths.isEmpty())

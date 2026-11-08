@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.apps_data.data_config
+﻿package com.rvdjv.pawnmc.apps_data.data_config
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -8,7 +8,7 @@ import java.util.Locale
 /**
  * compiler configuration options.
  */
-class CompilerConfig private constructor(context: Context) {
+class ContentConfig private constructor(context: Context) {
 
     private val appContext: Context = context.applicationContext
 
@@ -32,14 +32,14 @@ class CompilerConfig private constructor(context: Context) {
     init {
         restoreFromFile()
         prefs.registerOnSharedPreferenceChangeListener(prefListener)
-        if (!CompilerConfigFile.exists(appContext)) {
+        if (!ContentConfigFile.exists(appContext)) {
             mirrorToFile()
         }
     }
 
     /** Repopulates the prefs from the JSON mirror after a reinstall. */
     fun restoreFromFile() {
-        if (!CompilerConfigFile.restore(appContext, prefs)) return
+        if (!ContentConfigFile.restore(appContext, prefs)) return
 
         suppressMirror = true
         try {
@@ -96,7 +96,7 @@ class CompilerConfig private constructor(context: Context) {
     /** Rewrites the JSON file from the current prefs. */
     fun mirrorToFile() {
         if (suppressMirror) return
-        CompilerConfigFile.mirror(appContext, prefs)
+        ContentConfigFile.mirror(appContext, prefs)
     }
 
     //
@@ -275,7 +275,7 @@ class CompilerConfig private constructor(context: Context) {
      * automatic switch-on consumes it and drops both the flag and the switch, so
      * a user-set "Ignore case" stays untouched while an automatic one behaves
      * like a one-shot instruction. It is deliberately not mirrored to the JSON
-     * file — it only has to outlive a single failed compile.
+     * file - it only has to outlive a single failed compile.
      */
     var n_ignore_case_auto: Boolean
         get() = prefs.getBoolean(KEY_IGNORE_CASE_AUTO, false)
@@ -289,7 +289,7 @@ class CompilerConfig private constructor(context: Context) {
      * automatic switch-on consumes it and drops both the flag and the switch, so
      * a user-set "Explain output" stays untouched while an automatic one behaves
      * like a one-shot instruction. It is deliberately not mirrored to the JSON
-     * file — it only has to outlive a single failed compile.
+     * file - it only has to outlive a single failed compile.
      */
     var n_explain_auto: Boolean
         get() = prefs.getBoolean(KEY_EXPLAIN_AUTO, false)
@@ -344,7 +344,7 @@ class CompilerConfig private constructor(context: Context) {
      */
     fun repinCompilerModeFor(
         sourcePath: String?,
-        detectedVersion: CompilerConfig.CompilerVersion? = null
+        detectedVersion: ContentConfig.CompilerVersion? = null
     ): CompilerVersion {
         if (n_forced_compiler_mode) return n_compiler_version
         if (sourcePath.isNullOrBlank()) return n_compiler_version
@@ -648,7 +648,7 @@ class CompilerConfig private constructor(context: Context) {
         internal const val KEY_OPTIMIZATION      = "optimization_level"
         internal const val KEY_IGNORE_CASE       = "ignore_case"
         internal const val KEY_EXPLAIN_OUTPUT    = "explain_output"
-        private const val PREFS_NAME           = "compiler_config"
+        private const val PREFS_NAME           = "content_config"
         internal const val KEY_LAST_DIR         = "last_open_dir"
         internal const val KEY_LAST_FILE        = "last_sel_file"
         internal const val KEY_LAST_FILE_URI    = "last_sel_file_uri"
@@ -882,14 +882,14 @@ class CompilerConfig private constructor(context: Context) {
             if (!candidateFile.exists()) return false
 
             val canonicalKey = runCatching {
-                CompilerConfig.includePathKey(candidateFile.canonicalPath)
+                ContentConfig.includePathKey(candidateFile.canonicalPath)
             }.getOrNull() ?: return false
 
             for (path in existing) {
                 val file = java.io.File(normalPath(path))
                 if (!file.exists()) continue
                 val otherCanonical = runCatching {
-                    CompilerConfig.includePathKey(file.canonicalPath)
+                    ContentConfig.includePathKey(file.canonicalPath)
                 }.getOrNull() ?: continue
                 if (otherCanonical == canonicalKey) return true
             }
@@ -928,22 +928,22 @@ class CompilerConfig private constructor(context: Context) {
         }
 
         @Volatile
-        private var instance: CompilerConfig? = null
+        private var instance: ContentConfig? = null
 
-        fun getInstance(): CompilerConfig = instance
-            ?: throw IllegalStateException("CompilerConfig is not initialized. Call getInstance(context) first.")
+        fun getInstance(): ContentConfig = instance
+            ?: throw IllegalStateException("ContentConfig is not initialized. Call getInstance(context) first.")
 
-        fun getInstanceOrNull(): CompilerConfig? = instance
+        fun getInstanceOrNull(): ContentConfig? = instance
 
         @Synchronized
-        fun getInstance(context: Context): CompilerConfig {
-            return instance ?: CompilerConfig(context).also { instance = it }
+        fun getInstance(context: Context): ContentConfig {
+            return instance ?: ContentConfig(context).also { instance = it }
         }
 
         /** Re-read the user-editable mirror file into the live preferences. */
         fun reloadFromFile(context: Context): Boolean {
             val current = getInstance(context)
-            val loaded = CompilerConfigFile.restore(context, current.prefs)
+            val loaded = ContentConfigFile.restore(context, current.prefs)
             if (loaded) current.refreshPropertiesFromPreferences()
             return loaded
         }

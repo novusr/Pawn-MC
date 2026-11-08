@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.editor.xedapi
+﻿package com.rvdjv.pawnmc.user_interface.editor.xedapi
 
 import android.content.Context
 import android.graphics.Canvas
@@ -8,7 +8,7 @@ import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import android.view.inputmethod.InputConnectionWrapper
-import com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig
+import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import io.github.rosemoe.sora.widget.CodeEditor
 import io.github.rosemoe.sora.widget.SymbolPairMatch
 import io.github.rosemoe.sora.widget.EditorRenderer
@@ -22,13 +22,13 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
     /**
      * How opening brackets behave when typed.
      *
-     * Defaults to [CompilerConfig.EditorAutoClose.SMART]: no closing bracket is
+     * Defaults to [ContentConfig.EditorAutoClose.SMART]: no closing bracket is
      * ever inserted by the editor, so a fast `()` or `{}` can never end up with
      * a doubled closer. The value comes from the Xed Editor settings and is
      * pushed here by the editor screen whenever it changes.
      */
-    var autoCloseMode: CompilerConfig.EditorAutoClose =
-        CompilerConfig.getInstance(context).n_editor_auto_close
+    var autoCloseMode: ContentConfig.EditorAutoClose =
+        ContentConfig.getInstance(context).n_editor_auto_close
         set(value) {
             field = value
             // sora's own symbol-pair matcher is the thing inserting the closers on
@@ -39,7 +39,7 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
             val pairs = languageSymbolPairs ?: SymbolPairMatch().also { languageSymbolPairs = it }
             // The matcher has no on/off flag: an empty map means every opener falls
             // through as a plain character, which is exactly the "off" behaviour.
-            if (value == CompilerConfig.EditorAutoClose.SMART) {
+            if (value == ContentConfig.EditorAutoClose.SMART) {
                 pairs.putPair('(', null)
                 pairs.putPair('{', null)
                 pairs.putPair('[', null)
@@ -58,7 +58,7 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
                     val typed = text[0]
                     // "Off" mode: an opening bracket inserts itself only. Commit
                     // the bare character here so sora's pair expansion never runs.
-                    if (autoCloseMode == CompilerConfig.EditorAutoClose.SMART &&
+                    if (autoCloseMode == ContentConfig.EditorAutoClose.SMART &&
                         typed in OPENING_SYMBOLS
                     ) {
                         commitBareCharacter(typed)
@@ -67,7 +67,7 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
                     // "Smart pair" mode: the closer was auto-inserted, so a
                     // closing character typed right after it moves over instead
                     // of doubling it. "Always pair" skips this on purpose.
-                    if (autoCloseMode != CompilerConfig.EditorAutoClose.PAIR_ALWAYS &&
+                    if (autoCloseMode != ContentConfig.EditorAutoClose.PAIR_ALWAYS &&
                         skipExistingClosingCharacter(typed)
                     ) {
                         return true
@@ -103,7 +103,7 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
             return true
         }
         val typed = event.unicodeChar
-        if (typed.toChar() in OPENING_SYMBOLS && autoCloseMode == CompilerConfig.EditorAutoClose.SMART) {
+        if (typed.toChar() in OPENING_SYMBOLS && autoCloseMode == ContentConfig.EditorAutoClose.SMART) {
             commitBareCharacter(typed.toChar())
             return true
         }

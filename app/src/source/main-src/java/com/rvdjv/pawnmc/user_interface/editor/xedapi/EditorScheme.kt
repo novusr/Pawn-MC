@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.user_interface.editor.xedapi
+﻿package com.rvdjv.pawnmc.user_interface.editor.xedapi
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
@@ -12,7 +12,7 @@ import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
  *
  * Split out of `EditorScreen.kt`: everything here is a pure function of the app theme and
  * the optional user-picked canvas colour, with no Compose state and no widget access, so
- * it can be changed — and reasoned about — without the screen. Two decisions live here:
+ * it can be changed - and reasoned about - without the screen. Two decisions live here:
  *
  *  - the editor is tinted from the *canvas* rather than from the app theme, so a user who
  *    pins a dark canvas while the app is in light mode still gets light-on-dark text;
@@ -159,7 +159,7 @@ private val DarkPalette = SyntaxPalette(
  * while the dark one looked colourful. This set keeps every hue clearly
  * separated but sits in the mid-tone, high-chroma band that light IDE themes
  * (One Light, GitHub Light) use: saturated enough to be unmistakably coloured
- * at a glance, yet still ≥ 3:1 contrast against a white canvas.
+ * at a glance, yet still >= 3:1 contrast against a white canvas.
  */
 private val LightPalette = SyntaxPalette(
     keyword = 0xFFB45309.toInt(),
@@ -176,7 +176,7 @@ private val LightPalette = SyntaxPalette(
  * Parses a `#RRGGBB` string into an ARGB int, returning `null` for anything else.
  *
  * The stored preference is already validated by
- * [com.rvdjv.pawnmc.apps_data.data_config.CompilerConfig.normalizeEditorBackgroundColor];
+ * [com.rvdjv.pawnmc.apps_data.data_config.ContentConfig.normalizeEditorBackgroundColor];
  * this is the second gate that keeps a malformed value from reaching the
  * editor scheme, and it never throws.
  */
@@ -188,7 +188,7 @@ private fun parseHexColor(hex: String): Int? {
 }
 
 /**
- * Picks black or white — whichever contrasts more with [background].
+ * Picks black or white - whichever contrasts more with [background].
  *
  * Uses the ITU-R BT.601 luma approximation, which is the same weighting the
  * Material colour system uses for `onColor` decisions, so a custom background
