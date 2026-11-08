@@ -79,6 +79,35 @@ object Explainer {
     internal fun explainMarker(language: CompilerConfig.AppLanguage): String =
         EXPLAIN_PREFIX[language] ?: "[explain]"
 
+    /**
+     * True when [output] carries an `undefined symbol` hit naming [symbol].
+     *
+     * Read with the same quoted-symbol patterns the explanation fill uses
+     * ([QUOTED_SYMBOL_PATTERNS]), so the recovery decision and the text the user
+     * sees are derived from one reading of the compiler output — a message the
+     * explainer recognises is exactly the message the switch acts on.
+     */
+    internal fun explainsUndefinedSymbol(output: String, symbol: String): Boolean {
+        if (output.isBlank() || symbol.isBlank()) return false
+        val n_symbol = symbol.trim()
+        val n_undefinedLines = output.lineSequence().filter { line ->
+            line.contains("undefined", ignoreCase = true) &&
+                line.contains("symbol", ignoreCase = true)
+        }
+        for (line in n_undefinedLines) {
+            val n_quoted = QUOTED_SYMBOL_PATTERNS.firstNotNullOfOrNull { pattern ->
+                pattern.find(line)?.groupValues?.get(1)?.trim()
+            }
+            if (n_quoted != null && n_quoted.equals(n_symbol, ignoreCase = true)) return true
+            // Unquoted spelling: `undefined symbol __addressof` (the newer
+            // message shape writes the symbol without quotes).
+            if (Regex("(?i)undefined\\s+symbol\\s*:?\\s+" + Regex.escape(n_symbol))
+                    .containsMatchIn(line)
+            ) return true
+        }
+        return false
+    }
+
     fun explainCompilerOutput(
         rawText: String,
         cacheDir: File,

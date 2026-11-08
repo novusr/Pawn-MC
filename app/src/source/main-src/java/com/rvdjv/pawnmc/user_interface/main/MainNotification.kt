@@ -55,7 +55,9 @@ object MainNotification {
             ?: ""
 
         val notification: Notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(com.rvdjv.pawnmc.R.mipmap.ic_launcher)
+            // Same reason as SystemNotification: the adaptive mipmap renders as a
+            // grey box in the shade; the foreground vector is the proper mask.
+            .setSmallIcon(com.rvdjv.pawnmc.R.drawable.ic_launcher_foreground)
             .setContentTitle("PawnMC \u2014 $status")
             .setContentText(lastLine)
             .setStyle(NotificationCompat.BigTextStyle().bigText(lastLine))

@@ -95,8 +95,20 @@ suspend fun resolveDocumentToFile(context: Context, uri: Uri): File? =
 private fun resolveTree(resolver: ContentResolver, treeUri: Uri): File? {
     val documentId = runCatching { DocumentsContract.getTreeDocumentId(treeUri) }.getOrNull() ?: return null
 
-    val prefix = documentId.substringBefore(':', "").lowercase()
-    val relative = documentId.substringAfter(':', "")
+    // SAF sometimes hands back the *document* uri of a nested folder rather than
+    // the tree root (a pick started from a child). When getTreeDocumentId looks
+    // like a raw document id — its own uri still carries a document part — prefer
+    // the deepest id the uri exposes; using the tree id blindly was what mapped
+    // a `Downloads/xyz` pick onto `/storage/emulated` and showed the emulated/
+    // skeleton in the panel instead of the picked folder.
+    val nested = runCatching { DocumentsContract.getDocumentId(treeUri) }.getOrNull()
+    val idForResolve = when {
+        nested != null && nested != documentId -> nested
+        else -> documentId
+    }
+
+    val prefix = idForResolve.substringBefore(':', "").lowercase()
+    val relative = idForResolve.substringAfter(':', "")
 
     val segments = relative.split('/').filter { it.isNotEmpty() }
 
@@ -104,6 +116,10 @@ private fun resolveTree(resolver: ContentResolver, treeUri: Uri): File? {
     val candidate = when (prefix) {
         // Primary storage: root itself (empty relative) or a subfolder.
         "primary" -> if (segments.isEmpty()) root else File(root, segments.joinToString(File.separator))
+        // `home:` / `raw:` style ids still live under primary storage; resolve
+        // their path portion against the primary root instead of dropping the pick.
+        "home" -> File(root, "Documents").takeIf { segments.isEmpty() }
+            ?: File(root, segments.joinToString(File.separator))
         // Removable media: /storage/<volume>/<subpath>; a bare volume root is valid too.
         else -> {
             val volume = "/storage/$prefix"

@@ -31,6 +31,9 @@ object ServerApp {
     fun install(context: Context) {
         val app = context.applicationContext as? Application ?: return
         Handler.install(app)
+        // Preparation logs happen before RuntimeService.onCreate; capture the
+        // context here so the early `[Prepare]` lines land in the journal.
+        com.pocketsamp.server.service_handler.RuntimeService.attachEarlyContext(app)
     }
 
     /**

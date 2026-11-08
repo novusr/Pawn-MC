@@ -183,6 +183,60 @@ class Server(private val context: Context) {
             var cfgContent = cfgFile.readText()
             var modified = false
 
+            /*
+             * The `plugins` line has to name files that actually exist in the
+             * folder's `plugins/` directory: SA-MP reports "Loaded 0 plugins"
+             * (and often exits 1 right after) when a listed .so is missing.
+             * Restrict the line to what is really there instead of shipping a
+             * wish list the folder cannot satisfy.
+             */
+            val availablePlugins = File(sampDir, "plugins")
+                .listFiles()
+                ?.filter { it.isFile && it.extension.equals("so", true) }
+                ?.map { it.name }
+                .orEmpty()
+            if (availablePlugins.isEmpty()) {
+                if (cfgContent.contains(Regex("(?i)^\\s*plugins\\s+\\S", RegexOption.MULTILINE))) {
+                    cfgContent = cfgContent.replace(
+                        Regex("(?i)^\\s*plugins\\s+.*$", RegexOption.MULTILINE),
+                        "# plugins removed: the plugins folder holds no .so files"
+                    )
+                    modified = true
+                    scope.launch { _serverLogs.emit(t("log.tuning.plugins.none")) }
+                }
+            } else {
+                val currentListed = cfgContent
+                    .lineSequence()
+                    .firstOrNull { it.trim().startsWith("plugins", ignoreCase = true) }
+                    ?.trim()
+                    ?.split(Regex("\\s+"))
+                    ?.drop(1)
+                    .orEmpty()
+                val wanted = availablePlugins.filter { name ->
+                    currentListed.any { listed ->
+                        listed.equals(name, ignoreCase = true) ||
+                            listed.equals(name.removeSuffix(".so"), ignoreCase = true)
+                    }
+                }.ifEmpty { availablePlugins }
+                val currentSignature = currentListed.joinToString(" ").lowercase()
+                val wantedSignature = wanted.joinToString(" ").lowercase()
+                if (currentSignature != wantedSignature) {
+                    val pluginsLine = "plugins ${wanted.joinToString(" ")}"
+                    cfgContent = if (cfgContent.contains(Regex("(?i)^\\s*plugins\\s", RegexOption.MULTILINE))) {
+                        cfgContent.replace(
+                            Regex("(?i)^\\s*plugins\\s+.*$", RegexOption.MULTILINE),
+                            pluginsLine
+                        )
+                    } else {
+                        "$pluginsLine\n$cfgContent"
+                    }
+                    modified = true
+                    scope.launch {
+                        _serverLogs.emit(t("log.tuning.plugins").replace("{list}", wanted.joinToString(" ")))
+                    }
+                }
+            }
+
             if (cfgContent.contains(Regex("""(?i)^\s*lanmode\s+0""", RegexOption.MULTILINE))) {
                 cfgContent = cfgContent.replace(Regex("""(?i)^\s*lanmode\s+0""", RegexOption.MULTILINE), "lanmode 1")
                 modified = true

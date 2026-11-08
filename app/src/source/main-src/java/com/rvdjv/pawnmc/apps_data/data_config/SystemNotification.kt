@@ -83,7 +83,11 @@ object SystemNotification {
         )
 
         val notification: Notification = NotificationCompat.Builder(target, CHANNEL_ID)
-            .setSmallIcon(com.rvdjv.pawnmc.R.mipmap.ic_launcher)
+            // Notification small icons must be a flat alpha-mask drawable; the
+            // adaptive `mipmap/ic_launcher` (a white-on-grey square) renders as
+            // the grey box the user reported. `ic_launcher_foreground` is the
+            // vector mask the launcher itself composes.
+            .setSmallIcon(com.rvdjv.pawnmc.R.drawable.ic_launcher_foreground)
             .setContentTitle("Restart to apply the compiler switch")
             .setContentText("$fromVersion became $toVersion automatically. Restart PawnMC to load it.")
             .setStyle(

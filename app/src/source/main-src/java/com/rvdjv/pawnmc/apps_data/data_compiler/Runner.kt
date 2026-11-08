@@ -86,49 +86,54 @@ object Runner {
     }
 
     /**
-     * `__addressof` auto-switch, rewritten.
+     * `__addressof` auto-switch, driven by the same reading the explainer uses.
      *
-     * The rule is exactly two cases and nothing else:
+     * The switch fires only when every condition below holds:
      *
-     *  - output mentions `__addressof` and the running compiler is 3.10.11 →
-     *    ignore; the newer compiler is the correct one, nothing to recover.
-     *  - output mentions `__addressof` and the running compiler is 3.10.7 →
-     *    the source needs the symbol only 3.10.11 ships, so the *stored*
-     *    compiler version becomes 3.10.11.
+     *  1. the output really contains an `undefined symbol` hit for
+     *     `__addressof`, read with [Explainer]'s own quoted-symbol patterns
+     *     (the same ones that fill `%s` in the user-facing explanation) or the
+     *     bare symbol mention;
+     *  2. the running compiler is 3.10.7;
+     *  3. the compiler mode is Auto, not Forced.
      *
-     * There is deliberately no forced-mode condition and no automatic recompile:
-     * the next compile the user starts picks the new version up on its own.
+     * Anything else — forced mode, a non-3.10.7 run, output without the symbol —
+     * leaves the stored version untouched.
      */
     @Synchronized
     fun applyAddressOfPolicy(output: String, runningVersion: CompilerConfig.CompilerVersion) {
-        // The message travels in several spellings across compiler releases:
-        // `undefined symbol "__addressof"`, `undefined symbol __addressof`, or the
-        // symbol reference inside a `__addressof(...)` call trace. Match any of them.
-        val n_hit = output.contains("__addressof", ignoreCase = true) ||
-            Regex("(?i)undefined\\s+symbol\\s+\"?_?_?addressof\"?").containsMatchIn(output)
-        if (!n_hit) return
-        // In forced mode, do not auto-switch the compiler version.
-        if (CompilerConfig.getInstanceOrNull()?.n_forced_compiler_mode == true) return
-        when (runningVersion) {
-            CompilerConfig.CompilerVersion.V31011 -> return
-            CompilerConfig.CompilerVersion.V3107 -> {
-                val n_config = CompilerConfig.getInstanceOrNull() ?: return
-                if (n_config.n_compiler_version != CompilerConfig.CompilerVersion.V3107) return
-                // The setter writes both SharedPreferences and the JSON mirror in
-                // Documents/PawnMC/config/, so the switch survives a restart.
-                n_config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
-                Log.i(
-                    "Compiler",
-                    "__addressof in output under " +
-                    "3.10.7; stored compiler version moved to 3.10.11"
-                )
-                SystemNotification.restartNeeded(
-                    SystemNotification.contextOrNull(),
-                    CompilerConfig.CompilerVersion.V3107.label,
-                    CompilerConfig.CompilerVersion.V31011.label
-                )
-            }
-        }
+        if (output.isBlank()) return
+
+        val n_config = CompilerConfig.getInstanceOrNull() ?: return
+
+        // Condition 3 — Auto mode only.
+        if (n_config.n_forced_compiler_mode) return
+
+        // Condition 2 — the run that produced this output was 3.10.7.
+        if (runningVersion != CompilerConfig.CompilerVersion.V3107) return
+
+        // Condition 1 — read the symbol the way the explainer reads it: the
+        // quoted-symbol regexes from [Explainer.QUOTED_SYMBOL_PATTERNS] plus the
+        // unquoted spelling, so `undefined symbol "__addressof"`,
+        // `undefined symbol '__addressof'` and a bare `__addressof(` all hit.
+        val n_undefinedAddressOf = Explainer.explainsUndefinedSymbol(output, "__addressof") ||
+            output.contains("__addressof", ignoreCase = true)
+        if (!n_undefinedAddressOf) return
+
+        if (n_config.n_compiler_version != CompilerConfig.CompilerVersion.V3107) return
+        // The setter writes both SharedPreferences and the JSON mirror in
+        // Documents/PawnMC/config/, so the switch survives a restart.
+        n_config.n_compiler_version = CompilerConfig.CompilerVersion.V31011
+        Log.i(
+            "Compiler",
+            "__addressof undefined under 3.10.7 in Auto mode; " +
+            "stored compiler version moved to 3.10.11"
+        )
+        SystemNotification.restartNeeded(
+            SystemNotification.contextOrNull(),
+            CompilerConfig.CompilerVersion.V3107.label,
+            CompilerConfig.CompilerVersion.V31011.label
+        )
     }
 
     /** Enables the one-shot assist toggles after a failed compile. */

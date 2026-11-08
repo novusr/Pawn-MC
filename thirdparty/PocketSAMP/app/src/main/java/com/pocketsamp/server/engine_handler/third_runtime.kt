@@ -119,7 +119,12 @@ class ThirdRuntime(private val context: Context) {
 
         for (archive in ARCHIVES) {
             val target = archiveFile(context, archive.fileName)
-            if (target.isFile && target.length() > 0L && matchesChecksum(target, archive)) continue
+            if (target.isFile && target.length() > 0L && matchesChecksum(target, archive)) {
+                // Progress for the skip too: a silent gap made the console look
+                // like the preparation never ran.
+                onProgress(t("log.dl.cached").replace("{name}", archive.fileName))
+                continue
+            }
             if (target.exists()) {
                 Log.w(TAG, "Removing invalid cached archive ${archive.fileName}")
                 if (!target.delete()) {

@@ -317,7 +317,7 @@ fun MainScreen(
     // A remembered Xed workspace owns startup selection. Do not revive the main
     // screen's stale single-file path (often TMP/blank.pwn) over an empty workspace.
     LaunchedEffect(Unit) {
-        if (shouldRestoreLastSelectedFile(workspaceAvailable)) viewModel.loadLastSelectedFile()
+        if (shouldRestoreLastSelectedFile(viewModel.workspaceAvailable)) viewModel.loadLastSelectedFile()
 
         if (!hasStoragePermission(context)) {
             showPermissionDialog = true

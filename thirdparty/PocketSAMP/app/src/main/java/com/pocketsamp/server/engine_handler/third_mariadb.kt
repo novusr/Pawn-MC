@@ -62,6 +62,22 @@ class ThirdMariaDb(private val context: Context) {
     /** The install tree the daemon is resolved from, `filesDir/mariadb`. */
     private fun mariadbInstallRoot(): File = File(context.filesDir, "mariadb")
 
+    /**
+     * Classifies why the bundled daemon cannot run on this device.
+     *
+     * `BROKEN` — the file is not a valid ELF at all (truncated extraction,
+     * placeholder, wrong content): re-extracting is the fix.
+     * `WRONG_ARCH` — a valid ELF whose machine the host cannot execute (an
+     * ARM64 daemon on an x86_64 emulator, for instance): the archive is fine,
+     * MariaDB is simply unavailable on this device and stays optional.
+     */
+    private fun daemonFailure(mariadbd: File): String = when {
+        !mariadbd.isFile || mariadbd.length() < 1_000_000L -> "BROKEN"
+        ThirdLauncher.kindOf(mariadbd) == ThirdLauncher.Kind.AARCH64 ->
+            if (android.os.Build.SUPPORTED_ABIS.any { it == "arm64-v8a" }) "NONE" else "WRONG_ARCH"
+        else -> "BROKEN"
+    }
+
     private fun versionParts(value: String): List<Int>? {
         val match = Regex("""(\d+)\.(\d+)\.(\d+)""").find(value) ?: return null
         val parts = match.groupValues.drop(1).map { part -> part.toIntOrNull() }
@@ -154,6 +170,39 @@ class ThirdMariaDb(private val context: Context) {
                 return@withContext false
             }
 
+            when (daemonFailure(mariadbd)) {
+                /*
+                 * A daemon that is not a valid ARM64 ELF cannot be helped by any
+                 * launcher prefix; running it would only print the linker banner
+                 * and exit 0. Report the real state instead of a bare banner.
+                 */
+                "BROKEN" -> {
+                    _dbLogs.emit(
+                        t("log.mdb.daemon.invalid")
+                            .replace("{name}", mariadbd.name)
+                            .replace("{size}", (mariadbd.length() / 1024).toString())
+                            .replace("{kind}", ThirdLauncher.kindOf(mariadbd).name)
+                    )
+                    _dbLogs.emit(t("log.mdb.optional"))
+                    return@withContext false
+                }
+                /*
+                 * A valid ELF of a foreign architecture (ARM64 daemon on an
+                 * x86_64 emulator, for example): the archive is fine, this
+                 * device just cannot execute it natively. MariaDB stays
+                 * optional — the SA-MP server runs without it.
+                 */
+                "WRONG_ARCH" -> {
+                    _dbLogs.emit(
+                        t("log.mdb.daemon.wrongarch")
+                            .replace("{kind}", ThirdLauncher.kindOf(mariadbd).name)
+                            .replace("{abis}", android.os.Build.SUPPORTED_ABIS.take(2).joinToString(" / "))
+                    )
+                    _dbLogs.emit(t("log.mdb.optional"))
+                    return@withContext false
+                }
+            }
+
             val runtimeHome = File(mariadbDir, "runtime-home").apply { mkdirs() }
             val bootstrapLog = File(mariadbDir, "bootstrap.log")
             val bootstrapSqlFiles = listOf(
@@ -217,9 +266,21 @@ class ThirdMariaDb(private val context: Context) {
                     }
                 }
             } catch (e: IOException) {
+                /*
+                 * Writing into a dead bootstrap process surfaces as
+                 * `write failed: EPIPE (Broken pipe)`. The plain IOException
+                 * text confused users because it appeared *above* the MariaDB
+                 * banner with no context; wrap it in the db log stream so it
+                 * is readable as what it is: the initializer exited early.
+                 */
                 result.destroy()
                 val exitCode = withContext(Dispatchers.IO) { result.waitFor() }
                 val output = bootstrapLog.takeIf { it.isFile }?.readText().orEmpty()
+                _dbLogs.emit(
+                    t("log.mdb.init.brokenpipe")
+                        .replace("{code}", exitCode.toString())
+                        .replace("{reason}", e.message.orEmpty())
+                )
                 _dbLogs.emit(
                     t("log.mdb.init.failed")
                         .replace("{code}", exitCode.toString())
@@ -235,7 +296,24 @@ class ThirdMariaDb(private val context: Context) {
                 File(dataDir, "mysql/user.MYD").exists() ||
                 File(systemDb, "user.frm").exists()
             if (exitCode != 0 || !initialized) {
-                _dbLogs.emit(t("log.mdb.init.failed".replace("{code}", exitCode.toString()).replace("{output}", output.takeLast(2000))))
+                /*
+                 * `/system/bin/linker64` printing its banner ("This is
+                 * /system/bin/linker64, the helper program for dynamic
+                 * executables") means the launcher prefix ran the linker without
+                 * a binary it accepted — the daemon never started. Say so
+                 * explicitly instead of dumping the raw banner.
+                 */
+                val rawOutput = output.takeLast(2000)
+                val friendly = if (rawOutput.contains("helper program for dynamic executables")) {
+                    t("log.mdb.init.linkerbanner")
+                } else {
+                    rawOutput
+                }
+                _dbLogs.emit(
+                    t("log.mdb.init.failed")
+                        .replace("{code}", exitCode.toString())
+                        .replace("{output}", friendly)
+                )
                 return@withContext false
             }
             bootstrapLog.delete()
@@ -268,6 +346,30 @@ class ThirdMariaDb(private val context: Context) {
                 }
             }
             return
+        }
+
+        when (daemonFailure(mariadbdBinary)) {
+            "BROKEN" -> {
+                scope.launch {
+                    _dbLogs.emit(
+                        t("log.mdb.daemon.invalid")
+                            .replace("{name}", mariadbdBinary.name)
+                            .replace("{size}", (mariadbdBinary.length() / 1024).toString())
+                            .replace("{kind}", ThirdLauncher.kindOf(mariadbdBinary).name)
+                    )
+                }
+                return
+            }
+            "WRONG_ARCH" -> {
+                scope.launch {
+                    _dbLogs.emit(
+                        t("log.mdb.daemon.wrongarch")
+                            .replace("{kind}", ThirdLauncher.kindOf(mariadbdBinary).name)
+                            .replace("{abis}", android.os.Build.SUPPORTED_ABIS.take(2).joinToString(" / "))
+                    )
+                }
+                return
+            }
         }
 
         val socketFile = File(tmpDir, "mysql.sock")

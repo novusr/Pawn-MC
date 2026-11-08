@@ -55,7 +55,16 @@ object _DirectoryManager {
             }
             alive.firstOrNull()?.let { return File(it) }
         }
-        return getTemplateDirectory()
+        // No folder has ever been picked: activate the template folder as the
+        // working directory instead of returning it as an anonymous fallback.
+        // Registering it here means the File Manager opens with the template
+        // already active (browsable, writable, launchable) and the picker only
+        // appears when the user wants a different folder.
+        val template = getTemplateDirectory()
+        if (template.isDirectory && template.canRead()) {
+            runCatching { setServerDirectory(context, template) }
+        }
+        return template
     }
 
     /**

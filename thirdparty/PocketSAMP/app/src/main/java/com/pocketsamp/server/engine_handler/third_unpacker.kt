@@ -94,12 +94,23 @@ internal object ThirdUnpacker {
                                     // "libstdc++.so.6: cannot open shared object file".
                                     // Copy the link target's bytes instead: a real file
                                     // always resolves where a dangling symlink would not.
+                                    // Relative link names resolve against the link's own
+                                    // directory first (../lib64/... style), then against
+                                    // the extraction root — both spellings occur in the
+                                    // runtime archives.
                                     val copied = runCatching {
-                                        val source = File(outputDir.canonicalFile, entry.linkName)
-                                        val resolved = if (source.isFile) source else {
-                                            File(outputDir.canonicalFile, entry.linkName.substringAfterLast('/'))
+                                        val linkName = entry.linkName
+                                        val candidates = buildList {
+                                            if (File(linkName).isAbsolute) {
+                                                add(File(linkName))
+                                            } else {
+                                                add(File(target.parentFile, linkName))
+                                                add(File(outputDir.canonicalFile, linkName))
+                                            }
+                                            add(File(outputDir.canonicalFile, File(linkName).name))
                                         }
-                                        if (resolved.isFile) {
+                                        val resolved = candidates.firstOrNull { it.isFile }
+                                        if (resolved != null) {
                                             target.parentFile?.mkdirs()
                                             resolved.copyTo(target, overwrite = true)
                                             true
@@ -121,10 +132,23 @@ internal object ThirdUnpacker {
                                         processed += count
                                     }
                                 }
-                                if (!partial.renameTo(target)) {
+                                // renameTo refuses when the destination exists
+                                // (FUSE is the usual offender) — clear the old
+                                // copy first, and if rename still fails, fall
+                                // back to a plain copy so the file lands anyway.
+                                if (target.exists() && !target.delete()) {
                                     partial.delete()
                                     throw IllegalStateException("Unable to finalize extracted file ${target.name}")
                                 }
+                                val renamed = partial.renameTo(target)
+                                val copied = !renamed && runCatching {
+                                    partial.copyTo(target, overwrite = true)
+                                }.isSuccess
+                                if (!renamed && !copied) {
+                                    partial.delete()
+                                    throw IllegalStateException("Unable to finalize extracted file ${target.name}")
+                                }
+                                if (partial.exists()) partial.delete()
                                 if ((entry.mode and 0b001_001_001) != 0) {
                                     target.setExecutable(true, false)
                                 }

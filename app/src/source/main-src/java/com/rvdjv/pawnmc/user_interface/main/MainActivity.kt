@@ -200,6 +200,14 @@ class MainActivity : ComponentActivity() {
                 var returnToPocketSamp by remember { mutableStateOf(false) }
                 val currentFilePath = viewModel.selectedFilePath
 
+                // The main screen's startup decision (restore the last single file or
+                // leave the workspace alone) reads this live mirror; the compose-time
+                // parameter can be stale when a remembered workspace is restored late.
+                val workspaceIsOpen = editorViewModel.workspace.isWorkspaceOpen
+                LaunchedEffect(workspaceIsOpen) {
+                    viewModel.refreshWorkspaceAvailable(workspaceIsOpen)
+                }
+
                 LaunchedEffect(pendingXedRequest?.requestId) {
                     val request = pendingXedRequest ?: return@LaunchedEffect
                     val target = File(request.path)

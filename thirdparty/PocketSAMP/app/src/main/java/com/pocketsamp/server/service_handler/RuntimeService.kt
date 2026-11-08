@@ -57,6 +57,21 @@ class RuntimeService : Service() {
             consoleLogSink = sink
         }
 
+        /**
+         * Captures the app context before the service starts.
+         *
+         * Preparation logs (`[Prepare] ...`) are appended from the hosting
+         * activity while the runtime archives are still downloading — at that
+         * point `onCreate` has never run and `appContext` is still null. Calling
+         * this from `ServerApp.install` makes those early lines hit the journal
+         * instead of silently disappearing.
+         */
+        fun attachEarlyContext(context: android.content.Context) {
+            if (appContext == null) {
+                appContext = context.applicationContext
+            }
+        }
+
         /** True while the service (and therefore the engine) is alive. */
         @Volatile
         var isServiceRunning: Boolean = false
@@ -69,6 +84,21 @@ class RuntimeService : Service() {
         /** Own journal of console lines; trimmed at startup, written per line. */
         @Volatile
         private var journalFile: java.io.File? = null
+
+        /**
+         * Journal location resolvable before the service exists.
+         *
+         * `MainActivity` logs `[Prepare]` lines while the runtime is still being
+         * downloaded — before `RuntimeService.onCreate` has ever run — so the
+         * journal path is computed straight from a context instead of relying on
+         * the service having started. Without this the same preparation either
+         * showed up in the console or vanished depending on whether the service
+         * happened to be alive at that moment.
+         */
+        fun journalFileFor(context: android.content.Context): java.io.File {
+            val dir = java.io.File(context.filesDir, "console_logs").apply { mkdirs() }
+            return java.io.File(dir, "console.jsonl")
+        }
         private val _serverStatus = MutableStateFlow(Status.STOPPED)
         val serverStatus: StateFlow<Status> = _serverStatus.asStateFlow()
 
@@ -99,8 +129,13 @@ class RuntimeService : Service() {
                 // The host (PawnMC) mirrors every line into its SQLite log via the
                 // consoleLogSink installed at launch, so this module only keeps its
                 // own lightweight JSONL journal — the module does not link PawnMC
-                // code and cannot call the host store directly.
-                journalFile?.let { file ->
+                // code and cannot call the host store directly. When the service
+                // has not started yet (preparation from the dashboard), resolve the
+                // journal from the captured app context so early lines persist too.
+                val journal = journalFile ?: appContext?.let { context ->
+                    runCatching { journalFileFor(context) }.getOrNull()
+                }
+                journal?.let { file ->
                     runCatching { file.appendText(line.replace('\n', ' ') + "\n") }
                 }
                 val current = _logFeed.value.toMutableList()
@@ -181,12 +216,11 @@ class RuntimeService : Service() {
         super.onCreate()
         appContext = applicationContext
         journalFile = runCatching {
-            val dir = java.io.File(applicationContext.filesDir, "console_logs").apply { mkdirs() }
-            val file = java.io.File(dir, "console.jsonl")
-            // Keep the journal bounded: older lines are the host's SQLite store's
-            // job, this file only has to survive a session.
-            if (file.isFile && file.length() > 512 * 1024) file.delete()
-            file
+            journalFileFor(applicationContext).also { file ->
+                // Keep the journal bounded: older lines are the host's SQLite store's
+                // job, this file only has to survive a session.
+                if (file.isFile && file.length() > 512 * 1024) file.delete()
+            }
         }.getOrNull()
         isServiceRunning = true
         createNotificationChannel()
@@ -212,6 +246,22 @@ class RuntimeService : Service() {
                 updateNotification(t("notify.exit137"))
             } else {
                 appendLog(t("log.exited").replace("{code}", exitCode.toString()))
+                // Surface the tail of server_log.txt right after the exit line:
+                // an SA-MP exit code 1 always has a reason in the log (a missing
+                // gamemode, a plugin that failed to load) and showing only the
+                // code left the user guessing why the server bailed out.
+                val logTail = runCatching {
+                    val logFile = File(_DirectoryManager.getServerDirectory(applicationContext), "server_log.txt")
+                    if (logFile.isFile) {
+                        logFile.readLines().takeLast(12).joinToString("\n")
+                    } else {
+                        ""
+                    }
+                }.getOrDefault("")
+                if (logTail.isNotBlank()) {
+                    appendLog(t("log.exit.tail"))
+                    logTail.lines().forEach { appendLog(it) }
+                }
                 updateNotification(t("notify.stopped").replace("{code}", exitCode.toString()))
             }
 

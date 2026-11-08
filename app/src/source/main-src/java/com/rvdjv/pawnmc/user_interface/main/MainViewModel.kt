@@ -141,6 +141,22 @@ class MainViewModel(
     var n_ignore_case by mutableStateOf(config.n_ignore_case)
         private set
 
+    /**
+     * Live mirror of "a Xed workspace is currently open".
+     *
+     * The compose parameter is captured once per composition and can be stale
+     * during the startup effect; the startup decision (restore the last single
+     * file or leave the workspace alone) has to read the live state, otherwise a
+     * workspace restored in the background got overwritten with blank.pwn.
+     */
+    var workspaceAvailable by mutableStateOf(false)
+        private set
+
+    /** Called by the activity whenever the editor's workspace state changes. */
+    fun refreshWorkspaceAvailable(open: Boolean) {
+        workspaceAvailable = open
+    }
+
     var selectedFilePath by mutableStateOf<String?>(null)
         private set
 
@@ -204,6 +220,9 @@ class MainViewModel(
     }
 
     fun loadLastSelectedFile() {
+        // A Xed workspace being open owns the editor: writing a single-file path
+        // (often the blank.pwn starter) here would fight the workspace restore.
+        if (workspaceAvailable) return
         val lastPath = config.n_last_selected_file_path
         if (lastPath != null && File(lastPath).exists()) {
             selectFile(lastPath, isStartupLoad = true)
@@ -440,11 +459,10 @@ class MainViewModel(
             }
             if (sourcePath.isNullOrBlank()) return@launch
 
-            // Keep the compiler default at 3.10.7 when the EXE is absent or the metadata
-            // does not match any known version.
-            config.n_compiler_version = CompilerConfig.CompilerVersion.V3107
-            detectedCompilerVersionCache = CompilerConfig.CompilerVersion.V3107
-            detectedCompilerSourcePath = sourcePath
+            // No nearby compiler and no metadata match: leave the stored version
+            // alone. Forcing it back to 3.10.7 here used to undo the automatic
+            // `__addressof` recovery the moment the UI re-detected after a compile,
+            // which is why the switch looked like it never happened.
         }
     }
 
