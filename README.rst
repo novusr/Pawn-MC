@@ -113,6 +113,8 @@ Installation
 Download the latest `release <//github.com/novusr/Pawn-MC/releases/latest>`_ for your
 Android device and install the provided APK.
 
+.. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/PAWNMC.png
+
 Configuration
 -------------
 
