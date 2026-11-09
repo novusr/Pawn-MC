@@ -11,7 +11,7 @@ import java.io.File
 object CaseConversion {
 
     private val INCLUDE_DIRECTIVE_REGEX =
-        Regex("""(?i)#include\s*(?:\"([^\"]+)\"|'([^']+)'|<([^>]+)>)""")
+        Regex("""(?im)^(?![ \t]*(?://|/\*|\*))[ \t]*#include[ \t]*(?:\"([^\"]+)\"|'([^']+)'|<([^>]+)>)""")
 
     /** Outcome of the "Ignore case" filesystem conversion for one folder. */
     enum class ConversionStatus {
@@ -37,16 +37,17 @@ object CaseConversion {
         val rewrittenIncludes: Int = 0
     )
 
-    /** Lowercases every static `#include` reference of a source. */
+    /** Lowercases static includes while leaving comments and other source text untouched. */
     fun lowercaseIncludeReferences(content: String): String =
-        INCLUDE_DIRECTIVE_REGEX.replace(content) { match ->
-            val n_original_value = match.groupValues[1]
+        content.lineSequence().joinToString("\n") { line ->
+            val match = INCLUDE_DIRECTIVE_REGEX.matchEntire(line) ?: return@joinToString line
+            val path = match.groupValues[1]
                 .ifBlank { match.groupValues[2] }
                 .ifBlank { match.groupValues[3] }
-            if (n_original_value.isBlank()) return@replace match.value
-            val n_prefix = match.value.substringBefore(n_original_value)
-            val n_suffix = match.value.substringAfterLast(n_original_value)
-            "$n_prefix${n_original_value.lowercase()}$n_suffix"
+            if (path.isBlank()) return@joinToString line
+            val prefix = line.substringBefore(path)
+            val suffix = line.substringAfterLast(path)
+            "$prefix${path.lowercase()}$suffix"
         }
 
     /** Folder that receives the untouched copy of [workingDir]. */
@@ -88,12 +89,13 @@ object CaseConversion {
     fun needsConversion(workingDir: File, rememberedBackupDir: String? = null): Boolean {
         val n_backup = backupDirFor(workingDir)
         if (n_backup.isDirectory) return false
+        if (!hasConvertibleEntry(workingDir)) return false
         // The stored key alone is not enough: the backup must still be on disk.
         if (!rememberedBackupDir.isNullOrBlank()) {
             val n_remembered = File(rememberedBackupDir)
             if (n_remembered.absolutePath != n_backup.absolutePath && n_remembered.isDirectory) return false
         }
-        return hasConvertibleEntry(workingDir)
+        return true
     }
 
     /** Backs up the folder of the browsed file and lowercases it in place. */
@@ -162,8 +164,22 @@ object CaseConversion {
         }
     }
 
-    private fun hasConvertibleEntry(workingDir: File): Boolean =
-        workingDir.listFiles()?.any { !it.isDirectory && isConvertibleSource(it) } == true
+    private fun hasConvertibleEntry(workingDir: File): Boolean {
+        if (!workingDir.isDirectory) return false
+        val entries = workingDir.walkTopDown().filter { it != workingDir }.toList()
+        val hasSource = entries.any { it.isFile && isConvertibleSource(it) }
+        if (!hasSource) return false
+        val hasMixedCaseEntry = entries.any { it.name != it.name.lowercase() }
+        val hasMixedCaseInclude = entries.asSequence()
+            .filter { it.isFile && isConvertibleSource(it) }
+            .any { file ->
+                runCatching {
+                    val content = file.readText()
+                    lowercaseIncludeReferences(content) != content
+                }.getOrDefault(false)
+            }
+        return hasMixedCaseEntry || hasMixedCaseInclude
+    }
 
     private fun isConvertibleSource(file: File): Boolean =
         file.extension.lowercase() in CONVERTIBLE_EXTENSIONS

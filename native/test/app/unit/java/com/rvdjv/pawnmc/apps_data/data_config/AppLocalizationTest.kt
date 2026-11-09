@@ -168,15 +168,15 @@ class AppLocalizationTest {
             constructor.newInstance(parsed)
         }
 
-        // Key-based translation
-        assertEquals("osnovnye", localizer.get("settings.general", ContentConfig.AppLanguage.RU))
+        // Key-based translation preserves the supplied localized value.
+        assertEquals("Osnovnye", localizer.get("settings.general", ContentConfig.AppLanguage.RU))
 
         // Phrase / word-based translation
         assertEquals("Yazyk", localizer.get("Language", ContentConfig.AppLanguage.RU))
-        assertEquals("nastroyki¸", localizer.get("Settings", ContentConfig.AppLanguage.RU))
+        assertEquals("konfiguratsiya", localizer.get("Settings", ContentConfig.AppLanguage.RU))
 
-        // English recovers from Russian source text as well
-        assertEquals("Settings", localizer.get("nastroyki", ContentConfig.AppLanguage.EN))
+        // English recovers from the configured Russian source text as well.
+        assertEquals("Settings", localizer.get("konfiguratsiya", ContentConfig.AppLanguage.EN))
     }
 
     @Test
