@@ -1,4 +1,4 @@
-package com.rvdjv.pawnmc.apps_data.data_syntax
+﻿package com.rvdjv.pawnmc.apps_data.data_syntax
 
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import org.junit.Assert.assertEquals
@@ -141,9 +141,9 @@ class InternTomlTest {
             "rcon_password", "gravity", "weather", "tirepopping", "gamemodetext",
             "filterscripts", "plugins", "nosign", "anticheat", "instagib", "myriad",
             "chatlogging", "messageholelimit", "playertimeout", "db_logging",
-            "db_log_queries", "onfoot_rate", "incar_rate", "maxplayerperip",
-            "stream_rate", "stream_distance", "sleep", "connseedtime", "conncookies",
-            "cookielogging", "useartwork", "artpath", "artwork", "version"
+            "db_log_queries", "onfoot_rate", "incar_rate", "stream_rate", "stream_distance",
+            "sleep", "connseedtime", "conncookies", "cookielogging", "useartwork",
+            "artpath", "artwork", "version"
         )
         val missing = requested.filterNot { ServerConfig.isDirective(it) }
         assertTrue("missing from ServerConfig: $missing", missing.isEmpty())

@@ -17,7 +17,7 @@ class ServerConfigTest {
         "rcon_password", "gravity", "weather", "tirepopping", "gamemodetext",
         "filterscripts", "plugins", "nosign", "anticheat", "instagib", "myriad",
         "chatlogging", "messageholelimit", "playertimeout", "db_logging",
-        "db_log_queries", "onfoot_rate", "incar_rate", "maxplayerperip",
+        "db_log_queries", "onfoot_rate", "incar_rate",
         "stream_rate", "stream_distance", "sleep", "connseedtime", "conncookies",
         "cookielogging", "useartwork", "artpath", "artwork", "version"
     )

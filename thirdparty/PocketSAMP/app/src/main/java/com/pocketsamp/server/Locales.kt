@@ -1872,11 +1872,11 @@ object Locales {
             Lang.RU to "Podmesti vsyo",
         ),
         "console.idle" to mapOf(
-            Lang.ID to "Rumah sedang mudik. KASIH BAHAN BAKAR biar balik bawa masalah.",
-            Lang.EN to "The house is on vacation. FEED IT FUEL so it comes back with problems.",
-            Lang.TL to "Nagbabakasyon ang bahay. LAGYAN NG GASOLINA para bumalik na may problema.",
-            Lang.ES to "La casa está de vacaciones. ¡ÉCHALE COMBUSTIBLE para que vuelva con problemas!",
-            Lang.RU to "Dom na kanikulakh. ZAPRAAV EGO, chtoby vernulsya s problemami.",
+            Lang.ID to "Bos lagi mudik. KASIH BAHAN BAKAR biar balik bawa masalah.",
+            Lang.EN to "The boss is on vacation. FEED IT FUEL so it comes back with problems.",
+            Lang.TL to "Nagbabakasyon ang boss. LAGYAN NG GASOLINA para bumalik na may problema.",
+            Lang.ES to "El jefe está de vacaciones. ¡ÉCHALE COMBUSTIBLE para que vuelva con problemas!",
+            Lang.RU to "Boss na kanikulakh. ZAPRAAV EGO, chtoby vernulsya s problemami.",
         ),
         "config.field.hostname" to mapOf(
             Lang.ID to "Hostname server",
