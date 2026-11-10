@@ -258,7 +258,7 @@ object Locales {
             Lang.RU to "Pomosch",
         ),
         "tab.dashboard" to mapOf(
-            Lang.ID to "Beranda",
+            Lang.ID to "Keranda",
             Lang.EN to "Home",
             Lang.TL to "Bahay",
             Lang.ES to "Panel",
@@ -398,7 +398,7 @@ object Locales {
             Lang.RU to "Podklyucheno: 127.0.0.1:3306 (root)",
         ),
         "db.offline.hint" to mapOf(
-            Lang.ID to "Nyalain server dari Beranda dulu, baru balik ke sini ya.",
+            Lang.ID to "Nyalain server dari Keranda dulu, baru balik ke sini ya.",
             Lang.EN to "Fire the server up from Home, then swing back here.",
             Lang.TL to "Simulan ang server sa Home, tapos balik dito.",
             Lang.ES to "Encende el servidor en Inicio, despues volvé.",
@@ -1304,7 +1304,7 @@ object Locales {
             Lang.RU to "\$System [Restore] Ne poluchilos: {error}",
         ),
         "log.restore.gaveup" to mapOf(
-            Lang.ID to "\$System [Restore] Sistem terus matiin server. Auto-restore berhenti — nyalain manual dari Beranda.",
+            Lang.ID to "\$System [Restore] Sistem terus matiin server. Auto-restore berhenti — nyalain manual dari Keranda.",
             Lang.EN to "\$System [Restore] The system keeps killing it. Auto-recovery stopped — start manually from Home.",
             Lang.TL to "\$System [Restore] Pinapatay lage ng system. Stop na auto-recovery — simulan manually sa Home.",
             Lang.ES to "\$System [Restore] El sistema lo apaga siempre. Cortamos auto-recuperacion — prendelo manual.",
