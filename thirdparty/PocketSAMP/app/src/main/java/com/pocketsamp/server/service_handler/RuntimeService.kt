@@ -112,7 +112,13 @@ class RuntimeService : Service() {
 
         /** Consecutive auto-recoveries after an OS kill; reset once the server stays up. */
         private val crashRestartAttempts = java.util.concurrent.atomic.AtomicInteger(0)
-        private const val MAX_CRASH_RESTARTS = 3
+        /*
+         * Single-shot recovery: after a crash the process gets exactly one retry,
+         * then it is left down. Previous behaviour allowed three retries and the
+         * rapid-fire restart loop kept flooding the console with copies of the
+         * same failure until the user noticed.
+         */
+        private const val MAX_CRASH_RESTARTS = 1
         private const val RESTART_BACKOFF_MS = 2000L
 
         private val _lanIp = MutableStateFlow(FALLBACK_LAN_IP)

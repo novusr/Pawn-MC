@@ -184,6 +184,7 @@ internal object ThirdUnpacker {
                             logWarning("Symlink skipped: $linkPath -> $linkTarget")
                         }
                     }
+                }
             } catch (eof: java.io.EOFException) {
                 throw IllegalStateException(
                     t("log.unpack.incomplete").replace(

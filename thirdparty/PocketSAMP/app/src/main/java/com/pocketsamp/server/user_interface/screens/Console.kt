@@ -15,9 +15,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.SendToBack
+import androidx.compose.material.icons.automirrored.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Scissors
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import kotlinx.coroutines.flow.collectLatest
@@ -90,7 +90,7 @@ fun _Console(
                     cm.setPrimaryClip(ClipData.newPlainText("PocketSAMP log", joined))
                     Toast.makeText(context, t("copy.done"), Toast.LENGTH_SHORT).show()
                 }
-                ConsoleIconButton(Icons.AutoMirrored.Filled.SendToBack) {
+                ConsoleIconButton(Icons.AutoMirrored.Filled.ArrowDownward) {
                     val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
                     val name = "pocketsamp-console-${SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(Date())}.txt"
                     runCatching {
@@ -103,7 +103,7 @@ fun _Console(
                         Toast.makeText(context, t("files.operation.failed"), Toast.LENGTH_SHORT).show()
                     }
                 }
-                ConsoleIconButton(Icons.Default.Scissors) { onClearLogs() }
+                ConsoleIconButton(Icons.Default.Close) { onClearLogs() }
             }
         }
 
