@@ -206,7 +206,7 @@ fun _Console(
         /*
          * Passive info panel: a second, "dead" console at the bottom that just
          * reports what the app is running on — device model, Android version,
-         * PawnMC/PocketSAMP version and the current timestamp. Nothing here is
+         * PawnMC/ version and the current timestamp. Nothing here is
          * interactive; it exists so support requests come with context attached.
          */
         DeviceInfoConsole()

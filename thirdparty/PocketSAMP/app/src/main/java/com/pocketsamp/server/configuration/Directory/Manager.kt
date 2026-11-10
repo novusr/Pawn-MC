@@ -25,7 +25,7 @@ object _DirectoryManager {
     }
 
     /**
-     * `Documents/Pawn-MC/PocketSAMP`, the app's own folder on shared storage.
+     * `Documents/PawnMC/`, the app's own folder on shared storage.
      *
      * Nested under a named product folder so nothing else litters the user's
      * Documents root; the old `Documents/PawnMC` spot migrates automatically.
@@ -44,11 +44,11 @@ object _DirectoryManager {
         return target
     }
 
-    /** The current documents location, `Documents/Pawn-MC/PocketSAMP`. */
+    /** The current documents location, `Documents/PawnMC/`. */
     fun documentsPawnMcDir(): File {
         val extStorage = Environment.getExternalStorageDirectory()
-            ?: return File("/storage/emulated/0/Documents/Pawn-MC/PocketSAMP")
-        return File(File(extStorage, Environment.DIRECTORY_DOCUMENTS), "Pawn-MC/PocketSAMP")
+            ?: return File("/storage/emulated/0/Documents/PawnMC/")
+        return File(File(extStorage, Environment.DIRECTORY_DOCUMENTS), "PawnMC/")
     }
 
     /** The pre-rename location, kept only for the one-time migration above. */
