@@ -30,7 +30,11 @@ val TextSecondaryLight = Color(0xFF55584F)
 val TextMutedLight = Color(0xFF777A71)
 
 /*
- * Terminal/log canvas: near-black in both themes (a console is expected to be dark
- * and this keeps the log colour coding readable).
+ * Terminal/log canvas: neutral semi-dark, not the near-black void it used to be.
+ * Keeps the log colour coding readable while letting the text breathe on both
+ * low- and high-brightness screens.
  */
-val TerminalBg = Color(0xFF07080B)
+val TerminalBg = Color(0xFF2B2C28)
+
+/** Soft warm yellow for the floating tab-rail buttons. */
+val FloatingRailAccent = Color(0xFFF2CE7A)

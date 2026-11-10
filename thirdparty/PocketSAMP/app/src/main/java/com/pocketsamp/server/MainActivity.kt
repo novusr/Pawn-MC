@@ -32,10 +32,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.ReportProblem
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Monitor
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -70,10 +70,10 @@ enum class AppTab(val label: String, val icon: ImageVector) {
     // The help entry sits first so the rail reads as "learn, then use".
     HELP("Help", Icons.AutoMirrored.Filled.HelpOutline),
     DASHBOARD("Dashboard", Icons.Default.Home),
-    CONSOLE("Console", Icons.Default.Terminal),
+    CONSOLE("Console", Icons.Default.Monitor),
     FILES("Files", Icons.Default.FolderOpen),
     DATABASE("Database", Icons.Default.Storage),
-    CRASHES("Crash Logs", Icons.Default.ReportProblem),
+    CRASHES("Crash Logs", Icons.Default.BugReport),
     CONFIG("Config", Icons.Default.Settings)
 }
 
@@ -116,7 +116,7 @@ class MainActivity : ComponentActivity() {
             if (!ThirdRuntime.isComplete(applicationContext)) {
                 runtime.sync { line ->
                     android.util.Log.i("RuntimeDownload", line)
-                    RuntimeService.appendLog("[Prepare] $line")
+                    RuntimeService.appendSystemLog("Prepare", line)
                 }
                 // A failed sync leaves the archives unusable; surface it and let
                 // the next entry into the screen retry, instead of unpacking a
@@ -131,7 +131,7 @@ class MainActivity : ComponentActivity() {
             try {
                 if (!assetExtractor.isExtracted()) {
                     assetExtractor.extractAll { progress ->
-                        RuntimeService.appendLog("[Prepare] $progress")
+                        RuntimeService.appendSystemLog("Prepare", progress)
                     }
                     // A fresh install reports the old installed version (or none);
                     // re-reading here flips assetExtractorInitialised without the
@@ -359,7 +359,7 @@ class MainActivity : ComponentActivity() {
                             Icon(
                                 imageVector = tab.icon,
                                 contentDescription = t("tab.${tab.name.lowercase()}"),
-                                tint = if (selected) SampThemeColors.accent else SampThemeColors.textMuted,
+                                tint = if (selected) FloatingRailAccent else SampThemeColors.textMuted,
                                 modifier = Modifier.size(20.dp)
                             )
                         }

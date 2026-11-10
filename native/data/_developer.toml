@@ -13,118 +13,116 @@
 id = "Perintah yang tersedia:\n  help                 Tampilkan daftar perintah\n  docs                 Buka dokumentasi Developer Portal\n  pawncc <file> [flag] Jalankan pawncc dengan file dan flag yang ditulis\n  switch [versi]       Ganti compiler 3.10.7 / 3.10.11\n  clear                Bersihkan riwayat console (alias: celar)\n  ls                   Daftar file dan folder di workspace\n  whoami               Nama pengguna console\n  time                 Jam saat ini\n  date                 Tanggal dan waktu lengkap\n  which <perintah>     Lokasi program atau perintah bawaan\n  deviceinfo           Informasi perangkat dan ABI\n  version              Versi PawnMC dan compiler\n  github               Tautan repositori\n\nContoh: pawncc gamemodes/mode.pwn -d=3\nKetik docs untuk dokumentasi lengkap."
 en = "Available commands:\n  help                 Show the command list\n  docs                 Open the Developer Portal documentation\n  pawncc <file> [flags] Run pawncc with the specified file and flags\n  switch [version]     Switch compiler 3.10.7 / 3.10.11\n  clear                Clear console history (alias: celar)\n  ls                   List files and folders in the workspace\n  whoami               Console user name\n  time                 Current clock time\n  date                 Full date and time\n  which <command>      Location of a program or a built-in command\n  deviceinfo           Device and ABI information\n  version              PawnMC and compiler version\n  github               Repository link\n\nExample: pawncc gamemodes/mode.pwn -d=3\nType docs for full documentation."
 tl = "Mga available na command:\n  help                 Ipakita ang listahan ng command\n  docs                 Buksan ang dokumentasyon ng Developer Portal\n  pawncc <file> [flags] Patakbuhin ang pawncc sa file at flags na tinukoy\n  switch [version]     Palitan ang compiler 3.10.7 / 3.10.11\n  clear                Burahin ang history ng console (alias: celar)\n  ls                   Ilista ang file at folder sa workspace\n  whoami               Pangalan ng user sa console\n  time                 Kasalukuyang oras\n  date                 Buong petsa at oras\n  which <command>      Lokasyon ng program o built-in na command\n  deviceinfo           Impormasyon ng device at ABI\n  version              Bersyon ng PawnMC at compiler\n  github               Link ng repository\n\nHalimbawa: pawncc gamemodes/mode.pwn -d=3\nI-type ang docs para sa buong dokumentasyon."
-ru = "Ð”Ð¾ÑÑ‚ÑƒÐ¿Ð½Ñ‹Ðµ ÐºÐ¾Ð¼Ð°Ð½Ð´Ñ‹:\n  help                 ÐŸÐ¾ÐºÐ°Ð·Ð°Ñ‚ÑŒ ÑÐ¿Ð¸ÑÐ¾Ðº ÐºÐ¾Ð¼Ð°Ð½Ð´\n  docs                 ÐžÑ‚ÐºÑ€Ñ‹Ñ‚ÑŒ Ð´Ð¾ÐºÑƒÐ¼ÐµÐ½Ñ‚Ð°Ñ†Ð¸ÑŽ Developer Portal\n  pawncc <file> [flags] Ð—Ð°Ð¿ÑƒÑÑ‚Ð¸Ñ‚ÑŒ pawncc Ñ ÑƒÐºÐ°Ð·Ð°Ð½Ð½Ñ‹Ð¼ Ñ„Ð°Ð¹Ð»Ð¾Ð¼ Ð¸ Ñ„Ð»Ð°Ð³Ð°Ð¼Ð¸\n  switch [version]     ÐŸÐµÑ€ÐµÐºÐ»ÑŽÑ‡Ð¸Ñ‚ÑŒ ÐºÐ¾Ð¼Ð¿Ð¸Ð»ÑÑ‚Ð¾Ñ€ 3.10.7 / 3.10.11\n  clear                ÐžÑ‡Ð¸ÑÑ‚Ð¸Ñ‚ÑŒ Ð¸ÑÑ‚Ð¾Ñ€Ð¸ÑŽ ÐºÐ¾Ð½ÑÐ¾Ð»Ð¸ (Ð¿ÑÐµÐ²Ð´Ð¾Ð½Ð¸Ð¼: celar)\n  ls                   Ð¡Ð¿Ð¸ÑÐ¾Ðº Ñ„Ð°Ð¹Ð»Ð¾Ð² Ð¸ Ð¿Ð°Ð¿Ð¾Ðº Ñ€Ð°Ð±Ð¾Ñ‡ÐµÐ¹ Ð¾Ð±Ð»Ð°ÑÑ‚Ð¸\n  whoami               Ð˜Ð¼Ñ Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»Ñ ÐºÐ¾Ð½ÑÐ¾Ð»Ð¸\n  time                 Ð¢ÐµÐºÑƒÑ‰ÐµÐµ Ð²Ñ€ÐµÐ¼Ñ\n  date                 ÐŸÐ¾Ð»Ð½Ð°Ñ Ð´Ð°Ñ‚Ð° Ð¸ Ð²Ñ€ÐµÐ¼Ñ\n  which <command>      ÐŸÑƒÑ‚ÑŒ Ðº Ð¿Ñ€Ð¾Ð³Ñ€Ð°Ð¼Ð¼Ðµ Ð¸Ð»Ð¸ Ð²ÑÑ‚Ñ€Ð¾ÐµÐ½Ð½Ð¾Ð¹ ÐºÐ¾Ð¼Ð°Ð½Ð´Ðµ\n  deviceinfo           Ð¡Ð²ÐµÐ´ÐµÐ½Ð¸Ñ Ð¾Ð± ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ðµ Ð¸ ABI\n  version              Ð’ÐµÑ€ÑÐ¸Ñ PawnMC Ð¸ ÐºÐ¾Ð¼Ð¿Ð¸Ð»ÑÑ‚Ð¾Ñ€Ð°\n  github               Ð¡ÑÑ‹Ð»ÐºÐ° Ð½Ð° Ñ€ÐµÐ¿Ð¾Ð·Ð¸Ñ‚Ð¾Ñ€Ð¸Ð¹\n\nÐŸÑ€Ð¸Ð¼ÐµÑ€: pawncc gamemodes/mode.pwn -d=3\nÐ’Ð²ÐµÐ´Ð¸Ñ‚Ðµ docs Ð´Ð»Ñ Ð¿Ð¾Ð»Ð½Ð¾Ð¹ Ð´Ð¾ÐºÑƒÐ¼ÐµÐ½Ñ‚Ð°Ñ†Ð¸Ð¸."
-es = "Comandos disponibles:\n  help                 Muestra la lista de comandos\n  docs                 Abre la documentacion del Developer Portal\n  pawncc <archivo> [flags] Ejecuta pawncc con el archivo y los flags indicados\n  switch [version]     Cambia el compilador 3.10.7 / 3.10.11\n  clear                Borra el historial de la consola (alias: celar)\n  ls                   Lista archivos y carpetas del workspace\n  whoami               Nombre de usuario de la consola\n  time                 Hora actual\n  date                 Fecha y hora completas\n  which <comando>      Ubicacion de un programa o comando integrado\n  deviceinfo           Informacion del dispositivo y ABI\n  version              Version de PawnMC y del compilador\n  github               Enlace del repositorio\n\nEjemplo: pawncc gamemodes/mode.pwn -d=3\nEscribi docs para ver la documentacion completa."
+ru = "Dostupnye komandy:\n  help                 Pokazat spisok komand\n  docs                 Otkryt dokumentatsiyu Developer Portal\n  pawncc <file> [flags] Zapustit pawncc s ukazannym faylom i flagami\n  switch [version]     Pereklyuchit kompilyator 3.10.7 / 3.10.11\n  clear                Ochistit istoriyu konsoli (alias: celar)\n  ls                   Spisok faylov i papok rabochey oblasti\n  whoami               Imya polzovatelya konsoli\n  time                 Tekushchee vremya\n  date                 Polnaya data i vremya\n  which <command>      Put k programme ili vstroennoy komande\n  deviceinfo           Svedeniya ob ustroystve i ABI\n  version              Versiya PawnMC i kompilyatora\n  github               Ssylka na repozitoriy\n\nPrimer: pawncc gamemodes/mode.pwn -d=3\nVvedite docs dlya polnoy dokumentatsii."
 
 [terminal.error.quote]
 id = "Tanda kutip belum ditutup."
 en = "A quoted argument was not closed."
 tl = "May argument na may quote na hindi naisara."
-es = "No se cerro un argumento entre comillas."
-ru = "ÐÑ€Ð³ÑƒÐ¼ÐµÐ½Ñ‚ Ð² ÐºÐ°Ð²Ñ‹Ñ‡ÐºÐ°Ñ… Ð½Ðµ Ð·Ð°ÐºÑ€Ñ‹Ñ‚."
+es = "Hay un argumento con comillas sin cerrar."
+ru = "Argument v kavychkakh ne zakryt."
 
 [terminal.error.switch]
-id = "Gunakan `switch`, `switch 3.10.7`, atau `switch 3.10.11`."
-en = "Use `switch`, `switch 3.10.7`, or `switch 3.10.11`."
-tl = "Gamitin ang `switch`, `switch 3.10.7`, o `switch 3.10.11`."
-es = "Usar `switch`, `switch 3.10.7` o `switch 3.10.11`."
-ru = "Ð˜ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐ¹Ñ‚Ðµ `switch`, `switch 3.10.7` Ð¸Ð»Ð¸ `switch 3.10.11`."
+id = "Gunakan 'switch', 'switch 3.10.7', atau 'switch 3.10.11'."
+en = "Use 'switch', 'switch 3.10.7', or 'switch 3.10.11'."
+tl = "Gamitin ang 'switch', 'switch 3.10.7', o 'switch 3.10.11'."
+es = "Usar 'switch', 'switch 3.10.7' o 'switch 3.10.11'."
+ru = "Ispolzuyte 'switch', 'switch 3.10.7' ili 'switch 3.10.11'."
 
 [terminal.error.source]
-id = "Sumber tidak valid. Sebutkan file Pawn secara eksplisit di dalam workspace."
+id = "Sumber engga valid. Sebutkan file Pawn secara eksplisit di dalam workspace."
 en = "Invalid source. Name a Pawn file explicitly inside the workspace."
 tl = "Di-wastong source. Tukuyin nang malinaw ang Pawn file sa loob ng workspace."
 es = "Fuente invalida. Nombre un archivo Pawn explicitamente dentro del workspace."
-ru = "ÐÐµÐ´Ð¾Ð¿ÑƒÑÑ‚Ð¸Ð¼Ñ‹Ð¹ Ð¸ÑÑ‚Ð¾Ñ‡Ð½Ð¸Ðº. Ð£ÐºÐ°Ð¶Ð¸Ñ‚Ðµ Ñ„Ð°Ð¹Ð» Pawn ÑÐ²Ð½Ð¾ Ð²Ð½ÑƒÑ‚Ñ€Ð¸ Ñ€Ð°Ð±Ð¾Ñ‡ÐµÐ¹ Ð¾Ð±Ð»Ð°ÑÑ‚Ð¸."
+ru = "Nedopustimyy istochnik. Ukazhite fayl Pawn yavno vnutri rabochey oblasti."
 
 [terminal.error.restart]
 id = "Versi compiler baru belum dapat dimuat karena library lama sudah aktif. Mulai ulang aplikasi untuk memakai versi pilihan."
 en = "The selected compiler cannot load because another native library is already active. Restart the app to use the selected version."
 tl = "Hindi ma-load ang napiling compiler dahil may aktibong native library. I-restart ang app para magamit ang napiling bersyon."
-es = "El compilador elegido no se puede cargar porque ya hay otra libreria nativa activa. Reinicia la app para usar la version seleccionada."
-ru = "Ð’Ñ‹Ð±Ñ€Ð°Ð½Ð½Ñ‹Ð¹ ÐºÐ¾Ð¼Ð¿Ð¸Ð»ÑÑ‚Ð¾Ñ€ Ð½Ðµ Ð·Ð°Ð³Ñ€ÑƒÐ¶Ð°ÐµÑ‚ÑÑ: ÑƒÐ¶Ðµ Ð°ÐºÑ‚Ð¸Ð²Ð½Ð° Ð´Ñ€ÑƒÐ³Ð°Ñ Ð½Ð°Ñ‚Ð¸Ð²Ð½Ð°Ñ Ð±Ð¸Ð±Ð»Ð¸Ð¾Ñ‚ÐµÐºÐ°. ÐŸÐµÑ€ÐµÐ·Ð°Ð¿ÑƒÑÑ‚Ð¸Ñ‚Ðµ Ð¿Ñ€Ð¸Ð»Ð¾Ð¶ÐµÐ½Ð¸Ðµ, Ñ‡Ñ‚Ð¾Ð±Ñ‹ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒ Ð²Ñ‹Ð±Ñ€Ð°Ð½Ð½ÑƒÑŽ Ð²ÐµÑ€ÑÐ¸ÑŽ."
+es = "El compilador elegido no carga porque hay otra libreria nativa activa. Reinicia la app."
+ru = "Vybrannyy kompilyator ne zagruzhaetsya: uzhe aktivna drugaya nativnaya biblioteka. Perezapustite prilozhenie, chtoby ispolzovat vybrannuyu versiyu."
 
 [terminal.error.command]
-id = "Perintah tidak dikenal. Gunakan {commands}. Ketik `help`."
-en = "Unknown command. Use {commands}. Type `help`."
-tl = "Hindi kilalang command. Gamitin ang {commands}. I-type ang `help`."
-es = "Comando desconocido. Usar {commands}. Escribi `help`."
-ru = "ÐÐµÐ¸Ð·Ð²ÐµÑÑ‚Ð½Ð°Ñ ÐºÐ¾Ð¼Ð°Ð½Ð´Ð°. Ð˜ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐ¹Ñ‚Ðµ {commands}. Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ `help`."
+id = "Perintah engga dikenal. Gunakan {commands}. Ketik 'help'."
+en = "Unknown command. Use {commands}. Type 'help'."
+tl = "Hindi kilalang command. Gamitin ang {commands}. I-type ang 'help'."
+es = "Comando desconocido. Usar {commands}. Escribi 'help'."
+ru = "Neizvestnaya komanda. Ispolzuyte {commands}. Vvedite 'help'."
 
 [terminal.error.command.suggest]
 id = "Mungkin maksud Anda: {matches}"
 en = "Did you mean: {matches}"
 tl = "Ibig mong sabihin: {matches}"
-es = "Quizas quisiste decir: {matches}"
-ru = "Ð’Ð¾Ð·Ð¼Ð¾Ð¶Ð½Ð¾, Ð²Ñ‹ Ð¸Ð¼ÐµÐ»Ð¸ Ð² Ð²Ð¸Ð´Ñƒ: {matches}"
+es = "Quisiste decir: {matches}"
+ru = "Vozmozhno, vy imeli v vidu: {matches}"
 
 [terminal.pawncc.usage]
 id = "Cara pakai: pawncc <file.pwn> [flag...]. Sebutkan file sumber dan setiap flag yang ingin diteruskan."
 en = "Usage: pawncc <file.pwn> [flags...]. Specify the source file and every flag to pass through."
 tl = "Paggamit: pawncc <file.pwn> [flags...]. Tukuyin ang source file at bawat flag na ipapasa."
 es = "Modo de uso: pawncc <archivo.pwn> [flags...]. Indica el archivo fuente y cada flag que quieras pasar."
-ru = "Ð˜ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ð½Ð¸Ðµ: pawncc <file.pwn> [flags...]. Ð£ÐºÐ°Ð¶Ð¸Ñ‚Ðµ Ð¸ÑÑ…Ð¾Ð´Ð½Ñ‹Ð¹ Ñ„Ð°Ð¹Ð» Ð¸ Ð²ÑÐµ Ñ„Ð»Ð°Ð³Ð¸ Ð´Ð»Ñ Ð¿ÐµÑ€ÐµÐ´Ð°Ñ‡Ð¸."
+ru = "Ispolzovanie: pawncc <file.pwn> [flags...]. Ukazhite iskhodnyy fayl i vse flagi dlya peredachi."
 
 [terminal.error.execution]
 id = "Kompilasi gagal:"
 en = "Compilation failed:"
 tl = "Nabigo ang kompilasyon:"
 es = "La compilacion fallo:"
-ru = "ÐšÐ¾Ð¼Ð¿Ð¸Ð»ÑÑ†Ð¸Ñ Ð½Ðµ ÑƒÐ´Ð°Ð»Ð°ÑÑŒ:"
+ru = "Kompilyatsiya ne udalas:"
 
 [terminal.switch.success]
 id = "Versi compiler dipilih: {version}.{restart}"
 en = "Compiler version selected: {version}.{restart}"
 tl = "Napiling bersyon ng compiler: {version}.{restart}"
 es = "Version del compilador seleccionada: {version}.{restart}"
-ru = "Ð’Ñ‹Ð±Ñ€Ð°Ð½Ð° Ð²ÐµÑ€ÑÐ¸Ñ ÐºÐ¾Ð¼Ð¿Ð¸Ð»ÑÑ‚Ð¾Ñ€Ð°: {version}.{restart}"
+ru = "Vybrana versiya kompilyatora: {version}.{restart}"
 
 [terminal.switch.restart]
 id = " Mulai ulang aplikasi agar berlaku."
 en = " Restart the app for this to take effect."
 tl = " I-restart ang app para magkabisa ito."
 es = " Reinicia la app para que esto surta efecto."
-ru = " ÐŸÐµÑ€ÐµÐ·Ð°Ð¿ÑƒÑÑ‚Ð¸Ñ‚Ðµ Ð¿Ñ€Ð¸Ð»Ð¾Ð¶ÐµÐ½Ð¸Ðµ, Ñ‡Ñ‚Ð¾Ð±Ñ‹ ÑÑ‚Ð¾ Ð²ÑÑ‚ÑƒÐ¿Ð¸Ð»Ð¾ Ð² ÑÐ¸Ð»Ñƒ."
+ru = " Perezapustite prilozhenie, chtoby eto vstupilo v silu."
 
 [terminal.ready]
-id = "Developer Portal siap. Ketik `help` untuk perintah atau `docs` untuk dokumentasi."
-en = "Developer Portal ready. Type `help` for commands or `docs` for documentation."
-tl = "Handa na ang Developer Portal. I-type ang `help` para sa mga command o `docs` para sa dokumentasyon."
-es = "Developer Portal listo. Escribi `help` para los comandos o `docs` para la documentacion."
-ru = "Developer Portal Ð³Ð¾Ñ‚Ð¾Ð². Ð’Ð²ÐµÐ´Ð¸Ñ‚Ðµ `help` Ð´Ð»Ñ ÑÐ¿Ð¸ÑÐºÐ° ÐºÐ¾Ð¼Ð°Ð½Ð´ Ð¸Ð»Ð¸ `docs` Ð´Ð»Ñ Ð´Ð¾ÐºÑƒÐ¼ÐµÐ½Ñ‚Ð°Ñ†Ð¸Ð¸."
+id = "Developer Portal siap. Ketik 'help' untuk perintah atau 'docs' untuk dokumentasi."
+en = "Developer Portal ready. Type 'help' for commands or 'docs' for documentation."
+tl = "Handa na ang Developer Portal. I-type ang 'help' para sa mga command o 'docs' para sa dokumentasi."
+es = "Developer Portal listo. Escribi 'help' para comandos o 'docs' para docs."
+ru = "Developer Portal gotov. Vvedite 'help' dlya spiska komand ili 'docs' dlya dokumentatsii."
 
 [terminal.running]
 id = "Menjalankan pawncc..."
 en = "Running pawncc..."
 tl = "Tumatakbo ang pawncc..."
 es = "Ejecutando pawncc..."
-ru = "Ð—Ð°Ð¿ÑƒÑÐº pawncc..."
+ru = "Zapusk pawncc..."
 
 [terminal.input.placeholder]
 id = "Mungkin mau ngetik?..."
 en = "Maybe... want to type?..."
 tl = "Baka... gusto mong mag-type?..."
 es = "Tal vez... escribir algo?..."
-ru = "ÐœÐ¾Ð¶ÐµÑ‚... Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ Ñ‡Ñ‚Ð¾-Ñ‚Ð¾ Ð²Ð²ÐµÑÑ‚Ð¸?.."
+ru = "Mozhet... khotite chto-to vvesti?.."
 
 [terminal.run]
 id = "Jalankan perintah"
 en = "Run command"
 tl = "Patakbuhin ang command"
 es = "Ejecutar comando"
-ru = "Ð’Ñ‹Ð¿Ð¾Ð»Ð½Ð¸Ñ‚ÑŒ ÐºÐ¾Ð¼Ð°Ð½Ð´Ñƒ"
+ru = "Vypolnit komandu"
 
 [terminal.close]
 id = "Tutup Developer Portal"
 en = "Close Developer Portal"
 tl = "Isara ang Developer Portal"
 es = "Cerrar Developer Portal"
-ru = "Ð—Ð°ÐºÑ€Ñ‹Ñ‚ÑŒ Developer Portal"
+ru = "Zakryt Developer Portal"
 
 [terminal.input.toggle]
 id = "Munculkan atau sembunyikan input"
 en = "Show or hide the input"
 tl = "Ipakita o itago ang input"
 es = "Mostrar u ocultar la entrada"
-ru = "ÐŸÐ¾ÐºÐ°Ð·Ð°Ñ‚ÑŒ Ð¸Ð»Ð¸ ÑÐºÑ€Ñ‹Ñ‚ÑŒ Ð²Ð²Ð¾Ð´"
-
+ru = "Pokazat ili skryt vvod"

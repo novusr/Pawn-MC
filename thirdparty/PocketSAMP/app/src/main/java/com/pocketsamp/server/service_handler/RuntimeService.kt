@@ -123,7 +123,27 @@ class RuntimeService : Service() {
         /** Pending lines waiting for their paced screen tick. */
         private val streamingBacklog = ArrayDeque<String>()
 
-        fun appendLog(line: String) {
+        /**
+         * Lines that belong to the samp03svr lifecycle get the
+         * `[hh:mm:ss] $System [tag]` header so the console can tell them apart
+         * from raw engine output. Localized strings already carrying a `$System`
+         * tag just fall through to [appendLog], which grafts the timestamp on.
+         */
+        fun appendSystemLog(tag: String, line: String) {
+            if (line.contains("\$System")) {
+                appendLog(line)
+                return
+            }
+            appendLog("[${SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())}] \$System [$tag] $line")
+        }
+
+        fun appendLog(rawLine: String) {
+            // Every $System line carries an [hh:mm:ss] stamp up front; localized
+            // strings arrive without one, so graft it here before anything reads it.
+            val line = if (rawLine.contains("\$System") && !rawLine.startsWith("[")) {
+                val marker = rawLine.indexOf("\$System")
+                "[${SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())}] " + rawLine.substring(marker)
+            } else rawLine
             runCatching { consoleLogSink?.invoke(line) }
             synchronized(logLock) {
                 // The host (PawnMC) mirrors every line into its SQLite log via the
@@ -396,7 +416,7 @@ class RuntimeService : Service() {
 
     private fun startServers() {
         if (_serverStatus.value != Status.STOPPED) {
-            appendLog("[Runtime] Start request ignored; service status is ${_serverStatus.value}.")
+            appendSystemLog("Runtime", "Start request ignored; service status is ${_serverStatus.value}.")
             return
         }
 
@@ -450,7 +470,7 @@ class RuntimeService : Service() {
                             _serverStatus.value = Status.STOPPED
                             return@launch
                         }
-                        runtime.sync { line -> appendLog("[Prepare] $line") }
+                        runtime.sync { line -> appendSystemLog("Prepare", line) }
                     }
 
                     if (!ThirdRuntime.isComplete(applicationContext)) {
@@ -461,7 +481,7 @@ class RuntimeService : Service() {
 
                     appendLog(t("log.archive.extract"))
                     assetExtractor.extractAll { progress ->
-                        appendLog("[Prepare] $progress")
+                        appendSystemLog("Prepare", progress)
                         updateNotification(t("notify.setup").replace("{progress}", progress))
                     }
                 }

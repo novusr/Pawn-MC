@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -177,11 +178,22 @@ fun _Dashboard(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onNavigateBack) {
+            /* Back button sized in raw physical pixels instead of density-independent
+             * dp: 40 px reads compact on high-density screens where the same dp
+             * balloons, and stays comfortably tappable on low-density ones where a
+             * fixed dp shrinks to a dot. Font scale is irrelevant to a 20 px glyph. */
+            val backDp = with(LocalDensity.current) {
+                (40f / density.density).dp
+            }
+            IconButton(
+                onClick = onNavigateBack,
+                modifier = Modifier.size(backDp)
+            ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = t("back.to.pawnmc"),
-                    tint = SampThemeColors.textPrimary
+                    tint = SampThemeColors.textPrimary,
+                    modifier = Modifier.size((backDp.value * 0.5f).dp)
                 )
             }
             Column(modifier = Modifier.weight(1f)) {

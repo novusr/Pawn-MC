@@ -43,14 +43,14 @@ es = "Error 004: la función \"%s\" no está implementada. La función está dec
 ru = "Oshibka 004: funktsiya \"%s\" ne realizovana. Funktsiya obyavlena ili predvaritelno opisana, no eyo telo ne opredeleno."
 tl = "Error 004: hindi naipatupad ang function na \"%s\". Idineklara o ini-forward ang function, pero walang body na nagpapatupad dito."
 en = "Error 004: function \"%s\" is not implemented. The function is declared or forwarded but no body implements it."
-id = "Kesalahan 004: function \"%s\" is not implemented. Fungsi dideklarasikan atau di-forward tetapi tidak ada badan yang mengimplementasikannya."
+id = "Kesalahan 004: function \"%s\" is not implemented. Fungsi dideklarasikan atau di-forward tetapi engga ada badan yang mengimplementasikannya."
 
 [explain."005"]
 es = "Error 005: la función no puede tener argumentos. Una función que devuelve un array no puede llevar un tag; tampoco pueden declarar parámetros main()/entry()."
 ru = "Oshibka 005: u funktsii ne mozhet byt argumentov. Funktsiya, vozvrashchayushchaya massiv, ne mozhet imet teg; main()/entry() takzhe ne mogut obyavlyat parametry."
 tl = "Error 005: hindi puwedeng magkaroon ng argumento ang function. Hindi puwedeng may tag ang function na nagbabalik ng array, at hindi rin puwedeng magdeklara ng parameter ang main()/entry()."
 en = "Error 005: function may not have arguments. A function returning an array may not have a tag, or main()/entry() declare parameters."
-id = "Kesalahan 005: function may not have arguments. Fungsi yang mengembalikan array tidak boleh bertag, atau main()/entry() mendeklarasikan parameter."
+id = "Kesalahan 005: function may not have arguments. Fungsi yang mengembalikan array engga boleh bertag, atau main()/entry() mendeklarasikan parameter."
 
 [explain."006"]
 es = "Error 006: el destino de la asignación debe ser un array. El valor tiene que guardarse en un array, pero el destino no lo es."
@@ -64,7 +64,7 @@ es = "Error 007: no se puede redefinir un operador. No se puede redefinir el nom
 ru = "Oshibka 007: nelzya pereopredelit operator. Imya predopredelyonnogo operatora pereopredelyat nelzya; obyavlyat mozhno tolko novye operatory."
 tl = "Error 007: hindi puwedeng i-redefine ang operator. Hindi puwedeng i-redefine ang pangalan ng predefined operator; mga bagong operator lang ang puwedeng ideklara."
 en = "Error 007: operator cannot be redefined. A predefined operator name cannot be redefined; only new operators may be declared."
-id = "Kesalahan 007: operator cannot be redefined. Nama operator bawaan tidak boleh didefinisikan ulang; hanya operator baru yang boleh dideklarasikan."
+id = "Kesalahan 007: operator cannot be redefined. Nama operator bawaan engga boleh didefinisikan ulang; hanya operator baru yang boleh dideklarasikan."
 
 [explain."008"]
 es = "Error 008: se requiere una expresión constante; se asumió cero. Acá hace falta una expresión constante."
@@ -92,28 +92,28 @@ es = "Error 011: el desplazamiento de pila o la dirección de datos debe ser mú
 ru = "Oshibka 011: smeshchenie steka ili adres dannykh dolzhny byt kratny razmeru cell. Adres inline-assembler ili smeshchenie steka ne vyrovneny po razmeru cell."
 tl = "Error 011: dapat multiple ng laki ng cell ang stack offset o data address. Hindi naka-align sa laki ng cell ang address ng inline assembler o ang stack offset."
 en = "Error 011: stack offset/data address must be a multiple of cell size. An inline-assembly address or stack offset is not aligned to the cell size."
-id = "Kesalahan 011: stack offset/data address must be a multiple of cell size. Alamat atau offset assembler inline tidak selaras dengan ukuran cell."
+id = "Kesalahan 011: stack offset/data address must be a multiple of cell size. Alamat atau offset assembler inline engga selaras dengan ukuran cell."
 
 [explain."012"]
 es = "Error 012: llamada a función no válida; no es una dirección válida. La definición de un operador o una declaración forward está mal formada."
 ru = "Oshibka 012: nedopustimyj vyzov funktsii, eto ne dopustimyj adres. Nekorrektno oformleno opredelenie operatora ili predvaritelnoe obyavlenie."
 tl = "Error 012: hindi valid ang function call at hindi ito valid na address. Mali ang pagkakabuo ng operator definition o forward declaration."
 en = "Error 012: invalid function call, not a valid address. An operator definition or a forward declaration is malformed."
-id = "Kesalahan 012: invalid function call, not a valid address. Definisi operator atau forward declaration-nya tidak valid."
+id = "Kesalahan 012: invalid function call, not a valid address. Definisi operator atau forward declaration-nya engga valid."
 
 [explain."013"]
 en = "Error 013: no entry point (no public functions). The script has no main() and no public function for the runtime to start from."
-id = "Kesalahan 013: no entry point (no public functions). Skrip tidak punya main() maupun fungsi public sebagai titik mulai runtime."
-tl = "Walang nahanap na entry point. Tingnan kung tama ang na-compile na source file at kung may kinakailangang entry function ito. Para sa mabilisang standalone test, magdag ng `main() {}`; ang gamemode ay maaaring may partikular na public callback."
-es = "No se encontro el punto de entrada. Verifica que hayas compilado el archivo fuente correcto y que contenga la funcion de entrada requerida. Para una prueba rapida independiente, agrega `main() {}`; los modos de juego pueden requerir un callback publico especifico."
-ru = "Tochka vkhoda ne najdena. Proverte, chto skompilirovan nuzhnyj iskhodnyj fajl i chto v nyom est trebuemaya funktsiya vkhoda. Dlya bystroj avtonomnoj proverki dobavte `main() {}`; igrovye rezhimy mogut trebovat opredelyonnyj public-callback."
+id = "Kesalahan 013: no entry point (no public functions). Skrip engga punya main() maupun fungsi public sebagai titik mulai runtime."
+tl = "Walang nahanap na entry point. Tingnan kung tama ang na-compile na source file at kung may kinakailangang entry function ito. Para sa mabilisang standalone test, magdag ng 'main() {}'; ang gamemode ay maaaring may partikular na public callback."
+es = "No se encontro el punto de entrada. Verifica que hayas compilado el archivo fuente correcto y que contenga la funcion de entrada requerida. Para una prueba rapida independiente, agrega 'main() {}'; los modos de juego pueden requerir un callback publico especifico."
+ru = "Tochka vkhoda ne najdena. Proverte, chto skompilirovan nuzhnyj iskhodnyj fajl i chto v nyom est trebuemaya funktsiya vkhoda. Dlya bystroj avtonomnoj proverki dobavte 'main() {}'; igrovye rezhimy mogut trebovat opredelyonnyj public-callback."
 
 [explain."014"]
 es = "Error 014: instrucción no válida; fuera de un switch. Aparece \"else\" o \"case\" cuando el parser no está dentro de un switch."
 ru = "Oshibka 014: nedopustimyj operator vne switch. \"else\" ili \"case\" vstrechaetsya, kogda parser nakhoditsya ne vnutri switch."
 tl = "Error 014: hindi valid ang statement; wala ito sa switch. Lumitaw ang \"else\" o \"case\" habang wala sa loob ng switch ang parser."
 en = "Error 014: invalid statement; not in switch. \"else\" or \"case\" appears where the parser is not inside a switch."
-id = "Kesalahan 014: invalid statement; not in switch. \"else\" atau \"case\" muncul ketika parser tidak sedang berada di dalam switch."
+id = "Kesalahan 014: invalid statement; not in switch. \"else\" atau \"case\" muncul ketika parser engga sedang berada di dalam switch."
 
 [explain."015"]
 en = "Error 015: \"default\" case must be the last case in switch statement. The \"default\" label is followed by another case; default has to close the switch."
@@ -131,7 +131,7 @@ ru = "V odnom operatore switch zapreshcheno neskolko vetok default."
 
 [explain."017"]
 en = "Error 017: undefined symbol \"%s\". The identifier is not declared in this file or in any included file."
-id = "Kesalahan 017: undefined symbol \"%s\". Identifier tidak dideklarasikan di berkas ini maupun di include yang dimuat."
+id = "Kesalahan 017: undefined symbol \"%s\". Identifier engga dideklarasikan di berkas ini maupun di include yang dimuat."
 tl = "Hindi defined ang symbol na \"%s\". Tiyaking declared o naka-include ang identifier at eksaktong tugma ang baybay nito sa definition."
 es = "Símbolo no definido: \"%s\". Verificá que el identificador esté declarado o incluido, y que esté escrito exactamente igual que en su definición."
 ru = "Simvol \"%s\" ne opredelyon. Proverte, chto identifikator obyavlen ili podklyuchyon i napisan tochno tak zhe, kak v opredelenii."
@@ -148,14 +148,14 @@ es = "Error 019: no es una etiqueta: \"%s\". El nombre después de \"goto\" o la
 ru = "Oshibka 019: eto ne metka: \"%s\". Imya posle \"goto\" ili ispolzuemaya zdes metka nigde ne obyavleny."
 tl = "Error 019: hindi ito label: \"%s\". Hindi naideklara ang pangalan pagkatapos ng \"goto\" o ang label na ginagamit dito."
 en = "Error 019: not a label: \"%s\". The name after \"goto\", or the label used here, is never declared."
-id = "Kesalahan 019: not a label: \"%s\". Nama setelah \"goto\", atau label yang dipakai di sini, tidak pernah dideklarasikan."
+id = "Kesalahan 019: not a label: \"%s\". Nama setelah \"goto\", atau label yang dipakai di sini, engga pernah dideklarasikan."
 
 [explain."020"]
 es = "Error 020: nombre de símbolo no válido: \"%s\". El identificador empieza con un número o contiene un carácter que Pawn no permite."
 ru = "Oshibka 020: nedopustimoe imya simvola \"%s\". Identifikator nachinaetsya s tsifry ili soderzhit zapreshchyonnyj v Pawn simvol."
 tl = "Error 020: hindi valid ang pangalan ng symbol na \"%s\". Nagsisimula sa digit ang identifier o may karakter itong hindi pinapayagan ng Pawn."
 en = "Error 020: invalid symbol name \"%s\". The identifier starts with a digit or contains a character Pawn does not allow."
-id = "Kesalahan 020: invalid symbol name \"%s\". Identifier diawali angka atau memuat karakter yang tidak diizinkan Pawn."
+id = "Kesalahan 020: invalid symbol name \"%s\". Identifier diawali angka atau memuat karakter yang engga diizinkan Pawn."
 
 [explain."021"]
 en = "Error 021: symbol already defined: \"%s\". The same name is defined twice in one scope, usually a duplicated body or a twice-declared global."
@@ -169,7 +169,7 @@ es = "Error 022: debe ser un lvalue (no constante). No se puede escribir en el l
 ru = "Oshibka 022: trebuetsya izmenyaemoe lvalue (ne konstanta). V levuyu chast prisvaivaniya nelzya zapisat znachenie."
 tl = "Error 022: dapat lvalue ito (hindi constant). Hindi puwedeng sulatan ang kaliwang bahagi ng assignment."
 en = "Error 022: must be lvalue (non-constant). The left side of the assignment cannot be written to."
-id = "Kesalahan 022: must be lvalue (non-constant). Sisi kiri penugasan tidak bisa ditulis."
+id = "Kesalahan 022: must be lvalue (non-constant). Sisi kiri penugasan engga bisa ditulis."
 
 [explain."023"]
 es = "Error 023: la asignación de un array debe ser simple. Para copiar un array entero, usá una asignación común, no un operador compuesto."
@@ -190,21 +190,21 @@ es = "Error 025: el encabezado de la función no coincide con el prototipo. El e
 ru = "Oshibka 025: zagolovok funktsii ne sovpadaet s prototipom. Zagolovok ne sootvetstvuet ranee ukazannomu predvaritelnomu obyavleniyu."
 tl = "Error 025: hindi tugma ang function header sa prototype. Hindi kapareho ng naunang forward declaration ang function header."
 en = "Error 025: function heading differs from prototype. The function header does not match the forward declaration written earlier."
-id = "Kesalahan 025: function heading differs from prototype. Header fungsi tidak cocok dengan forward declaration yang ditulis sebelumnya."
+id = "Kesalahan 025: function heading differs from prototype. Header fungsi engga cocok dengan forward declaration yang ditulis sebelumnya."
 
 [explain."026"]
 es = "Error 026: no hay un \"#if...\" correspondiente. Un \"#endif\" no tiene su \"#if\" correspondiente o el bloque se cerró con otra directiva."
 ru = "Oshibka 026: otsutstvuet sootvetstvuyushchij \"#if...\". Dlya \"#endif\" net parnogo \"#if\" ili blok zakryt drugoj direktivoj."
 tl = "Error 026: walang katugmang \"#if...\". Walang katugmang \"#if\" ang \"#endif\", o maling directive ang nagsara sa block."
 en = "Error 026: no matching \"#if...\". An \"#endif\" has no matching \"#if\", or the block is closed by the wrong directive."
-id = "Kesalahan 026: no matching \"#if...\". \"#endif\" tidak punya pasangan \"#if\", atau bloknya ditutup direktif yang salah."
+id = "Kesalahan 026: no matching \"#if...\". \"#endif\" engga punya pasangan \"#if\", atau bloknya ditutup direktif yang salah."
 
 [explain."027"]
 es = "Error 027: constante de carácter no válida. El literal de carácter está vacío, sin cerrar o contiene más de un carácter."
 ru = "Oshibka 027: nedopustimaya simvolnaya konstanta. Simvolnyj literal pust, ne zakryt ili soderzhit bolshe odnogo simvola."
 tl = "Error 027: hindi valid ang character constant. Walang laman, hindi naisara, o mahigit sa isang karakter ang character literal."
 en = "Error 027: invalid character constant. A character literal is empty, unterminated, or holds more than one character."
-id = "Kesalahan 027: invalid character constant. Literal karakter kosong, tidak ditutup, atau memuat lebih dari satu karakter."
+id = "Kesalahan 027: invalid character constant. Literal karakter kosong, engga ditutup, atau memuat lebih dari satu karakter."
 
 [explain."028"]
 es = "Error 028: subíndice no válido (no es un array o hay demasiados subíndices): \"%s\". Se indexó más veces que las dimensiones disponibles, o el valor no es un array."
@@ -225,14 +225,14 @@ es = "Error 030: el bloque compuesto no se cerró al final del archivo (empezó 
 ru = "Oshibka 030: sostavnoj blok ne zakryt do kontsa fajla (nachat v stroke %d). Dlya \"{\" ne nashlas zakryvayushchaya skobka, poetomu fajl zakanchivaetsya vnutri bloka."
 tl = "Error 030: hindi naisara ang compound statement sa dulo ng file (nagsimula sa line %d). Walang katapat na pangsara ang \"{\", kaya nagtatapos ang file sa loob ng block na iyon."
 en = "Error 030: compound statement not closed at the end of file (started at line %d). A \"{\" was never matched, so the file ends inside that block."
-id = "Kesalahan 030: compound statement not closed at the end of file (started at line %d). Ada \"{\" yang tidak ditutup sehingga berkas berakhir di dalam blok itu."
+id = "Kesalahan 030: compound statement not closed at the end of file (started at line %d). Ada \"{\" yang engga ditutup sehingga berkas berakhir di dalam blok itu."
 
 [explain."031"]
 es = "Error 031: directiva desconocida. El nombre después de \"#\" no corresponde a ninguna directiva que reconozca el preprocesador."
 ru = "Oshibka 031: neizvestnaya direktiva. Preprotsessor ne raspoznayot direktivu, ukazannuyu v stroke s \"#\"."
 tl = "Error 031: hindi kilalang directive. Hindi kinikilala ng preprocessor ang directive na nasa linyang \"#\"."
 en = "Error 031: unknown directive. The \"#\" line names a directive the preprocessor does not recognise."
-id = "Kesalahan 031: unknown directive. Baris \"#\" menyebut direktif yang tidak dikenal preprocessor."
+id = "Kesalahan 031: unknown directive. Baris \"#\" menyebut direktif yang engga dikenal preprocessor."
 
 [explain."032"]
 es = "Error 032: índice de array fuera de rango (variable \"%s\"). Un índice constante queda fuera de los límites del array declarado."
@@ -260,7 +260,7 @@ es = "Error 035: el tipo del argumento no coincide (argumento %d). El tipo del a
 ru = "Oshibka 035: tip argumenta ne sovpadaet (argument %d). Tip argumenta ne sootvetstvuet obyavlennomu tipu parametra."
 tl = "Error 035: hindi tugma ang uri ng argumento (argument %d). Hindi kapareho ng idineklarang uri ng parameter ang uri ng argumento."
 en = "Error 035: argument type mismatch (argument %d). The argument type does not match the declared parameter type."
-id = "Kesalahan 035: argument type mismatch (argument %d). Tipe argumen tidak cocok dengan tipe parameter yang dideklarasikan."
+id = "Kesalahan 035: argument type mismatch (argument %d). Tipe argumen engga cocok dengan tipe parameter yang dideklarasikan."
 
 [explain."036"]
 es = "Error 036: instrucción vacía. Un \";\" aislado forma una instrucción sin efecto donde se esperaba una expresión."
@@ -274,7 +274,7 @@ es = "Error 037: string no válida (posiblemente sin terminar). El literal de st
 ru = "Oshibka 037: nedopustimaya stroka (vozmozhno, ne zavershena). Strokovyj literal ne zakryt ili soderzhit nedopustimuyu escape-posledovatelnost."
 tl = "Error 037: hindi valid ang string (posibleng hindi natapos). Hindi naisara ang string literal o may invalid itong escape."
 en = "Error 037: invalid string (possibly non-terminated string). A string literal is not terminated, or contains an invalid escape."
-id = "Kesalahan 037: invalid string (possibly non-terminated string). String tidak ditutup atau memuat escape yang tidak valid."
+id = "Kesalahan 037: invalid string (possibly non-terminated string). String engga ditutup atau memuat escape yang engga valid."
 
 [explain."038"]
 es = "Error 038: hay caracteres extra en la línea. Hay caracteres inesperados después de una instrucción que ya estaba completa."
@@ -288,7 +288,7 @@ es = "Error 039: el símbolo constante no tiene tamaño. Se aplicó \"sizeof\" a
 ru = "Oshibka 039: u konstantnogo simvola net razmera. Operator \"sizeof\" primenyon k konstante, u kotoroj net khranilishcha i razmera."
 tl = "Error 039: walang laki ang constant symbol. Inilapat ang \"sizeof\" sa constant na walang storage o laki."
 en = "Error 039: constant symbol has no size. \"sizeof\" was applied to a constant, which has no storage and no size."
-id = "Kesalahan 039: constant symbol has no size. \"sizeof\" dikenakan pada konstanta yang tidak punya penyimpanan."
+id = "Kesalahan 039: constant symbol has no size. \"sizeof\" dikenakan pada konstanta yang engga punya penyimpanan."
 
 [explain."040"]
 en = "Error 040: duplicate \"case\" label (value %d). Two case labels in one switch hold the same value."
@@ -316,7 +316,7 @@ es = "Error 043: la constante de carácter excede el rango de la string empaquet
 ru = "Oshibka 043: simvolnaya konstanta vykhodit za diapazon upakovannoj stroki. Simvol v upakovannoj stroke ne pomeshchaetsya v diapazon tselevoj yachejki cell."
 tl = "Error 043: lampas sa range ng packed string ang character constant. Hindi kasya sa range ng target cell ang karakter sa packed string."
 en = "Error 043: character constant exceeds range for packed string. A character in a packed string does not fit the range of the target cell."
-id = "Kesalahan 043: character constant exceeds range for packed string. Karakter pada packed string tidak muat dalam rentang cell tujuan."
+id = "Kesalahan 043: character constant exceeds range for packed string. Karakter pada packed string engga muat dalam rentang cell tujuan."
 
 [explain."044"]
 es = "Error 044: los parámetros posicionales deben ir antes que todos los parámetros con nombre. Los argumentos con nombre tienen que aparecer después de los posicionales."
@@ -337,7 +337,7 @@ es = "Error 046: tamaño de array desconocido (variable \"%s\"). No se puede det
 ru = "Oshibka 046: neizvesten razmer massiva (peremennaya \"%s\"). Razmer massiva nevozmozhno opredelit po obyavleniyu."
 tl = "Error 046: hindi alam ang laki ng array (variable na \"%s\"). Hindi matukoy ang laki ng array mula sa deklarasyon."
 en = "Error 046: unknown array size (variable \"%s\"). The array size cannot be determined from the declaration."
-id = "Kesalahan 046: unknown array size (variable \"%s\"). Ukuran array tidak dapat ditentukan dari deklarasinya."
+id = "Kesalahan 046: unknown array size (variable \"%s\"). Ukuran array engga bisa ditentukan dari deklarasinya."
 
 [explain."047"]
 es = "Error 047: los tamaños de los arrays no coinciden o el array de destino es demasiado chico. Se copia un array en otro de distinto tamaño o el destino no alcanza."
@@ -351,7 +351,7 @@ es = "Error 048: las dimensiones de los arrays no coinciden. Los dos arrays no t
 ru = "Oshibka 048: kolichestvo izmerenij massivov ne sovpadaet. U dvukh massivov raznoe chislo izmerenij."
 tl = "Error 048: hindi tugma ang mga dimension ng array. Hindi pareho ang bilang ng dimension ng dalawang array."
 en = "Error 048: array dimensions do not match. The two arrays do not have the same number of dimensions."
-id = "Kesalahan 048: array dimensions do not match. Kedua array tidak memiliki jumlah dimensi yang sama."
+id = "Kesalahan 048: array dimensions do not match. Kedua array engga punya jumlah dimensi yang sama."
 
 [explain."049"]
 es = "Error 049: continuación de línea no válida. Después de la barra invertida de continuación aparece algo que no es un salto de línea."
@@ -393,7 +393,7 @@ es = "Error 054: llave de cierre sin pareja (\"}\"). Una \"}\" cierra un bloque 
 ru = "Oshibka 054: lishnyaya zakryvayushchaya figurnaya skobka (\"}\"). Ona zakryvaet blok, kotoryj ne otkryvali; obychno eto lishnyaya skobka."
 tl = "Error 054: walang katapat ang pangsarang brace (\"}\"). Isinasara nito ang block na hindi naman binuksan; kadalasan sobra itong brace."
 en = "Error 054: unmatched closing brace (\"}\"). A \"}\" closes a block that was never opened, usually an extra brace."
-id = "Kesalahan 054: unmatched closing brace (\"}\"). \"}\" menutup blok yang tidak pernah dibuka, biasanya kurung berlebih."
+id = "Kesalahan 054: unmatched closing brace (\"}\"). \"}\" menutup blok yang engga pernah dibuka, biasanya kurung berlebih."
 
 [explain."055"]
 es = "Error 055: empieza el cuerpo de una función sin su encabezado. La llave que abre el cuerpo aparece sin el encabezado de la función."
@@ -407,7 +407,7 @@ es = "Error 056: los arrays, las variables locales y los argumentos de función 
 ru = "Oshibka 056: massivy, lokalnye peremennye i argumenty funktsii ne mogut byt public (peremennaya \"%s\"). Ikh nelzya obyavlyat kak public."
 tl = "Error 056: hindi puwedeng public ang array, local variable, at function argument (variable na \"%s\"). Hindi sila puwedeng ideklarang public."
 en = "Error 056: arrays, local variables and function arguments cannot be public (variable \"%s\"). Arrays, local variables and function arguments cannot be declared public."
-id = "Kesalahan 056: arrays, local variables and function arguments cannot be public (variable \"%s\"). Array, variabel lokal, dan argumen fungsi tidak boleh dideklarasikan public."
+id = "Kesalahan 056: arrays, local variables and function arguments cannot be public (variable \"%s\"). Array, variabel lokal, dan argumen fungsi engga boleh dideklarasikan public."
 
 [explain."057"]
 es = "Error 057: quedó una expresión sin terminar antes de una directiva del compilador. Una directiva interrumpió una expresión que seguía abierta."
@@ -428,7 +428,7 @@ es = "Error 059: el argumento de función no puede tener un valor predeterminado
 ru = "Oshibka 059: u argumenta funktsii ne mozhet byt znacheniya po umolchaniyu (peremennaya \"%s\"). Argumenty operatora ili funktsii public ne mogut obyavlyat znachenie po umolchaniyu."
 tl = "Error 059: hindi puwedeng may default value ang function argument (variable na \"%s\"). Hindi puwedeng magdeklara ng default value ang argumento ng operator o public function."
 en = "Error 059: function argument may not have a default value (variable \"%s\"). Arguments of an operator or public function cannot declare a default value."
-id = "Kesalahan 059: function argument may not have a default value (variable \"%s\"). Argumen operator atau fungsi public tidak boleh mendeklarasikan nilai bawaan."
+id = "Kesalahan 059: function argument may not have a default value (variable \"%s\"). Argumen operator atau fungsi public engga boleh mendeklarasikan nilai bawaan."
 
 [explain."060"]
 es = "Error 060: hay varias directivas \"#else\" entre \"#if ... #endif\". Aparecieron dos directivas \"#else\" dentro del mismo bloque."
@@ -449,7 +449,7 @@ es = "Error 062: la cantidad de operandos no corresponde al operador. La cantida
 ru = "Oshibka 062: chislo operandov ne sootvetstvuet operatoru. Kolichestvo ili raspolozhenie operandov nedopustimo dlya etogo operatora."
 tl = "Error 062: hindi akma sa operator ang bilang ng operand. Hindi akma sa operator ang dami o puwesto ng mga operand."
 en = "Error 062: number of operands does not fit the operator. The number or placement of the operands does not fit the operator."
-id = "Kesalahan 062: number of operands does not fit the operator. Jumlah atau penempatan operand tidak cocok dengan operator."
+id = "Kesalahan 062: number of operands does not fit the operator. Jumlah atau penempatan operand engga cocok dengan operator."
 
 [explain."063"]
 es = "Error 063: el tag del resultado del operador \"%s\" debe ser \"%s\". El tag del resultado del operador no coincide con el tag declarado."
@@ -463,7 +463,7 @@ es = "Error 064: no se pueden cambiar los operadores predefinidos. El script no 
 ru = "Oshibka 064: nelzya izmenyat predopredelyonnye operatory. Skript ne mozhet pereopredelit predopredelyonnyj operator."
 tl = "Error 064: hindi puwedeng baguhin ang mga predefined operator. Hindi puwedeng i-redefine ng script ang predefined operator."
 en = "Error 064: cannot change predefined operators. A predefined operator cannot be redefined by the script."
-id = "Kesalahan 064: cannot change predefined operators. Operator bawaan tidak boleh didefinisikan ulang oleh skrip."
+id = "Kesalahan 064: cannot change predefined operators. Operator bawaan engga boleh didefinisikan ulang oleh skrip."
 
 [explain."065"]
 es = "Error 065: el argumento de función solo puede tener un tag (argumento %d). Un argumento de función puede llevar un solo tag."
@@ -484,7 +484,7 @@ es = "Error 067: la variable no puede ser a la vez una referencia y un array (va
 ru = "Oshibka 067: peremennaya ne mozhet odnovremenno byt ssylkoj i massivom (peremennaya \"%s\"). Obyavlenie \"&name[]\" zdes ne podderzhivaetsya."
 tl = "Error 067: hindi puwedeng sabay na reference at array ang variable (variable na \"%s\"). Hindi suportado rito ang deklarasyong \"&name[]\"."
 en = "Error 067: variable cannot be both a reference and an array (variable \"%s\"). The declaration \"&name[]\" is not supported here."
-id = "Kesalahan 067: variable cannot be both a reference and an array (variable \"%s\"). Deklarasi \"&nama[]\" tidak didukung di sini."
+id = "Kesalahan 067: variable cannot be both a reference and an array (variable \"%s\"). Deklarasi \"&nama[]\" engga didukung di sini."
 
 [explain."068"]
 es = "Error 068: precisión no válida para números racionales en #pragma. La precisión indicada para la directiva de números racionales queda fuera del rango admitido."
@@ -505,7 +505,7 @@ es = "Error 070: no se habilitó el soporte para números racionales. Por eso se
 ru = "Oshibka 070: podderzhka ratsionalnykh chisel ne vklyuchena. Poetomu direktiva otklonena."
 tl = "Error 070: hindi pinagana ang suporta sa rational number, kaya tinanggihan ang pragma."
 en = "Error 070: rational number support was not enabled. Rational-number support is not enabled, so the pragma is rejected."
-id = "Kesalahan 070: rational number support was not enabled. Dukungan bilangan rasional tidak diaktifkan sehingga pragmanya ditolak."
+id = "Kesalahan 070: rational number support was not enabled. Dukungan bilangan rasional engga diaktifkan sehingga pragmanya ditolak."
 
 [explain."071"]
 es = "Error 071: hay que declarar el operador definido por el usuario antes de usarlo (función \"%s\"). Se usa el operador antes de declarar su función."
@@ -519,7 +519,7 @@ es = "Error 072: el operador \"sizeof\" no se puede aplicar a símbolos de tipo 
 ru = "Oshibka 072: operator \"sizeof\" nelzya primenyat k simvolam tipa \"function\". K simvolu funktsii nelzya primenyat \"sizeof\"."
 tl = "Error 072: hindi valid ang \"sizeof\" sa mga symbol na \"function\". Hindi puwedeng ilapat ang \"sizeof\" sa function symbol."
 en = "Error 072: \"sizeof\" operator is invalid on \"function\" symbols. \"sizeof\" cannot be applied to a function symbol."
-id = "Kesalahan 072: \"sizeof\" operator is invalid on \"function\" symbols. \"sizeof\" tidak dapat dikenakan pada simbol fungsi."
+id = "Kesalahan 072: \"sizeof\" operator is invalid on \"function\" symbols. \"sizeof\" engga bisa dikenakan pada simbol fungsi."
 
 [explain."073"]
 es = "Error 073: el argumento de función debe ser un array (argumento \"%s\"). El parámetro requiere un array, pero la llamada pasa un escalar."
@@ -547,7 +547,7 @@ es = "Error 076: error de sintaxis en la expresión o llamada a función no vál
 ru = "Oshibka 076: sintaksicheskaya oshibka v vyrazhenii ili nedopustimyj vyzov funktsii. Vyrazhenie ne udalos razobrat libo vyzov ne sootvetstvuet ni odnoj izvestnoj funktsii."
 tl = "Error 076: syntax error sa expression o hindi valid ang function call. Hindi ma-parse ang expression o walang kilalang function na tugma sa tawag."
 en = "Error 076: syntax error in the expression, or invalid function call. The expression cannot be parsed, or the call matches no known function."
-id = "Kesalahan 076: syntax error in the expression, or invalid function call. Ekspresi tidak dapat diurai, atau pemanggilan tidak cocok dengan fungsi mana pun."
+id = "Kesalahan 076: syntax error in the expression, or invalid function call. Ekspresi engga bisa diurai, atau pemanggilan engga cocok dengan fungsi mana pun."
 
 [explain."077"]
 es = "Error 077: codificación UTF-8 mal formada o archivo dañado: %s. El código fuente contiene UTF-8 mal formado o está truncado."
@@ -575,21 +575,21 @@ es = "Error 080: símbolo desconocido o no constante (símbolo \"%s\"). El símb
 ru = "Oshibka 080: neizvestnyj ili ne konstantnyj simvol (simvol \"%s\"). Simvol ne najden ili ne yavlyaetsya konstantoj v meste, gde ona trebuetsya."
 tl = "Error 080: hindi kilala o hindi constant ang symbol (symbol na \"%s\"). Hindi kilala ang symbol o hindi ito constant sa lugar na kailangan iyon."
 en = "Error 080: unknown symbol, or not a constant symbol (symbol \"%s\"). The symbol is unknown, or it is not a constant where one is required."
-id = "Kesalahan 080: unknown symbol, or not a constant symbol (symbol \"%s\"). Simbol tidak dikenal, atau bukan konstanta padahal konstanta diperlukan."
+id = "Kesalahan 080: unknown symbol, or not a constant symbol (symbol \"%s\"). Simbol engga dikenal, atau bukan konstanta padahal konstanta diperlukan."
 
 [explain."081"]
 es = "Error 081: no se puede usar un tag como valor predeterminado de un parámetro de array indexado (símbolo \"%s\"). \"tagof\" no se puede aplicar a un array indexado."
 ru = "Oshibka 081: teg nelzya ispolzovat kak znachenie po umolchaniyu dlya indeksirovannogo parametra-massiva (simvol \"%s\"). K indeksirovannomu massivu nelzya primenyat \"tagof\"."
 tl = "Error 081: hindi puwedeng gawing default value ang tag para sa naka-index na array parameter (symbol na \"%s\"). Hindi puwedeng ilapat ang \"tagof\" sa naka-index na array."
 en = "Error 081: cannot take a tag as a default value for an indexed array parameter (symbol \"%s\"). \"tagof\" cannot be applied to an indexed array."
-id = "Kesalahan 081: cannot take a tag as a default value for an indexed array parameter (symbol \"%s\"). \"tagof\" tidak dapat dikenakan pada array yang berindeks."
+id = "Kesalahan 081: cannot take a tag as a default value for an indexed array parameter (symbol \"%s\"). \"tagof\" engga bisa dikenakan pada array yang berindeks."
 
 [explain."082"]
 es = "Error 082: los operadores definidos por el usuario y las funciones nativas no pueden tener estados. Las funciones nativas, los operadores y main() no pueden llevar estados."
 ru = "Oshibka 082: u polzovatelskikh operatorov i nativnykh funktsij ne mozhet byt sostoyanij. Nativnye funktsii, operatory i main() ne mogut imet sostoyaniya."
 tl = "Error 082: hindi puwedeng magkaroon ng state ang user-defined operator at native function. Hindi puwedeng magdala ng state ang native function, operator, at main()."
 en = "Error 082: user-defined operators and native functions may not have states. Native functions, operators and main() cannot carry states."
-id = "Kesalahan 082: user-defined operators and native functions may not have states. Fungsi native, operator, dan main() tidak boleh membawa state."
+id = "Kesalahan 082: user-defined operators and native functions may not have states. Fungsi native, operator, dan main() engga boleh membawa state."
 
 [explain."083"]
 es = "Error 083: una función o variable solo puede pertenecer a un autómata (símbolo \"%s\"). Esta función ya pertenece a otro; un símbolo solo puede estar en una máquina de estados."
@@ -610,42 +610,42 @@ es = "Error 085: no hay estados definidos para el símbolo \"%s\". La función s
 ru = "Oshibka 085: dlya simvola \"%s\" ne zadany sostoyaniya. Funktsiya obyavlena kak funktsiya sostoyanij, no spisok sostoyanij otsutstvuet."
 tl = "Error 085: walang state na idineklara para sa symbol na \"%s\". Idineklara ang function bilang state function pero walang nakalistang state."
 en = "Error 085: no states are defined for symbol \"%s\". The function is declared as a state function, but no states were listed."
-id = "Kesalahan 085: no states are defined for symbol \"%s\". Fungsi dideklarasikan sebagai fungsi state, tetapi tidak ada state yang dicantumkan."
+id = "Kesalahan 085: no states are defined for symbol \"%s\". Fungsi dideklarasikan sebagai fungsi state, tetapi engga ada state yang dicantumkan."
 
 [explain."086"]
 es = "Error 086: autómata desconocido \"%s\". Nunca se declaró el autómata indicado después de \"state\"."
 ru = "Oshibka 086: neizvestnyj avtomat \"%s\". Avtomat, ukazannyj posle \"state\", nigde ne obyavlen."
 tl = "Error 086: hindi kilalang automaton na \"%s\". Hindi naideklara ang automaton na kasunod ng \"state\"."
 en = "Error 086: unknown automaton \"%s\". The automaton named after \"state\" was never declared."
-id = "Kesalahan 086: unknown automaton \"%s\". Automaton yang disebut setelah \"state\" tidak pernah dideklarasikan."
+id = "Kesalahan 086: unknown automaton \"%s\". Automaton yang disebut setelah \"state\" engga pernah dideklarasikan."
 
 [explain."087"]
 es = "Error 087: estado \"%s\" desconocido para el autómata \"%s\". El autómata existe, pero no tiene un estado con ese nombre."
 ru = "Oshibka 087: neizvestnoe sostoyanie \"%s\" avtomata \"%s\". Avtomat sushchestvuet, no sostoyanie s takim imenem ne obyavleno."
 tl = "Error 087: hindi kilalang state na \"%s\" para sa automaton na \"%s\". Umiiral ang automaton pero wala itong state na ganoon ang pangalan."
 en = "Error 087: unknown state \"%s\" for automaton \"%s\". The automaton exists, but it has no state with that name."
-id = "Kesalahan 087: unknown state \"%s\" for automaton \"%s\". Automaton itu ada, tetapi tidak punya state dengan nama tersebut."
+id = "Kesalahan 087: unknown state \"%s\" for automaton \"%s\". Automaton itu ada, tetapi engga punya state dengan nama tersebut."
 
 [explain."088"]
 es = "Error 088: las variables public y locales no pueden tener estados (símbolo \"%s\"). No se pueden asignar estados a variables public ni locales."
 ru = "Oshibka 088: u peremennykh public i lokalnykh peremennykh ne mozhet byt sostoyanij (simvol \"%s\"). Sostoyaniya nelzya naznachat peremennym public i lokalnym."
 tl = "Error 088: hindi puwedeng magkaroon ng state ang public at local variable (symbol na \"%s\"). Hindi puwedeng lagyan ng state ang mga public at local variable."
 en = "Error 088: public variables and local variables may not have states (symbol \"%s\"). Public and local variables cannot be given states."
-id = "Kesalahan 088: public variables and local variables may not have states (symbol \"%s\"). Variabel public dan lokal tidak boleh diberi state."
+id = "Kesalahan 088: public variables and local variables may not have states (symbol \"%s\"). Variabel public dan lokal engga boleh diberi state."
 
 [explain."089"]
 es = "Error 089: las variables de estado no pueden inicializarse (símbolo \"%s\"). Una variable dentro de un bloque de estado no puede tener inicializador."
 ru = "Oshibka 089: peremennye sostoyaniya nelzya initsializirovat (simvol \"%s\"). U peremennoj vnutri bloka sostoyaniya ne mozhet byt initsializatora."
 tl = "Error 089: hindi puwedeng i-initialize ang state variable (symbol na \"%s\"). Hindi puwedeng magkaroon ng initializer ang variable sa loob ng state block."
 en = "Error 089: state variables may not be initialized (symbol \"%s\"). A variable inside a state block cannot have an initialiser."
-id = "Kesalahan 089: state variables may not be initialized (symbol \"%s\"). Variabel di dalam blok state tidak boleh punya nilai awal."
+id = "Kesalahan 089: state variables may not be initialized (symbol \"%s\"). Variabel di dalam blok state engga boleh punya nilai awal."
 
 [explain."090"]
 es = "Error 090: las funciones public no pueden devolver arrays (símbolo \"%s\"). Una función public no puede devolver un array."
 ru = "Oshibka 090: funktsii public ne mogut vozvrashchat massivy (simvol \"%s\"). Funktsiya public ne mozhet vozvrashchat massiv."
 tl = "Error 090: hindi puwedeng magbalik ng array ang public function (symbol na \"%s\"). Hindi puwedeng magbalik ng array ang public function."
 en = "Error 090: public functions may not return arrays (symbol \"%s\"). A public function cannot return an array."
-id = "Kesalahan 090: public functions may not return arrays (symbol \"%s\"). Fungsi public tidak boleh mengembalikan array."
+id = "Kesalahan 090: public functions may not return arrays (symbol \"%s\"). Fungsi public engga boleh mengembalikan array."
 
 [explain."091"]
 es = "Error 091: constante ambigua; hace falta especificar el tag (símbolo \"%s\"). La constante coincide con más de un tag, así que hay que indicar cuál corresponde."
@@ -666,7 +666,7 @@ es = "Error 093: el operador \"__addressof\" no es válido en expresiones del pr
 ru = "Oshibka 093: operator \"__addressof\" nedopustim v vyrazheniyakh preprotsessora. \"__addressof\" nelzya ispolzovat vnutri direktiv preprotsessora."
 tl = "Error 093: hindi valid ang operator na \"__addressof\" sa preprocessor expression. Hindi puwedeng gamitin ang \"__addressof\" sa loob ng preprocessor directive."
 en = "Error 093: \"__addressof\" operator is invalid in preprocessor expressions. \"__addressof\" cannot be used inside preprocessor directives."
-id = "Kesalahan 093: \"__addressof\" operator is invalid in preprocessor expressions. \"__addressof\" tidak dapat dipakai di dalam direktif preprocessor."
+id = "Kesalahan 093: \"__addressof\" operator is invalid in preprocessor expressions. \"__addressof\" engga bisa dipakai di dalam direktif preprocessor."
 
 [explain."100"]
 en = "Fatal error 100: cannot read from file: \"%s\". The source or an include could not be opened; check the path spelling, permissions and that the file exists. Compilation stops here, so fix the messages above first."
@@ -701,7 +701,7 @@ es = "Error fatal 104: instrucción de assembler no válida \"%s\". El generador
 ru = "Kriticheskaya oshibka 104: nedopustimaya instruktsiya assemblera \"%s\". Generator koda vydal instruktsiyu, kotoruyu nevozmozhno zakodirovat. Kompilyatsiya ostanovlena; snachala ispravte soobshcheniya vyshe."
 tl = "Fatal error 104: hindi valid ang assembler instruction na \"%s\". Naglabas ang code generator ng instruction na hindi nito ma-encode. Ihihinto ang compilation; ayusin muna ang mga mensahe sa itaas."
 en = "Fatal error 104: invalid assembler instruction \"%s\". The code generator emitted an instruction it cannot encode. Compilation stops here, so fix the messages above first."
-id = "Fatal 104: invalid assembler instruction \"%s\". Code generator menghasilkan instruksi yang tidak bisa dienkode. Kompilasi berhenti di sini, jadi perbaiki pesan di atasnya lebih dulu."
+id = "Fatal 104: invalid assembler instruction \"%s\". Code generator menghasilkan instruksi yang engga bisa dienkode. Kompilasi berhenti di sini, jadi perbaiki pesan di atasnya lebih dulu."
 
 [explain."105"]
 es = "Error fatal 105: desbordamiento numérico; se superó la capacidad. Esta línea produjo más diagnósticos de los que el compilador informa por línea. La compilación se detiene; corregí primero los mensajes anteriores."
@@ -715,7 +715,7 @@ es = "Error fatal 106: el script compilado supera el tamaño máximo de memoria 
 ru = "Kriticheskaya oshibka 106: skompilirovannyj skript prevyshaet maksimalnyj razmer pamyati (%ld bajt). Ne udalos opredelit kodirovku iskhodnogo fajla; sokhranite ego v UTF-8 ili obychnom ASCII. Kompilyatsiya ostanovlena; snachala ispravte soobshcheniya vyshe."
 tl = "Fatal error 106: lumampas ang compiled script sa maximum memory size (%ld bytes). Hindi matukoy ang encoding ng source; i-save ito bilang UTF-8 o plain ASCII. Ihihinto ang compilation; ayusin muna ang mga mensahe sa itaas."
 en = "Fatal error 106: compiled script exceeds the maximum memory size (%ld bytes). The source encoding could not be detected; save the file as UTF-8 or plain ASCII. Compilation stops here, so fix the messages above first."
-id = "Fatal 106: compiled script exceeds the maximum memory size (%ld bytes). Encoding sumber tidak dapat dideteksi; simpan berkas sebagai UTF-8 atau ASCII biasa. Kompilasi berhenti di sini, jadi perbaiki pesan di atasnya lebih dulu."
+id = "Fatal 106: compiled script exceeds the maximum memory size (%ld bytes). Encoding sumber engga bisa dideteksi; simpan berkas sebagai UTF-8 atau ASCII biasa. Kompilasi berhenti di sini, jadi perbaiki pesan di atasnya lebih dulu."
 
 [explain."107"]
 es = "Error fatal 107: hay demasiados mensajes de error en una línea. Una instrucción de assembler inline está mal formada o no tiene su operando. La compilación se detiene; corregí primero los mensajes anteriores."
@@ -729,7 +729,7 @@ es = "Error fatal 108: no se encontró el archivo de asignación de página de c
 ru = "Kriticheskaya oshibka 108: fajl tablitsy kodovoj stranitsy ne najden. Odnovremenno vozniklo neskolko kriticheskikh oshibok, poetomu sostoyanie kompilyatora nesoglasovanno. Kompilyatsiya ostanovlena; snachala ispravte soobshcheniya vyshe."
 tl = "Fatal error 108: hindi makita ang codepage mapping file. Sabay-sabay na naganap ang ilang fatal error kaya hindi tugma ang estado ng compiler. Ihihinto ang compilation; ayusin muna ang mga mensahe sa itaas."
 en = "Fatal error 108: codepage mapping file not found. Several fatal errors were raised at once, so the compiler state is inconsistent. Compilation stops here, so fix the messages above first."
-id = "Fatal 108: codepage mapping file not found. Beberapa fatal error muncul sekaligus sehingga status compiler tidak konsisten. Kompilasi berhenti di sini, jadi perbaiki pesan di atasnya lebih dulu."
+id = "Fatal 108: codepage mapping file not found. Beberapa fatal error muncul sekaligus sehingga status compiler engga konsisten. Kompilasi berhenti di sini, jadi perbaiki pesan di atasnya lebih dulu."
 
 [explain."109"]
 es = "Error fatal 109: ruta no válida: \"%s\". El runtime no pudo vincular la función durante el inicio. La compilación se detiene; corregí primero los mensajes anteriores."
@@ -743,7 +743,7 @@ es = "Error fatal 110: falló la aserción: %s. La instrucción no es válida o 
 ru = "Kriticheskaya oshibka 110: proverka utverzhdeniya ne projdena: %s. Instruktsiya nedopustima libo generator koda otklyuchyon, khotya on vsyo eshchyo nuzhen. Kompilyatsiya ostanovlena; snachala ispravte soobshcheniya vyshe."
 tl = "Fatal error 110: bumagsak ang assertion: %s. Hindi valid ang instruction o hindi pinagana ang code generator kahit kailangan pa ito. Ihihinto ang compilation; ayusin muna ang mga mensahe sa itaas."
 en = "Fatal error 110: assertion failed: %s. The instruction is invalid, or the code generator was disabled while still needed. Compilation stops here, so fix the messages above first."
-id = "Fatal 110: assertion failed: %s. Instruksi tidak valid, atau code generator dinonaktifkan padahal masih dibutuhkan. Kompilasi berhenti di sini, jadi perbaiki pesan di atasnya lebih dulu."
+id = "Fatal 110: assertion failed: %s. Instruksi engga valid, atau code generator dinonaktifkan padahal masih dibutuhkan. Kompilasi berhenti di sini, jadi perbaiki pesan di atasnya lebih dulu."
 
 [explain."111"]
 es = "Error fatal 111: error del usuario: %s. El compilador accedió a memoria fuera de la imagen del script, generalmente después de un error interno. La compilación se detiene; corregí primero los mensajes anteriores."
@@ -775,21 +775,21 @@ id = "Peringatan 202: number of arguments does not match definition. Pemanggilan
 
 [explain."203"]
 en = "Warning 203: symbol is never used: \"%s\". Nothing in this file reads the symbol, and it is not stock, public or native."
-id = "Peringatan 203: symbol is never used: \"%s\". Tidak ada bagian di berkas ini yang membaca simbol, dan simbol bukan stock, public, atau native."
+id = "Peringatan 203: symbol is never used: \"%s\". Engga ada bagian di berkas ini yang membaca simbol, dan simbol bukan stock, public, atau native."
 tl = "Naka-declare ang symbol na \"%s\" pero hindi ito ginagamit. Maaaring dead code ito o hindi pa tapos na implementation."
 es = "El símbolo \"%s\" está declarado, pero nunca se usa. Puede ser código muerto o una implementación sin terminar."
 ru = "Simvol \"%s\" obyavlen, no nikogda ne ispolzuetsya. Vozmozhno, eto myortvyj kod ili nezavershyonnaya realizatsiya."
 
 [explain."204"]
 en = "Warning 204: symbol is assigned a value that is never used: \"%s\". The assigned value is never read."
-id = "Peringatan 204: symbol is assigned a value that is never used: \"%s\". Nilai yang diberikan tidak pernah dibaca."
+id = "Peringatan 204: symbol is assigned a value that is never used: \"%s\". Nilai yang diberikan engga pernah dibaca."
 tl = "Ina-assignan ng value ang symbol na \"%s\" pero hindi ito binabasa. Kadalasan, redundant na initialization ito o logic bug."
 es = "Al símbolo \"%s\" se le asigna un valor que nunca se lee. Suele indicar una inicialización redundante o un error de lógica."
 ru = "Simvolu \"%s\" prisvaivaetsya znachenie, kotoroe nikogda ne chitaetsya. Chasto eto ukazyvaet na izbytochnuyu initsializatsiyu ili oshibku v logike."
 
 [explain."205"]
 en = "Warning 205: redundant code: constant expression is zero. The code after this point can never run."
-id = "Peringatan 205: redundant code: constant expression is zero. Kode setelah titik ini tidak pernah dijalankan."
+id = "Peringatan 205: redundant code: constant expression is zero. Kode setelah titik ini engga pernah dijalankan."
 tl = "Redundant code: constant expression na zero ang halaga. Laging false ang kondisyon, kaya hindi naaabot ang block."
 es = "Codigo redundante: la expresion constante es cero. Esta condicion siempre es falsa y vuelve inalcanzable el bloque."
 ru = "Lishnij kod: konstantnoe vyrazhenie ravno nulyu. Eto uslovie vsegda lozhno, iz-za chego blok nedostizhim."
@@ -806,14 +806,14 @@ es = "Advertencia 207: #pragma desconocido. El \"#pragma\" indica una opción qu
 ru = "Preduprezhdenie 207: neizvestnyj #pragma. V \"#pragma\" ukazana optsiya, neizvestnaya kompilyatoru."
 tl = "Babala 207: hindi kilalang #pragma. Hindi alam ng compiler ang opsyong tinukoy ng \"#pragma\"."
 en = "Warning 207: unknown #pragma. The \"#pragma\" names an option the compiler does not know."
-id = "Peringatan 207: unknown #pragma. \"#pragma\" menyebut opsi yang tidak dikenal compiler."
+id = "Peringatan 207: unknown #pragma. \"#pragma\" menyebut opsi yang engga dikenal compiler."
 
 [explain."208"]
 es = "Advertencia 208: se usó una función con resultado etiquetado antes de definirla y hubo que volver a analizar. Esta expresión tiene un efecto que se descarta o la instrucción no se puede evaluar."
 ru = "Preduprezhdenie 208: funktsiya s tegirovannym rezultatom ispolzovana do opredeleniya, trebuetsya povtornyj razbor. Effekt etogo vyrazheniya otbrasyvaetsya libo operator nevozmozhno vychislit."
 tl = "Babala 208: ginamit ang function na may tag sa resulta bago ito ideklara kaya kailangang i-parse muli. Itinatapon ang epekto ng expression na ito o hindi masusuri ang statement."
 en = "Warning 208: function with tag result used before definition, forcing reparse. This expression has an effect that is discarded, or a statement cannot be evaluated."
-id = "Peringatan 208: function with tag result used before definition, forcing reparse. Ekspresi punya efek yang dibuang, atau pernyataannya tidak dapat dievaluasi."
+id = "Peringatan 208: function with tag result used before definition, forcing reparse. Ekspresi punya efek yang dibuang, atau pernyataannya engga bisa dievaluasi."
 
 [explain."209"]
 es = "Advertencia 209: la función \"%s\" debería devolver un valor. Está declarada para devolver un valor, pero alguna ruta termina sin devolverlo."
@@ -827,7 +827,7 @@ es = "Advertencia 210: posible uso del símbolo antes de inicializarlo: \"%s\". 
 ru = "Preduprezhdenie 210: vozmozhno, simvol ispolzuetsya do initsializatsii: \"%s\". Rezultat prisvaivaniya nigde ne chitaetsya libo operand nevozmozhno vychislit."
 tl = "Babala 210: posibleng ginamit ang symbol bago i-initialize: \"%s\". Walang bumabasa sa assignment o hindi masusuri ang isang operand."
 en = "Warning 210: possible use of symbol before initialization: \"%s\". The assignment has no reader or an operand cannot be evaluated."
-id = "Peringatan 210: possible use of symbol before initialization: \"%s\". Penugasan tanpa pembaca, atau operand tidak dapat dievaluasi."
+id = "Peringatan 210: possible use of symbol before initialization: \"%s\". Penugasan tanpa pembaca, atau operand engga bisa dievaluasi."
 
 [explain."211"]
 en = "Warning 211: possibly unintended assignment. An assignment sits inside a condition where a comparison was probably intended."
@@ -841,7 +841,7 @@ es = "Advertencia 212: operación bit a bit posiblemente no intencional. El argu
 ru = "Preduprezhdenie 212: vozmozhno, pobitovaya operatsiya ukazana neprednamerenno. Argument nedopustim v etoj pozitsii."
 tl = "Babala 212: posibleng hindi sinasadya ang bitwise operation. Hindi valid ang argumento sa posisyong ito."
 en = "Warning 212: possibly unintended bitwise operation. The argument is invalid at this position."
-id = "Peringatan 212: possibly unintended bitwise operation. Argumen tidak valid pada posisi ini."
+id = "Peringatan 212: possibly unintended bitwise operation. Argumen engga valid pada posisi ini."
 
 [explain."213"]
 es = "Advertencia 213: los tags no coinciden: se esperaba %s %s, pero se encontró %s. Se asignó a una variable un valor con otro tag."
@@ -852,7 +852,7 @@ id = "Peringatan 213: tag mismatch: expected %s %s but found %s. Nilai bertag te
 
 [explain."214"]
 en = "Warning 214: possibly a \"const\" array argument was intended: \"%s\". The literal is copied into a temporary buffer; mark the parameter \"const\" when the function does not write to it."
-id = "Peringatan 214: possibly a \"const\" array argument was intended: \"%s\". Literal disalin ke buffer sementara; tandai parameter \"const\" bila fungsi tidak menulis ke sana."
+id = "Peringatan 214: possibly a \"const\" array argument was intended: \"%s\". Literal disalin ke buffer sementara; tandai parameter \"const\" bila fungsi engga menulis ke sana."
 tl = "Maaaring dapat \"const\" ang array argument na \"%s\". Kinokopya ang literal sa temporary buffer; gamitin ang \"const\" kung hindi binabago ng function ang parameter."
 es = "El argumento de array \"%s\" podría haberse declarado \"const\". El literal se copia a un buffer temporal; usá \"const\" si la función no modifica el parámetro."
 ru = "Argument massiva \"%s\" vozmozhno sledovalo obyavit kak \"const\". Literal kopiruetsya vo vremennyj bufer; ukazhite \"const\", esli funktsiya ne izmenyaet parametr."
@@ -873,7 +873,7 @@ id = "Peringatan 216: nested comment. Komentar dibuka di dalam komentar lain."
 
 [explain."217"]
 en = "Warning 217: loose indentation. The indentation is loose; PawnMC passes -w217 on every compile, so this only appears if you re-enable it."
-id = "Peringatan 217: loose indentation. Indentasi tidak rapi; PawnMC selalu memakai -w217 sehingga ini hanya muncul bila diaktifkan kembali."
+id = "Peringatan 217: loose indentation. Indentasi engga rapi; PawnMC selalu memakai -w217 sehingga ini hanya muncul bila diaktifkan kembali."
 tl = "Maluwag ang indentation. Kosmetik lang ang warning na ito pero natatakpan nito ang maling estruktura at mas mahirap basahin ang code."
 es = "Indentacion irregular. Esta advertencia es estetica, pero puede esconder errores estructurales y dificulta la lectura del codigo."
 ru = "Nerovnye otstupy. Eto preduprezhdenie kosmeticheskoe, no ono mozhet skryvat strukturnye oshibki i zatrudnyat chtenie koda."
@@ -897,7 +897,7 @@ es = "Advertencia 220: una expresión con sobreescritura de tag debe ir entre pa
 ru = "Preduprezhdenie 220: vyrazhenie s pereopredeleniem tega dolzhno byt zaklyucheno v skobki. Operand nevozmozhno vychislit."
 tl = "Babala 220: dapat nasa loob ng panaklong ang expression na may tag override. Hindi masusuri ang operand."
 en = "Warning 220: expression with tag override must appear between parentheses. The operand cannot be evaluated."
-id = "Peringatan 220: expression with tag override must appear between parentheses. Operand tidak dapat dievaluasi."
+id = "Peringatan 220: expression with tag override must appear between parentheses. Operand engga bisa dievaluasi."
 
 [explain."221"]
 es = "Advertencia 221: el nombre de etiqueta \"%s\" coincide con el nombre de un tag. La etiqueta y el tag tienen el mismo nombre."
@@ -925,14 +925,14 @@ es = "Advertencia 224: tamaño de array indeterminado en la expresión \"sizeof\
 ru = "Preduprezhdenie 224: razmer massiva v vyrazhenii \"sizeof\" ne opredelyon (simvol \"%s\"). \"sizeof\" primenyon k massivu neizvestnogo razmera."
 tl = "Babala 224: hindi matukoy ang laki ng array sa \"sizeof\" expression (symbol na \"%s\"). Ginamit ang \"sizeof\" sa array na hindi alam ang laki."
 en = "Warning 224: indeterminate array size in \"sizeof\" expression (symbol \"%s\"). \"sizeof\" is used on an array whose size is not known."
-id = "Peringatan 224: indeterminate array size in \"sizeof\" expression (symbol \"%s\"). \"sizeof\" dipakai pada array yang ukurannya tidak diketahui."
+id = "Peringatan 224: indeterminate array size in \"sizeof\" expression (symbol \"%s\"). \"sizeof\" dipakai pada array yang ukurannya engga diketahui."
 
 [explain."225"]
 es = "Advertencia 225: código inalcanzable. No se puede ejecutar el código que sigue a este punto."
 ru = "Preduprezhdenie 225: nedostizhimyj kod. Kod posle etoj tochki ne mozhet byt vypolnen."
 tl = "Babala 225: hindi maaabot ang code. Hindi tatakbo ang code pagkatapos ng puntong ito."
 en = "Warning 225: unreachable code. Control flow cannot reach the statements after this point, often because an earlier return, break, or exit always transfers control away."
-id = "Peringatan 225: unreachable code. Kode setelah titik ini tidak terjangkau."
+id = "Peringatan 225: unreachable code. Kode setelah titik ini engga terjangkau."
 
 [explain."226"]
 es = "Advertencia 226: una variable se asigna a sí misma (símbolo \"%s\"). La variable recibe su propio valor."
@@ -967,7 +967,7 @@ es = "Advertencia 230: no hay implementación para el estado \"%s\" en la funci�
 ru = "Preduprezhdenie 230: dlya sostoyaniya \"%s\" funktsii \"%s\" net realizatsii ili zapasnogo varianta. Sostoyanie ne realizovano i ne imeet fallback."
 tl = "Babala 230: walang implementation o fallback para sa state na \"%s\" sa function na \"%s\". Walang implementation o fallback ang state."
 en = "Warning 230: no implementation for state \"%s\" in function \"%s\", no fall-back. A state has no implementation and no fallback."
-id = "Peringatan 230: no implementation for state \"%s\" in function \"%s\", no fall-back. Sebuah state tidak punya implementasi dan tidak punya fallback."
+id = "Peringatan 230: no implementation for state \"%s\" in function \"%s\", no fall-back. Sebuah state engga punya implementasi dan engga punya fallback."
 
 [explain."231"]
 es = "Advertencia 231: se ignora la especificación de estado en una declaración forward. Se ignoran las especificaciones de estado de una declaración forward."
@@ -1002,14 +1002,14 @@ es = "Advertencia 235: la función public no tiene declaración forward (símbol
 ru = "Preduprezhdenie 235: dlya funktsii public net predvaritelnogo obyavleniya (simvol \"%s\"). Sreda vypolneniya nikogda ne vyzyvaet etu funktsiyu."
 tl = "Babala 235: walang forward declaration ang public function (symbol na \"%s\"). Hindi kailanman tatawagin ng runtime ang function."
 en = "Warning 235: public function lacks forward declaration (symbol \"%s\"). The function is never called by the runtime."
-id = "Peringatan 235: public function lacks forward declaration (symbol \"%s\"). Fungsi tidak pernah dipanggil runtime."
+id = "Peringatan 235: public function lacks forward declaration (symbol \"%s\"). Fungsi engga pernah dipanggil runtime."
 
 [explain."236"]
 es = "Advertencia 236: parámetro desconocido en la sustitución (patrón #define incorrecto). El patrón \"#define\" no coincide con los parámetros de la macro."
 ru = "Preduprezhdenie 236: neizvestnyj parametr podstanovki (nevernyj shablon #define). Shablon \"#define\" ne sootvetstvuet parametram makrosa."
 tl = "Babala 236: hindi kilalang parameter sa substitution (mali ang #define pattern). Hindi tugma ang pattern ng \"#define\" sa mga parameter ng macro."
 en = "Warning 236: unknown parameter in substitution (incorrect #define pattern). The \"#define\" pattern does not match the parameters of the macro."
-id = "Peringatan 236: unknown parameter in substitution (incorrect #define pattern). Pola \"#define\" tidak cocok dengan parameter makronya."
+id = "Peringatan 236: unknown parameter in substitution (incorrect #define pattern). Pola \"#define\" engga cocok dengan parameter makronya."
 
 [explain."237"]
 es = "Advertencia 237: advertencia del usuario: %s. El script emitió una advertencia mediante \"#pragma warn\" o una llamada de advertencia del usuario."
@@ -1023,11 +1023,11 @@ es = "Advertencia 238: combinación de especificadores de clase sin sentido (%s)
 ru = "Preduprezhdenie 238: bessmyslennoe sochetanie spetsifikatorov klassa (%s). Ispolzovannoe sochetanie spetsifikatorov klassa ne imeet smysla."
 tl = "Babala 238: walang saysay na kombinasyon ng class specifier (%s). Walang kahulugan ang pinagsamang class specifier dito."
 en = "Warning 238: meaningless combination of class specifiers (%s). The class specifiers combined here mean nothing."
-id = "Peringatan 238: meaningless combination of class specifiers (%s). Kombinasi penentu kelas di sini tidak bermakna."
+id = "Peringatan 238: meaningless combination of class specifiers (%s). Kombinasi penentu kelas di sini engga bermakna."
 
 [explain."239"]
 es = "Advertencia 239: se pasó un array o string literal a un parámetro que no es const. Esta expresión no se puede reducir a una constante."
 ru = "Preduprezhdenie 239: literal massiva ili stroki peredan parametru bez const. Eto vyrazhenie nevozmozhno svesti k konstante."
 tl = "Babala 239: ipinasa ang literal na array/string sa parameter na hindi const. Hindi mare-reduce sa constant ang expression na ito."
 en = "Warning 239: literal array/string passed to a non-const parameter. This expression cannot be reduced to a constant."
-id = "Peringatan 239: literal array/string passed to a non-const parameter. Ekspresi ini tidak dapat direduksi menjadi konstanta."
+id = "Peringatan 239: literal array/string passed to a non-const parameter. Ekspresi ini engga bisa direduksi menjadi konstanta."

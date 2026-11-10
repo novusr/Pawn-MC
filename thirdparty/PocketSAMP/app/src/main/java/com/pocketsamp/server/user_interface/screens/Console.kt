@@ -40,54 +40,62 @@ fun _Console(
             }
     }
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(SampThemeColors.bg)
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(SampThemeColors.bg)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = t("console.title"),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = SampThemeColors.textPrimary,
-                        maxLines = 1
-                    )
-                    Text(
-                        text = t("console.buffered").replace("{count}", logs.size.toString()),
-                        fontSize = 12.sp,
-                        color = SampThemeColors.textSecondary,
-                        maxLines = 1
-                    )
-                }
-
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    TextButton(
-                        onClick = onClearLogs,
-                        colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.textSecondary),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-                    ) {
-                        Text(
-                            text = t("console.clear"),
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = SampThemeColors.textSecondary
-                        )
-                    }
-                }
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = t("console.title"),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = SampThemeColors.textPrimary,
+                    maxLines = 1
+                )
+                Text(
+                    text = t("console.buffered").replace("{count}", logs.size.toString()),
+                    fontSize = 12.sp,
+                    color = SampThemeColors.textSecondary,
+                    maxLines = 1
+                )
             }
 
+            TextButton(
+                onClick = onClearLogs,
+                colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.textSecondary),
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+            ) {
+                Text(
+                    text = t("console.clear"),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = SampThemeColors.textSecondary
+                )
+            }
+        }
+
+        /*
+         * Simple console card: one flat semi-dark surface, no decorative
+         * chrome. A slim scrollbar rides the right edge so long logs can be
+         * dragged through without flinging blind.
+         */
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 52.dp)
+        ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 52.dp)
+                    .weight(1f)
+                    .fillMaxHeight()
                     .clip(RoundedCornerShape(12.dp))
                     .background(SampThemeColors.terminal)
                     .padding(12.dp)
@@ -101,29 +109,58 @@ fun _Console(
                         modifier = Modifier.align(Alignment.Center)
                     )
                 } else {
-                LazyColumn(
-                    state = listState,
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    itemsIndexed(logs) { _, line ->
-                        val lineColor = when {
-                            line.contains("error", ignoreCase = true) || line.contains("failed", ignoreCase = true) -> SampThemeColors.danger
-                            line.contains("loaded", ignoreCase = true) || line.contains("success", ignoreCase = true) -> SampThemeColors.success
-                            line.contains("warning", ignoreCase = true) -> SampThemeColors.warn
-                            line.startsWith("[PROCESS]") -> SampThemeColors.accent
-                            line.startsWith("[MariaDB]") -> MaterialTheme.colorScheme.secondary
-                            else -> SampThemeColors.textSecondary
-                        }
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        itemsIndexed(logs) { _, line ->
+                            val lineColor = when {
+                                line.contains("error", ignoreCase = true) || line.contains("failed", ignoreCase = true) -> SampThemeColors.danger
+                                line.contains("loaded", ignoreCase = true) || line.contains("success", ignoreCase = true) -> SampThemeColors.success
+                                line.contains("warning", ignoreCase = true) -> SampThemeColors.warn
+                                line.contains("\$System") -> SampThemeColors.accent
+                                else -> SampThemeColors.textSecondary
+                            }
 
-                        Text(
-                            text = line,
-                            fontSize = 12.sp,
-                            fontFamily = FontFamily.Monospace,
-                            color = lineColor,
-                            lineHeight = 17.sp
-                        )
+                            Text(
+                                text = line,
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace,
+                                color = lineColor,
+                                lineHeight = 17.sp
+                            )
+                        }
                     }
+                }
+            }
+
+            // Slim scrollbar riding the right edge of the log surface.
+            val layoutInfo = listState.layoutInfo
+            val totalCount = layoutInfo.totalItemsCount
+            val visibleCount = layoutInfo.visibleItemsInfo.size
+            if (totalCount > visibleCount && visibleCount > 0) {
+                val first = layoutInfo.visibleItemsInfo.first().index
+                val scrollRange = (totalCount - visibleCount).coerceAtLeast(1)
+                val progress = (first.toFloat() / scrollRange).coerceIn(0f, 1f)
+                Column(
+                    modifier = Modifier
+                        .width(10.dp)
+                        .fillMaxHeight()
+                        .padding(start = 4.dp, top = 12.dp, bottom = 12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.weight(progress.coerceAtLeast(0.001f))
+                    ) {}
+                    Box(
+                        modifier = Modifier
+                            .weight(0.08f)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(SampThemeColors.textMuted.copy(alpha = 0.45f))
+                    ) {}
+                    Box(
+                        modifier = Modifier.weight((1f - progress - 0.08f).coerceAtLeast(0.001f))
+                    ) {}
                 }
             }
         }
