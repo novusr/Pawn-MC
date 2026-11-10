@@ -107,7 +107,15 @@ class MainActivity : ComponentActivity() {
     /** Only one background sync per process lifetime. */
     private var downloadStarted = false
     private var assetExtractorInitialised = false
-    /** Fetches and unpacks runtime archives before the console is made available. */
+
+    /**
+     * Fetches and unpacks runtime archives before the console is made available.
+     *
+     * Runs automatically the first time PocketSAMP is entered — the user never
+     * has to press KASIH BAHAN BAKAR just to see the archives being prepared.
+     * Every archive download and unpack step emits a `$System [Prepare]` line so
+     * the console narrates the whole sequence as it happens.
+     */
     private fun startRuntimeDownload() {
         if (downloadStarted) return
         downloadStarted = true
@@ -115,6 +123,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val runtime = ThirdRuntime(applicationContext)
             if (!ThirdRuntime.isComplete(applicationContext)) {
+                RuntimeService.appendSystemLog("Prepare", Locales.text(Locales.current, "log.archive.prepare"))
                 runtime.sync { line ->
                     android.util.Log.i("RuntimeDownload", line)
                     RuntimeService.appendSystemLog("Prepare", line)
@@ -131,6 +140,7 @@ class MainActivity : ComponentActivity() {
             }
             try {
                 if (!assetExtractor.isExtracted()) {
+                    RuntimeService.appendSystemLog("Prepare", Locales.text(Locales.current, "log.archive.extract"))
                     assetExtractor.extractAll { progress ->
                         RuntimeService.appendSystemLog("Prepare", progress)
                     }
