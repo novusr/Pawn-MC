@@ -121,6 +121,46 @@ class RuntimeService : Service() {
         private const val MAX_CRASH_RESTARTS = 1
         private const val RESTART_BACKOFF_MS = 2000L
 
+        /*
+         * Uptime a restored server must reach before the attempt counter may be
+         * reset again. Without this a server that dies seconds after the recovery
+         * restart counted as a brand-new crash: start() succeeded, the counter
+         * went back to 0, the next exit took its one fresh retry — an unbounded
+         * restart cycle through a "max 1 retry" rule. A crash-then-crash within
+         * this window now rides the same bounded counter instead.
+         */
+        private const val STABLE_UPTIME_RESET_MS = 60_000L
+
+        /** When the current (or last) engine run actually started; wall clock. */
+        @Volatile
+        private var lastRunStartedAtMs: Long = 0L
+
+        /** True only when the previous run stayed up for [STABLE_UPTIME_RESET_MS]. */
+        private fun previousRunWasStable(): Boolean {
+            val startedAt = lastRunStartedAtMs
+            return startedAt > 0 &&
+                System.currentTimeMillis() - startedAt >= STABLE_UPTIME_RESET_MS
+        }
+
+        /** Marks a fresh engine launch so stability windows are measured from it. */
+        fun markRunStarted() {
+            lastRunStartedAtMs = System.currentTimeMillis()
+        }
+
+        /**
+         * Resets the crash counter, but only when the run that just ended had
+         * proven itself stable. A rapid crash right after a recovery keeps the
+         * count climbing, so the bounded single-shot rule eventually wins.
+         */
+        private fun maybeResetCrashCounter() {
+            if (previousRunWasStable()) {
+                crashRestartAttempts.set(0)
+            }
+        }
+
+        /** Wall-clock start of the most recent run, for the stability window. */
+        val lastRunStartMs: Long get() = lastRunStartedAtMs
+
         private val _lanIp = MutableStateFlow(FALLBACK_LAN_IP)
         val lanIp: StateFlow<String> = _lanIp.asStateFlow()
 
@@ -146,6 +186,7 @@ class RuntimeService : Service() {
         fun appendLog(rawLine: String) {
             // Every $System line carries an [hh:mm:ss] stamp up front; localized
             // strings arrive without one, so graft it here before anything reads it.
+            ensureLogStreamer()
             val line = if (rawLine.contains("\$System") && !rawLine.startsWith("[")) {
                 val marker = rawLine.indexOf("\$System")
                 "[${SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())}] " + rawLine.substring(marker)
@@ -181,10 +222,32 @@ class RuntimeService : Service() {
 
         /**
          * Drains [streamingBacklog] into the UI feed at a readable cadence.
-         * Started once from [onCreate]; runs only while lines are pending.
+         *
+         * Previously this drainer was launched only from `onCreate` of the
+         * foreground service. Preparation (`[Prepare]`) lines arrive from the
+         * hosting Activity, usually before the service has been started even
+         * once — their backlog sat there forever and the console stayed empty
+         * "sometimes", depending on whether a server run had brought the service
+         * up first. The drainer is now owned by the companion, started lazily on
+         * the first appended line, so pacing works from the app's very first log.
          */
+        private var logStreamerStarted = false
+        private val streamerScope = kotlinx.coroutines.CoroutineScope(
+            kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.Default
+        )
+
         fun startLogStreamer(scope: kotlinx.coroutines.CoroutineScope) {
-            scope.launch(kotlinx.coroutines.Dispatchers.Default) {
+            // Kept for compatibility with prior call sites; the internal drainer
+            // is single-shot and idempotent now.
+            ensureLogStreamer()
+        }
+
+        private fun ensureLogStreamer() {
+            synchronized(logLock) {
+                if (logStreamerStarted) return
+                logStreamerStarted = true
+            }
+            streamerScope.launch {
                 while (kotlinx.coroutines.currentCoroutineContext().isActive) {
                     kotlinx.coroutines.delay(150)
                     var released: List<String> = emptyList()
@@ -252,6 +315,14 @@ class RuntimeService : Service() {
         createNotificationChannel()
         startLogStreamer(serviceScope)
 
+        // Best-effort shield against the Android 12+ phantom process killer before
+        // any child is ever spawned; silently a no-op where the shell refuses us.
+        serviceScope.launch(Dispatchers.IO) {
+            com.pocketsamp.server.engine_handler.PhantomGuard.harden(applicationContext) { note ->
+                appendSystemLog("Runtime", note)
+            }
+        }
+
         assetExtractor = ThirdExtractor(this)
         serverEngine = Server(this)
         mariaDbEngine = ThirdMariaDb(this)
@@ -304,7 +375,11 @@ class RuntimeService : Service() {
             if (shouldBeRunning && osKilled) {
                 // Bound the recovery: each consecutive kill backs off longer and
                 // after several in a row the server is left stopped instead of
-                // relaunching forever.
+                // relaunching forever. The counter is NOT reset blindly: a server
+                // that dies again within the stability window is still part of
+                // the same failure streak, which is what stops the old pattern of
+                // one retry surviving forever because every quick re-start reset it.
+                maybeResetCrashCounter()
                 val attempts = crashRestartAttempts.incrementAndGet()
                 if (attempts > MAX_CRASH_RESTARTS) {
                     appendLog(t("log.restore.gaveup"))
@@ -317,7 +392,10 @@ class RuntimeService : Service() {
                         if (prefs.getBoolean("server_running_state", false) && !serverEngine.isRunning) {
                             try {
                                 if (serverEngine.start(serviceScope)) {
-                                    crashRestartAttempts.set(0)
+                                    // No counter reset here: the restored run only
+                                    // earns a reset once it proves stable (see
+                                    // maybeResetCrashCounter, checked on the NEXT exit).
+                                    markRunStarted()
                                     updateNotification(t("notify.active").replace("{ip}", _lanIp.value))
                                     appendLog(t("log.restored"))
                                 } else {
@@ -366,6 +444,10 @@ class RuntimeService : Service() {
         when (intent.action) {
             ACTION_START -> {
                 prefs.edit().putBoolean("server_running_state", true).apply()
+                // A deliberate user start is a clean slate: the bounded recovery
+                // budget belongs to the crash streak, not to this fresh launch.
+                markRunStarted()
+                crashRestartAttempts.set(0)
                 startServers()
             }
             ACTION_STOP -> {
@@ -443,9 +525,10 @@ class RuntimeService : Service() {
                     return
                 }
         }
-        clearLogs()
-        // Fresh console: drop the previous run's replayed lines so stale "Stream
-        // closed"/pipe noise from the last session never leads the new log.
+        // Fresh console for a deliberate user start: drop the previous run's
+        // replayed lines. Preparation lines arriving earlier this session are
+        // preserved here (clearLogs is only called from the explicit clear), so
+        // the `[Prepare]` narration is not erased the moment the engine begins.
         serverEngine.resetLogHistory()
         _serverStatus.value = Status.STARTING
         acquireLocks()
@@ -521,6 +604,9 @@ class RuntimeService : Service() {
                     return@launch
                 }
                 _serverStatus.value = Status.RUNNING
+                // Stability window starts here: a run that lives this long earns a
+                // fresh recovery budget the next time something kills it.
+                markRunStarted()
                 updateLanIp()
                 updateNotification(t("notify.active").replace("{ip}", _lanIp.value))
                 appendLog(t("log.active").replace("{ip}", _lanIp.value))

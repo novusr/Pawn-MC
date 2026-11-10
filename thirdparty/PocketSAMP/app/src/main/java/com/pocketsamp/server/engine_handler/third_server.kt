@@ -127,10 +127,16 @@ class Server(private val context: Context) {
         if (sampDir.absolutePath.startsWith("/storage/")) {
             runCatching {
                 val privateRoot = File(filesDir, "bin/private_samp").apply { mkdirs() }
-                listOf("lib", "usr/lib").forEach { relative ->
-                    val source = File(rootfsDir, relative)
-                    if (source.isDirectory) {
-                        source.copyRecursively(File(privateRoot, relative), overwrite = true)
+                // Only re-mirror the loader tree when the source actually changed;
+                // copying thousands of sysroot files on every start used to churn
+                // the disk exactly when the OOM killer was likeliest to strike.
+                val restage = com.pocketsamp.server.engine_handler.PhantomGuard.needsRestage(rootfsDir, privateRoot)
+                if (restage) {
+                    listOf("lib", "usr/lib").forEach { relative ->
+                        val source = File(rootfsDir, relative)
+                        if (source.isDirectory) {
+                            source.copyRecursively(File(privateRoot, relative), overwrite = true)
+                        }
                     }
                 }
                 val plugins = File(sampDir, "plugins")
