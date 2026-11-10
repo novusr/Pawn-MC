@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.FolderOpen
@@ -178,24 +179,6 @@ fun _Dashboard(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            /* Back button sized in raw physical pixels instead of density-independent
-             * dp: 40 px reads compact on high-density screens where the same dp
-             * balloons, and stays comfortably tappable on low-density ones where a
-             * fixed dp shrinks to a dot. Font scale is irrelevant to a 20 px glyph. */
-            val backDp = with(LocalDensity.current) {
-                (40f / density).dp
-            }
-            IconButton(
-                onClick = onNavigateBack,
-                modifier = Modifier.size(backDp)
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = t("back.to.pawnmc"),
-                    tint = SampThemeColors.textPrimary,
-                    modifier = Modifier.size(backDp / 2)
-                )
-            }
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "PocketSAMP",

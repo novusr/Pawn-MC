@@ -377,7 +377,7 @@ object Locales {
             Lang.RU to "Sokhraneno. Server uzhe vzal.",
         ),
         "console.title" to mapOf(
-            Lang.ID to "Kata server",
+            Lang.ID to "Ceritanya",
             Lang.EN to "What the server is saying",
             Lang.TL to "Sinasabi ng server",
             Lang.ES to "Consola del servidor",

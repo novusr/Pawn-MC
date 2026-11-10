@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Monitor
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -346,22 +347,44 @@ class MainActivity : ComponentActivity() {
                     verticalArrangement = Arrangement.spacedBy(3.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (!isphpMyAdminVisible) AppTab.values().forEach { tab ->
-                        val selected = tab == currentTab
+                    if (!isphpMyAdminVisible) {
+                        // Leave-PocketSAMP button, parked at the very top of the
+                        // rail above Help so the exit gesture is always reachable.
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(if (selected) SampThemeColors.card else Color.Transparent)
-                                .clickable { currentTab = tab },
+                                .clickable {
+                                    val callback = onNavigateBack
+                                    if (callback != null) callback() else finish()
+                                },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = tab.icon,
-                                contentDescription = t("tab.${tab.name.lowercase()}"),
-                                tint = if (selected) FloatingRailAccent else SampThemeColors.textMuted,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = t("back.to.pawnmc"),
+                                tint = SampThemeColors.textSecondary,
                                 modifier = Modifier.size(20.dp)
                             )
+                        }
+
+                        AppTab.values().forEach { tab ->
+                            val selected = tab == currentTab
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (selected) SampThemeColors.card else Color.Transparent)
+                                    .clickable { currentTab = tab },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = tab.icon,
+                                    contentDescription = t("tab.${tab.name.lowercase()}"),
+                                    tint = if (selected) FloatingRailAccent else SampThemeColors.textMuted,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
                         }
                     }
                 }

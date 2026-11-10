@@ -1,27 +1,38 @@
 package com.pocketsamp.server.user_interface.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Build
+import android.os.Environment
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.snapshotFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.collectLatest
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.user_interface.theme.*
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun _Console(
@@ -31,6 +42,7 @@ fun _Console(
     val listState = rememberLazyListState()
     val lang = Locales.current
     fun t(key: String): String = Locales.text(lang, key)
+    val context = LocalContext.current
 
     LaunchedEffect(listState) {
         snapshotFlow { listState.layoutInfo.totalItemsCount }
@@ -68,17 +80,27 @@ fun _Console(
                 )
             }
 
-            TextButton(
-                onClick = onClearLogs,
-                colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.textSecondary),
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
-            ) {
-                Text(
-                    text = t("console.clear"),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = SampThemeColors.textSecondary
-                )
+            Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                ConsoleIconButton(Icons.Default.ContentCopy) {
+                    val joined = logs.joinToString("\n")
+                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    cm.setPrimaryClip(ClipData.newPlainText("PocketSAMP log", joined))
+                    Toast.makeText(context, t("copy.done"), Toast.LENGTH_SHORT).show()
+                }
+                ConsoleIconButton(Icons.Default.Save) {
+                    val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+                    val name = "pocketsamp-console-${SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(Date())}.txt"
+                    runCatching {
+                        val out = File(dir, name)
+                        out.parentFile?.mkdirs()
+                        out.writeText(logs.joinToString("\n"))
+                    }.onSuccess {
+                        Toast.makeText(context, name, Toast.LENGTH_LONG).show()
+                    }.onFailure {
+                        Toast.makeText(context, t("files.operation.failed"), Toast.LENGTH_SHORT).show()
+                    }
+                }
+                ConsoleIconButton(Icons.Default.Delete) { onClearLogs() }
             }
         }
 
@@ -89,8 +111,8 @@ fun _Console(
          */
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(bottom = 52.dp)
+                .weight(1f)
+                .fillMaxWidth()
         ) {
             Box(
                 modifier = Modifier
@@ -145,7 +167,7 @@ fun _Console(
                 val progress = (first.toFloat() / scrollRange).coerceIn(0f, 1f)
                 Column(
                     modifier = Modifier
-                        .width(10.dp)
+                        .width(14.dp)
                         .fillMaxHeight()
                         .padding(start = 4.dp, top = 12.dp, bottom = 12.dp)
                 ) {
@@ -156,12 +178,79 @@ fun _Console(
                         modifier = Modifier
                             .weight(0.08f)
                             .clip(RoundedCornerShape(4.dp))
-                            .background(SampThemeColors.textMuted.copy(alpha = 0.45f))
+                            .background(SampThemeColors.textMuted.copy(alpha = 0.55f))
                     ) {}
                     Box(
                         modifier = Modifier.weight((1f - progress - 0.08f).coerceAtLeast(0.001f))
                     ) {}
                 }
+            }
+        }
+
+        /*
+         * Passive info panel: a second, "dead" console at the bottom that just
+         * reports what the app is running on — device model, Android version,
+         * PawnMC/PocketSAMP version and the current timestamp. Nothing here is
+         * interactive; it exists so support requests come with context attached.
+         */
+        DeviceInfoConsole()
+    }
+}
+
+@Composable
+private fun ConsoleIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    TextButton(
+        onClick = onClick,
+        colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.textSecondary),
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
+
+@Composable
+private fun DeviceInfoConsole() {
+    val lang = Locales.current
+    fun t(key: String): String = Locales.text(lang, key)
+
+    val details = listOf(
+        "model" to "${Build.MANUFACTURER} ${Build.MODEL}",
+        "android" to "API ${Build.VERSION.SDK_INT} (${Build.VERSION.RELEASE})",
+        "app" to "PocketSAMP module · PawnMC host",
+        "abi" to Build.SUPPORTED_ABIS.joinToString("/"),
+        "date" to SimpleDateFormat("EEEE, dd MMMM yyyy — HH:mm:ss z", Locale.getDefault()).format(Date())
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(SampThemeColors.terminal.copy(alpha = 0.55f))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        details.forEach { (label, value) ->
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 1.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = label,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = SampThemeColors.textMuted
+                )
+                Text(
+                    text = value,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = SampThemeColors.textSecondary,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
             }
         }
     }
