@@ -15,9 +15,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.SendToBack
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Scissors
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import kotlinx.coroutines.flow.collectLatest
@@ -83,14 +83,14 @@ fun _Console(
                 )
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy((-8).dp)) {
                 ConsoleIconButton(Icons.Default.ContentCopy) {
                     val joined = logs.joinToString("\n")
                     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     cm.setPrimaryClip(ClipData.newPlainText("PocketSAMP log", joined))
                     Toast.makeText(context, t("copy.done"), Toast.LENGTH_SHORT).show()
                 }
-                ConsoleIconButton(Icons.Default.Save) {
+                ConsoleIconButton(Icons.AutoMirrored.Filled.SendToBack) {
                     val dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
                     val name = "pocketsamp-console-${SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(Date())}.txt"
                     runCatching {
@@ -103,7 +103,7 @@ fun _Console(
                         Toast.makeText(context, t("files.operation.failed"), Toast.LENGTH_SHORT).show()
                     }
                 }
-                ConsoleIconButton(Icons.Default.Delete) { onClearLogs() }
+                ConsoleIconButton(Icons.Default.Scissors) { onClearLogs() }
             }
         }
 
@@ -160,31 +160,44 @@ fun _Console(
                 }
             }
 
-            // Slim scrollbar riding the right edge of the log surface.
+            /* Vertical scrollbar on the right of the log surface. Two bars:
+             * a faint track spanning the full height (so the strip is visible
+             * even before any scroll happens) and a solid draggable thumb
+             * whose position reflects the scroll progress. */
             val layoutInfo = listState.layoutInfo
             val totalCount = layoutInfo.totalItemsCount
             val visibleCount = layoutInfo.visibleItemsInfo.size
-            if (totalCount > visibleCount && visibleCount > 0) {
+            if (totalCount > 0 && visibleCount > 0) {
                 val first = layoutInfo.visibleItemsInfo.first().index
                 val scrollRange = (totalCount - visibleCount).coerceAtLeast(1)
                 val progress = (first.toFloat() / scrollRange).coerceIn(0f, 1f)
+                val thumbFraction = (visibleCount.toFloat() / totalCount).coerceIn(0.08f, 1f)
                 Column(
                     modifier = Modifier
-                        .width(14.dp)
+                        .width(18.dp)
                         .fillMaxHeight()
-                        .padding(start = 4.dp, top = 12.dp, bottom = 12.dp)
+                        .padding(start = 6.dp, top = 12.dp, bottom = 12.dp)
                 ) {
                     Box(
-                        modifier = Modifier.weight(progress.coerceAtLeast(0.001f))
+                        modifier = Modifier
+                            .weight(progress.coerceAtLeast(0.001f))
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(SampThemeColors.card)
                     ) {}
                     Box(
                         modifier = Modifier
-                            .weight(0.08f)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(SampThemeColors.textMuted.copy(alpha = 0.55f))
+                            .weight(thumbFraction)
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(SampThemeColors.textMuted)
                     ) {}
                     Box(
-                        modifier = Modifier.weight((1f - progress - 0.08f).coerceAtLeast(0.001f))
+                        modifier = Modifier
+                            .weight((1f - progress - thumbFraction).coerceAtLeast(0.001f))
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(SampThemeColors.card)
                     ) {}
                 }
             }
@@ -202,14 +215,15 @@ fun _Console(
 
 @Composable
 private fun ConsoleIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
-    TextButton(
+    // Bare icon button: no default label text is rendered, only the glyph.
+    IconButton(
         onClick = onClick,
-        colors = ButtonDefaults.textButtonColors(contentColor = SampThemeColors.textSecondary),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+        modifier = Modifier.size(30.dp)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
+            tint = SampThemeColors.textSecondary,
             modifier = Modifier.size(18.dp)
         )
     }
@@ -228,6 +242,12 @@ private fun DeviceInfoConsole() {
         "date" to SimpleDateFormat("EEEE, dd MMMM yyyy — HH:mm:ss z", Locale.getDefault()).format(Date())
     )
 
+    /*
+     * Label and value both read against the same terminal surface, so they are
+     * given contrast levels that work on both themes: the muted label is still
+     * clearly darker than the background on light theme, and the value uses
+     * the same textPrimary as the main log body so it never fades away.
+     */
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -245,13 +265,13 @@ private fun DeviceInfoConsole() {
                     text = label,
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = SampThemeColors.textMuted
+                    color = SampThemeColors.textSecondary
                 )
                 Text(
                     text = value,
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
-                    color = SampThemeColors.textSecondary,
+                    color = SampThemeColors.textPrimary,
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }

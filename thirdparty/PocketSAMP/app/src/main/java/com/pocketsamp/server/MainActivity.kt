@@ -36,7 +36,7 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Monitor
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.PedalBike
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -361,7 +361,7 @@ class MainActivity : ComponentActivity() {
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                imageVector = Icons.Default.PedalBike,
                                 contentDescription = t("back.to.pawnmc"),
                                 tint = SampThemeColors.textSecondary,
                                 modifier = Modifier.size(20.dp)
