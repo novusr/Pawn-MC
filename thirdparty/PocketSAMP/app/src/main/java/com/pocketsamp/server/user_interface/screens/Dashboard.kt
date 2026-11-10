@@ -183,7 +183,7 @@ fun _Dashboard(
              * balloons, and stays comfortably tappable on low-density ones where a
              * fixed dp shrinks to a dot. Font scale is irrelevant to a 20 px glyph. */
             val backDp = with(LocalDensity.current) {
-                (40f / density.density).dp
+                (40f / density).dp
             }
             IconButton(
                 onClick = onNavigateBack,
@@ -193,7 +193,7 @@ fun _Dashboard(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = t("back.to.pawnmc"),
                     tint = SampThemeColors.textPrimary,
-                    modifier = Modifier.size((backDp.value * 0.5f).dp)
+                    modifier = Modifier.size(backDp / 2)
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
