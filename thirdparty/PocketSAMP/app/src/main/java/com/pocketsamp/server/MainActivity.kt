@@ -104,9 +104,25 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** Only one background sync per process lifetime. */
+    /** Only one background prepare run per process lifetime. */
     private var downloadStarted = false
     private var assetExtractorInitialised = false
+
+    /*
+     * `Setup wrapped up!` guard: after the preparation finishes, ON_RESUME fires
+     * on every return to the app and re-entered `startRuntimeDownload` (the
+     * completion branch sets nothing to stop it), appending the same wrapped-up
+     * line again each time the console was opened. One latch keeps the success
+     * announcement to a single line per install.
+     */
+    private var announcedReady = false
+
+    /** Guards `log.x.complete` so the console sees it once per process. */
+    private fun announceReadyOnce(): Boolean {
+        if (announcedReady) return false
+        announcedReady = true
+        return true
+    }
 
     /**
      * Fetches and unpacks runtime archives before the console is made available.
@@ -154,7 +170,9 @@ class MainActivity : ComponentActivity() {
                 }
                 if (assetExtractorInitialised) {
                     downloadStarted = true
-                    RuntimeService.appendLog(Locales.text(Locales.current, "log.x.complete"))
+                    if (announceReadyOnce()) {
+                        RuntimeService.appendLog(Locales.text(Locales.current, "log.x.complete"))
+                    }
                 } else {
                     RuntimeService.appendLog(Locales.text(Locales.current, "log.x.incomplete"))
                     downloadStarted = false
@@ -187,6 +205,9 @@ class MainActivity : ComponentActivity() {
             assetExtractorInitialised = assetExtractor.isExtracted()
             if (assetExtractorInitialised) {
                 downloadStarted = true
+                if (announceReadyOnce()) {
+                    RuntimeService.appendLog(Locales.text(Locales.current, "log.x.complete"))
+                }
             } else {
                 assetExtractorInitialised = false
                 // Auto-prepare on entry: the archives download and unpack in the

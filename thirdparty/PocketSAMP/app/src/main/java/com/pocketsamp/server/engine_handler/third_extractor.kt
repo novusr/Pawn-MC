@@ -136,7 +136,10 @@ class ThirdExtractor(private val context: Context) {
             mariadbComplete
         if (allPresent) {
             File(filesDir, "runtime.ready").writeText(CURRENT_VERSION.toString())
-            onProgress(t("log.x.complete"))
+            // The callers announce completion themselves (MainActivity and
+            // RuntimeService each append `log.x.complete` after extractAll
+            // returns); emitting it here too produced the doubled
+            // "Setup wrapped up!" pair in the console.
         } else {
             File(filesDir, "runtime.ready").delete()
             onProgress(t("log.x.incomplete"))
