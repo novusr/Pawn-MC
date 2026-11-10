@@ -1906,11 +1906,11 @@ object Locales {
             Lang.RU to "Podmesti vsyo",
         ),
         "console.idle" to mapOf(
-            Lang.ID to "Bos lagi mudik. KASIH BAHAN BAKAR biar balik bawa masalah.",
-            Lang.EN to "The boss is on vacation. FEED IT FUEL so it comes back with problems.",
-            Lang.TL to "Nagbabakasyon ang boss. LAGYAN NG GASOLINA para bumalik na may problema.",
-            Lang.ES to "El jefe está de vacaciones. ¡ÉCHALE COMBUSTIBLE para que vuelva con problemas!",
-            Lang.RU to "Boss na kanikulakh. ZAPRAAV EGO, chtoby vernulsya s problemami.",
+            Lang.ID to "Bos lagi mudik. 'KASIH BAHAN BAKAR' dulu lah!, biar dia balik sambil bawa masalah.",
+            Lang.EN to "The boss is out on vacation. 'LIGHT IT UP' first, so it can come back with more problems.",
+            Lang.TL to "Nagbabakasyon ang boss. 'PASINDIHAN' muna para bumalik na may dalang problema.",
+            Lang.ES to "El jefe está de vacaciones. ¡'ENCENDER SERVIDOR' primero para que vuelva con más problemas!",
+            Lang.RU to "Boss ushol v otpusk. 'ZAPUSTIT SERVER' snachala, chtoby vernulsya s novymi problemami.",
         ),
         "config.field.hostname" to mapOf(
             Lang.ID to "Hostname server",
