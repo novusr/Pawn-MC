@@ -835,18 +835,18 @@ ru = "Skryt menyu"
 es = "Ocultar el menu"
 
 [main.perm.grand.title]
-id = "Izin Grand Permissions Dibutuhkan!"
-en = "Grand Permissions Required!"
-tl = "Kailangan ang All Files Access!"
-ru = "Trebuyutsya Grand Permissions!"
-es = "Se necesitan permisos totales!"
+id = "Butuh izin nih!"
+en = "Need Permission Here!"
+tl = "Kailangan ng Pahintulot!"
+ru = "Nuzhno razreshenie!"
+es = "¡Hace falta permiso!"
 
 [main.perm.grand.desc]
-id = "Izin Semua Berkas (Grand Permissions) diperlukan PawnMC agar bisa mengompilasi berkas pawn dan menulis hasil amx ke lokasi mana pun. Izin ini juga penting karena jika aplikasi dicopot pemasangannya (uninstall), konfigurasi sebelumnya dapat dipulihkan kembali saat aplikasi dipasang ulang."
-en = "PawnMC needs Grand Permissions (All files access) so it can compile pawn files and write the amx output anywhere. This permission is also important because, if the application is uninstalled, your previous configurations can be restored when the application is reinstalled."
-tl = "Kailangan ng PawnMC ang All files access para makapag-compile ng pawn file at makapagsulat ng amx output kahit saan. Mahalaga rin ito dahil kung ma-uninstall ang app, maibabalik ang dating configuration kapag ini-install muli."
-ru = "PawnMC nuzhny Grand Permissions (dostup ko vsem fajlam), chtoby kompilirovat fajly pawn i zapisyvat vyvod amx v lyuboe mesto. Eto razreshenie takzhe vazhno, poskolku pri udalenii prilozheniya vashi predydushchie nastrojki mogut byt vosstanovleny pri povtornoj ustanovke."
-es = "PawnMC necesita Permisos Totales (acceso a todos los archivos) para poder compilar archivos pawn y escribir la salida amx donde le indiques. Este permiso también es importante porque, si se desinstala la aplicación, tus configuraciones anteriores se podrán restaurar al reinstalarla."
+id = "Izinin dulu dong! biar lu sendiri bisa akses yang namanya Editor dan juga bisa kompilasi. jangan kocak!"
+en = "Just grant the damn permission! So you can access the Editor and compile your files yourself. Don't be ridiculous!"
+tl = "Ibigay mo na kasi ang permission! Para ma-access mo ang Editor at makapag-compile ka rin. Huwag kang magpatawa!"
+ru = "Dai uzhe eto chertovo razreshenie! Togda ty smozhesh otkryt Editor i kompilirovat svoi fajly. Ne prikalyvajsya!"
+es = "¡Dale el maldito permiso de una vez! Así podrás acceder al Editor y compilar tus archivos. ¡No hagas el ridículo!"
 
 [main.perm.grand.grant]
 id = "Beri Izin"
