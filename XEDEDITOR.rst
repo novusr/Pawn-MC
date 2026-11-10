@@ -86,6 +86,7 @@ Fitur yang Jarang Diketahui
 * **Pencarian & Ganti seluruh workspace** — dari panel workspace, pencarian dan replace berjalan di semua file dalam folder yang terbuka.
 * **Hash Generator** — menu "Hash Generator" menghitung hash (SHA-256 dan lainnya) untuk teks yang ditulis atau file yang dipilih.
 * **Developer Portal** — terminal mini (perintah ``help``, ``docs``, ``pawncc``, ``switch``, ``ls``, ``time``, ``deviceinfo``) untuk kompilasi cepat tanpa meninggalkan editor.
+* **Tombol Mengambang** — gunakan opsi "Sembunyikan tombol mengambang" di menu untuk menyembunyikan seluruh kontrol mengambang agar kanvas kode bersih; pilih "Tampilkan tombol mengambang" untuk mengembalikan portal, workspace, toolbar, dan tombol kompilasi.
 * **Word Wrap / Read-Only / Line Numbers** — ketiganya bisa di-toggle dari menu dan hanya berlaku untuk sesi ini.
 
 **English (US)**
@@ -98,6 +99,7 @@ Fitur yang Jarang Diketahui
 * **Workspace-wide Search & Replace** — from the workspace panel, search and replace run over every file in the open folder.
 * **Hash Generator** — the "Hash Generator" menu computes hashes (SHA-256 and friends) for typed text or a picked file.
 * **Developer Portal** — a mini terminal (``help``, ``docs``, ``pawncc``, ``switch``, ``ls``, ``time``, ``deviceinfo``) for quick compiles without leaving the editor.
+* **Floating Buttons** — choose "Hide floating buttons" in the overflow menu for a clear code canvas, then "Show floating buttons" to restore the portal, workspace, toolbar, and compile controls. This toggle lasts for the editor session.
 * **Word Wrap / Read-Only / Line Numbers** — all three toggle from the menu and only last for the session.
 
 **Tagalog**

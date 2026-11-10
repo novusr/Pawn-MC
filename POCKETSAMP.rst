@@ -24,7 +24,7 @@ Di halaman utama, Anda dapat memulai atau menghentikan server. Tersedia dua alam
 
 Ketuk salah satu alamat untuk menyalinnya.
 
-Tombol **Start/Stop** berada di bagian bawah dan digunakan untuk menjalankan atau menghentikan server.
+Tombol **Start/Stop** berada di bagian bawah dan digunakan untuk menjalankan atau menghentikan server. Jika server berakhir dengan SIGKILL (137) atau segmentation fault (139), PocketSAMP hanya mencoba pemulihan otomatis satu kali; crash berulang perlu dijalankan kembali secara manual. Untuk exit 139, Console juga mencatat informasi diagnostik binary, plugin, dan akhir ``server_log.txt``.
 
 Jika ``server.cfg`` belum tersedia, PocketSAMP akan membuatnya menggunakan pengaturan awal ketika server pertama kali dijalankan. Pengaturan bawaan runner meliputi:
 
@@ -42,7 +42,7 @@ The main interface is where you start or stop the server. It provides two addres
 
 Tap either address to copy it.
 
-The **Start/Stop** button is located at the bottom of the screen and controls the server.
+The **Start/Stop** button is located at the bottom of the screen and controls the server. After SIGKILL (137) or a segmentation fault (139), PocketSAMP makes only one automatic recovery attempt; repeated crashes must be started manually. For exit 139, the Console also records diagnostic details for the binary, plugins, and the tail of ``server_log.txt``.
 
 If ``server.cfg`` does not exist, PocketSAMP creates it with the default runner settings when the server starts for the first time:
 
@@ -60,7 +60,7 @@ Dito mo sisimulan o ihihinto ang server. May dalawang address na puwede mong gam
 
 I-tap ang alinman sa mga address para makopya ito.
 
-Nasa ibabang bahagi ng screen ang **Start/Stop** button. Gamitin ito para simulan o ihinto ang server.
+Nasa ibabang bahagi ng screen ang **Start/Stop** button. Gamitin ito para simulan o ihinto ang server. Kapag nagtapos ang server dahil sa system kill (137) o segmentation fault (139), isang beses lang susubukan ng PocketSAMP ang automatic recovery; mano-manong simulan ulit kung umulit ang crash. Para sa exit 139, nagtatala rin ang Console ng detalye ng binary, plugins, at huling bahagi ng ``server_log.txt``.
 
 Kung wala pang ``server.cfg``, awtomatikong gagawa ang PocketSAMP ng file gamit ang default runner settings sa unang pagsisimula:
 
@@ -78,7 +78,7 @@ Aquí puedes iniciar o detener el servidor. La pantalla muestra dos direcciones 
 
 Toca cualquiera de las direcciones para copiarla.
 
-El botón **Start/Stop** está en la parte inferior de la pantalla y permite iniciar o detener el servidor.
+El botón **Start/Stop** está en la parte inferior de la pantalla y permite iniciar o detener el servidor. Tras un cierre por SIGKILL (137) o un fallo de segmentación (139), PocketSAMP solo intenta recuperarlo automáticamente una vez; si vuelve a fallar, debes iniciarlo manualmente. Para el exit 139, Console también registra datos del binario, los plugins y el final de ``server_log.txt``.
 
 Si todavía no existe ``server.cfg``, PocketSAMP lo creará con los valores predeterminados del runner durante el primer inicio:
 
@@ -96,7 +96,7 @@ Si todavía no existe ``server.cfg``, PocketSAMP lo creará con los valores pred
 
 Нажмите на любой адрес, чтобы скопировать его.
 
-Кнопка **Start/Stop** находится в нижней части экрана и отвечает за запуск и остановку сервера.
+Кнопка **Start/Stop** находится в нижней части экрана и отвечает за запуск и остановку сервера. После SIGKILL (137) или segmentation fault (139) PocketSAMP выполняет только одну попытку автоматического восстановления; при повторном сбое запустите сервер вручную. Для exit 139 Console также записывает сведения о бинарном файле, плагинах и последних строках ``server_log.txt``.
 
 Если файл ``server.cfg`` отсутствует, PocketSAMP создаст его с настройками runner по умолчанию при первом запуске:
 
@@ -268,7 +268,7 @@ PocketSAMP menjalankan MariaDB bersama server. Melalui halaman Database, Anda da
 * Menjalankan perintah SQL.
 * Mengimpor file ``.sql``.
 
-Akun bawaan yang umum digunakan adalah ``root`` tanpa password. Sesuaikan akun dan kredensial database jika gamemode yang digunakan memerlukan konfigurasi berbeda.
+Akun bawaan yang umum digunakan adalah ``root`` tanpa password. Sesuaikan akun dan kredensial database jika gamemode yang digunakan memerlukan konfigurasi berbeda. Inisialisasi database sistem dilakukan saat setup pertama; jika bootstrap terputus, jalankan Setup lagi agar skema ``mysql`` yang belum lengkap dapat dibuat ulang.
 
 **English (US)**
 
@@ -279,7 +279,7 @@ PocketSAMP runs MariaDB alongside the server. The Database section lets you:
 * Execute SQL statements.
 * Import ``.sql`` files.
 
-The usual default account is ``root`` with no password. Adjust the database account and credentials if your gamemode requires different settings.
+The usual default account is ``root`` with no password. Adjust the database account and credentials if your gamemode requires different settings. System database initialization runs during setup; if bootstrap is interrupted, run Setup again so an incomplete ``mysql`` schema can be rebuilt.
 
 **Tagalog**
 
@@ -362,83 +362,33 @@ Configuration
 
 **Indonesia**
 
-Halaman Configuration digunakan untuk mengedit pengaturan ``server.cfg``, termasuk:
+Halaman Configuration bersifat hanya-baca. Halaman ini menampilkan parameter ``server.cfg`` yang dikenali runner, bentuk nilai yang diterima, serta nilai yang sedang digunakan. Jika berkas belum ada, halaman menampilkan informasi nilai bawaan runner.
 
-* **Hostname:** Nama server yang ditampilkan kepada pemain.
-* **Port:** Port yang digunakan server.
-* **Max Players:** Batas maksimum pemain.
-* **RCON Password:** Password untuk akses RCON.
-* **Gamemode:** Gamemode yang dijalankan server.
-* **Filterscripts:** Daftar filterscript yang dimuat.
-* **Plugins:** Daftar plugin yang digunakan server.
-
-Jika ``server.cfg`` belum tersedia, halaman ini akan menampilkan nilai bawaan dari runner.
-
-Tekan **Save** untuk menyimpan konfigurasi ke dalam folder server dan memperbarui ``server.cfg``.
+Untuk mengubah konfigurasi, buka ``server.cfg`` melalui **Xed Editor**. Perubahan pada berkas akan terlihat saat halaman Configuration dimuat kembali.
 
 **English (US)**
 
-The Configuration section lets you edit ``server.cfg`` settings, including:
+The Configuration section is read-only. It lists the ``server.cfg`` parameters understood by the runner, their accepted value shapes, and the values currently in use. If the file is missing, the page shows the runner defaults for reference.
 
-* **Hostname:** The server name displayed to players.
-* **Port:** The port used by the server.
-* **Max Players:** The maximum number of players allowed.
-* **RCON Password:** The password used for RCON access.
-* **Gamemode:** The gamemode loaded by the server.
-* **Filterscripts:** The list of filterscripts to load.
-* **Plugins:** The plugins used by the server.
-
-If ``server.cfg`` does not exist, this section displays the runner's default values.
-
-Press **Save** to write the configuration to the server folder and update ``server.cfg``.
+To change a setting, open ``server.cfg`` in **Xed Editor**. The Configuration page refreshes its values when you return to it.
 
 **Tagalog**
 
-Ginagamit ang Configuration para i-edit ang mga setting ng ``server.cfg``, kabilang ang:
+Read-only ang Configuration section. Ipinapakita nito ang mga parameter ng ``server.cfg`` na nauunawaan ng runner, mga tinatanggap na value, at kasalukuyang settings. Kung wala ang file, ipinapakita ang defaults para sa sanggunian.
 
-* **Hostname:** Pangalan ng server na makikita ng mga player.
-* **Port:** Port na ginagamit ng server.
-* **Max Players:** Pinakamaraming player na puwedeng kumonekta.
-* **RCON Password:** Password para sa RCON access.
-* **Gamemode:** Gamemode na tatakbo sa server.
-* **Filterscripts:** Listahan ng mga filterscript na ilo-load.
-* **Plugins:** Mga plugin na gagamitin ng server.
-
-Kung wala pang ``server.cfg``, ipapakita rito ang default values ng runner.
-
-Pindutin ang **Save** para isulat ang configuration sa server folder at i-update ang ``server.cfg``.
+Para magbago ng setting, buksan ang ``server.cfg`` sa **Xed Editor**. Nagre-refresh ang pahinang ito kapag bumalik ka rito.
 
 **Español**
 
-La sección Configuration permite editar los parámetros de ``server.cfg``, incluidos:
+La sección Configuration es de solo lectura. Muestra los parámetros de ``server.cfg`` que reconoce el runner, los formatos de valor aceptados y los valores actuales. Si falta el archivo, muestra los valores predeterminados del runner como referencia.
 
-* **Hostname:** Nombre del servidor que ven los jugadores.
-* **Port:** Puerto utilizado por el servidor.
-* **Max Players:** Número máximo de jugadores permitidos.
-* **RCON Password:** Contraseña para acceder mediante RCON.
-* **Gamemode:** Gamemode que ejecutará el servidor.
-* **Filterscripts:** Lista de filterscripts que se cargarán.
-* **Plugins:** Plugins utilizados por el servidor.
-
-Si ``server.cfg`` todavía no existe, esta sección muestra los valores predeterminados del runner.
-
-Pulsa **Save** para guardar la configuración en la carpeta del servidor y actualizar ``server.cfg``.
+Para cambiar un ajuste, abre ``server.cfg`` en **Xed Editor**. La página Configuration actualiza los valores al volver a ella.
 
 **Русский**
 
-В разделе Configuration можно изменять параметры ``server.cfg``, включая:
+Раздел Configuration доступен только для чтения. Здесь показаны параметры ``server.cfg``, поддерживаемые runner, допустимые форматы значений и текущие настройки. Если файла нет, отображаются стандартные значения runner для справки.
 
-* **Hostname:** Имя сервера, отображаемое игрокам.
-* **Port:** Порт, используемый сервером.
-* **Max Players:** Максимальное количество игроков.
-* **RCON Password:** Пароль для доступа через RCON.
-* **Gamemode:** Gamemode, запускаемый сервером.
-* **Filterscripts:** Список загружаемых filterscripts.
-* **Plugins:** Плагины, используемые сервером.
-
-Если ``server.cfg`` отсутствует, в этом разделе отображаются стандартные значения runner.
-
-Нажмите **Save**, чтобы записать конфигурацию в папку сервера и обновить ``server.cfg``.
+Чтобы изменить настройку, откройте ``server.cfg`` в **Xed Editor**. При возвращении в Configuration значения обновятся.
 
 Troubleshooting
 ---------------
