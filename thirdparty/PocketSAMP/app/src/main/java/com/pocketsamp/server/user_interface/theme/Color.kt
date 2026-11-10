@@ -36,5 +36,9 @@ val TextMutedLight = Color(0xFF777A71)
  */
 val TerminalBg = Color(0xFF2B2C28)
 
+/** Light-theme console canvas: same warm neutral family as the light surfaces, so
+ *  the log area blends into a white theme instead of staying a dark slab. */
+val TerminalBgLight = Color(0xFFF3F4F1)
+
 /** Soft warm yellow for the floating tab-rail buttons. */
 val FloatingRailAccent = Color(0xFFF2CE7A)

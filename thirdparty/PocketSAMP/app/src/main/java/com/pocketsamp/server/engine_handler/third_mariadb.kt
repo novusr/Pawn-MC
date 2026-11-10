@@ -231,7 +231,15 @@ class ThirdMariaDb(private val context: Context) {
                 "--plugin-dir=${File(installed, "lib/plugin").absolutePath}",
                 "--log-warnings=0",
                 "--max_allowed_packet=8M",
-                "--net_buffer_length=16K"
+                "--net_buffer_length=16K",
+                // With --no-defaults the cnf is not read, so the bootstrap used to
+                // start with the built-in 128M InnoDB buffer pool — memory a phone
+                // under pressure does not have, and exactly the kind of spike that
+                // gets the whole process group OOM-killed mid-initialize.
+                "--innodb_buffer_pool_size=16M",
+                "--innodb_log_buffer_size=2M",
+                "--performance_schema=OFF",
+                "--skip-grant-tables"
             )
             val installerCommand = ThirdLauncher.command(
                 binary = mariadbd,
@@ -259,7 +267,10 @@ class ThirdMariaDb(private val context: Context) {
             val result = installBuilder.start()
             try {
                 result.outputStream.bufferedWriter().use { writer ->
-                    writer.append("USE mysql;\nSET @auth_root_socket=NULL;\n")
+                    // No leading `USE mysql;`: the system-table script creates the
+                    // mysql database itself, and selecting it beforehand failed with
+                    // `ERROR 1049 Unknown database 'mysql'` — the abort the console
+                    // showed before a single table existed.
                     for (sqlFile in bootstrapSqlFiles) {
                         sqlFile.bufferedReader().use { reader -> reader.copyTo(writer) }
                         writer.append('\n')
@@ -286,6 +297,10 @@ class ThirdMariaDb(private val context: Context) {
                         .replace("{code}", exitCode.toString())
                         .replace("{output}", (output + "\n" + e.message.orEmpty()).takeLast(2000))
                 )
+                // A broken bootstrap is never fatal for the server: MariaDB is an
+                // optional companion. Say so and continue instead of wedging the
+                // startup sequence in a half-initialized state.
+                _dbLogs.emit(t("log.mdb.optional"))
                 return@withContext false
             }
             val exitCode = withContext(Dispatchers.IO) { result.waitFor() }
@@ -314,6 +329,9 @@ class ThirdMariaDb(private val context: Context) {
                         .replace("{code}", exitCode.toString())
                         .replace("{output}", friendly)
                 )
+                // Same graceful path: an aborted bootstrap leaves the daemon
+                // unusable for now, not the server. The SA-MP run continues.
+                _dbLogs.emit(t("log.mdb.optional"))
                 return@withContext false
             }
             bootstrapLog.delete()

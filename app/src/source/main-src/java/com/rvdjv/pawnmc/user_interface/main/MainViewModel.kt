@@ -27,7 +27,9 @@ class MainViewModel(
 
     companion object {
         const val TEMPORARY_FILE_NAME = "blank.pwn"
-        const val TEMPORARY_FILE_NOTICE = "This is a temporary file because you have not selected your own Pawn file yet."
+        /** English fallback text; the localized wording comes from `notice.temporary`. */
+        const val TEMPORARY_FILE_NOTICE_KEY = "notice.temporary"
+        const val TEMPORARY_FILE_NOTICE = "What you opened is just a temporary file. You can't edit it. It's like a statue, just for display. haha!."
         const val IGNORE_CASE_BUSY_NOTICE =
             "Ignore case is enabled. Backing up this folder and converting every file name and #include reference to lowercase..."
         const val IGNORE_CASE_DONE_NOTICE =

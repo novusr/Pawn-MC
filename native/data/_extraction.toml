@@ -785,6 +785,13 @@ tl = "Pawn sa bulsa, bugs."
 ru = "Pawn v karmane, oshibki."
 es = "Pawn en tu bolsillo, fallos."
 
+[notice.temporary]
+id = "Yang lu buka cuma file sementara. Lu ga bisa edit. Itu kaya patung, cuma pajangan aja. haha!."
+en = "What you opened is just a temporary file. You can't edit it. It's like a statue, just for display. haha!."
+tl = "Pansamantalang file lang ang binuksan mo. Hindi mo iyan mae-edit. Parang bantay na nakatayo lang, puro dekorasyon. haha!."
+ru = "Ty otkryl vremennyj fajl. Redaktirovat yego nelzya. Eto kak statuya, tolko dlya vidnosti. haha!."
+es = "Lo que abriste es solo un archivo temporal. No podés editarlo. Es como una estatua, pura decoración. jaja!."
+
 [main.header.expand]
 id = "Tampilkan menu"
 en = "Show menu"

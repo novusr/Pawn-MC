@@ -62,7 +62,15 @@ object SampThemeColors {
     val warn: Color @Composable get() = if (isPocketSampDarkTheme()) AccentOrange else AccentOrangeDarkText
     val success: Color @Composable get() = if (isPocketSampDarkTheme()) StatusGreen else StatusGreenDarkText
     val danger: Color @Composable get() = if (isPocketSampDarkTheme()) StatusRed else StatusRedDarkText
-    val terminal: Color @Composable get() = TerminalBg
+
+    /*
+     * Console/log canvas. In dark theme it stays the soft charcoal terminal;
+     * in light theme it follows the app's own light surfaces so the console no
+     * longer punches a dark rectangle into a white screen — the log lines keep
+     * their colour coding (danger/warn/success/accent switch to their dark-text
+     * variants alongside it).
+     */
+    val terminal: Color @Composable get() = if (isPocketSampDarkTheme()) TerminalBg else TerminalBgLight
 }
 
 @Composable

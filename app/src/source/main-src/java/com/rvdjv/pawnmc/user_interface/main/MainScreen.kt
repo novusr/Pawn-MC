@@ -520,7 +520,11 @@ fun MainScreen(
                             viewModel.ensureTemporaryFileSelected()
                             Toast.makeText(
                                 context,
-                                viewModel.temporaryFileNotice ?: "This is a temporary file because you have not selected your own Pawn file yet.",
+                                localizer?.get(
+                                    com.rvdjv.pawnmc.user_interface.main.MainViewModel.TEMPORARY_FILE_NOTICE_KEY,
+                                    appLanguage,
+                                    com.rvdjv.pawnmc.user_interface.main.MainViewModel.TEMPORARY_FILE_NOTICE
+                                ) ?: com.rvdjv.pawnmc.user_interface.main.MainViewModel.TEMPORARY_FILE_NOTICE,
                                 Toast.LENGTH_LONG
                             ).show()
                             performHeaderAction(onEditorClick)
@@ -622,7 +626,7 @@ fun MainScreen(
                 }
             }
 
-            viewModel.temporaryFileNotice?.let { notice ->
+            viewModel.temporaryFileNotice?.let { _ ->
                 item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -636,7 +640,13 @@ fun MainScreen(
                     )
                     Spacer(modifier = Modifier.width(SpaceXS + 2.dp))
                     Text(
-                        text = notice,
+                        // Resolved at render time so a language switch re-renders it
+                        // in the new language without an app restart.
+                        text = localizer?.get(
+                            MainViewModel.TEMPORARY_FILE_NOTICE_KEY,
+                            appLanguage,
+                            MainViewModel.TEMPORARY_FILE_NOTICE
+                        ) ?: MainViewModel.TEMPORARY_FILE_NOTICE,
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -807,10 +817,11 @@ internal fun ScreenHeader(
             )
 
             Text(
-                // Picked once per process launch with a stable seed, not on every
-                // recomposition: the tagline stays the same all session and changes
-                // only on the next app start.
-                text = remember { randomTagline(localizer, appLanguage) },
+                // Picked once per process launch with a stable seed, then
+                // re-resolved whenever the language changes: without the language
+                // key the `remember { }` froze the Indonesian phrase across a
+                // switch to English until the next full app restart.
+                text = remember(appLanguage) { randomTagline(localizer, appLanguage) },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
