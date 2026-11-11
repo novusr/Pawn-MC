@@ -28,6 +28,8 @@ TODO.txt
 # `build/` trees tracked. These patterns cover both cases.
 build/
 
+clone/
+
 # Gradle / Kotlin / AGP incremental state.
 .gradle/
 .kotlin/

@@ -828,11 +828,11 @@ ru = "Vybrat fajl"
 es = "Elegir archivo"
 
 [main.output.title]
-id = "periksa pelan-pelan."
-en = "read it through."
-tl = "basahin ito nang buo."
-ru = "prochti ne spesha."
-es = "léela con calma."
+id = "Pelan-Pelan aja 'Bos'."
+en = "Take it slow, 'Boss'."
+tl = "Dahan-dahan lang, 'Boss'."
+ru = "Ne toropis, 'Boss'."
+es = "Tranquilo, 'Boss'."
 
 [main.output.actions]
 id = "Aksi"
