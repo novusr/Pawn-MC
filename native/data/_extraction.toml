@@ -1354,11 +1354,11 @@ ru = "Yazyk"
 es = "Idioma"
 
 [main.promo.language.desc]
-id = "Indonesia, Inggris, Spanyol (Argentina), atau Rusia untuk seluruh antarmuka."
-en = "Indonesian, English, Spanish (Argentina) or Russian for the entire interface."
-tl = "Indonesian, English, Spanish (Argentina), Russian, o Tagalog para sa buong interface."
-ru = "Indonezijskij, anglijskij, ispanskij (Argentina) ili russkij dlya vsego interfejsa."
-es = "Indones, ingles, espanol (Argentina) o ruso para toda la interfaz."
+id = "Indonesia, Inggris, Tagalog (Filipina), Spanyol (Argentina), atau Rusia untuk seluruh antarmuka."
+en = "Indonesian, English, Tagalog (Philippines), Spanish (Argentina), or Russian for the entire interface."
+tl = "Indonesian, English, Tagalog (Philippines), Spanish (Argentina), o Russian para sa buong interface."
+ru = "Indoneziyskiy, angliyskiy, tagalskiy (Filippiny), ispanskiy (Argentina) ili russkiy dlya vsego interfeysa."
+es = "Indonesio, inglés, tagalo (Filipinas), español (Argentina) o ruso para toda la interfaz."
 
 [main.promo.compiler.title]
 id = "Versi compiler"

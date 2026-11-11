@@ -84,7 +84,7 @@ internal fun SettingsPromoCard(
             title = text("main.promo.language.title", "Language"),
             description = text(
                 "main.promo.language.desc",
-                "Indonesian, English, Spanish (Argentina) or Russian for the entire interface."
+                "Indonesian, English, Tagalog (Philippines), Spanish (Argentina) or Russian for the entire interface."
             ),
             target = SettingsTarget.Language
         ),
