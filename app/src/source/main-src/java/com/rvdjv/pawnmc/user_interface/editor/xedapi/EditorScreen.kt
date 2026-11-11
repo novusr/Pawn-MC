@@ -81,6 +81,7 @@ import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
@@ -140,6 +141,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
+import com.rvdjv.pawnmc.apps_data.data_compiler.DiagnosticsStore
 import com.rvdjv.pawnmc.user_interface._Icons
 import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
@@ -165,6 +167,7 @@ import io.github.rosemoe.sora.widget.schemes.SchemeEclipse
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.delay
 import java.io.File
 import kotlin.math.roundToInt
@@ -257,6 +260,63 @@ fun EditorScreen(
     var noticeMessage by remember { mutableStateOf<String?>(null) }
     var isQuickSymbolBarVisible by remember { mutableStateOf(true) }
 
+    // ------------------------------------------------------------------
+    // Workspace: several files/folders open at once, Visual Studio style.
+    // Declared before the explain-sync loop because the loop reads the
+    // active document path from it.
+    // ------------------------------------------------------------------
+    val workspace = viewModel.workspace
+    val scope = rememberCoroutineScope()
+
+    /** How often the explainer JSON is re-read for hint injection. */
+    val explainCycleMs = remember { ExplainInjector.CYCLE_INTERVAL_MS }
+
+    /** Bumped whenever a new cycle should start right away (open, or compile done). */
+    var explainCycleTick by remember { mutableIntStateOf(0) }
+
+    /**
+     * Applies the explain hints for the file now shown in the editor, without
+     * waiting for the next periodic cycle.
+     */
+    fun refreshExplainHints() {
+        val editor = editorRef ?: return
+        val path = if (workspace.isWorkspaceOpen) {
+            workspace.activeDocument?.file?.absolutePath
+        } else {
+            viewModel.filePath.takeIf { it.isNotBlank() }
+        } ?: return
+        scope.launch { ExplainInjector.apply(editor, path, context) }
+    }
+
+    /**
+     * Explainer sync loop: every six minutes - and once right after the screen
+     * opens - the compiled diagnostics JSON is read and the `[explain]` comments
+     * are re-applied to the lines it still covers. Ticks from the compile path
+     * run a refresh right away, so the comments appear while the user is still
+     * looking at the code, not only after leaving and re-entering the editor.
+     */
+    LaunchedEffect(explainCycleTick) {
+        if (explainCycleTick > 0) {
+            refreshExplainHints()
+        }
+        while (true) {
+            delay(explainCycleMs)
+            editorRef?.let { editor ->
+                val path = if (workspace.isWorkspaceOpen) {
+                    workspace.activeDocument?.file?.absolutePath
+                } else {
+                    viewModel.filePath.takeIf { it.isNotBlank() }
+                }
+                if (path != null) {
+                    ExplainInjector.apply(editor, path, context)
+                }
+            }
+        }
+    }
+
+    // Start the first cycle immediately when the editor appears.
+    LaunchedEffect(Unit) { explainCycleTick++ }
+
     /**
      * Master toggle for the whole floating-button stack.
      *
@@ -277,10 +337,10 @@ fun EditorScreen(
     var isLineNumbers by remember { mutableStateOf(true) }
 
     // ------------------------------------------------------------------
-    // Workspace: several files/folders open at once, Visual Studio style.
+    // Workspace: declared above, before the explain-sync loop; the scope
+    // is declared next to it because the instant hint refresh launches
+    // through it.
     // ------------------------------------------------------------------
-    val workspace = viewModel.workspace
-    val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(lifecycleOwner, workspace) {
@@ -762,9 +822,38 @@ fun EditorScreen(
     }
 
     if (showJumpDialog) {
+        // Opening the dialog processes `injector_data.json`: the damaged lines of the
+        // file now open become the rotating shadow hints of the line input.
+        val jumpTargetPath = if (workspace.isWorkspaceOpen) {
+            workspace.activeDocument?.file?.absolutePath
+        } else {
+            viewModel.filePath.takeIf { it.isNotBlank() }
+        }
+        val damagedLines = remember(jumpTargetPath) {
+            jumpTargetPath?.let { DiagnosticsStore.damagedLines(context, it) }.orEmpty()
+        }
+        // When no damaged line exists the placeholder stays the plain localized
+        // "line number" label; otherwise it cycles random damaged lines while
+        // the user keeps the field idle.
+        var shadowLine by remember(damagedLines) {
+            mutableStateOf(damagedLines.randomOrNull())
+        }
+        LaunchedEffect(damagedLines) {
+            while (damagedLines.size > 1) {
+                delay(4_000L)
+                // Pick a different line than the one showing, so the rotation
+                // is always visible to the user.
+                val next = damagedLines.filter { it != shadowLine }.randomOrNull()
+                if (next != null) shadowLine = next
+            }
+        }
         var lineInput by remember { mutableStateOf("") }
         var columnInput by remember { mutableStateOf("") }
         var showColumnInput by remember { mutableStateOf(false) }
+        val linePlaceholder = when (shadowLine) {
+            null -> localizer.get("editor.jump.shadow.line", appLanguage, "line number")
+            else -> "$shadowLine ${localizer.get("editor.jump.shadow.damaged", appLanguage, "damaged line")}"
+        }
         AlertDialog(
             onDismissRequest = { showJumpDialog = false },
             title = {
@@ -778,9 +867,32 @@ fun EditorScreen(
                         label = {
                             Text(if (appLanguage == ContentConfig.AppLanguage.ID) "Nomor baris" else "Line number")
                         },
+                        placeholder = {
+                            Text(
+                                linePlaceholder,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true
                     )
+                    if (damagedLines.isNotEmpty()) {
+                        // One-tap fill: tapping a damaged line drops it into the
+                        // input so pressing Go jumps straight to it.
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.horizontalScroll(rememberScrollState())
+                        ) {
+                            damagedLines.take(6).forEach { damaged ->
+                                AssistChip(
+                                    onClick = { lineInput = damaged.toString() },
+                                    label = { Text(damaged.toString()) }
+                                )
+                            }
+                        }
+                    }
                     TextButton(
                         onClick = {
                             if (showColumnInput) columnInput = ""
@@ -1997,19 +2109,25 @@ fun EditorScreen(
                             if (!allSaved) {
                                 "Compilation cancelled because a file could not be saved."
                             } else {
-                                withContext(Dispatchers.IO) {
+                                val explained = withContext(Dispatchers.IO) {
                                     val result = Compiler.compileManual(
                                         sourceFile = source.absolutePath,
                                         options = manualOptions,
                                         version = version
                                     )
-                                    val explained = Compiler.explainCompilerOutput(
+                                    Compiler.explainCompilerOutput(
                                         rawText = result.second,
                                         cacheDir = context.cacheDir,
                                         language = appLanguage
-                                    )
-                                    "$explained\nExit code: ${result.first}"
+                                    ) + "\nExit code: ${result.first}"
                                 }
+                                // The compile above refreshed the diagnostics
+                                // JSON; apply the hints right away so the
+                                // comments show up while the user is still
+                                // looking at the code, not only after leaving
+                                // and reopening the editor.
+                                refreshExplainHints()
+                                explained
                             }
                         }
                     )

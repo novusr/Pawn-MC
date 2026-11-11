@@ -10,6 +10,60 @@ object Explainer {
 
     private val COMPILER_MESSAGE_REGEX = Regex("""(?i)(warning|error|fatal)\s+(\d+)""")
 
+    /**
+     * Shape of a diagnostic line the Pawn compilers emit:
+     * `<path>(<line>) : error 017: undefined symbol "x"`.
+     *
+     * The line number and the code both get recorded into
+     * `Documents/PawnMC/compiler/injector_data.json` so the xed editor can later match
+     * a stored explainer with the line the user is on.
+     */
+    private val DIAGNOSTIC_LOCATION_REGEX = Regex(
+        """(?i)^\s*(.+?)\((\d+)\)\s*:?\s*(warning|error|fatal)\s+(\d+)"""
+    )
+
+    /**
+     * Parses one compiler output line into the values [DiagnosticsStore] keeps,
+     * or null when the line is not a located error/warning/fatal.
+     */
+    internal data class LocatedDiagnostic(
+        val file: String,
+        val line: Int,
+        val kind: String,
+        val code: String,
+        val message: String,
+        val explainer: String
+    )
+
+    /**
+     * Error 013 (`no entry point`) never points at a line worth hinting: it is
+     * a script-shape complaint, so it is exempted from recording and injection.
+     */
+    private const val EXEMPT_CODE_NO_ENTRY_POINT = "13"
+
+    /** Turns a raw compiler line into a record for [DiagnosticsStore]. */
+    internal fun locatedDiagnostic(
+        line: String,
+        language: ContentConfig.AppLanguage,
+        marker: String
+    ): LocatedDiagnostic? {
+        val match = DIAGNOSTIC_LOCATION_REGEX.find(line) ?: return null
+        val rawCode = match.groupValues[4]
+        val code = rawCode.trimStart('0').ifEmpty { "0" }
+        if (code == EXEMPT_CODE_NO_ENTRY_POINT) return null
+        val explanation = Explanations.explanationFor(code, language)
+            ?: Explanations.explanationFor(rawCode, language)
+            ?: noLocalExplanation(language)
+        return LocatedDiagnostic(
+            file = match.groupValues[1].trim(),
+            line = match.groupValues[2].toIntOrNull() ?: return null,
+            kind = match.groupValues[3].lowercase(),
+            code = code,
+            message = line.trim(),
+            explainer = "$marker ${explanationText(line, explanation)}"
+        )
+    }
+
     /** The `[explain]` marker prefix, localised per app language. */
     private val EXPLAIN_PREFIX = mapOf(
         ContentConfig.AppLanguage.ID to "[jelaskan]",
@@ -113,17 +167,26 @@ object Explainer {
         cacheDir: File,
         language: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
     ): String {
-        if (rawText.isBlank()) return rawText
+        if (rawText.isBlank()) {
+            // A clean run erases what the previous one stored, so the editor's
+            // next cycle finds no stale hints to inject.
+            recordDiagnostics(rawText, emptyList())
+            return rawText
+        }
 
         val n_language = ContentConfig.getInstanceOrNull()?.n_app_language ?: language
         val marker = explainMarker(n_language)
         val outputCache = File(cacheDir, "compiler_output_cache_${System.nanoTime()}.log")
         outputCache.writeText(rawText)
 
+        val located = mutableListOf<LocatedDiagnostic>()
         val builder = StringBuilder()
         outputCache.useLines { lines ->
             lines.forEach { line ->
                 builder.appendLine(line)
+                // Every located error/warning also goes to the JSON the xed
+                // editor later reads, so its `[explain]` hints match this run.
+                locatedDiagnostic(line, n_language, marker)?.let { located.add(it) }
                 val match = COMPILER_MESSAGE_REGEX.find(line)
                 if (match != null) {
                     val rawCode = match.groupValues[2]
@@ -141,6 +204,40 @@ object Explainer {
         }
 
         outputCache.delete()
+        recordDiagnostics(rawText, located)
         return builder.toString()
+    }
+
+    /**
+     * Hands the located diagnostics of one run to [DiagnosticsStore], grouped by
+     * source file. Each file key is replaced with this run's entries, so a clean
+     * compile (no located lines) wipes every key the previous run touched.
+     */
+    private fun recordDiagnostics(rawText: String, located: List<LocatedDiagnostic>) {
+        val context = Runner.hostContext() ?: return
+        if (located.isEmpty()) {
+            // No located line left: the previous run's records are all stale,
+            // whatever the reason (clean compile or output the parser did not
+            // recognize), so the store is emptied.
+            DiagnosticsStore.save(DiagnosticsStore.fileFor(context), emptyMap())
+            return
+        }
+        val grouped = located.groupBy { it.file }
+        for ((file, entries) in grouped) {
+            DiagnosticsStore.record(
+                context,
+                file,
+                entries.map { entry ->
+                    DiagnosticsStore.Entry(
+                        line = entry.line,
+                        code = entry.code,
+                        kind = entry.kind,
+                        message = entry.message,
+                        explainer = entry.explainer,
+                        at = System.currentTimeMillis()
+                    )
+                }
+            )
+        }
     }
 }

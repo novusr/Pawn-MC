@@ -29,6 +29,9 @@ object Runner {
     @Volatile
     private var HOST: android.content.Context? = null
 
+    /** Host context for layers that need the app storage root (JSON writer). */
+    internal fun hostContext(): android.content.Context? = HOST
+
     /**
      * Hands the compiler layer its storage root. Called from the app entry point once
      * `Documents/PawnMC` exists, and safe to call again after a folder change.

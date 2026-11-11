@@ -8,6 +8,20 @@
 #
 # Leaves are the interface languages: id, en, ru, es.
 
+[editor.jump.shadow.line]
+id = "nomor baris"
+en = "line number"
+tl = "numero ng linya"
+ru = "nomer stroki"
+es = "numero de linea"
+
+[editor.jump.shadow.damaged]
+id = "baris yang rusak"
+en = "damaged line"
+tl = "pihadong linya"
+ru = "povrezhdennaya stroka"
+es = "linea daniada"
+
 [settings.title]
 id = "Pengaturan"
 en = "Settings"
