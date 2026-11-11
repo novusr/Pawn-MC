@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
@@ -68,6 +69,7 @@ import androidx.lifecycle.LifecycleOwner
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.configuration.Reader
 import com.pocketsamp.server.configuration._DirectoryManager
+import com.pocketsamp.server.engine_handler.ArchiveExtractor
 import com.pocketsamp.server.service_handler.Status
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
 import kotlinx.coroutines.Dispatchers
@@ -124,6 +126,11 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
         entries.firstOrNull { it.file.absolutePath == selected.absolutePath }
     }
     var name by remember { mutableStateOf("") }
+
+    /** Archive pending an extraction, plus the method choice dialog state. */
+    var extractTarget by remember { mutableStateOf<File?>(null) }
+    var extracting by remember { mutableStateOf(false) }
+    var extractBusyName by remember { mutableStateOf<String?>(null) }
 
     /*
      * Upload: the user picks a document with the system picker, and it is copied
@@ -282,6 +289,64 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
      * selection the folder currently open is used.
      */
     fun createDestination(): File = createDestinationFor(root, currentDirectory, selectedFolder)
+
+    /**
+     * Runs the extraction of [archive] into the folder [method] picks, on the IO
+     * dispatcher, and refreshes the tree when it lands. [customFolderName] lets
+     * the method dialog supply the folder name for the new-folder route.
+     */
+    fun extractArchive(
+        archive: File,
+        method: ArchiveExtractor.Method,
+        customFolderName: String? = null
+    ) {
+        if (serverActive) {
+            operationError = t("files.extract.server.running")
+            return
+        }
+        val safeRoot = runCatching { root.canonicalFile }.getOrNull() ?: root
+        val destination = when (method) {
+            ArchiveExtractor.Method.NEW_FOLDER -> {
+                val folderName = customFolderName?.trim().orEmpty()
+                if (!isSafeName(folderName)) {
+                    operationError = t("files.invalid.name")
+                    return
+                }
+                File(archive.parentFile ?: root, folderName)
+            }
+            else -> ArchiveExtractor.destinationFor(archive, method)
+        }
+        scope.launch {
+            extracting = true
+            extractBusyName = archive.name
+            val outcome = withContext(Dispatchers.IO) {
+                runCatching {
+                    require(isWithin(safeRoot, runCatching { destination.canonicalFile }.getOrNull() ?: destination)) {
+                        t("files.outside.root")
+                    }
+                    require(ArchiveExtractor.isSupported(archive)) { t("files.extract.unsupported") }
+                    ArchiveExtractor.extract(archive, destination)
+                }
+            }
+            extracting = false
+            extractBusyName = null
+            outcome.onSuccess {
+                operationError = null
+                // Open the folder the content landed in so the result is visible.
+                currentDirectory = destination
+                expandedPaths = expandedPaths + destination.absolutePath
+                selectedEntry = null
+                selectedFolder = null
+                refreshToken++
+            }.onFailure {
+                operationError = if (it is SecurityException) {
+                    t("files.permission.denied")
+                } else {
+                    "${t("files.extract.failed")}: ${it.message.orEmpty()}"
+                }
+            }
+        }
+    }
 
     fun startCreate(kind: FileAction) {
         createTarget = createDestination()
@@ -475,6 +540,10 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                             },
                             onOpenWorkspace = { openXed(entry.file, workspace = true) },
                             onEdit = { openXed(entry.file, workspace = false) },
+                            onExtract = {
+                                selectedEntry = entry.file
+                                extractTarget = entry.file
+                            },
                             onRename = {
                                 selectedEntry = entry.file
                                 name = entry.file.name
@@ -490,7 +559,9 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                             workspaceLabel = t("files.open.workspace"),
                             folderLabel = t("files.folder"),
                             expandLabel = t("files.expand"),
-                            collapseLabel = t("files.collapse")
+                            collapseLabel = t("files.collapse"),
+                            extractLabel = t("files.extract"),
+                            extractSupported = !entry.isDirectory && ArchiveExtractor.isSupported(entry.file)
                         )
                     }
                 }
@@ -519,6 +590,17 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                                 Icon(Icons.Default.Edit, contentDescription = null)
                                 Spacer(Modifier.size(6.dp))
                                 Text(t("files.edit"), maxLines = 1)
+                            }
+                        }
+                        // Archives get their own quick action; plain files keep Edit.
+                        if (ArchiveExtractor.isSupported(selectedFile)) {
+                            OutlinedButton(
+                                onClick = { extractTarget = selectedFile },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(Icons.Default.Unarchive, contentDescription = null)
+                                Spacer(Modifier.size(6.dp))
+                                Text(t("files.extract"), maxLines = 1)
                             }
                         }
                         IconButton(
@@ -560,6 +642,83 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
             dismissButton = {
                 TextButton(onClick = { showResetConfirm = false }) { Text(t("perm.close")) }
             }
+        )
+    }
+
+    /**
+     * Extraction method chooser: a new folder with a typed name, the archive's
+     * own name as the folder, or straight into the folder holding the archive.
+     */
+    extractTarget?.let { archive ->
+        var customName by remember(archive.absolutePath) {
+            mutableStateOf(archive.nameWithoutExtension + "_extracted")
+        }
+        AlertDialog(
+            onDismissRequest = { if (!extracting) extractTarget = null },
+            title = { Text(t("files.extract.method.title")) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(t("files.extract.method.desc"), style = MaterialTheme.typography.bodySmall, color = SampThemeColors.textSecondary)
+                    // Name field lives above its button so focus and scrolling
+                    // behave like any other dialog input.
+                    OutlinedTextField(
+                        value = customName,
+                        onValueChange = { customName = it },
+                        label = { Text(t("files.extract.method.new_folder")) },
+                        singleLine = true,
+                        enabled = !extracting,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedButton(
+                        enabled = !extracting,
+                        onClick = {
+                            extractTarget = null
+                            extractArchive(archive, ArchiveExtractor.Method.NEW_FOLDER, customName)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(t("files.extract.method.new_folder"))
+                    }
+                    OutlinedButton(
+                        enabled = !extracting,
+                        onClick = {
+                            extractTarget = null
+                            extractArchive(archive, ArchiveExtractor.Method.ARCHIVE_FOLDER)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(t("files.extract.method.archive_name"))
+                    }
+                    OutlinedButton(
+                        enabled = !extracting,
+                        onClick = {
+                            extractTarget = null
+                            extractArchive(archive, ArchiveExtractor.Method.DIRECT)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(t("files.extract.method.direct"))
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(enabled = !extracting, onClick = { extractTarget = null }) { Text(t("files.cancel")) }
+            }
+        )
+    }
+
+    if (extracting) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(t("files.extract.running.title")) },
+            text = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    CircularProgressIndicator(color = SampThemeColors.accent, modifier = Modifier.size(22.dp))
+                    Text(t("files.extract.running").replace("{name}", extractBusyName.orEmpty()))
+                }
+            },
+            confirmButton = {}
         )
     }
 
@@ -677,6 +836,7 @@ private fun FileEntry(
     onToggle: () -> Unit,
     onOpenWorkspace: () -> Unit,
     onEdit: () -> Unit,
+    onExtract: () -> Unit,
     onRename: () -> Unit,
     onDelete: () -> Unit,
     renameLabel: String,
@@ -685,7 +845,9 @@ private fun FileEntry(
     workspaceLabel: String,
     folderLabel: String,
     expandLabel: String,
-    collapseLabel: String
+    collapseLabel: String,
+    extractLabel: String,
+    extractSupported: Boolean
 ) {
     val file = entry.file
     var showActions by remember(file.absolutePath) { mutableStateOf(false) }
@@ -754,6 +916,16 @@ private fun FileEntry(
                             text = { Text(workspaceLabel) },
                             leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) },
                             onClick = { showActions = false; onOpenWorkspace() }
+                        )
+                    } else if (extractSupported) {
+                        // An archive gets the extraction entry instead of Edit:
+                        // the payload is compressed data, not editable text.
+                        DropdownMenuItem(
+                            text = { Text(extractLabel) },
+                            leadingIcon = {
+                                Icon(Icons.Default.Unarchive, contentDescription = null)
+                            },
+                            onClick = { showActions = false; onExtract() }
                         )
                     } else {
                         DropdownMenuItem(

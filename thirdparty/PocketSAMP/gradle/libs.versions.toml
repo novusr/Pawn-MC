@@ -9,9 +9,16 @@ material3 = "1.2.1"
 coroutines = "1.8.1"
 mariadbClient = "3.3.3"
 commonsCompress = "1.26.1"
+# Archive extraction extras: pure-java RAR reader and 7z/RAR native binding.
+# commons-compress covers tar/tar.gz/zip; these two cover the formats it cannot.
+sevenZipJBinding = "16.02-2.01"
+junrar = "7.5.5"
 
 [libraries]
 commons-compress = { group = "org.apache.commons", name = "commons-compress", version.ref = "commonsCompress" }
+sevenzipjbinding = { group = "net.sf.sevenzipjbinding", name = "sevenzipjbinding", version.ref = "sevenZipJBinding" }
+sevenzipjbinding-all-platforms = { group = "net.sf.sevenzipjbinding", name = "sevenzipjbinding-all-platforms", version.ref = "sevenZipJBinding" }
+junrar = { group = "com.github.junrar", name = "junrar", version.ref = "junrar" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-lifecycle-viewmodel-compose = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }

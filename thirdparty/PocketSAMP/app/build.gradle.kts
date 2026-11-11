@@ -75,6 +75,12 @@ dependencies {
     implementation(rootProject.libs.kotlinx.coroutines.android)
     implementation(rootProject.libs.mariadb.java.client)
     implementation(rootProject.libs.commons.compress)
+    // Archive extraction beyond commons-compress: junrar reads RAR4 archives in
+    // pure Java; SevenZipJBinding adds the 7-Zip engine for 7z and modern RAR5
+    // (native per-ABI, unpacked from the -all-platforms jar).
+    implementation(rootProject.libs.junrar)
+    implementation(rootProject.libs.sevenzipjbinding)
+    implementation(rootProject.libs.sevenzipjbinding.allplatforms)
 
     testImplementation(rootProject.libs.junit)
 }
