@@ -68,7 +68,7 @@ internal object HelpContent {
         Locales.Lang.ID -> listOf(
             HelpSection(
                 "dashboard",
-                "Antarmuka Utama",
+                "Halaman Utama",
                 "Mulai atau hentikan server di sini. Salin alamat Local untuk bermain di perangkat ini, " +
                     "atau alamat LAN untuk pemain di jaringan Wi-Fi yang sama.\n\n" +
                     "Jika server.cfg belum ada, file dengan pengaturan awal akan dibuat saat server pertama kali dimulai."

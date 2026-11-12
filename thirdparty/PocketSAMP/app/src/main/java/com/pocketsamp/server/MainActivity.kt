@@ -137,7 +137,7 @@ class MainActivity : ComponentActivity() {
      * Fetches and unpacks runtime archives before the console is made available.
      *
      * Runs automatically the first time PocketSAMP is entered — the user never
-     * has to press KASIH BAHAN BAKAR just to see the archives being prepared.
+     * has to press `action.start` just to see the archives being prepared.
      * Every archive download and unpack step emits a `$System [Prepare]` line so
      * the console narrates the whole sequence as it happens.
      */
@@ -221,7 +221,7 @@ class MainActivity : ComponentActivity() {
                 assetExtractorInitialised = false
                 // Auto-prepare on entry: the archives download and unpack in the
                 // background right away, so the console already shows `[Prepare]`
-                // lines without the user having to press KASIH BAHAN BAKAR first.
+                // lines without the user having to press `action.start` first.
                 if (hasAllFilesAccess.value) startRuntimeDownload()
             }
         }
@@ -482,7 +482,7 @@ class MainActivity : ComponentActivity() {
             return
         }
 
-        // "KASIH BAHAN BAKAR" also kicks the runtime download/extraction off when
+        // `action.start` also kicks the runtime download/extraction off when
         // the archives are not ready yet: the service repeats the same check, but
         // starting here means the progress log fills in while the user watches the
         // dashboard instead of after a silent first tick.
