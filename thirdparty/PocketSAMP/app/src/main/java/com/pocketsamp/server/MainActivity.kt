@@ -48,7 +48,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.offset
+
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import kotlin.math.roundToInt
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.LocalDensity
 import androidx.core.view.WindowCompat
 import androidx.core.content.ContextCompat
 import com.pocketsamp.server.configuration._DirectoryManager
@@ -367,10 +376,43 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // Floating tab rail: fixed 36 dp squares, icons only.
+                // The whole rail moves as one unit: drag it anywhere on screen
+                // and the chosen spot sticks for the rest of the session, so it
+                // stops covering whatever control happens to sit underneath.
+                var railOffset by remember { mutableStateOf(IntOffset.Zero) }
+                var railPlaced by remember { mutableStateOf(false) }
+                var railBounds by remember { mutableStateOf(IntSize.Zero) }
+                val density = LocalDensity.current
+                val railMarginXPx = with(density) { 12.dp.toPx() }.roundToInt()
+                val railMarginYPx = with(density) { 16.dp.toPx() }.roundToInt()
                 Column(
                     modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(end = 12.dp, bottom = 16.dp)
+                        .align(Alignment.TopStart)
+                        .offset { railOffset }
+                        .onGloballyPositioned { railCoords ->
+                            val parent = railCoords.parentCoordinates ?: return@onGloballyPositioned
+                            railBounds = IntSize(parent.size.width, parent.size.height)
+                            // First layout only: park it at the familiar
+                            // bottom-end corner before the user drags it elsewhere.
+                            if (!railPlaced && railCoords.size.width > 0) {
+                                railPlaced = true
+                                railOffset = IntOffset(
+                                    (parent.size.width - railCoords.size.width - railMarginXPx).coerceAtLeast(0),
+                                    (parent.size.height - railCoords.size.height - railMarginYPx).coerceAtLeast(0)
+                                )
+                            }
+                        }
+                        .pointerInput(railBounds) {
+                            detectDragGestures { change, dragAmount ->
+                                change.consume()
+                                railOffset = IntOffset(
+                                    (railOffset.x + dragAmount.x.roundToInt())
+                                        .coerceIn(0, (railBounds.width - 60).coerceAtLeast(0)),
+                                    (railOffset.y + dragAmount.y.roundToInt())
+                                        .coerceIn(0, (railBounds.height - 60).coerceAtLeast(0))
+                                )
+                            }
+                        }
                         .clip(RoundedCornerShape(14.dp))
                         .background(SampThemeColors.surface)
                         .border(1.dp, SampThemeColors.card, RoundedCornerShape(14.dp))

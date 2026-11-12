@@ -448,14 +448,9 @@ fun SettingsScreen(
                 onClick = {
                     fabScope.launch {
                         if (atBottom) {
-                            while (settingsScrollState.value > 0) {
-                                val next = (settingsScrollState.value - FAB_SCROLL_STEP_PX).coerceAtLeast(0)
-                                settingsScrollState.animateScrollTo(
-                                    next,
-                                    animationSpec = tween(durationMillis = FAB_SCROLL_STEP_DURATION_MS)
-                                )
-                                if (next == settingsScrollState.value) break
-                            }
+                            // Already resting at the very bottom: the trip home is
+                            // one smooth direct flight, no staged hops needed.
+                            settingsScrollState.animateScrollTo(0)
                         } else {
                             while (settingsScrollState.value < settingsScrollState.maxValue) {
                                 val next = (settingsScrollState.value + FAB_SCROLL_STEP_PX)

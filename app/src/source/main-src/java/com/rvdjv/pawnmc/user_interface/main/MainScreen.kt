@@ -454,13 +454,9 @@ fun MainScreen(
                 onClick = {
                     fabScope.launch {
                         if (atBottom) {
-                            var target = listState.firstVisibleItemIndex
-                            while (target > 0) {
-                                val next = (target - 12).coerceAtLeast(0)
-                                listState.animateScrollToItem(next)
-                                if (next == target) break
-                                target = next
-                            }
+                            // At the very bottom already: fly straight home to the
+                            // top in one smooth motion, no staged hops.
+                            listState.animateScrollToItem(0)
                         } else {
                             val lastItem = (listState.layoutInfo.totalItemsCount - 1).coerceAtLeast(0)
                             var target = listState.firstVisibleItemIndex
