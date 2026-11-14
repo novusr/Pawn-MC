@@ -111,11 +111,6 @@ class MainActivity : ComponentActivity() {
         journal("lifecycle", "MainActivity.onStart")
     }
 
-    override fun onResume() {
-        super.onResume()
-        journal("lifecycle", "MainActivity.onResume")
-    }
-
     override fun onPause() {
         journal("lifecycle", "MainActivity.onPause")
         super.onPause()
@@ -129,11 +124,6 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         journal("lifecycle", "MainActivity.onDestroy finishing=$isFinishing")
         super.onDestroy()
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        journal("lifecycle", "MainActivity.onNewIntent action=${intent.action}")
     }
 
     /**
@@ -369,6 +359,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        journal("lifecycle", "MainActivity.onNewIntent action=${intent.action}")
         setIntent(intent)
         initialUri = intent.data
         pendingXedRequest = xedRequest(intent)
@@ -380,6 +371,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        journal("lifecycle", "MainActivity.onResume")
         ContentConfig.reloadFromFile(applicationContext)
         viewModel.refreshTheme()
         viewModel.refreshLanguage()

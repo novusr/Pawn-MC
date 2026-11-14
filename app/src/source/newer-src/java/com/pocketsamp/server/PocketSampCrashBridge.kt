@@ -2,8 +2,8 @@ package com.pocketsamp.server
 
 import android.content.Context
 import android.util.Log
+import com.pocketsamp.server.crash_handler.Manager
 import com.pocketsamp.server.crash_handler.Report
-import com.pocketsamp.server.crash_handler.Reporter
 import com.rvdjv.pawnmc.apps_data.data_crash.ActivityJournal
 import com.rvdjv.pawnmc.apps_data.data_crash.CrashHandler
 import java.io.File
@@ -27,7 +27,7 @@ import java.io.PrintWriter
  * flavor that links the runtime may see them. It is registered from
  * [registerNewerPocketSampHook], which the shared gateway resolves reflectively.
  */
-internal object PocketSampCrashBridge : Reporter {
+internal object PocketSampCrashBridge : Manager.Reporter {
 
     private const val TAG = "PocketSampCrash"
 
@@ -90,10 +90,11 @@ internal class CrashReportException(report: Report) :
 
     private val captured = report
 
-    /** The trace already exists as text; there is no live frame to attach. */
-    override val stackTrace: Array<StackTraceElement>
-        get() = emptyArray()
-
+    /**
+     * `Throwable.getStackTrace()` is final in Java, so the captured text cannot be
+     * installed as a real stack trace. `printStackTrace` is the hook that *is* overridable,
+     * and `CrashHandler` formats the report through exactly that call.
+     */
     override fun printStackTrace(writer: PrintWriter) {
         writer.print(captured.stackTrace)
     }

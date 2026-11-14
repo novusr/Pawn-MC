@@ -265,11 +265,11 @@ object Locales {
         Lang.RU to "Glavnaya",
         ),
         "tab.console" to mapOf(
-        Lang.ID to "Konsol",
-        Lang.EN to "Console",
-        Lang.TL to "Konsol",
-        Lang.ES to "Consola",
-        Lang.RU to "Konsol",
+        Lang.ID to "Terminal",
+        Lang.EN to "Terminal",
+        Lang.TL to "Terminal",
+        Lang.ES to "Terminal",
+        Lang.RU to "Terminal",
         ),
         "tab.files" to mapOf(
         Lang.ID to "File Manager",

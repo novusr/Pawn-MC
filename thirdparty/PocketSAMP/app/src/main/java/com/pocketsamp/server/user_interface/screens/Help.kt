@@ -76,8 +76,8 @@ internal object HelpContent {
                     "Jika server.cfg belum ada, file dengan pengaturan awal akan dibuat saat server pertama kali dimulai."
             ),
             HelpSection(
-                "console",
-                "Console",
+                "terminal",
+                "Terminal",
                 "Pesan startup, plugin, dan error server tampil di sini. Bersihkan tampilan tanpa menghapus log tersimpan."
             ),
             HelpSection(
@@ -109,8 +109,8 @@ internal object HelpContent {
                     "If server.cfg is missing, the app creates it with default settings on first start."
             ),
             HelpSection(
-                "console",
-                "Console",
+                "terminal",
+                "Terminal",
                 "Startup messages, plugins, and server errors appear here. Clear the view without deleting saved logs."
             ),
             HelpSection(
@@ -146,8 +146,8 @@ internal object HelpContent {
                     "gagawa ng file sa unang simula."
             ),
             HelpSection(
-                "console",
-                "Console",
+                "terminal",
+                "Terminal",
                 "Dito lumalabas ang lahat ng sinasabi ng server: startup, mga plugin na na-load, at " +
                     "error kapag hindi na-load ang gamemode.\n\n" +
                     "Kung may kakaiba, dito muna tumingin — kadalasan pula ang dahilan. Hindi binubura " +
@@ -247,8 +247,8 @@ internal object HelpContent {
                     "umolchaniyu (PocketSAMP/PawnMC Runner, port 7777, 20 igrokov, rcon234) i sozdayot fajl pri pervom zapuske."
             ),
             HelpSection(
-                "console",
-                "Konsol",
+                "terminal",
+                "Terminal",
                 "Zdes vidno vsyo, chto soobshchaet server: zapusk, zagruzhennye plaginy i oshibku, iz-za " +
                     "kotoroj ne zagruzilsya gamemode.\n\n" +
                     "Esli chto-to ne tak, smotrite syuda: krasnaya stroka obychno i est prichina. Ochistka " +

@@ -49,7 +49,7 @@ object CrashHandler {
 
     /** Application context captured at install, for helpers that take no context. */
     @Volatile
-    private var appContext: Context? = null
+    private var hostContext: Context? = null
 
     /** Time the process started, for the uptime line in the dump. */
     @Volatile
@@ -63,11 +63,11 @@ object CrashHandler {
         if (installed) return
         synchronized(this) {
             if (installed) return
-            val hostContext = context.applicationContext
-            appContext = hostContext
+            val app = context.applicationContext
+            hostContext = app
             val previous = Thread.getDefaultUncaughtExceptionHandler()
             Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-                handle(hostContext, thread, throwable, SOURCE_PAWNMC, chainTo = previous)
+                handle(app, thread, throwable, SOURCE_PAWNMC, chainTo = previous)
             }
             installed = true
             Log.i(TAG, "Crash handler installed")
@@ -239,9 +239,9 @@ object CrashHandler {
     fun listDumpFiles(folder: File? = null): List<File> = listCrashFiles(folder, ".dmp")
 
     private fun listCrashFiles(folder: File?, suffix: String): List<File> {
-        val resolved = folder ?: runCatching {
-            appContext?.get()?.let { ActivityJournal.crashReportFolder(it) }
-        }.getOrNull() ?: return emptyList()
+        val resolved = folder
+            ?: hostContext?.let { ActivityJournal.crashReportFolder(it) }
+            ?: return emptyList()
         return resolved.listFiles { file ->
             file.isFile && file.name.startsWith("crash_") && file.name.endsWith(suffix)
         }?.sortedByDescending { it.lastModified() } ?: emptyList()
@@ -258,12 +258,12 @@ object CrashHandler {
         if (parts.size < 7) return@runCatching null
         // The dump location lives in the trailing "extra" block, when the report has
         // one; older reports end at the stack trace.
-        val dumpLine = parts.drop(7)
-            ?.lineSequence()
-            ?.firstOrNull { it.startsWith("Dump: ") }
+        val dumpLine: String? = parts.drop(7).joinToString("\n")
+            .lineSequence()
+            .firstOrNull { line -> line.startsWith("Dump: ") }
             ?.removePrefix("Dump: ")
             ?.trim()
-            ?.takeIf { it.isNotBlank() && it != "(not written)" }
+            ?.takeIf { path -> path.isNotBlank() && path != "(not written)" }
         ParsedReport(
             id = parts[0].trim(),
             timestamp = parts[1].trim().toLongOrNull() ?: file.lastModified(),

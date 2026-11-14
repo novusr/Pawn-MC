@@ -373,8 +373,8 @@ object Minidump {
     }
 
     private fun totalRamBytes(): Long = runCatching {
-        val manager = com.rvdjv.pawnmc.PawnMCApplication.appContext
-            ?.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+        val context = com.rvdjv.pawnmc.PawnMCApplication.appContext?.get() ?: return 0L
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
             ?: return 0L
         val info = ActivityManager.MemoryInfo()
         manager.getMemoryInfo(info)

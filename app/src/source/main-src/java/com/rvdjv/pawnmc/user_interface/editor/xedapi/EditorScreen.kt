@@ -19,6 +19,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -1601,6 +1602,15 @@ fun EditorScreen(
                 }
             }
 
+            // The editor body: tab strip, canvas, right-edge sidebar, and every floating
+            // control in one Box so they share one coordinate space.
+            //
+            // This Box is the overlay layer, not just a canvas host. The floating stack
+            // used to live in a second sibling Box below this one; because both had
+            // `weight(1f)` they split the height, which put the compile button and the
+            // workspace toggle in a band underneath the canvas - the "wall" that stopped
+            // them reaching the top of the editor. They belong here, over the code, where
+            // they can float anywhere in the body.
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -1647,6 +1657,9 @@ fun EditorScreen(
                         .weight(1f)
                         .fillMaxHeight()
                 ) {
+                    // The code canvas. The explorer overlay is anchored to this Box, so a
+                    // dragged panel cannot drift over the tab strip or the sidebar.
+                    Box(modifier = Modifier.fillMaxSize()) {
                     when {
                     viewModel.isLoading && !workspace.isWorkspaceOpen -> {
                         Box(
@@ -1797,11 +1810,12 @@ fun EditorScreen(
                         )
                         }
                     }
-                }
 
                 // Floating explorer: like every other floating surface it is a free-floating
                 // card that the user drags anywhere inside the editor canvas, not a
-                // docked sidebar welded to one edge.
+                // docked sidebar welded to one edge. It lives inside the canvas Box on
+                // purpose: `fillMaxSize` there means "the code area", while in the Row it
+                // would claim the sidebar's width and push the strip off screen.
                 if (isExplorerVisible) {
                     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                         val density = LocalDensity.current
@@ -1912,9 +1926,33 @@ fun EditorScreen(
                         }
                     }
                 }
-                }
+
                 }
 
+                // Scroll sidebar, docked to the right edge of the editor body.
+                //
+                // A trailing sibling of the canvas inside the Row, so it owns its own
+                // strip of width instead of painting over the last characters of a line.
+                // The Row is the canvas row, not the whole body: the tab strip above keeps
+                // the full width, and the floating buttons still get the body to move in.
+                EditorScrollSidebar(
+                    editor = editorRef,
+                    activeDocument = activeDocument,
+                    singleFileContent = viewModel.fileContent,
+                    onBeforeSeek = ::dismissAutoCompletion,
+                    modifier = Modifier.fillMaxHeight()
+                )
+                }
+            }
+
+            // The floating stack, back inside the editor body.
+            //
+            // This used to be a second, separate Box under the canvas. Both carried
+            // `weight(1f)`, so the two split the available height: the canvas got the top
+            // half and the compile button, workspace toggle and toolbar were marooned in
+            // the bottom half with no way to reach the top of the editor. Living here, in
+            // the same Box as the canvas, they float over the code again.
+            Box(modifier = Modifier.fillMaxSize()) {
                 toolPanelMode?.let { mode ->
                     ToolPanel(
                         mode = mode,
@@ -1947,19 +1985,6 @@ fun EditorScreen(
                             .align(Alignment.TopEnd)
                             .padding(12.dp)
                     )
-                }
-
-                // Scroll sidebar of the code canvas, docked to the right edge of the
-                // editor body. It lists the first and last visible line and sizes its
-                // thumb to the share of the document on screen, so the strip itself
-                // answers "how long is this file" before anything is scrolled.
-                EditorScrollSidebar(
-                    editor = editorRef,
-                    activeDocument = activeDocument,
-                    singleFileContent = viewModel.fileContent,
-                    onBeforeSeek = ::dismissAutoCompletion,
-                    modifier = Modifier.fillMaxHeight()
-                )
                 }
 
             // Master gate: when hidden, the whole floating stack (Developer Portal,
@@ -2111,6 +2136,8 @@ fun EditorScreen(
                 )
             }
 
+
+
                 if (isPawnTerminalVisible) {
                     val terminalSource = if (workspace.isWorkspaceOpen) {
                         activeDocument?.file
@@ -2162,6 +2189,8 @@ fun EditorScreen(
                         }
                     )
                 }
+            }
+            }
             }
 
             if (isQuickSymbolBarVisible) {
@@ -2227,6 +2256,7 @@ fun EditorScreen(
                 )
             }
         }
+    }
     }
 
     DisposableEffect(Unit) {
@@ -3335,10 +3365,13 @@ private fun EditorScrollSidebar(
         val density = LocalDensity.current
         // How many rows the canvas height holds right now; written back below so the
         // strip follows the keyboard opening and closing.
-        val rows = with(density) {
-            (maxHeight.toPx() / editor.rowHeight.coerceAtLeast(1f)).coerceAtLeast(1f)
+        // `rowHeight` is an Int on the widget, so the division is done in Float explicitly:
+        // mixing the two here is a compile error, not an implicit widening.
+        val rowsAfterLayout: Float = with(density) {
+            val rowHeightPx = editor.rowHeight.coerceAtLeast(1).toFloat()
+            (maxHeight.toPx() / rowHeightPx).coerceAtLeast(1f)
         }
-        LaunchedEffect(rows) { rowsOnScreen = rows }
+        LaunchedEffect(rowsAfterLayout) { rowsOnScreen = rowsAfterLayout }
         if (totalLines <= 0) return@BoxWithConstraints
 
         EditorSeekStrip(
