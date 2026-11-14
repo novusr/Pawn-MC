@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -103,6 +104,7 @@ import com.rvdjv.pawnmc.apps_data.data_update.UpdateStatus
 import com.rvdjv.pawnmc.user_interface.main.SettingsTarget
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFolderPickerIntent
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveTreeToFile
+import com.rvdjv.pawnmc.user_interface.widget.SimpleScrollSidebar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -506,12 +508,17 @@ fun SettingsScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+        ) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
                 .verticalScroll(settingsScrollState)
-                .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
+                .padding(start = 16.dp, end = 4.dp, bottom = 32.dp)
         ) {
             SectionIntro(
                 text = localizer.get(
@@ -1231,6 +1238,16 @@ fun SettingsScreen(
                     }
                 }
             }
+        }
+
+        // Sidebar of the whole settings page: the thumb is as long as the share of the
+        // page on screen, so the reader can tell how much is left before reaching the
+        // bottom of a several-screen preferences list.
+        SimpleScrollSidebar(
+            scrollState = settingsScrollState,
+            thumbColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+        )
         }
     }
 

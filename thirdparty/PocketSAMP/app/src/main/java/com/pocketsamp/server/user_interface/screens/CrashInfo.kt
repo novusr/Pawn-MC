@@ -29,6 +29,7 @@ import com.pocketsamp.server.Locales
 import com.pocketsamp.server.crash_handler.Manager
 import com.pocketsamp.server.crash_handler.Report
 import com.pocketsamp.server.user_interface.theme.*
+import com.pocketsamp.server.user_interface.widget.SimpleScrollSidebar
 
 @Composable
 fun _CrashInfo(
@@ -188,9 +189,11 @@ private fun CrashDetailView(
     fun t(key: String): String = Locales.text(lang, key)
     val scrollState = rememberScrollState()
 
+    Row(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .weight(1f)
+            .fillMaxHeight()
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -301,6 +304,11 @@ private fun CrashDetailView(
                 lineHeight = 16.sp
             )
         }
+    }
+
+    // A crash report is a long read: stack traces run for hundreds of lines, so the
+    // sidebar doubles as the "how much further" indicator.
+    SimpleScrollSidebar(scrollState = scrollState, thumbColor = SampThemeColors.danger)
     }
 }
 

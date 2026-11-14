@@ -22,6 +22,7 @@ import com.pocketsamp.server.configuration.ConfigParameters
 import com.pocketsamp.server.configuration.Reader
 import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
+import com.pocketsamp.server.user_interface.widget.SimpleScrollSidebar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -105,11 +106,13 @@ fun _Config() {
     }
 
     val scrollState = rememberScrollState()
+    Row(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .weight(1f)
+            .fillMaxHeight()
             .background(SampThemeColors.bg)
-            .padding(horizontal = 14.dp, vertical = 10.dp)
+            .padding(start = 14.dp, end = 4.dp, top = 10.dp, bottom = 10.dp)
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -133,6 +136,11 @@ fun _Config() {
             )
         }
         Spacer(modifier = Modifier.height(52.dp))
+    }
+
+    // Right-edge sidebar of the parameter list; it disappears when every parameter
+    // already fits, so a short server.cfg keeps the full width.
+    SimpleScrollSidebar(scrollState = scrollState)
     }
 }
 

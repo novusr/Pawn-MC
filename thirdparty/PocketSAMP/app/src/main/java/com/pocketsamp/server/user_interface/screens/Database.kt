@@ -39,6 +39,7 @@ import com.pocketsamp.server.Locales
 import com.pocketsamp.server.database_handler.DatabaseManager
 import com.pocketsamp.server.database_handler.QueryResult
 import com.pocketsamp.server.user_interface.theme.*
+import com.pocketsamp.server.user_interface.widget.SimpleScrollSidebar
 import kotlinx.coroutines.launch
 
 /**
@@ -154,12 +155,14 @@ fun _Database(
      */
     val pageScroll = rememberScrollState()
 
+    Row(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .weight(1f)
+            .fillMaxHeight()
             .background(SampThemeColors.bg)
             .verticalScroll(pageScroll)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(start = 14.dp, end = 4.dp, top = 10.dp, bottom = 10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         /*
@@ -594,6 +597,11 @@ fun _Database(
              */
             Spacer(modifier = Modifier.height(56.dp))
         }
+    }
+
+    // Right-edge sidebar of the database page: the thumb length is the share of the
+    // page on screen, so a long schema list is visibly long before it is scrolled.
+    SimpleScrollSidebar(scrollState = pageScroll)
     }
 
     /*

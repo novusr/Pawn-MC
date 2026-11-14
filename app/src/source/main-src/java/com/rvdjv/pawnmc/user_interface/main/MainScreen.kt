@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -115,6 +116,8 @@ import com.rvdjv.pawnmc.user_interface.theme.status_error_container
 import com.rvdjv.pawnmc.user_interface.theme.status_idle
 import com.rvdjv.pawnmc.user_interface.theme.status_success
 import com.rvdjv.pawnmc.user_interface.theme.status_success_container
+import com.rvdjv.pawnmc.user_interface.widget.LazyScrollSidebar
+import com.rvdjv.pawnmc.user_interface.widget.SimpleScrollSidebar
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -485,11 +488,16 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        LazyColumn(
-            state = listState,
+        Row(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
+        ) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
                 .padding(horizontal = SpaceL)
         ) {
             item { Spacer(modifier = Modifier.height(SpaceM)) }
@@ -759,6 +767,15 @@ fun MainScreen(
             }
 
             item { Spacer(modifier = Modifier.height(SpaceL)) }
+        }
+
+        // Sidebar of the whole main page. Same strip as the compiler output below,
+        // so the two read as one control family; this one is as long as the page.
+        LazyScrollSidebar(
+            listState = listState,
+            thumbColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.55f),
+            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+        )
         }
     }
 
@@ -1267,6 +1284,11 @@ internal fun OutputPanel(
     isCompiling: Boolean,
     scrollState: androidx.compose.foundation.ScrollState
 ) {
+    val linesInLog = if (outputText.isEmpty() || outputText == OUTPUT_PLACEHOLDER) {
+        0
+    } else {
+        outputText.lines().size
+    }
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -1283,17 +1305,46 @@ internal fun OutputPanel(
                 )
             }
 
-            Text(
-                text = explainHighlightedText(outputText),
-                fontFamily = FontFamily.Monospace,
-                fontStyle = if (outputText == OUTPUT_PLACEHOLDER) FontStyle.Italic else FontStyle.Normal,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(SpaceM)
-            )
+            Row(modifier = Modifier.fillMaxSize()) {
+                Text(
+                    text = explainHighlightedText(outputText),
+                    fontFamily = FontFamily.Monospace,
+                    fontStyle = if (outputText == OUTPUT_PLACEHOLDER) FontStyle.Italic else FontStyle.Normal,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .verticalScroll(scrollState)
+                        .padding(SpaceM)
+                )
+
+                // Sidebar of the compiler output. Its thumb length is the visible share
+                // of the log and its position is the read progress, so both "how long is
+                // this" and "where am I" are answerable without scrolling first.
+                if (linesInLog > 0) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(top = 8.dp, bottom = 8.dp, end = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = linesInLog.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = 9.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            maxLines = 1
+                        )
+                        SimpleScrollSidebar(
+                            scrollState = scrollState,
+                            thumbColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
+                            trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
         }
     }
 }

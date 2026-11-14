@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
+import com.pocketsamp.server.user_interface.widget.SimpleScrollSidebar
 
 /**
  * One explainer card of the PocketSAMP help screen.
@@ -299,12 +301,14 @@ fun _Help(lang: Locales.Lang) {
     val sections = remember(lang) { HelpContent.sections(lang) }
     val scrollState = rememberScrollState()
 
+    Row(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .weight(1f)
+            .fillMaxHeight()
             .background(SampThemeColors.bg)
             .verticalScroll(scrollState)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
@@ -369,5 +373,9 @@ fun _Help(lang: Locales.Lang) {
             )
         }
         Spacer(Modifier.height(64.dp))
+    }
+
+    // The guide is one long read; the sidebar shows how much of it is left.
+    SimpleScrollSidebar(scrollState = scrollState)
     }
 }

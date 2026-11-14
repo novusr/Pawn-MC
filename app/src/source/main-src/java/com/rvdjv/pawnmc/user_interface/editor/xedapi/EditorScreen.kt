@@ -1625,10 +1625,15 @@ fun EditorScreen(
                     }
                 )
 
-                Box(
+                Row(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
+                ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
                 ) {
                     when {
                     viewModel.isLoading && !workspace.isWorkspaceOpen -> {
@@ -1930,6 +1935,19 @@ fun EditorScreen(
                             .align(Alignment.TopEnd)
                             .padding(12.dp)
                     )
+                }
+
+                // Scroll sidebar of the code canvas, docked to the right edge of the
+                // editor body. It lists the first and last visible line and sizes its
+                // thumb to the share of the document on screen, so the strip itself
+                // answers "how long is this file" before anything is scrolled.
+                EditorScrollSidebar(
+                    editor = editorRef,
+                    activeDocument = activeDocument,
+                    singleFileContent = viewModel.fileContent,
+                    onBeforeSeek = ::dismissAutoCompletion,
+                    modifier = Modifier.fillMaxHeight()
+                )
                 }
 
             // Master gate: when hidden, the whole floating stack (Developer Portal,
@@ -3256,3 +3274,179 @@ private fun FloatingCompileButton(
         }
     }
 }
+
+/**
+ * Scroll sidebar of the Sora code canvas.
+ *
+ * The editor widget owns the scrolling and exposes it as a line offset, so this strip
+ * reads two numbers from the live editor instead of a Compose scroll state:
+ *
+ *  - [CodeEditor.firstVisibleLine] over the total line count gives the position, which
+ *    is also how "how far into the file am I" is answered while typing;
+ *  - the rows that fit the current canvas height over the remaining lines gives the
+ *    thumb length, so a 4000-line script shows a visibly shorter thumb than a 40-line
+ *    include, and the strip regrows when the keyboard closes.
+ *
+ * Dragging or tapping the track jumps the editor, which is the one interaction a bare
+ * sidebar should offer on a canvas that is itself the scroll surface.
+ */
+@Composable
+private fun EditorScrollSidebar(
+    editor: CodeEditor?,
+    activeDocument: OpenDocument?,
+    singleFileContent: String?,
+    onBeforeSeek: () -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    if (editor == null) return
+    // Snapshot states only exist in a composition, so the bindings are hoisted here and
+    // the strip itself stays a plain, testable function of numbers.
+    var firstLine by remember(editor) { mutableIntStateOf(0) }
+    var rowsOnScreen by remember(editor) { mutableFloatStateOf(1f) }
+    // The buffer under the canvas: its text gives the total line count directly and is
+    // already a snapshot state, so a file switch is picked up on the next frame.
+    val shownText = activeDocument?.content ?: singleFileContent.orEmpty()
+    val totalLines = remember(shownText) { shownText.count { it == '\n' } + 1 }
+
+    // `firstVisibleLine` is plain widget state the snapshot system cannot observe, so it
+    // is polled while the strip is on screen. One integer read, four times a second.
+    LaunchedEffect(editor) {
+        firstLine = editor.firstVisibleLine
+        while (true) {
+            val current = runCatching { editor.firstVisibleLine }.getOrDefault(0)
+            if (current != firstLine) firstLine = current
+            delay(SCROLL_SIDEBAR_POLL_MS)
+        }
+    }
+
+    BoxWithConstraints(modifier = modifier) {
+        val density = LocalDensity.current
+        // How many rows the canvas height holds right now; written back below so the
+        // strip follows the keyboard opening and closing.
+        val rows = with(density) {
+            (maxHeight.toPx() / editor.rowHeight.coerceAtLeast(1f)).coerceAtLeast(1f)
+        }
+        LaunchedEffect(rows) { rowsOnScreen = rows }
+        if (totalLines <= 0) return@BoxWithConstraints
+
+        EditorSeekStrip(
+            progress = (firstLine.toFloat() / (totalLines - 1).coerceAtLeast(1))
+                .coerceIn(0f, 1f),
+            visibleFraction = (rowsOnScreen / totalLines).coerceIn(0f, 1f),
+            totalLines = totalLines,
+            firstVisibleLine = firstLine,
+            lastVisibleLine = (firstLine + rowsOnScreen.toInt()).coerceAtMost(totalLines - 1),
+            onSeek = { fraction ->
+                onBeforeSeek()
+                val target = (fraction * (totalLines - 1)).roundToInt()
+                editor.jumpToLine(target.coerceIn(0, totalLines - 1))
+            }
+        )
+    }
+}
+
+/** Track + thumb of the editor sidebar; measured against the caller's height. */
+@Composable
+private fun EditorSeekStrip(
+    progress: Float,
+    visibleFraction: Float,
+    totalLines: Int,
+    firstVisibleLine: Int,
+    lastVisibleLine: Int,
+    onSeek: (Float) -> Unit
+) {
+    val density = LocalDensity.current
+    val colors = MaterialTheme.colorScheme
+    BoxWithConstraints(
+        modifier = Modifier
+            .width(16.dp)
+            .fillMaxHeight()
+    ) {
+        val stripHeightPx = with(density) { (maxHeight - 8.dp).toPx() }.coerceAtLeast(1f)
+        val minThumbPx = with(density) { 28.dp.toPx() }
+        val thumbHeightPx = (stripHeightPx * visibleFraction)
+            .coerceIn(minThumbPx.coerceAtMost(stripHeightPx), stripHeightPx)
+        val travelPx = (stripHeightPx - thumbHeightPx).coerceAtLeast(1f)
+        val thumbOffsetPx = travelPx * progress
+        val thumbHeightDp = with(density) { thumbHeightPx.toDp() }
+
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .padding(vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // First and last buffered line on screen: the sidebar's thumb already
+            // tells the length, these two numbers name it.
+            Text(
+                text = (firstVisibleLine + 1).toString(),
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 9.sp,
+                color = colors.onSurfaceVariant.copy(alpha = 0.65f),
+                maxLines = 1
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .pointerInput(totalLines, thumbHeightPx) {
+                        detectTapGestures { position ->
+                            onSeek(((position.y - thumbHeightPx / 2f) / travelPx).coerceIn(0f, 1f))
+                        }
+                    }
+                    .pointerInput(totalLines, thumbHeightPx) {
+                        // Jump to the finger, then follow it: the editor reports the new
+                        // offset a frame later, so deltas from a stored start are stable.
+                        var dragFraction = progress
+                        detectDragGestures(
+                            onDragStart = { offset ->
+                                dragFraction = ((offset.y - thumbHeightPx / 2f) / travelPx)
+                                    .coerceIn(0f, 1f)
+                                onSeek(dragFraction)
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                dragFraction = (dragFraction + dragAmount.y / travelPx)
+                                    .coerceIn(0f, 1f)
+                                onSeek(dragFraction)
+                            }
+                        )
+                    }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .width(4.dp)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(50))
+                        .background(colors.onSurface.copy(alpha = 0.08f))
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .offset { IntOffset(0, thumbOffsetPx.roundToInt()) }
+                        .width(4.dp)
+                        .height(thumbHeightDp)
+                        .clip(RoundedCornerShape(50))
+                        .background(colors.primary.copy(alpha = 0.75f))
+                )
+            }
+            Text(
+                text = (lastVisibleLine + 1).toString(),
+                style = MaterialTheme.typography.labelSmall,
+                fontSize = 9.sp,
+                color = colors.onSurfaceVariant.copy(alpha = 0.65f),
+                maxLines = 1
+            )
+        }
+    }
+}
+
+/**
+ * Poll interval of the editor scroll sidebar.
+ *
+ * `CodeEditor.firstVisibleLine` is plain widget state, invisible to snapshot, so the
+ * strip samples it instead of being pushed to. This only runs while the strip is on
+ * screen, and one integer read four times a second is not measurable next to a repaint.
+ */
+private const val SCROLL_SIDEBAR_POLL_MS = 200L

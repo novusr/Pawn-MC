@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -71,6 +72,7 @@ import com.pocketsamp.server.configuration.Reader
 import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.service_handler.Status
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
+import com.pocketsamp.server.user_interface.widget.SimpleScrollSidebar
 import kotlinx.coroutines.delay
 import java.io.File
 
@@ -167,12 +169,18 @@ fun _Dashboard(
     }
     val serverPort = serverConfig.getOrNull()?.port?.toString() ?: "—"
 
+    // The page keeps its own scroll state so the right-edge sidebar can be driven from
+    // it: the dashboard is several cards tall, and the thumb tells how much is left.
+    val pageScroll = rememberScrollState()
+
+    Row(modifier = Modifier.fillMaxSize()) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .weight(1f)
+            .fillMaxHeight()
             .background(SampThemeColors.bg)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 16.dp),
+            .verticalScroll(pageScroll)
+            .padding(start = 20.dp, end = 6.dp, top = 16.dp, bottom = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(
@@ -514,6 +522,9 @@ fun _Dashboard(
                 )
             }
         }
+    }
+
+    SimpleScrollSidebar(scrollState = pageScroll)
     }
 }
 

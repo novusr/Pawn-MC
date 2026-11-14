@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.user_interface.theme.*
+import com.pocketsamp.server.user_interface.widget.LabeledScrollSidebar
+import com.pocketsamp.server.user_interface.widget.rememberLazyScrollMetrics
+import kotlinx.coroutines.launch
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -43,6 +46,7 @@ fun _Console(
     onClearLogs: () -> Unit
 ) {
     val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
     val lang = Locales.current
     fun t(key: String): String = Locales.text(lang, key)
     val context = LocalContext.current
@@ -160,47 +164,27 @@ fun _Console(
                 }
             }
 
-            /* Vertical scrollbar on the right of the log surface. Two bars:
-             * a faint track spanning the full height (so the strip is visible
-             * even before any scroll happens) and a solid draggable thumb
-             * whose position reflects the scroll progress. */
-            val layoutInfo = listState.layoutInfo
-            val totalCount = layoutInfo.totalItemsCount
-            val visibleCount = layoutInfo.visibleItemsInfo.size
-            if (totalCount > 0 && visibleCount > 0) {
-                val first = layoutInfo.visibleItemsInfo.first().index
-                val scrollRange = (totalCount - visibleCount).coerceAtLeast(1)
-                val progress = (first.toFloat() / scrollRange).coerceIn(0f, 1f)
-                val thumbFraction = (visibleCount.toFloat() / totalCount).coerceIn(0.08f, 1f)
-                Column(
-                    modifier = Modifier
-                        .width(18.dp)
-                        .fillMaxHeight()
-                        .padding(start = 6.dp, top = 12.dp, bottom = 12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(progress.coerceAtLeast(0.001f))
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(SampThemeColors.card)
-                    ) {}
-                    Box(
-                        modifier = Modifier
-                            .weight(thumbFraction)
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(SampThemeColors.textMuted)
-                    ) {}
-                    Box(
-                        modifier = Modifier
-                            .weight((1f - progress - thumbFraction).coerceAtLeast(0.001f))
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(SampThemeColors.card)
-                    ) {}
-                }
-            }
+            /* Vertical scrollbar on the right of the log surface.
+             *
+             * The shared sidebar draws the track and a thumb whose length is the
+             * share of the log on screen, so the strip itself says how long the
+             * buffered output is before it is scrolled. The line counters above and
+             * below the thumb turn that estimate into a number: the first and last
+             * buffered line currently on screen. */
+            val (scrollProgress, visibleShare) = rememberLazyScrollMetrics(listState)
+            val firstVisible = listState.layoutInfo.visibleItemsInfo.firstOrNull()?.index ?: 0
+            val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            LabeledScrollSidebar(
+                progress = scrollProgress,
+                visibleFraction = visibleShare,
+                startLabel = (firstVisible + 1).toString(),
+                endLabel = (lastVisible + 1).coerceAtMost(logs.size).toString(),
+                onSeekFraction = { fraction ->
+                    val target = ((logs.size - 1) * fraction).toInt()
+                    scope.launch { listState.scrollToItem(target.coerceIn(0, (logs.size - 1).coerceAtLeast(0))) }
+                },
+                modifier = Modifier.padding(start = 6.dp, top = 12.dp, bottom = 12.dp)
+            )
         }
 
         /*
