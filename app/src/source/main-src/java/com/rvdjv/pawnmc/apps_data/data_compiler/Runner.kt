@@ -370,6 +370,13 @@ object Runner {
             compilerArgumentsForVersion(sourceFile, options, version)
         }
         val n_startTime = System.currentTimeMillis()
+        runCatching {
+            com.rvdjv.pawnmc.apps_data.data_crash.ActivityJournal.record(
+                ContentConfig.getInstance().applicationContextHolder(),
+                "compile",
+                "start ${File(sourceFile).name} with ${version.label}"
+            )
+        }
         val n_output = compile(n_args.toTypedArray())
         val n_duration = System.currentTimeMillis() - n_startTime
         val n_parsedResult = parseCompilerOutput(n_output)

@@ -141,6 +141,19 @@ internal object AppStorage {
     /** Folder holding the unified compile-log SQLite database, `PawnMC/logs`. */
     fun logsRoot(context: Context): File = File(dataRoot(context), "logs").ensureDir()
 
+    /**
+     * Folder holding crash dumps and their activity journals, `PawnMC/crashreport`.
+     *
+     * Throws instead of silently creating the folder in an app-private location: the
+     * crash handler has to know whether the user can actually reach the dump, because
+     * a report nobody can find is not a report.
+     */
+    fun crashReportRoot(context: Context): File {
+        val root = documentsRoot(context)
+            ?: throw SecurityException("Documents/PawnMC is not writable; grant all-files access")
+        return File(root, "crashreport").ensureDir()
+    }
+
     private fun File.ensureDir(): File = apply { if (!exists()) mkdirs() }
 
     private fun canonicalPath(file: File): String =

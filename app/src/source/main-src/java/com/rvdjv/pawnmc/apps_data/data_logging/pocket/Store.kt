@@ -63,6 +63,12 @@ object _pocket_store {
     /** Store one console line without involving compiler-specific fields or retention. */
     fun record(context: Context, message: String, level: String = classify(message)) {
         if (message.isBlank()) return
+        // Mirror into the activity journal: the console is the runtime's own record, the
+        // journal is the timeline a crash dump reads, and they need not contain the same
+        // lines. Content lines are sampled so a chatty server cannot drown the journal.
+        if (shouldJournal(message)) {
+            com.rvdjv.pawnmc.apps_data.data_crash.ActivityJournal.record(context, "server", message)
+        }
         val dbHelper = helperFor(context) ?: return
         val entry = Entry(System.currentTimeMillis(), normalizeLevel(level), message)
         runCatching {
@@ -107,6 +113,29 @@ object _pocket_store {
                 }
             }
         }
+
+    /**
+     * Keeps noteworthy console lines and samples the rest.
+     *
+     * Error/warning lines always survive; ordinary chatter is taken one line in eight,
+     * which still shows the shape of a session without filling a phone's storage.
+     */
+    private fun shouldJournal(message: String): Boolean {
+        val noteworthy = message.contains("error", ignoreCase = true) ||
+            message.contains("warning", ignoreCase = true) ||
+            message.contains("failed", ignoreCase = true) ||
+            message.contains("crash", ignoreCase = true) ||
+            message.contains("exit", ignoreCase = true) ||
+            message.contains("start", ignoreCase = true) ||
+            message.contains("stop", ignoreCase = true)
+        if (noteworthy) return true
+        sampleCounter = (sampleCounter + 1) and 7
+        return sampleCounter == 0
+    }
+
+    /** Counter of the sampling above; only touched from the journal's serial writer. */
+    @Volatile
+    private var sampleCounter = 0
 
     private fun classify(message: String): String = when {
         message.contains("error", ignoreCase = true) || message.contains("failed", ignoreCase = true) -> "error"

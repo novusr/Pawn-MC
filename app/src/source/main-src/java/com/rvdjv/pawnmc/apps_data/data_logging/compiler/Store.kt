@@ -84,6 +84,15 @@ object _compiler_store {
     /** Records one finished compile as a single row ("cell") and prunes old rows. */
     fun record(context: Context, entry: Entry) {
         if (!entry.isValid()) return
+        // The journal keeps the timeline a crash dump reads; the SQLite row keeps the
+        // full output. Only the summary goes into the journal, because a compile log can
+        // be thousands of lines by itself.
+        com.rvdjv.pawnmc.apps_data.data_crash.ActivityJournal.record(
+            context,
+            "compile",
+            "exit ${entry.exitCode} in ${entry.durationMs} ms  " +
+                "${entry.sourceName} (${entry.compilerVersion}, ${entry.output.lines().size} lines)"
+        )
         val store = helperFor(context) ?: return
         runCatching {
             store.writableDatabase.use { db ->

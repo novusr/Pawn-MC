@@ -23,6 +23,16 @@ class Server(private val context: Context) {
 
     private val processRunner = ThirdProcess("SA-MP") { exitCode ->
         onExit?.invoke(exitCode)
+    }.apply {
+        // An abnormal exit of the emulated server is a crash of the runtime, not of the
+        // app: nothing throws, so the journal line is the only record of the signal.
+        launchProcessJournalSink = { message ->
+            com.pocketsamp.server.crash_handler.RuntimeJournal.record(
+                context,
+                "SA-MP $message",
+                tag = "server"
+            )
+        }
     }
     private var logPollingJob: Job? = null
 

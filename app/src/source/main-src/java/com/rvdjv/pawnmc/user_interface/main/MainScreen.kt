@@ -224,6 +224,9 @@ fun MainScreen(
     val localizer = remember(context) { AppLocalization.shared(context) }
     val appLanguage = viewModel.n_app_language
 
+    // Resolved once per screen: whether there is an unacknowledged crash report.
+    val pendingCrash = remember(context) { loadPendingCrash(context) != null }
+
     // state dialog
     var showFileBrowser by remember { mutableStateOf(false) }
     var showPermissionDialog by remember { mutableStateOf(false) }
@@ -402,6 +405,13 @@ fun MainScreen(
         // lives in the flavor hook, because this source set is shared with the Nougat
         // flavor, which has no PocketSAMP module at all.
         val launched = PocketSampGateway.launch(context, appLanguage.value, viewModel.n_app_theme.value)
+        // Journal: the runtime is one module of this process, so a crash raised there has
+        // to be traceable to the tap that opened it.
+        com.rvdjv.pawnmc.apps_data.data_crash.ActivityJournal.record(
+            context,
+            "pocketsamp",
+            if (launched) "launched from main screen" else "launch failed"
+        )
         if (!launched) {
             Toast.makeText(
                 context,
@@ -501,6 +511,15 @@ fun MainScreen(
                 .padding(horizontal = SpaceL)
         ) {
             item { Spacer(modifier = Modifier.height(SpaceM)) }
+
+            // Offered once after a crash: the handler cannot show anything itself, so
+            // the report is surfaced on the first screen of the next launch.
+            if (pendingCrash) {
+                item {
+                    CrashReportCard(context = context)
+                    Spacer(modifier = Modifier.height(SpaceS))
+                }
+            }
 
             item { ScreenHeader(
                 isCompiling = viewModel.isCompiling,

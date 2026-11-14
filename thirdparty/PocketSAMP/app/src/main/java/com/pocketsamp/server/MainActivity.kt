@@ -207,6 +207,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Journal: the runtime UI and the server service share this process with the
+        // host editor, so a crash report must say which screen was in front.
+        com.pocketsamp.server.crash_handler.RuntimeJournal.record(this, "PocketSAMP.onCreate")
         handleNavigationIntent(intent)
         lifecycle.addObserver(permissionObserver)
         hasAllFilesAccess.value = _DirectoryManager.hasStoragePermission(this)

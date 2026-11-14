@@ -389,6 +389,18 @@ fun EditorScreen(
         CodeLanguages.forFile(activeFilePath?.let(::File), appLanguage)
     }
 
+    // Journal: which document is in front, so a crash inside the editor names its file.
+    // Runs on every tab switch, which is exactly the granularity a crash timeline needs.
+    LaunchedEffect(activeFilePath) {
+        if (!activeFilePath.isNullOrBlank()) {
+            com.rvdjv.pawnmc.apps_data.data_crash.ActivityJournal.record(
+                context,
+                "editor",
+                "file ${File(activeFilePath).name}"
+            )
+        }
+    }
+
     val hasUnsavedChanges =
         if (workspace.isWorkspaceOpen) {
             workspace.hasDirtyDocuments

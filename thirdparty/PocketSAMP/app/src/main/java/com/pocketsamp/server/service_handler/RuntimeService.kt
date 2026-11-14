@@ -19,6 +19,7 @@ import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.crash_handler.Handler
 import com.pocketsamp.server.crash_handler.Manager
 import com.pocketsamp.server.crash_handler.Report
+import com.pocketsamp.server.crash_handler.RuntimeJournal
 import com.pocketsamp.server.engine_handler.Server
 import com.pocketsamp.server.engine_handler.ThirdExtractor
 import com.pocketsamp.server.engine_handler.ThirdMariaDb
@@ -192,6 +193,13 @@ class RuntimeService : Service() {
                 "[${SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())}] " + rawLine.substring(marker)
             } else rawLine
             runCatching { consoleLogSink?.invoke(line) }
+            // The crash journal is written on this side too, not only through the host
+            // sink: a line recorded just before a native crash must still be on disk,
+            // and the sink (installed at launch) may not be present when the service
+            // starts from the dashboard before the host hook was resolved.
+            appContext?.let { context ->
+                RuntimeJournal.record(context, line, tag = "server")
+            }
             synchronized(logLock) {
                 // The host (PawnMC) mirrors every line into its SQLite log via the
                 // consoleLogSink installed at launch, so this module only keeps its
@@ -612,6 +620,13 @@ class RuntimeService : Service() {
                 appendLog(t("log.active").replace("{ip}", _lanIp.value))
 
             } catch (e: Exception) {
+                // The service has no screen of its own: a crash here is only visible in
+                // the journal and in the dump written below.
+                RuntimeJournal.record(
+                    this@RuntimeService,
+                    "service start failed: ${e.javaClass.simpleName}: ${e.message}",
+                    tag = "server"
+                )
                 val errorDetails = e.message ?: e.javaClass.simpleName
                 appendLog(t("log.start.failed").replace("{error}", errorDetails))
                 Log.e("Service", "Startup error", e)

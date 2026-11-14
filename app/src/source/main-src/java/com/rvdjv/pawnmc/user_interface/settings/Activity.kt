@@ -50,6 +50,13 @@ class SettingsActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Settings has its own entry point; without this line a crash on this screen and
+        // on the main screen would be indistinguishable in the journal.
+        com.rvdjv.pawnmc.apps_data.data_crash.ActivityJournal.record(
+            applicationContext,
+            "lifecycle",
+            "SettingsActivity.onCreate focus=${intent.getStringExtra(EXTRA_FOCUS_TARGET)}"
+        )
         ContentConfig.getInstance(applicationContext)
         // A compiler switch queued by the previous process is applied (and verified)
         // here, before anything reads the config - see [applyPendingCompilerSwitch].

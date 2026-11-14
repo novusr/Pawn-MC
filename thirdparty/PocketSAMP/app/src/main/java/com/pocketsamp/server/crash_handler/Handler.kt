@@ -21,6 +21,17 @@ class Handler private constructor(private val application: Application) : Thread
         @Volatile
         private var isInstalled = false
 
+        /** Set once a handler in this process has started writing the report. */
+        private var reportStarted = false
+
+        /** True for the one caller that wins the race; false for every later handler. */
+        @Synchronized
+        fun beginReport(): Boolean {
+            if (reportStarted) return false
+            reportStarted = true
+            return true
+        }
+
         fun install(application: Application) {
             if (isInstalled) return
             synchronized(this) {
@@ -66,6 +77,13 @@ class Handler private constructor(private val application: Application) : Thread
     }
 
     override fun uncaughtException(thread: Thread, throwable: Throwable) {
+        // One report per process, however many handlers are chained.
+        //
+        // This handler normally runs last, after PawnMC's own: the host was installed
+        // first and therefore chains into this one. Without the guard, one exception
+        // would produce a host report *and* a PocketSAMP report - two dumps of the same
+        // crash, written twice into the same folder.
+        if (!beginReport()) return
         try {
             Log.e(TAG, "Uncaught exception intercepted in thread [${thread.name}]", throwable)
 
@@ -96,18 +114,30 @@ class Handler private constructor(private val application: Application) : Thread
             )
 
             /*
-             * Save crash report persistently to disk
+             * Save crash report persistently to disk: the host's public folder with a
+             * `.dmp` when PawnMC installed its reporter, the private folder otherwise.
              */
-            Manager.saveCrash(application, report)
+            val savedReport = Manager.saveCrash(application, report)
 
             /*
-             * Launch dedicated CrashDialog in a clean isolated task
+             * Launch dedicated CrashDialog in a clean isolated task.
+             *
+             * Only inside the PawnMC host: the dialog lives in PocketSAMP's own `:crash`
+             * process, and starting that from a host crash screen would replace the
+             * system UI for a report the host already shows. Standalone PocketSAMP keeps
+             * the upstream behaviour.
              */
-            val intent = Intent(application, CrashDialog::class.java).apply {
-                putExtra(EXTRA_CRASH_ID, crashId)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            if (savedReport.isFile) {
+                val intent = Intent(application, CrashDialog::class.java).apply {
+                    putExtra(EXTRA_CRASH_ID, crashId)
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    )
+                }
+                runCatching { application.startActivity(intent) }
             }
-            application.startActivity(intent)
 
         } catch (e: Exception) {
             Log.e(TAG, "Fatal failure inside Handler", e)

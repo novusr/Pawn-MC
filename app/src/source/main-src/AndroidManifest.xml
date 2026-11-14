@@ -29,7 +29,13 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
 
+    <!--
+      android:name points at PawnMCApplication, which installs the crash handler and the
+      activity journal before any activity exists. Without it a crash during startup - the
+      most common kind - leaves no report at all.
+    -->
     <application
+        android:name=".PawnMCApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"

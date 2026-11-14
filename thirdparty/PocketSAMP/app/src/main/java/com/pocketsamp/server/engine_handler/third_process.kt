@@ -14,6 +14,12 @@ class ThirdProcess(
     private val tag: String,
     var onExit: ((exitCode: Int) -> Unit)? = null
 ) {
+    /**
+     * Extra sink for lifecycle facts that matter after a crash, above all an abnormal
+     * exit code. A native binary killed by a signal leaves no Java exception, so this
+     * line is the only trace of it; the host wires it into the activity journal.
+     */
+    var launchProcessJournalSink: ((message: String) -> Unit)? = null
     private var process: Process? = null
     private var job: Job? = null
 
@@ -84,6 +90,19 @@ class ThirdProcess(
                 } finally {
                     val exitVal = proc.waitFor()
                     _logs.tryEmit("[$tag] Process exited with code $exitVal")
+                    // A native server that dies on a signal (SIGSEGV 11, SIGABRT 6, …)
+                    // produces no Java exception and therefore no dump; the exit code is
+                    // the only evidence, so it is recorded as a crash-shaped journal
+                    // line and the server log file next to the binary is kept.
+                    if (exitVal != 0) {
+                        _logs.tryEmit(
+                            "[$tag] Abnormal exit $exitVal (${describeExit(exitVal)}); " +
+                                "see the server log in ${workingDir.absolutePath}"
+                        )
+                        launchProcessJournalSink?.invoke(
+                            "abnormal exit $exitVal (${describeExit(exitVal)}) in ${workingDir.absolutePath}"
+                        )
+                    }
                     onExit?.invoke(exitVal)
                 }
             }
@@ -93,6 +112,18 @@ class ThirdProcess(
             _logs.tryEmit("[$tag] Failed to start: ${e.message}")
             return false
         }
+    }
+
+    /** Human-readable meaning of a Java process exit code (128+N = killed by signal N). */
+    private fun describeExit(code: Int): String = when (code) {
+        128 + 11 -> "SIGSEGV"
+        128 + 6 -> "SIGABRT"
+        128 + 9 -> "SIGKILL"
+        128 + 4 -> "SIGILL"
+        128 + 8 -> "SIGFPE"
+        128 + 7 -> "SIGBUS"
+        in 129..192 -> "signal ${code - 128}"
+        else -> "non-zero exit"
     }
 
     fun stop() {

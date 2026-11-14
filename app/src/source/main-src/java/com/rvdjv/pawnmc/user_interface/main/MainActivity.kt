@@ -106,6 +106,36 @@ class MainActivity : ComponentActivity() {
         MainViewModelFactory(applicationContext)
     }
 
+    override fun onStart() {
+        super.onStart()
+        journal("lifecycle", "MainActivity.onStart")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        journal("lifecycle", "MainActivity.onResume")
+    }
+
+    override fun onPause() {
+        journal("lifecycle", "MainActivity.onPause")
+        super.onPause()
+    }
+
+    override fun onStop() {
+        journal("lifecycle", "MainActivity.onStop")
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        journal("lifecycle", "MainActivity.onDestroy finishing=$isFinishing")
+        super.onDestroy()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        journal("lifecycle", "MainActivity.onNewIntent action=${intent.action}")
+    }
+
     /**
      * Editor view model scoped to the activity, not to the editor screen.
      *
@@ -125,11 +155,19 @@ class MainActivity : ComponentActivity() {
      */
     private val startupScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    /** Journal helper: one call per lifecycle step, no context plumbing at every site. */
+    private fun journal(tag: String, message: String) =
+        com.rvdjv.pawnmc.apps_data.data_crash.ActivityJournal.record(this, tag, message)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initialUri = intent.data
         pendingXedRequest = xedRequest(intent)
         launchedForXed = pendingXedRequest != null
+        journal(
+            "lifecycle",
+            "MainActivity.onCreate uri=${initialUri != null} xedShortcut=$launchedForXed restored=${savedInstanceState != null}"
+        )
 
     // The compiler libraries now ship as one archive per ABI inside the APK and live
     // in Documents/PawnMC/library/<abi>/ afterwards. Point the compiler at that folder
@@ -193,6 +231,13 @@ class MainActivity : ComponentActivity() {
                 }
 
                 var isEditorOpen by remember { mutableStateOf(launchedForXed) }
+                LaunchedEffect(isEditorOpen) {
+                    com.rvdjv.pawnmc.apps_data.data_crash.ActivityJournal.record(
+                        context = applicationContext,
+                        tag = "editor",
+                        message = if (isEditorOpen) "Xed editor opened" else "Xed editor closed"
+                    )
+                }
                 // Null until the PocketSAMP shortcut finishes; null means "not a shortcut".
                 // While it is false nothing is composed, which is what removes the main screen
                 // flash between the tap and the editor.

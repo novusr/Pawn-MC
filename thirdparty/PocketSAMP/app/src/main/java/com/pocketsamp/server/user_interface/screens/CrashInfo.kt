@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Save
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.crash_handler.Manager
 import com.pocketsamp.server.crash_handler.Report
@@ -177,6 +179,54 @@ fun _CrashInfo(
     }
 }
 
+/**
+ * Shows the `.dmp` paired with a report: its name, and the folder it sits in.
+ *
+ * The dump is the file a support person opens in a debugger; the text report on this
+ * screen is only the summary, so the two are always shown together.
+ */
+@Composable
+private fun ReportDumpRow(report: Report) {
+    val dumpPath = remember(report.id) { Manager.dumpFor(report) }
+    if (dumpPath == null) return
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Save,
+            contentDescription = null,
+            tint = SampThemeColors.accent,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.size(6.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "Minidump: ${dumpPath.name}",
+                color = SampThemeColors.textPrimary,
+                fontSize = 11.sp,
+                fontFamily = FontFamily.Monospace,
+                maxLines = 1
+            )
+            Text(
+                text = dumpPath.parent ?: "",
+                color = SampThemeColors.textMuted,
+                fontSize = 10.sp,
+                fontFamily = FontFamily.Monospace,
+                maxLines = 1
+            )
+        }
+        Text(
+            text = "${dumpPath.length() / 1024} KB",
+            color = SampThemeColors.textMuted,
+            fontSize = 10.sp,
+            fontFamily = FontFamily.Monospace
+        )
+    }
+}
+
 @Composable
 private fun CrashDetailView(
     report: Report,
@@ -283,6 +333,13 @@ private fun CrashDetailView(
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace
                 )
+
+                /*
+                 * Where the dump of this crash lives. The report file carries it in its
+                 * trailing block, written by the host; a report from an older build has
+                 * none, and the row is simply not drawn.
+                 */
+                ReportDumpRow(report = report)
             }
         }
 

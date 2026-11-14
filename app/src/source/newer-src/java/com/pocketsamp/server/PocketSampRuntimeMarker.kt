@@ -20,6 +20,19 @@ internal object PocketSampRuntimeMarker
 internal object NewerPocketSampHook : PocketSampGateway.PocketSampHook {
 
     override fun install(context: Context, onConsoleLine: ((String) -> Unit)?) {
+        // Crash reports go to Documents/PawnMC/crashreport as a `.dmp` plus a text
+        // report, instead of PocketSAMP's private folder. Installed before the runtime's
+        // handler can intercept anything.
+        runCatching {
+            com.pocketsamp.server.crash_handler.Manager.installReporter(PocketSampCrashBridge)
+            PocketSampCrashBridge.attach(context.applicationContext)
+            // The runtime's own activities and service report their state into the same
+            // journal the host uses, so a crash anywhere in the process reads as one
+            // timeline instead of two disconnected logs.
+            com.pocketsamp.server.crash_handler.RuntimeJournal.install { ctx, tag, message ->
+                com.rvdjv.pawnmc.apps_data.data_crash.ActivityJournal.record(ctx, tag, message)
+            }
+        }
         ServerApp.install(context)
         if (onConsoleLine != null) {
             com.pocketsamp.server.service_handler.RuntimeService.setConsoleLogSink(onConsoleLine)
