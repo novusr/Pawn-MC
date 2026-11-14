@@ -107,6 +107,53 @@ documentation and guides on how to use this application and set up your mobile w
 See the project roadmap in ``ROADMAP.rst`` for a full architecture overview, feature
 breakdown, and file-by-file analysis of the current codebase.
 
+Folder-level notes live next to the code they describe, each as a ``README.rst`` inside
+the folder. Read the one for a directory before changing it; they record the rules that
+are not visible from the code alone.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 45 55
+
+   * - Folder
+     - What its ``README.rst`` explains
+   * - ``app/src/source/main-src/java/…/apps_data``
+     - The data layer and the flavor boundary; index of the subpackages below.
+   * - ``…/apps_data/data_config``
+     - Preferences, the JSON mirror, storage paths and localisation — the three stores.
+   * - ``…/apps_data/data_compiler``
+     - Kotlin side of the compiler: facade, runner, JNI bridge and where each belongs.
+   * - ``…/apps_data/data_syntax``
+     - Pawn symbol tables and the ``_internal.toml`` source of truth.
+   * - ``…/apps_data/data_logging``
+     - Which log store answers which question, and why they are not merged.
+   * - ``…/apps_data/data_crash``
+     - The crash handler, the ``.dmp`` writer and the activity journal.
+   * - ``…/user_interface/main``
+     - The host activity, the one-page main screen and its view model.
+   * - ``…/user_interface/settings``
+     - Settings, plus the compiler-switch restart state machine.
+   * - ``…/user_interface/widget``
+     - The shared scroll sidebar and its copy in the PocketSAMP module.
+   * - ``…/user_interface/editor/xedapi``
+     - The Sora editor screen, its two buffer modes and the explain injector.
+   * - ``…/user_interface/editor/workspace``
+     - The workspace session: tabs, folder scanning, persistence and caps.
+   * - ``…/user_interface/editor/syntax``
+     - The Pawn and ``server.cfg`` highlighters and how a file picks one.
+   * - ``…/user_interface/editor/portal``
+     - The Developer Portal console: parsing, dispatch and how to add a command.
+   * - ``app/src/source/newer-src`` / ``nougat-src``
+     - The per-flavor overlays and what shared code may not reference from them.
+   * - ``thirdparty/PocketSAMP/app/src/main/java/com/pocketsamp/server``
+     - The embedded runtime: engines, service, screens, crash path and its seams.
+   * - ``native/test``
+     - The Android test source sets, including the retired ``.bak`` tests.
+   * - ``clone``
+     - The prebuilt emulator libraries: what they are and what does **not** use them.
+
+``native/cpp`` and ``configuration`` already carry their own notes.
+
 Installation
 ------------
 
