@@ -751,11 +751,11 @@ ru = "Pri vybore fajla PawnMC vybiraet odnu papku include v takom poryadke: 'paw
 es = "Cuando se elige un archivo, PawnMC selecciona una carpeta de include en este orden: 'pawno/include', 'qawno/include' y luego 'includes'."
 
 [settings.include.extension.stripped]
-id = "Ekstensi script (.pawn, .pwn, .p, .inc) dihapus otomatis dan path disimpan sebagai:"
-en = "The script extension (.pawn, .pwn, .p, .inc) was removed automatically and the path was saved as:"
-tl = "Awtomatikong inalis ang extension ng script (.pawn, .pwn, .p, .inc) at na-save ang path bilang:"
-ru = "Rasshirenie skripta (.pawn, .pwn, .p, .inc) bylo avtomaticheski udaleno, a put sokhranyon kak:"
-es = "La extension del script (.pawn, .pwn, .p, .inc) se elimino automaticamente y la ruta se guardo como:"
+id = "Kamu baru saja menambahkan lokasi sebagai berikut:"
+en = "You just added the following location:"
+tl = "Idinagdag mo lang ang sumusunod na lokasyon:"
+ru = "Ty tolko chto dobavil sleduyushchee raspolozhenie:"
+es = "Acabás de agregar la siguiente ubicación:"
 
 [settings.include.extension.list]
 id = ".pawn, .pwn, .p, .inc"
