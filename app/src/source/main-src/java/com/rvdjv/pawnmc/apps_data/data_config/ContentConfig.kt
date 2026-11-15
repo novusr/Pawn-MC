@@ -268,20 +268,6 @@ class ContentConfig private constructor(context: Context) {
         }
 
     /**
-     * Marks "Ignore case" as having been switched on by the automatic
-     * `cannot read from file` detection instead of by the user.
-     *
-     * The flag travels with [n_ignore_case]: the compile that runs after the
-     * automatic switch-on consumes it and drops both the flag and the switch, so
-     * a user-set "Ignore case" stays untouched while an automatic one behaves
-     * like a one-shot instruction. It is deliberately not mirrored to the JSON
-     * file - it only has to outlive a single failed compile.
-     */
-    var n_ignore_case_auto: Boolean
-        get() = prefs.getBoolean(KEY_IGNORE_CASE_AUTO, false)
-        set(value) = prefs.edit { putBoolean(KEY_IGNORE_CASE_AUTO, value) }
-
-    /**
      * Marks "Explain output" as having been switched on by the automatic
      * consecutive-failure detection instead of by the user.
      *
@@ -653,7 +639,7 @@ class ContentConfig private constructor(context: Context) {
         internal const val KEY_LAST_FILE        = "last_sel_file"
         internal const val KEY_LAST_FILE_URI    = "last_sel_file_uri"
         private const val KEY_CASE_BACKUP_DIR  = "case_insensitive_backup_dir"
-        private const val KEY_IGNORE_CASE_AUTO = "ignore_case_auto"
+
         private const val KEY_EXPLAIN_AUTO = "explain_output_auto"
         internal const val KEY_SEMICOLONS       = "semicolons"
         internal const val KEY_PARENTHESES      = "parentheses"

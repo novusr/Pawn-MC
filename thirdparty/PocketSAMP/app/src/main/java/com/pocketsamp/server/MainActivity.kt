@@ -66,7 +66,7 @@ import com.pocketsamp.server.engine_handler.ThirdExtractor
 import com.pocketsamp.server.engine_handler.ThirdRuntime
 import com.pocketsamp.server.service_handler.RuntimeService
 import com.pocketsamp.server.service_handler.Status
-import com.pocketsamp.server.user_interface.screens._Config
+import com.pocketsamp.server.user_interface.screens._Configuration
 import com.pocketsamp.server.user_interface.screens._Console
 import com.pocketsamp.server.user_interface.screens._CrashInfo
 import com.pocketsamp.server.user_interface.screens._Dashboard
@@ -362,7 +362,7 @@ class MainActivity : ComponentActivity() {
                             lang = lang
                         )
                         AppTab.CRASHES -> _CrashInfo()
-                        AppTab.CONFIG -> _Config()
+                        AppTab.CONFIG -> _Configuration()
                         AppTab.HELP -> _Help(lang = lang)
                     }
                 }

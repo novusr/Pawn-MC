@@ -155,11 +155,9 @@ object Runner {
             n_config.n_explain_auto = true
         }
 
-        if (!n_config.n_ignore_case && CANNOT_READ_FROM_FILE_REGEX.containsMatchIn(output)) {
-            Log.i("Compiler", "Auto-assist: 'cannot read from file' detected, enabling Ignore case for the next compile")
-            n_config.n_ignore_case = true
-            n_config.n_ignore_case_auto = true
-        }
+        // 'Ignore case' is strictly manual: it rewrites whole folders on disk,
+        // so it is never switched on automatically, not even as a one-shot
+        // assist after a 'cannot read from file' failure.
     }
 
     /**
@@ -358,11 +356,8 @@ object Runner {
             n_config.n_explain_auto = false
         }
 
-        if (manualArguments && n_config?.n_ignore_case_auto == true) {
-            Log.i("Compiler", "Auto-assist: disabling the temporary Ignore case instruction")
-            n_config.n_ignore_case = false
-            n_config.n_ignore_case_auto = false
-        }
+        // ('Ignore case' has no automatic assist anymore — see
+        // applyAutomaticFailureToggles — so nothing to drop here.)
 
         val n_args = if (manualArguments) {
             compilerArgumentsForManual(sourceFile, options)

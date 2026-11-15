@@ -159,7 +159,7 @@ Source layout
         service/
             RuntimeService.kt    foreground service, wakelocks, notification
         ui/
-            screens/             Dashboard, Console, Database, Crash logs, Config,
+            screens/             Dashboard, Console, Database, Crash logs, Configuration,
                                  phpMyAdmin browser
             theme/               colour ramp and typography
 

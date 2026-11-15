@@ -108,9 +108,17 @@ fun _Console(
         }
 
         /*
-         * Simple console card: one flat semi-dark surface, no decorative
-         * chrome. A slim scrollbar rides the right edge so long logs can be
-         * dragged through without flinging blind.
+         * Log card: one flat semi-dark surface, no decorative chrome. A slim
+         * scrollbar rides the right edge so long logs can be dragged through
+         * without flinging blind.
+         *
+         * Every line keeps its own colour rule regardless of palette: danger,
+         * warn, success and $System accents all resolve against
+         * [SampThemeColors], so the light theme gets dark-text variants instead
+         * of plain text. Lines are keyed by index, which makes recomposition
+         * deterministic — newly appended rows reuse exact slot colours instead
+         * of items drifting into the wrong tint (the "only one or two rows
+         * coloured" glitch when logs streamed in fast).
          */
         Row(
             modifier = Modifier
@@ -139,7 +147,10 @@ fun _Console(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        itemsIndexed(logs) { _, line ->
+                        itemsIndexed(logs, key = { index, _ -> "log-$index" }) { _, line ->
+                            /* Colour is decided per-composition from the whole
+                             * line so light/dark palettes both always tint it;
+                             * keys keep recomposition deterministic (see below). */
                             val lineColor = when {
                                 line.contains("error", ignoreCase = true) || line.contains("failed", ignoreCase = true) -> SampThemeColors.danger
                                 line.contains("loaded", ignoreCase = true) || line.contains("success", ignoreCase = true) -> SampThemeColors.success

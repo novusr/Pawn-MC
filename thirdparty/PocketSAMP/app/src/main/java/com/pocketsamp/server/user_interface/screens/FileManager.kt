@@ -117,7 +117,6 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
     var operationError by remember { mutableStateOf<String?>(null) }
     var serverConfigExists by remember { mutableStateOf(false) }
     var refreshToken by remember { mutableStateOf(0) }
-    var requestedInitialFolder by remember { mutableStateOf(false) }
     var action by remember { mutableStateOf<FileAction?>(null) }
     var selectedEntry by remember { mutableStateOf<File?>(null) }
     /** Folder a create action was started from, frozen when the dialog opens. */
@@ -182,6 +181,8 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val uri = result.data?.data
+        /* Only runs when the user taps the open-folder button themselves; the
+         * screen never opens the picker on its own anymore. */
         if (uri != null) {
             runCatching {
                 context.contentResolver.takePersistableUriPermission(
@@ -203,13 +204,6 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                 selectedFolder = null
                 operationError = null
             }
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        if (!_DirectoryManager.hasCustomServerDirectory(context) && !requestedInitialFolder) {
-            requestedInitialFolder = true
-            folderPicker.launch(pocketsampFolderPickerIntent())
         }
     }
 

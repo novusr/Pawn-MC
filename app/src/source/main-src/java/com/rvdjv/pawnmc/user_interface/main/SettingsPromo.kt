@@ -116,7 +116,7 @@ internal fun SettingsPromoCard(
             title = text("main.promo.ignorecase.title", "Filesystem"),
             description = text(
                 "main.promo.ignorecase.desc",
-                "Back a folder up and lowercase its names and #include references once, for projects written on Windows."
+                "Optional, manual-only: backs a folder up and lowercases its names and #include references once, for projects written on Windows. Never switches on by itself."
             ),
             target = SettingsTarget.Filesystem
         ),

@@ -1,4 +1,4 @@
-package com.pocketsamp.server.configuration
+package com.pocketsamp.server.configuration.Parameters
 
 /**
  * Every `server.cfg` parameter this runner understands, for the read-only

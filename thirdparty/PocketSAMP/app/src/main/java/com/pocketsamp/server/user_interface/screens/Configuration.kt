@@ -18,7 +18,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
 import com.pocketsamp.server.Locales
-import com.pocketsamp.server.configuration.ConfigParameters
+import com.pocketsamp.server.configuration.Parameters.ConfigParameters
 import com.pocketsamp.server.configuration.Reader
 import com.pocketsamp.server.configuration._DirectoryManager
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
@@ -38,7 +38,7 @@ import java.io.File
  * Xed Editor.
  */
 @Composable
-fun _Config() {
+fun _Configuration() {
     val context = LocalContext.current
     val lang = Locales.current
     fun t(key: String): String = Locales.text(lang, key)

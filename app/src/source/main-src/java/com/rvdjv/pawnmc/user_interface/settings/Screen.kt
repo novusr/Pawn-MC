@@ -820,7 +820,7 @@ fun SettingsScreen(
                     SwitchRow(
                         modifier = Modifier.sectionOffset(sectionOffsets, SettingsTarget.Filesystem),
                         title = localizer.get("settings.option.ignorecase", appLanguage, "Filesystem"),
-                        description = localizer.get("settings.option.ignorecase.desc", appLanguage, "Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."),
+                        description = localizer.get("settings.option.ignorecase.desc", appLanguage, "Toggle manually to enable. This option is never activated automatically by the system. Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."),
                         checked = viewModel.n_ignore_case,
                         onCheckedChange = { viewModel.updateIgnoreCase(it) }
                     )

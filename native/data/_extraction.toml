@@ -436,11 +436,11 @@ ru = "Fajlovaya sistema"
 es = "Sistema de archivos"
 
 [settings.option.ignorecase.desc]
-id = "Mencoba memperbaiki akar masalah 'cannot read from file: ...' akibat perbedaan format filesystem Android dan Windows."
-en = "Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."
-tl = "Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."
-ru = "Pytaetsya ustranit pervoprichinu oshibok 'cannot read from file: ...', vyzvannykh razlichiyami v formatakh fajlovykh sistem Android i Windows."
-es = "Intenta solucionar la causa raíz de los errores 'cannot read from file: ...' provocados por las diferencias entre los formatos de los sistemas de archivos de Android y Windows."
+id = "Klik untuk mengaktifkan konversi case secara manual. Opsi ini tidak pernah aktif otomatis oleh sistem. Mencoba memperbaiki akar masalah 'cannot read from file: ...' akibat perbedaan format filesystem Android dan Windows."
+en = "Toggle manually to enable. This option is never activated automatically by the system. Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."
+tl = "I-toggle nang manu-mano upang paganahin. Hindi kailanman awtomatikong ina-activate ng sistema. Attempts to fix the root cause of 'cannot read from file: ...' errors caused by differences between Android and Windows filesystem formats."
+ru = "Vklyuchite vruchnuyu. Sistema nikogda ne aktiviruet etu opciya avtomaticheski. Pytaetsya ustranit pervoprichinu oshibok 'cannot read from file: ...', vyzvannykh razlichiyami v formatakh fajlovykh sistem Android i Windows."
+es = "Active manualmente para habilitar. El sistema nunca activa esta opción automáticamente. Intenta solucionar la causa raíz de los errores 'cannot read from file: ...' provocados por las diferencias entre los formatos de los sistemas de archivos de Android y Windows."
 
 [settings.option.explain]
 id = "Lihat Penjelasan"
@@ -1424,11 +1424,11 @@ ru = "Fajlovaya sistema"
 es = "Sistema de archivos"
 
 [main.promo.ignorecase.desc]
-id = "Cadangkan sebuah folder lalu ubah namanya dan referensi #include-nya menjadi huruf kecil sekali jalan, untuk proyek yang ditulis di Windows."
-en = "Back a folder up and lowercase its names and #include references once, for projects written on Windows."
-tl = "I-backup ang isang folder at gawing lowercase ang mga pangalan at #include reference nito nang isang beses, para sa project na ginawa sa Windows."
-ru = "Sdelajte rezervnuyu kopiyu papki i odin raz privedite eyo imena i ssylki #include k nizhnemu registru — dlya proektov, napisannykh na Windows."
-es = "Haz una copia de seguridad de una carpeta y pasa sus nombres y referencias #include a minusculas una sola vez, para proyectos escritos en Windows."
+id = "Opsional dan manual saja: cadangkan sebuah folder lalu ubah namanya dan referensi #include-nya menjadi huruf kecil sekali jalan, untuk proyek yang ditulis di Windows. Tidak pernah aktif dengan sendirinya."
+en = "Optional and manual-only: backs a folder up and lowercases its names and #include references once, for projects written on Windows. Never switches on by itself."
+tl = "Opsyonal at manu-mano lang: i-backup ang isang folder at gawing lowercase ang mga pangalan at #include reference nito nang isang beses, para sa project na ginawa sa Windows. Hindi kailanman nag-o-on mag-isa."
+ru = "Po zhelaniyu i tolko vruchnuyu: sdelajte rezervnuyu kopiyu papki i odin raz privedite eyo imena i ssylki #include k nizhnemu registru — dlya proektov, napisannykh na Windows. Nikogda ne vklyuchaetsya sama."
+es = "Opcional y solo manual: haz una copia de seguridad de una carpeta y pasa sus nombres y referencias #include a minusculas una sola vez, para proyectos escritos en Windows. Nunca se activa por si sola."
 
 [main.promo.explain.title]
 id = "Lihat Penjelasan"
