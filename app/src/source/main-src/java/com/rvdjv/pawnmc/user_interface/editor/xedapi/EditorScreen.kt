@@ -290,7 +290,7 @@ fun EditorScreen(
 
     /**
      * Explainer sync loop: every six minutes - and once right after the screen
-     * opens - the compiled diagnostics JSON is read and the `[explain]` comments
+     * opens - the compiled diagnostics JSON is read and the `[cause]` comments
      * are re-applied to the lines it still covers. Ticks from the compile path
      * run a refresh right away, so the comments appear while the user is still
      * looking at the code, not only after leaving and re-entering the editor.

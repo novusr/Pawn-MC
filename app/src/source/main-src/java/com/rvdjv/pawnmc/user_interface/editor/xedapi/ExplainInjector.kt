@@ -10,12 +10,12 @@ import kotlinx.coroutines.withContext
  * Injects the explainer hints recorded by the compiler run into the open editor.
  *
  * The compiler layer writes `Documents/PawnMC/compiler/injector_data.json` with the
- * file, the damaged line and the localized `[explain]` text; this reader walks
+ * file, the damaged line and the localized `[cause]` text; this reader walks
  * that JSON every cycle and:
  *
- *  1. Appends a trailing `// [explain]: ...` comment to each line the compiler
+ *  1. Appends a trailing `// [cause]: ...` comment to each line the compiler
  *     flagged, when the line is still present in the editor buffer.
- *  2. Removes any trailing `[explain]` comment whose stored line no longer
+ *  2. Removes any trailing `[cause]` comment whose stored line no longer
  *     exists, so a fixed file cleans itself up.
  *
  * A plain comment was chosen over a shadow/gutter overlay on purpose: it needs

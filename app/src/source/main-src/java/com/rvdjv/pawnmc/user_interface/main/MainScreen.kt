@@ -1300,7 +1300,7 @@ internal fun OutputPanel(
 
 
 /**
- * Colour of the `[explain]` marker inside compiler output.
+ * Colour of the `[cause]` marker inside compiler output.
  *
  * The `0xFFF0F070` value comes straight from the palette the workspace panel and the
  * main-screen output panel both reference, so the two interfaces agree on the exact
@@ -1315,7 +1315,7 @@ val ExplainMarkerColor = Color(0xFFF0F070)
 private val EXPLAIN_MARKER_REGEX = Regex("\\[[a-z]+\\]", RegexOption.IGNORE_CASE)
 
 /**
- * Splits [outputText] into plain runs and `[explain]` markers.
+ * Splits [outputText] into plain runs and `[cause]` markers.
  *
  * Returned pairs carry the text and whether that text is a marker; interfaces render
  * the marker runs in [ExplainMarkerColor] (bright and important), and everything else
@@ -1342,7 +1342,7 @@ internal fun splitExplainMarkers(outputText: String): List<Pair<String, Boolean>
 }
 
 /**
- * Builds an [AnnotatedString] of [outputText] with every `[explain]` marker painted
+ * Builds an [AnnotatedString] of [outputText] with every `[cause]` marker painted
  * in [ExplainMarkerColor] and bold, so the hint stands out from the raw compiler
  * log around it while the rest of the text keeps the panel's normal styling.
  */

@@ -16,7 +16,7 @@ import org.json.JSONObject
  *  - `code`     : the message number ("150"), zero-padded form kept too
  *  - `marker`   : which record type ("error" / "warning" / "fatal")
  *  - `message`  : the raw compiler text of that line
- *  - `explainer`: the localized `[explain]` text rendered for that message,
+ *  - `explainer`: the localized `[cause]` text rendered for that message,
  *                 including the `%s` fill from the quoted symbol
  *  - `at`       : wall-clock stamp of the last compile that produced it
  *

@@ -64,10 +64,10 @@ object Explainer {
         )
     }
 
-    /** The `[explain]` marker prefix, localised per app language. */
+    /** The `[cause]` marker prefix, localised per app language. */
     private val EXPLAIN_PREFIX = mapOf(
-        ContentConfig.AppLanguage.ID to "[jelaskan]",
-        ContentConfig.AppLanguage.EN to "[explain]",
+        ContentConfig.AppLanguage.ID to "[alasan]",
+        ContentConfig.AppLanguage.EN to "[cause]",
         ContentConfig.AppLanguage.ES to "[explicar]",
         ContentConfig.AppLanguage.RU to "[obyasnenie]",
         ContentConfig.AppLanguage.TL to "[paliwanag]",
@@ -129,9 +129,9 @@ object Explainer {
             .trim()
     }
 
-    /** Localised `[explain]` marker for [language]. */
+    /** Localised `[cause]` marker for [language]. */
     internal fun explainMarker(language: ContentConfig.AppLanguage): String =
-        EXPLAIN_PREFIX[language] ?: "[explain]"
+        EXPLAIN_PREFIX[language] ?: "[cause]"
 
     /**
      * True when [output] carries an `undefined symbol` hit naming [symbol].
@@ -185,7 +185,7 @@ object Explainer {
             lines.forEach { line ->
                 builder.appendLine(line)
                 // Every located error/warning also goes to the JSON the xed
-                // editor later reads, so its `[explain]` hints match this run.
+                // editor later reads, so its `[cause]` hints match this run.
                 locatedDiagnostic(line, n_language, marker)?.let { located.add(it) }
                 val match = COMPILER_MESSAGE_REGEX.find(line)
                 if (match != null) {
