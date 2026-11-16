@@ -954,11 +954,11 @@ ru = "Vybrat fajl"
 es = "Elegir archivo"
 
 [main.output.title]
-id = "...."
-en = "...."
-tl = "...."
-ru = "...."
-es = "...."
+id = "........."
+en = "........."
+tl = "........."
+ru = "........."
+es = "........."
 
 [main.output.actions]
 id = "Aksi"
