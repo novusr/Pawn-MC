@@ -81,8 +81,10 @@ internal fun buildEditorScheme(
     base.setColor(EditorColorScheme.LINE_DIVIDER, outline)
     base.setColor(EditorColorScheme.BLOCK_LINE, outline)
     base.setColor(EditorColorScheme.CURRENT_LINE, faint)
-    base.setColor(EditorColorScheme.SCROLL_BAR_TRACK, lineNumberBackground)
-    base.setColor(EditorColorScheme.SCROLL_BAR_THUMB, outline)
+    // The gutter scrollbar is drawn by `GutterScrollbar`, so sora's built-in bars stay
+    // transparent: two bars over each other would fight for the same edge.
+    base.setColor(EditorColorScheme.SCROLL_BAR_TRACK, 0x00000000)
+    base.setColor(EditorColorScheme.SCROLL_BAR_THUMB, 0x00000000)
     return base
 }
 
@@ -111,6 +113,11 @@ private fun applyVividSyntaxPalette(scheme: EditorColorScheme, darkCanvas: Boole
     scheme.setColor(EditorColorScheme.ANNOTATION, p.annotation)
     scheme.setColor(EditorColorScheme.COMMENT, p.comment)
     scheme.setColor(EditorColorScheme.LINE_NUMBER, p.lineNumber)
+
+    // `BRACKET`, `STRING`, `NUMBER` and `COMMENT_KEYWORD` do not exist in the bundled sora
+    // version. The analyzer therefore reaches its extra hues through the slots above:
+    // `ANNOTATION` carries the dense orange for brackets, `LITERAL` serves strings and
+    // numbers, and `KEYWORD` serves directives and comment keywords.
     // Plain identifiers (variables, labels) inherit the scheme's text colour, so
     // it has to be re-pointed at the canvas as well. Without this a custom dark
     // canvas under a light app theme would render every variable dark-on-dark.
@@ -121,11 +128,11 @@ private fun applyVividSyntaxPalette(scheme: EditorColorScheme, darkCanvas: Boole
 }
 
 /**
- * Token colours for the dark canvas.
+ * Token colours for one canvas.
  *
- * Hues are chosen so adjacent kinds never share a family: keywords are amber,
- * types are cyan, literals are orange, functions are blue, operators are
- * magenta, annotations are violet and comments are neutral grey.
+ * Every hue is warm and each kind keeps its own family - keywords amber, functions gold,
+ * types peach, strings tangerine, brackets a dense orange - so no two kinds read as the
+ * same colour while the page as a whole stays in the orange/yellow band.
  */
 private data class SyntaxPalette(
     val keyword: Int,
@@ -135,18 +142,30 @@ private data class SyntaxPalette(
     val operator: Int,
     val annotation: Int,
     val comment: Int,
-    val lineNumber: Int
+    val lineNumber: Int,
+    val tag: Int
 )
 
+/**
+ * Warm dark palette.
+ *
+ * The blues and violets this scheme used to carry are gone: keywords are bright amber,
+ * functions a warm gold, types a soft peach and strings a deep tangerine, while brackets -
+ * `(`, `)`, `{`, `}` - get their own saturated orange so structural characters stand out
+ * from both keywords and operators. Numbers lean to a warm rose and comments to a warm
+ * grey-green, which keeps the text readable without introducing a cold hue again.
+ */
 private val DarkPalette = SyntaxPalette(
-    keyword = 0xFFFFD866.toInt(),
-    type = 0xFF6FE3F5.toInt(),
-    literal = 0xFFFFB07C.toInt(),
-    function = 0xFF8AB4F8.toInt(),
-    operator = 0xFFE6A8FF.toInt(),
-    annotation = 0xFF7EE081.toInt(),
-    comment = 0xFF9CA3AF.toInt(),
-    lineNumber = 0xFF7E8CA3.toInt()
+    keyword = 0xFFFFC94A.toInt(),
+    type = 0xFFFFB07C.toInt(),
+    literal = 0xFFFF8A5B.toInt(),
+    function = 0xFFFFD27A.toInt(),
+    operator = 0xFFFF7A00.toInt(),
+    // Brackets are painted through this slot, so it carries the dense orange.
+    annotation = 0xFFFF7A00.toInt(),
+    comment = 0xFF8E9B87.toInt(),
+    lineNumber = 0xFF9C8B72.toInt(),
+    tag = 0xFFFFA94D.toInt()
 )
 
 /**
@@ -163,13 +182,16 @@ private val DarkPalette = SyntaxPalette(
  */
 private val LightPalette = SyntaxPalette(
     keyword = 0xFFB45309.toInt(),
-    type = 0xFF0E7490.toInt(),
-    literal = 0xFFDC2626.toInt(),
-    function = 0xFF2563EB.toInt(),
-    operator = 0xFF9333EA.toInt(),
-    annotation = 0xFF16A34A.toInt(),
-    comment = 0xFF6E7681.toInt(),
-    lineNumber = 0xFF77828F.toInt()
+    type = 0xFF9A3412.toInt(),
+    literal = 0xFFB91C1C.toInt(),
+    function = 0xFFA16207.toInt(),
+    operator = 0xFFC2410C.toInt(),
+    // Brackets (and `=` / `;` in a server.cfg) use this slot: the heaviest orange of the
+    // palette, so structure reads differently from every word around it.
+    annotation = 0xFFC2410C.toInt(),
+    comment = 0xFF7A7166.toInt(),
+    lineNumber = 0xFF8A7A66.toInt(),
+    tag = 0xFFB45309.toInt()
 )
 
 /**

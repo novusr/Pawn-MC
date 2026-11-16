@@ -19,6 +19,24 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
 
+    <!--
+      Folder pickers offered before the server root is chosen. Package visibility
+      must be declared for Android 11+: without it the getPackageInfo() probe in
+      FileManager reports every manager as missing and the chooser never appears.
+    -->
+    <queries>
+        <package android:name="com.zarchiver" />
+        <package android:name="com.zarchiver.pro" />
+        <!-- Old package id kept: 0.9.x shipped under it and still answers the intent. -->
+        <package android:name="ru.zdevs.zarchiver" />
+        <package android:name="com.speedsoftware.rootexplorer" />
+        <package android:name="com.alphainventor.filemanager" />
+        <package android:name="com.mixplorer" />
+        <intent>
+            <action android:name="android.intent.action.OPEN_DOCUMENT_TREE" />
+        </intent>
+    </queries>
+
     <application tools:node="merge">
 
         <!--

@@ -110,6 +110,9 @@ import com.rvdjv.pawnmc.user_interface.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.user_interface.filebrowser.FileBrowserMode
 import com.rvdjv.pawnmc.user_interface.theme.PawnMCTheme
 import com.rvdjv.pawnmc.user_interface.theme.DarkSectionContainer
+import com.rvdjv.pawnmc.user_interface.common.OverlayScrollbar
+import com.rvdjv.pawnmc.user_interface.common.LazyListScrollbar
+import com.rvdjv.pawnmc.user_interface.common.lineCountOf
 import com.rvdjv.pawnmc.user_interface.theme.status_error
 import com.rvdjv.pawnmc.user_interface.theme.status_error_container
 import com.rvdjv.pawnmc.user_interface.theme.status_idle
@@ -485,10 +488,16 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
-        LazyColumn(
-            state = listState,
+        Box(
             modifier = Modifier
                 .padding(innerPadding)
+                .fillMaxSize()
+        ) {
+        LazyColumn(
+            state = listState,
+            // Trailing room for the scrollbar lane, so no card is covered by it.
+            contentPadding = PaddingValues(end = 20.dp),
+            modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = SpaceL)
         ) {
@@ -759,6 +768,16 @@ fun MainScreen(
             }
 
             item { Spacer(modifier = Modifier.height(SpaceL)) }
+        }
+        // Main-interface scrollbar: floats on the trailing edge of the screen, beside the
+        // list. The numbers above and below the thumb are the first and last item it
+        // covers, so it reads the same way as the editor's gutter bar.
+        LazyListScrollbar(
+            state = listState,
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 2.dp)
+        )
         }
     }
 
@@ -1283,17 +1302,28 @@ internal fun OutputPanel(
                 )
             }
 
-            Text(
-                text = explainHighlightedText(outputText),
-                fontFamily = FontFamily.Monospace,
-                fontStyle = if (outputText == OUTPUT_PLACEHOLDER) FontStyle.Italic else FontStyle.Normal,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(scrollState)
-                    .padding(SpaceM)
-            )
+            // The output text and its scrollbar share a Box: the bar floats over the
+            // trailing padding, so the log keeps the whole width and the thumb still has
+            // a lane of its own. Its two numbers are the first and last line the thumb
+            // covers, the same reading the Xed gutter bar gives.
+            Box(modifier = Modifier.fillMaxSize()) {
+                Text(
+                    text = explainHighlightedText(outputText),
+                    fontFamily = FontFamily.Monospace,
+                    fontStyle = if (outputText == OUTPUT_PLACEHOLDER) FontStyle.Italic else FontStyle.Normal,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(SpaceM)
+                        .padding(end = 24.dp)
+                )
+                OverlayScrollbar(
+                    state = scrollState,
+                    unitCount = lineCountOf(outputText)
+                )
+            }
         }
     }
 }

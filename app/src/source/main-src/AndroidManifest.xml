@@ -29,6 +29,27 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
 
+    <!--
+      Folder pickers offered next to the built-in and system ones (include paths, Xed
+      workspace). Package visibility has to be declared here: from Android 11 on,
+      getPackageInfo() for an undeclared package reports "not installed", which made
+      the third-party choices unreachable.
+    -->
+    <queries>
+        <package android:name="com.zarchiver" />
+        <package android:name="com.zarchiver.pro" />
+        <package android:name="ru.zdevs.zarchiver" />
+        <package android:name="com.speedsoftware.rootexplorer" />
+        <package android:name="com.alphainventor.filemanager" />
+        <package android:name="com.mixplorer" />
+        <intent>
+            <action android:name="android.intent.action.OPEN_DOCUMENT_TREE" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.GET_CONTENT" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"

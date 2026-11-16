@@ -120,11 +120,18 @@ object Compiler {
         version: ContentConfig.CompilerVersion
     ): List<String> = Runner.compilerArgumentsForVersion(sourceFile, options, version)
 
+    /**
+     * Attaches explanations to [rawText] and refreshes `injector_data.json`.
+     *
+     * [sourcePath] names the file that was just compiled; it is what lets a clean run
+     * retire that file's pending hints without touching the comments the user kept.
+     */
     fun explainCompilerOutput(
         rawText: String,
         cacheDir: File,
-        language: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
-    ): String = Explainer.explainCompilerOutput(rawText, cacheDir, language)
+        language: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN,
+        sourcePath: String? = null
+    ): String = Explainer.explainCompilerOutput(rawText, cacheDir, language, sourcePath)
 
     /**
      * Returns the last captured compiler output from the native layer.
@@ -132,6 +139,20 @@ object Compiler {
      * @return output string or empty when not initialized
      */
     fun getCapturedOutput(): String = Runner.getCapturedOutput()
+
+    /**
+     * True when [output] carries a located error/warning of the Pawn compilers.
+     *
+     * Used by the editor to decide whether a finished run has anything for the
+     * explainer to analyse: "shown only when warnings or errors exist" is expressed by
+     * this predicate, while the JSON is still refreshed on every run so the hints
+     * recorded by an earlier run keep their state.
+     */
+    fun hasLocatedDiagnostics(output: String): Boolean =
+        output.lineSequence().any { line -> LOCATED_DIAGNOSTIC.containsMatchIn(line) }
+
+    private val LOCATED_DIAGNOSTIC =
+        Regex("""\(\d+\)\s*:?\s*(?i:warning|error|fatal)\s+\d+""")
 
     /**
      * Returns the last captured compiler errors from the native layer.

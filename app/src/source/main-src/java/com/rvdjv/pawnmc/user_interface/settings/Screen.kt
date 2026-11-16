@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -101,8 +102,16 @@ import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_update.UpdateManager
 import com.rvdjv.pawnmc.apps_data.data_update.UpdateStatus
 import com.rvdjv.pawnmc.user_interface.main.SettingsTarget
-import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFolderPickerIntent
+import com.rvdjv.pawnmc.user_interface.editor.workspace.BuiltInFolderBrowser
+import com.rvdjv.pawnmc.user_interface.editor.workspace.FolderSourceChooserDialog
+import com.rvdjv.pawnmc.user_interface.editor.workspace.IncludePathInfoDialog
+import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFolderPickerIntentAt
+import com.rvdjv.pawnmc.user_interface.editor.workspace.availableThirdPartyFolderPickers
+import com.rvdjv.pawnmc.user_interface.editor.workspace.launchInPackage
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveTreeToFile
+import com.rvdjv.pawnmc.user_interface.common.ScrollStateVerticalScrollbar
+import com.rvdjv.pawnmc.user_interface.common.lineCountOf
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -220,6 +229,14 @@ fun SettingsScreen(
     var showManualRestartDialog by remember { mutableStateOf(false) }
     var editingIncludePathIndex by remember { mutableStateOf<Int?>(null) }
     var addingIncludePath by remember { mutableStateOf(false) }
+    // Include-path interaction: tapping a stored path opens the info dialog, which then
+    // offers the picker; ":+" opens the source chooser first (built-in / system / third party).
+    var infoIncludePath by remember { mutableStateOf<String?>(null) }
+    var showIncludeSourceChooser by remember { mutableStateOf(false) }
+    var pendingIncludeStartDirectory by remember { mutableStateOf<File?>(null) }
+    // Package that should answer the next include folder pick; null = system picker.
+    var pendingIncludePickerPackage by remember { mutableStateOf<String?>(null) }
+    var showBuiltInIncludeBrowser by remember { mutableStateOf(false) }
     var pendingVersion by remember { mutableStateOf<ContentConfig.CompilerVersion?>(null) }
     var updateStatus by remember { mutableStateOf("Checking for updates...") }
     var updateReady by remember { mutableStateOf(false) }
@@ -366,6 +383,7 @@ fun SettingsScreen(
         val isAdding = addingIncludePath
         editingIncludePathIndex = null
         addingIncludePath = false
+        pendingIncludePickerPackage = null
         if (result.resultCode != Activity.RESULT_OK || pickedUri == null) return@rememberLauncherForActivityResult
 
         val resultFlags = result.data?.flags ?: 0
@@ -403,11 +421,30 @@ fun SettingsScreen(
         }
     }
 
-    fun openIncludeFolderPicker(index: Int? = null) {
+    /**
+     * Queues which include entry the next pick belongs to and opens [startDirectory].
+     *
+     * A picked folder only replaces an entry when [index] is given; otherwise it is a new
+     * entry. [startDirectory] is the folder the picker should show first - for a stored
+     * path that is the path itself, so the user lands where they expected.
+     */
+    fun launchIncludeFolderPicker(index: Int?, startDirectory: File?) {
         editingIncludePathIndex = index
         addingIncludePath = index == null
         viewModel.clearIncludePathExtensionNotice()
-        includeFolderPickerLauncher.launch(buildFolderPickerIntent())
+        includeFolderPickerLauncher.launch(
+            buildFolderPickerIntentAt(startDirectory).setPackage(pendingIncludePickerPackage)
+        )
+    }
+
+    fun openIncludeFolderPicker(index: Int? = null, startDirectory: File? = null) {
+        pendingIncludeStartDirectory = startDirectory
+        // Devices with a third-party manager get to pick which app answers; without one
+        // the extra step is skipped entirely.
+        showIncludeSourceChooser = availableThirdPartyFolderPickers(context).isNotEmpty()
+        if (!showIncludeSourceChooser) {
+            launchIncludeFolderPicker(index, startDirectory)
+        }
     }
 
     // Safety net for paths that vanished while the app was running (e.g. the SD card was
@@ -506,12 +543,19 @@ fun SettingsScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        Column(
+        // The content stays in the Scaffold body; the scrollbar is a sibling that overlays
+        // its trailing edge, so the list keeps its full width and the bar still has a lane
+        // of its own (the extra end padding above reserves that lane).
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .verticalScroll(settingsScrollState)
-                .padding(start = 16.dp, end = 16.dp, bottom = 32.dp)
+                .padding(start = 16.dp, end = 30.dp, bottom = 32.dp)
         ) {
             SectionIntro(
                 text = localizer.get(
@@ -1007,7 +1051,11 @@ fun SettingsScreen(
                             PathRow(
                                 path = path,
                                 onClick = {
-                                    openIncludeFolderPicker(index)
+                                    // Tap = inspect first: full path, parent folders and the
+                                    // first folders/files it contains. The picker is only
+                                    // offered from inside that dialog.
+                                    infoIncludePath = path
+                                    editingIncludePathIndex = index
                                 },
                                 onRemoveClick = { viewModel.removeIncludePathAt(index) }
                             )
@@ -1085,7 +1133,7 @@ fun SettingsScreen(
                     ActionRow(
                         text = localizer.get("settings.include.add", appLanguage, "Add Include Path"),
                         icon = Icons.Default.Add,
-                        onClick = { openIncludeFolderPicker() }
+                        onClick = { editingIncludePathIndex = null; openIncludeFolderPicker() }
                     )
                 }
             }
@@ -1526,6 +1574,115 @@ fun SettingsScreen(
                 }
             }
         )
+    }
+
+    // Include path: inspect the stored path first, then optionally hand it to a picker
+    // that starts on that very folder.
+    infoIncludePath?.let { path ->
+        IncludePathInfoDialog(
+            path = path,
+            appLanguage = appLanguage,
+            localizer = localizer,
+            onBrowse = {
+                val storedIndex = viewModel.n_include_paths.indexOf(path)
+                infoIncludePath = null
+                openIncludeFolderPicker(
+                    index = storedIndex.takeIf { it >= 0 },
+                    startDirectory = File(path).takeIf { it.isDirectory }
+                )
+            },
+            onDismiss = {
+                infoIncludePath = null
+                editingIncludePathIndex = null
+            }
+        )
+    }
+
+    if (showIncludeSourceChooser) {
+        val start = pendingIncludeStartDirectory
+        val targetIndex = editingIncludePathIndex
+        FolderSourceChooserDialog(
+            appLanguage = appLanguage,
+            localizer = localizer,
+            onBuiltInPick = {
+                showIncludeSourceChooser = false
+                showBuiltInIncludeBrowser = true
+            },
+            onSystemPick = {
+                showIncludeSourceChooser = false
+                pendingIncludePickerPackage = null
+                launchIncludeFolderPicker(targetIndex, start)
+            },
+            onThirdPartyPick = { target ->
+                showIncludeSourceChooser = false
+                // A package that does not actually answer the tree intent would throw; the
+                // system picker then takes over so the tap never dies silently.
+                pendingIncludePickerPackage = target.packageName
+                // A package without an ACTION_OPEN_DOCUMENT_TREE handler would only fail
+                // asynchronously inside `launch`, so it is resolved (and the fallback taken)
+                // before the explicit launch.
+                val handled = includeFolderPickerLauncher.launchInPackage(
+                    buildFolderPickerIntentAt(start),
+                    target.packageName
+                )
+                if (!handled) {
+                    pendingIncludePickerPackage = null
+                    launchIncludeFolderPicker(targetIndex, start)
+                }
+            },
+            onDismiss = {
+                showIncludeSourceChooser = false
+                editingIncludePathIndex = null
+                addingIncludePath = false
+            }
+        )
+    }
+
+    if (showBuiltInIncludeBrowser) {
+        BuiltInFolderBrowser(
+            startDirectory = pendingIncludeStartDirectory,
+            onFolderSelected = { folder ->
+                showBuiltInIncludeBrowser = false
+                val targetIndex = editingIncludePathIndex
+                val isAdding = addingIncludePath
+                editingIncludePathIndex = null
+                addingIncludePath = false
+                val accepted = when {
+                    targetIndex != null -> viewModel.updateIncludePathAt(targetIndex, folder.absolutePath)
+                    isAdding -> viewModel.addIncludePath(folder.absolutePath)
+                    else -> false
+                }
+                if (!accepted) {
+                    Toast.makeText(
+                        context,
+                        localizer.get("settings.include.rejected", appLanguage, "Path already added or folder not found"),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            },
+            onDismiss = {
+                showBuiltInIncludeBrowser = false
+                editingIncludePathIndex = null
+                addingIncludePath = false
+            }
+        )
+    }
+
+        // Settings scrollbar: its own Box takes the full height and the bar is aligned
+        // inside it, so `Modifier.align` always resolves against a `BoxScope` of this very
+        // call - no dependency on an enclosing Box from the Scaffold body.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(end = 2.dp)
+        ) {
+            ScrollStateVerticalScrollbar(
+                state = settingsScrollState,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxHeight()
+            )
+        }
     }
 }
 

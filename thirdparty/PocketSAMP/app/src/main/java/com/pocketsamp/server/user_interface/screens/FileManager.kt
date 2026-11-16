@@ -107,6 +107,8 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
     var currentDirectory by remember(root.absolutePath) { mutableStateOf(root) }
     // Confirmation gate for the return-to-startpoint button.
     var showResetConfirm by remember { mutableStateOf(false) }
+    // Set when the root-folder button was tapped and more than one picker is installed.
+    var showPickerSource by remember { mutableStateOf(false) }
     var entries by remember { mutableStateOf<List<ManagedFile>>(emptyList()) }
     /** Folders shown with their children; the root starts open. */
     var expandedPaths by remember(root.absolutePath) { mutableStateOf(setOf(root.absolutePath)) }
@@ -409,11 +411,39 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("files.reset.root"), tint = SampThemeColors.accent)
             }
+            // Tapping asks *which* picker first when a third-party manager (ZArchiver and
+            // friends) is installed; without one the system picker opens straight away,
+            // exactly as before.
             IconButton(
                 enabled = !serverActive,
-                onClick = { folderPicker.launch(pocketsampFolderPickerIntent()) }
+                onClick = {
+                    if (pocketsampThirdPartyPickers(context).isNotEmpty()) {
+                        showPickerSource = true
+                    } else {
+                        folderPicker.launch(pocketsampFolderPickerIntent())
+                    }
+                }
             ) {
                 Icon(Icons.Default.FolderOpen, contentDescription = t("files.choose.root"), tint = SampThemeColors.accent)
+            }
+            if (showPickerSource) {
+                PocketSampPickerSourceDialog(
+                    targets = pocketsampThirdPartyPickers(context),
+                    onSystemPick = {
+                        showPickerSource = false
+                        folderPicker.launch(pocketsampFolderPickerIntent())
+                    },
+                    onPackagePick = { packageName ->
+                        showPickerSource = false
+                        val explicit = pocketsampFolderPickerIntent().setPackage(packageName)
+                        val handled = runCatching {
+                            folderPicker.launch(explicit)
+                            true
+                        }.getOrDefault(false)
+                        if (!handled) folderPicker.launch(pocketsampFolderPickerIntent())
+                    },
+                    onDismiss = { showPickerSource = false }
+                )
             }
         }
 
@@ -1016,6 +1046,64 @@ private const val EXTRA_XED_WORKSPACE = "com.rvdjv.pawnmc.extra.XED_WORKSPACE"
 private val EDITABLE_EXTENSIONS = setOf(
     "pwn", "pawn", "inc", "p", "txt", "cfg", "ini", "json", "sql", "log", "xml", "yml", "yaml"
 )
+
+private data class PocketSampPickerTarget(val packageName: String, val label: String)
+
+/** Third-party folder pickers that may answer [android.content.Intent.ACTION_OPEN_DOCUMENT_TREE]. */
+private val POCKETSAMP_THIRD_PARTY_PICKERS = linkedMapOf(
+    "com.zarchiver" to "ZArchiver",
+    "com.zarchiver.pro" to "ZArchiver Pro",
+    "ru.zdevs.zarchiver" to "ZArchiver",
+    "com.speedsoftware.rootexplorer" to "Root Explorer",
+    "com.alphainventor.filemanager" to "File Manager",
+    "com.mixplorer" to "MiXplorer"
+)
+
+private fun pocketsampThirdPartyPickers(context: android.content.Context): List<PocketSampPickerTarget> {
+    val pm = context.packageManager
+    return POCKETSAMP_THIRD_PARTY_PICKERS.mapNotNull { (packageName, label) ->
+        val installed = runCatching { pm.getPackageInfo(packageName, 0) }.isSuccess
+        if (installed) PocketSampPickerTarget(packageName, label) else null
+    }
+}
+
+/**
+ * Picks between the system folder picker and an installed file manager.
+ *
+ * The dialog never shows the built-in browser because PocketSAMP's file screen is
+ * already a browser of its own; the point here is only to let ZArchiver answer the
+ * intent when the user browses with it.
+ */
+@Composable
+private fun PocketSampPickerSourceDialog(
+    targets: List<PocketSampPickerTarget>,
+    onSystemPick: () -> Unit,
+    onPackagePick: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Choose a folder picker") },
+        text = {
+            Column {
+                androidx.compose.material3.TextButton(
+                    onClick = onSystemPick,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("System picker") }
+                targets.forEach { target ->
+                    androidx.compose.material3.TextButton(
+                        onClick = { onPackagePick(target.packageName) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) { Text(target.label) }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
 
 private fun pocketsampFolderPickerIntent(): android.content.Intent = android.content.Intent(android.content.Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
     addFlags(

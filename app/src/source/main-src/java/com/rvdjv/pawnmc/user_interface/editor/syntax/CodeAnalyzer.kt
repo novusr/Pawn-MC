@@ -53,20 +53,33 @@ internal class CodeAnalyzer(
         return styles
     }
 
-    /** Token types and their Sora styles. */
+    /**
+     * Token types and their Sora styles.
+     *
+     * The sora version bundled here only ships the classic colour slots
+     * (`KEYWORD`, `LITERAL`, `COMMENT`, `ANNOTATION`, `OPERATOR`, ...); `BRACKET`,
+     * `STRING`, `NUMBER`, `COMMENT_KEYWORD` and `TextStyle.BOLD` do not exist. The extra
+     * hues therefore come from distinct *slots*: brackets take `ANNOTATION`, which the
+     * palette fills with the dense orange, while strings and numbers stay on `LITERAL`
+     * and directives on `KEYWORD`.
+     */
     private enum class SpanKind(val style: Long) {
         Keyword(TextStyle.makeStyle(EditorColorScheme.KEYWORD)),
         Type(TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME)),
         Constant(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
         Function(TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME)),
-        LocalFunction(TextStyle.makeStyle(EditorColorScheme.ANNOTATION)),
+        LocalFunction(TextStyle.makeStyle(EditorColorScheme.FUNCTION_NAME)),
         Identifier(TextStyle.makeStyle(EditorColorScheme.TEXT_NORMAL)),
-        Directive(TextStyle.makeStyle(EditorColorScheme.ANNOTATION)),
+        Directive(TextStyle.makeStyle(EditorColorScheme.KEYWORD)),
         String(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
+        Number(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
         Comment(TextStyle.makeStyle(EditorColorScheme.COMMENT)),
+        CommentKeyword(TextStyle.makeStyle(EditorColorScheme.KEYWORD)),
         Operator(TextStyle.makeStyle(EditorColorScheme.OPERATOR)),
-        BraceOpen(TextStyle.makeStyle(EditorColorScheme.OPERATOR)),
-        BraceClose(TextStyle.makeStyle(EditorColorScheme.OPERATOR));
+        // `()` `{}` `[]`: the dense-orange slot, separate from the operators.
+        BraceOpen(TextStyle.makeStyle(EditorColorScheme.ANNOTATION)),
+        BraceClose(TextStyle.makeStyle(EditorColorScheme.ANNOTATION)),
+        Bracket(TextStyle.makeStyle(EditorColorScheme.ANNOTATION));
     }
 
     private data class Span(val line: Int, val column: Int, val kind: SpanKind)
@@ -100,13 +113,15 @@ internal class CodeAnalyzer(
                     c == '/' && peekChar(1) == '*' -> skipBlockComment()
                     c == '#' -> emitDirective()
                     c == '"' || c == '\'' -> emitString(c)
-                    c.isDigit() || (c == '.' && peekChar(1)?.isDigit() == true) -> skipNumber()
+                    c.isDigit() || (c == '.' && peekChar(1)?.isDigit() == true) -> emitNumber()
                     c.isLetter() || c == '_' -> emitIdentifier()
                     c == '*' && tryEmitBlockCommentKeyword() -> Unit
                     c == '{' -> emitSingle(SpanKind.BraceOpen)
                     c == '}' -> emitSingle(SpanKind.BraceClose)
+                    // Parentheses and square brackets: the same dense orange as the
+                    // braces, so every kind of bracket reads as one family.
+                    c == '(' || c == ')' || c == '[' || c == ']' -> emitSingle(SpanKind.Bracket)
                     c in PawnRegistry.OPERATOR_HEADS -> emitOperator()
-                    // Function names are highlighted; parentheses are not.
                     else -> skipPunctuation()
                 }
             }
@@ -187,7 +202,9 @@ internal class CodeAnalyzer(
             // Columns are line-relative, so use the absolute source index.
             val word = text.substring(startIndex + 1, index)
             if (PawnRegistry.isDirective(word)) {
-                emit(Span(line, startColumn, SpanKind.Directive))
+                // Directives are painted like comment keywords: a warm amber that is
+                // visible against both canvases and never confused with a function.
+                emit(Span(line, startColumn, SpanKind.CommentKeyword))
             }
         }
 
@@ -215,7 +232,9 @@ internal class CodeAnalyzer(
             emit(Span(line, startColumn, SpanKind.String))
         }
 
-        private fun skipNumber() {
+        /** Consumes a numeric literal and paints it through the number slot. */
+        private fun emitNumber() {
+            val startColumn = column
             if (text[index] == '0' && (peekChar(1) == 'x' || peekChar(1) == 'X')) {
                 index += 2
                 column += 2
@@ -223,12 +242,13 @@ internal class CodeAnalyzer(
                     index++
                     column++
                 }
-                return
+            } else {
+                while (hasMore() && text[index] in "0123456789.eE") {
+                    index++
+                    column++
+                }
             }
-            while (hasMore() && text[index] in "0123456789.eE") {
-                index++
-                column++
-            }
+            emit(Span(line, startColumn, SpanKind.Number))
         }
 
         private fun emitIdentifier() {
@@ -298,7 +318,7 @@ internal class CodeAnalyzer(
                 val startColumn = column
                 index += keyword.length
                 column += keyword.length
-                emit(Span(line, startColumn, SpanKind.Keyword))
+                emit(Span(line, startColumn, SpanKind.CommentKeyword))
                 return true
             }
             return false

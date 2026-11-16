@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.DocumentsContract
+import androidx.activity.result.ActivityResultLauncher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -22,8 +23,16 @@ import java.io.File
  */
 
 /** Intent that opens the system folder picker, starting in the Downloads folder. */
-fun buildFolderPickerIntent(): Intent {
-    val initialUri = downloadsInitialUri()
+fun buildFolderPickerIntent(): Intent = buildFolderPickerIntentAt(null)
+
+/**
+ * Same picker as [buildFolderPickerIntent], but opened at [startDirectory] instead of
+ * Downloads. Used where the location matters - an include path the user already owns
+ * should open the picker right on that folder - and falls back to Downloads when the
+ * folder cannot be expressed as a document uri.
+ */
+fun buildFolderPickerIntentAt(startDirectory: File?): Intent {
+    val initialUri = initialUriFor(startDirectory) ?: downloadsInitialUri()
     val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
         addFlags(
             Intent.FLAG_GRANT_READ_URI_PERMISSION or
@@ -52,6 +61,39 @@ fun buildFilePickerIntent(): Intent {
 }
 
 /**
+ * Conversions between a folder on disk and the document uri the storage provider uses.
+ *
+ * Primary storage is `content://com.android.externalstorage.documents/document/primary%3A<path>`;
+ * a removable volume keeps its volume id before the colon. Anything outside
+ * `/storage/...` (the app-private directory, for one) has no document uri and therefore
+ * no picker start, so the callers fall back to Downloads.
+ */
+@Suppress("unused")
+fun documentUriFor(directory: File): Uri? = runCatching {
+    val canonical = directory.canonicalFile
+    val path = canonical.absolutePath.replace('\\', '/')
+    val relative = when {
+        path.startsWith("/storage/emulated/0/") -> "primary:" + path.removePrefix("/storage/emulated/0/")
+        path == "/storage/emulated/0" -> "primary:"
+        path.startsWith("/storage/") -> {
+            val rest = path.removePrefix("/storage/")
+            val volume = rest.substringBefore('/')
+            val tail = rest.substringAfter('/', "")
+            "$volume:$tail"
+        }
+        else -> return null
+    }
+    val encoded = Uri.encode(relative).replace("/", "%2F")
+    Uri.parse("content://com.android.externalstorage.documents/document/$encoded")
+}.getOrNull()
+
+private fun initialUriFor(directory: File?): Uri? {
+    if (directory == null) return null
+    if (!directory.isDirectory) return null
+    return documentUriFor(directory)
+}
+
+/**
  * Downloads folder of the primary shared storage, where the picker starts.
  *
  * Falling back to `content://com.android.externalstorage.documents/document/primary:`
@@ -64,6 +106,87 @@ private fun downloadsInitialUri(): Uri? = runCatching {
 }.getOrNull() ?: runCatching {
     Uri.parse("content://com.android.externalstorage.documents/document/primary:")
 }.getOrNull()
+
+/**
+ * Third-party file managers that can answer an `ACTION_OPEN_DOCUMENT_TREE` intent.
+ *
+ * Android itself only offers the system picker, so every place that asks the user for
+ * a folder also offers these explicitly. The list is intentionally small: each entry is
+ * a package that is known to ship a document-tree activity.
+ */
+private val THIRD_PARTY_FOLDER_PICKERS = linkedMapOf(
+    "com.zarchiver" to "ZArchiver",
+    "com.zarchiver.pro" to "ZArchiver Pro",
+    "ru.zdevs.zarchiver" to "ZArchiver",
+    "com.speedsoftware.rootexplorer" to "Root Explorer",
+    "com.alphainventor.filemanager" to "File Manager",
+    "com.mixplorer" to "MiXplorer"
+)
+
+/** One installed folder picker the user can hand the request to. */
+data class FolderPickerTarget(val packageName: String, val label: String)
+
+/**
+ * Installed third-party folder pickers, ZArchiver first.
+ *
+ * Returns an empty list when none of [THIRD_PARTY_FOLDER_PICKERS] is installed, so the
+ * caller can skip the chooser and open the system picker directly. Requires the
+ * `<queries>` block in the manifest - without it `getPackageInfo` reports every package
+ * as missing on Android 11+.
+ */
+fun availableThirdPartyFolderPickers(context: Context): List<FolderPickerTarget> {
+    val pm = context.packageManager
+    return THIRD_PARTY_FOLDER_PICKERS.mapNotNull { (packageName, label) ->
+        // One overload for every API level: the only thing needed here is "is it
+        // installed", and the flags overload adds nothing to that answer.
+        @Suppress("DEPRECATION")
+        val installed = runCatching { pm.getPackageInfo(packageName, 0) }.isSuccess
+        if (installed) FolderPickerTarget(packageName, label) else null
+    }
+}
+
+/**
+ * Opens [intent] in the picker of [packageName].
+ *
+ * The explicit package only ever receives the request through an activity the system
+ * resolves for the intent; when the package cannot handle it the call returns `false`
+ * and the caller should fall back to the system picker.
+ */
+fun ActivityResultLauncher<Intent>.launchInPackage(intent: Intent, packageName: String?): Boolean {
+    if (packageName == null) {
+        launch(intent)
+        return true
+    }
+    val explicit = Intent(intent).setPackage(packageName)
+    // `launch` is asynchronous: a missing activity surfaces later, in the activity
+    // result callback, not as an exception here. Checking resolution first keeps the
+    // promise of the boolean, so the caller can fall back to the system picker.
+    if (explicit.resolveActivityCompat() == null) return false
+    launch(explicit)
+    return true
+}
+
+/**
+ * The activity [this] intent would start, or `null`.
+ *
+ * A package that was offered by [availableThirdPartyFolderPickers] may still be
+ * installed without an ``ACTION_OPEN_DOCUMENT_TREE`` handler, so the explicit intent is
+ * resolved against the real package manager before it is launched.
+ */
+private fun Intent.resolveActivityCompat(): android.content.pm.ResolveInfo? {
+    val context = com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
+        .getInstanceOrNull()
+        ?.applicationContextHolder()
+        ?: return null
+    // The deprecated overload is the one that exists on every API level, and resolving a
+    // dispatch is all this needs; the flags overload buys nothing here.
+    @Suppress("DEPRECATION")
+    return runCatching {
+        val resolved: android.content.pm.ResolveInfo? =
+            context.packageManager.resolveActivity(this, 0)
+        resolved
+    }.getOrNull()
+}
 
 /**
  * Turns a picked tree URI into a real [File] on the primary shared storage.

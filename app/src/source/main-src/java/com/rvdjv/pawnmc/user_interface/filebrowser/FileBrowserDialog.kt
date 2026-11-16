@@ -90,6 +90,8 @@ fun FileBrowserDialog(
     fileExtensions: Set<String> = DEFAULT_FILE_EXTENSIONS,
     onFileSelected: (String) -> Unit,
     onFolderSelected: (String) -> Unit = {},
+    /** Folder the browser opens on, or `null` for the last visited one. */
+    initialDirectory: File? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -131,7 +133,8 @@ fun FileBrowserDialog(
     }
 
     var currentDir by remember {
-        val startPath = config.lastOpenedDirPath ?: rootPath
+        val preferred = initialDirectory?.takeIf { it.isDirectory && it.canRead() }
+        val startPath = preferred?.absolutePath ?: config.lastOpenedDirPath ?: rootPath
         var start = File(startPath)
         if (!start.exists() || !start.isDirectory) start = File(rootPath)
         mutableStateOf(start)

@@ -14,8 +14,10 @@ class WorkspacePanelSourceTest {
          */
         val source = root?.let { File(it, "app/src/source/main-src/java/com/rvdjv/pawnmc/user_interface/editor/workspace/Panel.kt").readText() } ?: ""
 
-        assertTrue(source.contains(".verticalScroll(outputScrollState)"))
-        assertTrue(source.contains(".horizontalScroll(outputHorizontalScrollState)"))
+        assertTrue(source.contains("verticalScroll(outputScrollState)"))
+        assertTrue(source.contains("horizontalScroll(outputHorizontalScrollState)"))
+        // The output panel now carries its own scrollbar around the same scroll state.
+        assertTrue(source.contains("OverlayScrollbar("))
         assertTrue(source.contains("softWrap = false"))
         assertTrue("compiler output must not be capped to a fixed number of lines", !source.contains("OUTPUT_MAX_LINES"))
     }

@@ -162,14 +162,33 @@ object Explainer {
         return false
     }
 
+    /**
+     * Source file the current compile is working on, remembered by [explainCompilerOutput].
+     *
+     * A clean run has no located line to read the path from, yet the file still has to
+     * be named so its pending hints can be retired - hence this one-shot memo.
+     */
+    @Volatile
+    private var lastSourcePath: String? = null
+
+    /** Remembers which file the next clean run belongs to. */
+    internal fun noteSourcePath(path: String?) {
+        lastSourcePath = path
+    }
+
+    private fun currentSourcePath(): String? = lastSourcePath
+
     fun explainCompilerOutput(
         rawText: String,
         cacheDir: File,
-        language: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN
+        language: ContentConfig.AppLanguage = ContentConfig.AppLanguage.EN,
+        sourcePath: String? = null
     ): String {
+        if (!sourcePath.isNullOrBlank()) noteSourcePath(sourcePath)
         if (rawText.isBlank()) {
-            // A clean run erases what the previous one stored, so the editor's
-            // next cycle finds no stale hints to inject.
+            // A clean run retires the *pending* hints only. The comments already in
+            // the buffer stay: removing them is the user's decision (Discard), not the
+            // compiler's, and discarded lines stay discarded.
             recordDiagnostics(rawText, emptyList())
             return rawText
         }
@@ -209,17 +228,18 @@ object Explainer {
     }
 
     /**
-     * Hands the located diagnostics of one run to [DiagnosticsStore], grouped by
-     * source file. Each file key is replaced with this run's entries, so a clean
-     * compile (no located lines) wipes every key the previous run touched.
+     * Hands the located diagnostics of one run to [DiagnosticsStore].
+     *
+     * [DiagnosticsStore.record] merges instead of replacing: a line the user discarded
+     * keeps its tombstone, and a clean run only retires the pending hints. That is what
+     * keeps an injected comment in place until the user discards it.
      */
     private fun recordDiagnostics(rawText: String, located: List<LocatedDiagnostic>) {
         val context = Runner.hostContext() ?: return
         if (located.isEmpty()) {
-            // No located line left: the previous run's records are all stale,
-            // whatever the reason (clean compile or output the parser did not
-            // recognize), so the store is emptied.
-            DiagnosticsStore.save(DiagnosticsStore.fileFor(context), emptyMap())
+            // Nothing located in this run: retire the pending records of the file the
+            // run compiled, leaving every discarded tombstone untouched.
+            currentSourcePath()?.let { path -> DiagnosticsStore.record(context, path, emptyList()) }
             return
         }
         val grouped = located.groupBy { it.file }

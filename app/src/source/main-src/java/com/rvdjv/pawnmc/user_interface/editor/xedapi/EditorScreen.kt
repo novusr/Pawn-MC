@@ -56,6 +56,7 @@ import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.FolderOpen
@@ -153,6 +154,10 @@ import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFolderPickerIntent
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFilePickerIntent
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveDocumentToFile
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveTreeToFile
+import com.rvdjv.pawnmc.user_interface.editor.workspace.BuiltInFolderBrowser
+import com.rvdjv.pawnmc.user_interface.editor.workspace.FolderSourceChooserDialog
+import com.rvdjv.pawnmc.user_interface.editor.workspace.availableThirdPartyFolderPickers
+import com.rvdjv.pawnmc.user_interface.editor.workspace.launchInPackage
 import com.rvdjv.pawnmc.user_interface.editor.syntax.CodeLanguages
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspacePanel
 import com.rvdjv.pawnmc.user_interface.editor.portal.DeveloperPortal
@@ -180,7 +185,11 @@ fun EditorScreen(
     editorBackgroundColor: String? = null,
     compileOutput: String = "",
     isCompiling: Boolean = false,
-    onCompileRequest: (String) -> Unit = {}
+    /** Bumped by the host after a run that wrote diagnostics; pulls the hints at once. */
+    diagnosticsRevision: Int = 0,
+    onCompileRequest: (String) -> Unit = {},
+    /** Lets Discard tell the host the JSON changed, so other screens re-read it. */
+    onDiagnosticsChanged: () -> Unit = {}
 ) {
     val context = LocalContext.current
     // Shared across screens so the localisation asset is read and parsed only once
@@ -275,8 +284,13 @@ fun EditorScreen(
     var explainCycleTick by remember { mutableIntStateOf(0) }
 
     /**
-     * Applies the explain hints for the file now shown in the editor, without
-     * waiting for the next periodic cycle.
+     * Applies the explain hints for the file now shown in the editor, without waiting
+     * for the next periodic cycle.
+     *
+     * Before reading the JSON, hints whose stored record was discarded are stripped from
+     * the buffer: the store is the only place that decides "this line is no longer
+     * explained", and a hint the user threw away must never come back - not after a
+     * recompile, not after a reopen.
      */
     fun refreshExplainHints() {
         val editor = editorRef ?: return
@@ -285,15 +299,28 @@ fun EditorScreen(
         } else {
             viewModel.filePath.takeIf { it.isNotBlank() }
         } ?: return
-        scope.launch { ExplainInjector.apply(editor, path, context) }
+        scope.launch {
+            ExplainInjector.stripDiscarded(editor, path, context)
+            ExplainInjector.apply(editor, path, context)
+        }
+    }
+
+    // A finished compile that produced errors/warnings wrote the JSON: pull it now.
+    LaunchedEffect(diagnosticsRevision) {
+        if (diagnosticsRevision > 0) refreshExplainHints()
+    }
+    // The end of a run is the second trigger: the compile may have finished while the
+    // JSON was still being written, so the falling edge re-reads it once more.
+    LaunchedEffect(isCompiling) {
+        if (!isCompiling) refreshExplainHints()
     }
 
     /**
-     * Explainer sync loop: every six minutes - and once right after the screen
-     * opens - the compiled diagnostics JSON is read and the `[cause]` comments
-     * are re-applied to the lines it still covers. Ticks from the compile path
-     * run a refresh right away, so the comments appear while the user is still
-     * looking at the code, not only after leaving and re-entering the editor.
+     * Explainer sync loop: every six minutes - and once right after the screen opens -
+     * the compiled diagnostics JSON is read and the pending `[cause]` comments are applied.
+     * The compile path does not wait for this timer: [diagnosticsRevision] and the falling
+     * edge of [isCompiling] trigger a refresh immediately, so the comment is printed on the
+     * broken line the moment the run ends.
      */
     LaunchedEffect(explainCycleTick) {
         if (explainCycleTick > 0) {
@@ -308,6 +335,7 @@ fun EditorScreen(
                     viewModel.filePath.takeIf { it.isNotBlank() }
                 }
                 if (path != null) {
+                    ExplainInjector.stripDiscarded(editor, path, context)
                     ExplainInjector.apply(editor, path, context)
                 }
             }
@@ -407,6 +435,20 @@ fun EditorScreen(
     }
     val workspaceHasNoActiveFile = workspace.isWorkspaceOpen && activeDocument == null
 
+    // ------------------------------------------------------------------
+    // Folder source: the system picker, the built-in browser or an installed
+    // third-party manager (ZArchiver and friends). Set when the user asks for a
+    // workspace folder while one of those managers is installed.
+    // ------------------------------------------------------------------
+    var showWorkspaceSourceChooser by remember { mutableStateOf(false) }
+    var showBuiltInWorkspaceBrowser by remember { mutableStateOf(false) }
+
+    /** Opens the picked folder as the active workspace. */
+    fun openWorkspaceFolder(folder: File) {
+        workspace.openWorkspace(folder)
+        isExplorerVisible = true
+    }
+
     val folderPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -424,6 +466,14 @@ fun EditorScreen(
                     Toast.LENGTH_LONG
                 ).show()
             }
+        }
+    }
+
+    /** Entry point of every "open a workspace folder" affordance. */
+    fun requestWorkspaceFolder() {
+        showWorkspaceSourceChooser = availableThirdPartyFolderPickers(context).isNotEmpty()
+        if (!showWorkspaceSourceChooser) {
+            folderPickerLauncher.launch(buildFolderPickerIntent())
         }
     }
 
@@ -1209,7 +1259,7 @@ fun EditorScreen(
                                 onClick = {
                                     dismissAutoCompletion()
                                     showMenu = false
-                                    folderPickerLauncher.launch(buildFolderPickerIntent())
+                                    requestWorkspaceFolder()
                                 }
                             )
                             if (workspace.openWorkspaces.isNotEmpty()) {
@@ -1353,6 +1403,63 @@ fun EditorScreen(
                                     dismissAutoCompletion()
                                     showMenu = false
                                     showJumpDialog = true
+                                }
+                            )
+                            // Once a `[cause]` comment is printed it belongs to the user:
+                            // this is the only thing that removes it before a manual save.
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        localizer.get(
+                                            "editor.explainer.discard",
+                                            appLanguage,
+                                            "Discard explainer on this line"
+                                        )
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Filled.DeleteSweep,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    dismissAutoCompletion()
+                                    showMenu = false
+                                    val editor = editorRef
+                                    val path = if (workspace.isWorkspaceOpen) {
+                                        workspace.activeDocument?.file?.absolutePath
+                                    } else {
+                                        viewModel.filePath.takeIf { it.isNotBlank() }
+                                    }
+                                    if (editor != null && path != null) {
+                                        scope.launch {
+                                            val removed = ExplainInjector.discard(
+                                                editor = editor,
+                                                filePath = path,
+                                                context = context,
+                                                lineIndex = cursorLine
+                                            )
+                                            onDiagnosticsChanged()
+                                            Toast.makeText(
+                                                context,
+                                                if (removed) {
+                                                    localizer.get(
+                                                        "editor.explainer.discarded",
+                                                        appLanguage,
+                                                        "Explainer discarded on this line"
+                                                    )
+                                                } else {
+                                                    localizer.get(
+                                                        "editor.explainer.nothing",
+                                                        appLanguage,
+                                                        "No explainer comment on this line"
+                                                    )
+                                                },
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
                                 }
                             )
                             DropdownMenuItem(
@@ -1613,7 +1720,7 @@ fun EditorScreen(
                     },
                     onOpenFileClick = {
                         dismissAutoCompletion()
-                        folderPickerLauncher.launch(buildFolderPickerIntent())
+                        requestWorkspaceFolder()
                     },
                     onOpenPawnFileClick = {
                         dismissAutoCompletion()
@@ -1665,7 +1772,7 @@ fun EditorScreen(
                         if (workspaceHasNoActiveFile) {
                             EmptyWorkspaceView(
                                 onBrowseExplorer = { isExplorerVisible = !isExplorerVisible },
-                                onOpenFolder = { folderPickerLauncher.launch(buildFolderPickerIntent()) }
+                                onOpenFolder = { requestWorkspaceFolder() }
                             )
                         } else {
                         // Explicit type argument: without it Kotlin cannot infer the view type of the
@@ -1731,6 +1838,11 @@ fun EditorScreen(
                             },
                             update = { editor: XedCodeEditor ->
                                 editorRef = editor
+                                // The gutter scrollbar paints from the editor's own offsets,
+                                // so it needs no state of its own - only a redraw when the
+                                // scrolled range changes. Driving it from the update block
+                                // keeps it in step with the buffer swaps above.
+                                editor.invalidate()
                                 // A `server.cfg` keeps the Pawn grammar out of the way: the
                                 // widget must re-analyse with the config language as soon as a
                                 // workspace file with another extension is activated.
@@ -1777,6 +1889,20 @@ fun EditorScreen(
                                 }
                             },
                             modifier = Modifier.fillMaxSize()
+                        )
+                        // Scrollbar column, right of the code: the upper label is the
+                        // line at the top of the thumb, the lower one the line at its
+                        // bottom, so both move while scrolling.
+                        // The widget reads its state lazily, so the instance is enough:
+                        // it must not depend on `editorRef` state changes, which would
+                        // re-create the AndroidView on every recomposition.
+                        GutterScrollbar(
+                            editor = editorRef,
+                            activeColor = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(top = 28.dp)
                         )
                         }
                     }
@@ -1874,7 +2000,7 @@ fun EditorScreen(
                                 onClosePanel = { isExplorerVisible = false },
                                 onOpenFolder = {
                                     dismissAutoCompletion()
-                                    folderPickerLauncher.launch(buildFolderPickerIntent())
+                                    requestWorkspaceFolder()
                                 },
                                 onCreateFileAt = { directory ->
                                     dismissAutoCompletion()
@@ -2000,7 +2126,7 @@ fun EditorScreen(
                         showSearchBar = !showSearchBar
                         if (!showSearchBar) editorRef?.searcher?.stopSearch()
                     },
-                    onOpenWorkspaceClick = { folderPickerLauncher.launch(buildFolderPickerIntent()) },
+                    onOpenWorkspaceClick = { requestWorkspaceFolder() },
                     onSaveClick = { saveActiveFile() },
                     onSaveAllClick = {
                         if (workspace.isWorkspaceOpen) {
@@ -2197,6 +2323,42 @@ fun EditorScreen(
                 )
             }
         }
+    }
+
+    // Folder source chooser: shown only when a third-party manager is installed, so
+    // devices without one keep the single-tap system picker. The built-in browser is
+    // always offered because it can reach app-private folders the system picker hides.
+    if (showWorkspaceSourceChooser) {
+        FolderSourceChooserDialog(
+            appLanguage = appLanguage,
+            localizer = localizer,
+            onBuiltInPick = {
+                showWorkspaceSourceChooser = false
+                showBuiltInWorkspaceBrowser = true
+            },
+            onSystemPick = {
+                showWorkspaceSourceChooser = false
+                folderPickerLauncher.launch(buildFolderPickerIntent())
+            },
+            onThirdPartyPick = { target ->
+                showWorkspaceSourceChooser = false
+                if (!folderPickerLauncher.launchInPackage(buildFolderPickerIntent(), target.packageName)) {
+                    folderPickerLauncher.launch(buildFolderPickerIntent())
+                }
+            },
+            onDismiss = { showWorkspaceSourceChooser = false }
+        )
+    }
+
+    if (showBuiltInWorkspaceBrowser) {
+        BuiltInFolderBrowser(
+            startDirectory = workspace.activeWorkspace?.root,
+            onFolderSelected = { folder ->
+                showBuiltInWorkspaceBrowser = false
+                openWorkspaceFolder(folder)
+            },
+            onDismiss = { showBuiltInWorkspaceBrowser = false }
+        )
     }
 
     DisposableEffect(Unit) {

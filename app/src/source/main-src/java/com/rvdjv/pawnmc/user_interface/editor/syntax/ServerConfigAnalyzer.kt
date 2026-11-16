@@ -88,11 +88,20 @@ internal class ServerConfigAnalyzer : SimpleAnalyzeManager<Any?>() {
                     if (index < end) index++
                     builder.addIfNeeded(line, column, SpanKind.String.style)
                 }
-                text[index] == ' ' || text[index] == '\t' || text[index] == '=' -> index++
+                // `=` is painted as structure, the same dense orange as brackets.
+                text[index] == '=' -> {
+                    builder.addIfNeeded(line, index - start, SpanKind.Punctuation.style)
+                    index++
+                }
+                text[index] == ' ' || text[index] == '\t' -> index++
                 text[index].isDigit() -> {
                     val column = index - start
                     while (index < end && (text[index].isDigit() || text[index] == '.' || text[index] == '-')) index++
                     builder.addIfNeeded(line, column, SpanKind.Constant.style)
+                }
+                text[index] == ';' -> {
+                    builder.addIfNeeded(line, index - start, SpanKind.Punctuation.style)
+                    index++
                 }
                 else -> {
                     val column = index - start
@@ -108,12 +117,19 @@ internal class ServerConfigAnalyzer : SimpleAnalyzeManager<Any?>() {
         }
     }
 
+    /**
+     * Token kinds, all from the warm palette the Pawn analyzer uses, so a `server.cfg`
+     * does not switch back to the blue/violet colours the editor left behind. Only the
+     * slots the bundled sora version defines are used - there is no `STRING`, `NUMBER`
+     * or `BRACKET` slot here.
+     */
     private enum class SpanKind(val style: Long) {
         Keyword(TextStyle.makeStyle(EditorColorScheme.KEYWORD)),
         Value(TextStyle.makeStyle(EditorColorScheme.IDENTIFIER_NAME)),
         String(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
         Constant(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
-        Comment(TextStyle.makeStyle(EditorColorScheme.COMMENT));
+        Comment(TextStyle.makeStyle(EditorColorScheme.COMMENT)),
+        Punctuation(TextStyle.makeStyle(EditorColorScheme.OPERATOR));
     }
 
     private companion object {

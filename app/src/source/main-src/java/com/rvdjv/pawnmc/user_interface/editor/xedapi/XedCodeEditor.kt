@@ -364,9 +364,10 @@ private class ColumnLineNumberRenderer(host: CodeEditor) : EditorRenderer(host) 
     }
 
     private companion object {
-        // Gutter label colors.
-        const val CHIP_BACKGROUND = 0x407B5CC7
-        const val CHIP_BORDER = 0x60B7A6F5
-        const val CHIP_TEXT = 0xFFE4DDF7.toInt()
+        // Gutter label colors: warm amber instead of the blue-violet the chip used to
+        // carry, so the caret label belongs to the same palette as the code around it.
+        const val CHIP_BACKGROUND = 0x40FFA126
+        const val CHIP_BORDER = 0x80FFC46B.toInt()
+        const val CHIP_TEXT = 0xFFFFE8C4.toInt()
     }
 }

@@ -53,6 +53,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import com.rvdjv.pawnmc.user_interface.main.explainHighlightedText
+import com.rvdjv.pawnmc.user_interface.common.OverlayScrollbar
+import com.rvdjv.pawnmc.user_interface.common.lineCountOf
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -280,20 +282,32 @@ fun WorkspacePanel(
                         isCompiling = isCompiling,
                         onBeforeAction = onBeforeAction
                     )
-                    Column(
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 180.dp)
-                            .verticalScroll(outputScrollState)
-                            .horizontalScroll(outputHorizontalScrollState)
-                            .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
-                        Text(
-                            text = explainHighlightedText(outputText),
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            softWrap = false,
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .verticalScroll(outputScrollState)
+                                .horizontalScroll(outputHorizontalScrollState)
+                                .padding(start = 12.dp, end = 28.dp, top = 8.dp, bottom = 8.dp)
+                        ) {
+                            Text(
+                                text = explainHighlightedText(outputText),
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                softWrap = false,
+                            )
+                        }
+                        // Where errors, warnings and the `[cause]` lines are printed the
+                        // panel gets its own scrollbar, with the first and last visible
+                        // log line framed above and below the thumb.
+                        OverlayScrollbar(
+                            state = outputScrollState,
+                            unitCount = lineCountOf(outputText)
                         )
                     }
                 }

@@ -186,6 +186,14 @@ class MainViewModel(
     var isCompiling by mutableStateOf(false)
         private set
 
+    /**
+     * Bumped after every compile that wrote located errors/warnings to the diagnostics
+     * JSON. Xed observes it and re-applies the hints on the open file immediately, so the
+     * `[cause]` comment appears while the user is still looking at the broken line.
+     */
+    var diagnosticsRevision by mutableStateOf(0)
+        private set
+
     var outputText by mutableStateOf("Ah, another project - a breath of fresh air everyone will inhale whether they asked for it or not.\n")
         private set
 
@@ -555,13 +563,33 @@ class MainViewModel(
                 Compiler.compile(sourcePath, n_options, n_selectedVersion)
             }
             val n_duration = System.currentTimeMillis() - n_startTime
+            // The diagnostics JSON is refreshed on every run, independent of the
+            // "Explain output" toggle: the hints it holds drive the `[cause]` comments
+            // in Xed, and the toggle only decides whether the explanation lines are
+            // also printed here in the console.
             val compilerOutput = if (config.n_explain_output || config.n_explain_auto) {
-                Compiler.explainCompilerOutput(n_result.second, appDirectory, config.n_app_language)
+                Compiler.explainCompilerOutput(
+                    rawText = n_result.second,
+                    cacheDir = appDirectory,
+                    language = config.n_app_language,
+                    sourcePath = sourcePath
+                )
             } else {
+                // Keeps the record up to date (and retires pending hints on a clean
+                // run) without touching the text the console shows.
+                Compiler.explainCompilerOutput(
+                    rawText = "",
+                    cacheDir = appDirectory,
+                    language = config.n_app_language,
+                    sourcePath = sourcePath
+                )
                 n_result.second
             }
 
             outputText += compilerOutput
+            // Signals Xed that this run produced (or cleared) hints; the editor pulls the
+            // JSON right away instead of waiting for its periodic cycle.
+            if (Compiler.hasLocatedDiagnostics(n_result.second)) diagnosticsRevision++
             val n_elapsedLabel = if (n_duration >= 1000) {
                 String.format("%.2f seconds", n_duration / 1000.0)
             } else {
@@ -601,6 +629,11 @@ class MainViewModel(
         applyCompilerAutoDetection(path)
         pendingCompilePath = path
         compileRequestId++
+    }
+
+    /** Pulls the diagnostics JSON into the open editor on demand (Discard, reopen). */
+    fun notifyDiagnosticsChanged() {
+        diagnosticsRevision++
     }
 
     /** Returns the queued editor compile request once, or `null` when there is none. */
