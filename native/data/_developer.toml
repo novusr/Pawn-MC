@@ -30,7 +30,7 @@ es = "Usar 'switch', 'switch 3.10.7' o 'switch 3.10.11'."
 ru = "Ispolzuyte 'switch', 'switch 3.10.7' ili 'switch 3.10.11'."
 
 [terminal.error.source]
-id = "Sumber engga valid. Sebutkan file Pawn secara eksplisit di dalam workspace."
+id = "Sumber gak valid. Sebutkan file Pawn secara eksplisit di dalam workspace."
 en = "Invalid source. Name a Pawn file explicitly inside the workspace."
 tl = "Di-wastong source. Tukuyin nang malinaw ang Pawn file sa loob ng workspace."
 es = "Fuente invalida. Nombre un archivo Pawn explicitamente dentro del workspace."
@@ -44,7 +44,7 @@ es = "El compilador elegido no carga porque hay otra libreria nativa activa. Rei
 ru = "Vybrannyy kompilyator ne zagruzhaetsya: uzhe aktivna drugaya nativnaya biblioteka. Perezapustite prilozhenie, chtoby ispolzovat vybrannuyu versiyu."
 
 [terminal.error.command]
-id = "Perintah engga dikenal. Gunakan {commands}. Ketik 'help'."
+id = "Perintah gak dikenal. Gunakan {commands}. Ketik 'help'."
 en = "Unknown command. Use {commands}. Type 'help'."
 tl = "Hindi kilalang command. Gamitin ang {commands}. I-type ang 'help'."
 es = "Comando desconocido. Usar {commands}. Escribi 'help'."

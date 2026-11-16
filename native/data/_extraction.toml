@@ -898,32 +898,32 @@ ru = "PawnRMC"
 es = "PawnESMC"
 
 [app.tagline]
-id = "Ngetik dulu, error belakangan."
-en = "Type first, panic later."
-tl = "Type muna, panic mamaya."
-ru = "Pishi, panikuy potom."
-es = "Escribe, entra en pánico."
+id = "X"
+en = "Telegram"
+tl = "WhatsApp"
+ru = "Instagram"
+es = "Facebook"
 
 [app.tagline.2]
-id = "Edit sini, error sana."
-en = "Edit here, errors there."
-tl = "Edit dito, error doon."
-ru = "Redaktiruy zdes, oshibki tam."
-es = "Edita aquí, errores allá."
+id = "TikTok"
+en = "YouTube"
+tl = "Discord"
+ru = "Reddit"
+es = "Spotify"
 
 [app.tagline.3]
-id = "Compile, pura-pura berhasil."
-en = "Compile, pretend it worked."
-tl = "Compile, kunwari gumana."
-ru = "Kompiliruy, budto rabotaet."
-es = "Compila, finge que funciona."
+id = "Snapchat"
+en = "Pinterest"
+tl = "Threads"
+ru = "Messenger"
+es = "LINE"
 
 [app.tagline.4]
-id = "Pawn di HP, error."
-en = "Pawn in your pocket, bugs."
-tl = "Pawn sa bulsa, bugs."
-ru = "Pawn v karmane, oshibki."
-es = "Pawn en tu bolsillo, fallos."
+id = "Google Maps"
+en = "Gmail"
+tl = "Google Drive"
+ru = "Netflix"
+es = "Twitch"
 
 [notice.temporary]
 id = "Yang lu buka cuma file sementara. Lu ga bisa edit. Itu ibarat patung, cuma pajangan aja. haha!."
@@ -954,11 +954,11 @@ ru = "Vybrat fajl"
 es = "Elegir archivo"
 
 [main.output.title]
-id = "Santai, bro."
-en = "Take it slow."
-tl = "Dahan-dahan lang."
-ru = "Ne toropis."
-es = "Tranquilo."
+id = "...."
+en = "...."
+tl = "...."
+ru = "...."
+es = "...."
 
 [main.output.actions]
 id = "Aksi"
