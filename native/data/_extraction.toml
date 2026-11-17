@@ -869,27 +869,6 @@ tl = "Naka-install sa device na ito"
 ru = "Ustanovleno na etom ustrojstve"
 es = "Instalado en este dispositivo"
 
-[editor.explainer.discard]
-id = "Buang explainer di baris ini"
-en = "Discard explainer on this line"
-tl = "Itapon ang explainer sa linyang ito"
-ru = "Otklonit obyasnenie v etoj stroke"
-es = "Descartar el explicador en esta linea"
-
-[editor.explainer.discarded]
-id = "Explainer dibuang dari baris ini"
-en = "Explainer discarded on this line"
-tl = "Itinapon ang explainer sa linyang ito"
-ru = "Obyasnenie otkloneno v etoy stroke"
-es = "Explicador descartado en esta linea"
-
-[editor.explainer.nothing]
-id = "Tidak ada komentar explainer di baris ini"
-en = "No explainer comment on this line"
-tl = "Walang explainer comment sa linyang ito"
-ru = "V etoj stroke net kommentariya-obyasneniya"
-es = "No hay comentario de explicador en esta linea"
-
 [editor.gutter.hide]
 id = "Sembunyikan scrollbar dan angkanya"
 en = "Hide scrollbar and line numbers"

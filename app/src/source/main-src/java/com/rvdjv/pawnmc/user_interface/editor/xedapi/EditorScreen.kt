@@ -871,6 +871,21 @@ fun EditorScreen(
                                     viewModel.loadFile()
                                 }
                                 workspace.persistOpenTabs()
+                                // A discard here is the exit-dialog discard: the buffer
+                                // rolled back to disk, so the explainer record of every
+                                // touched file is wiped too - no stale JSON survives
+                                // into the next session.
+                                val discardedPaths = buildList {
+                                    workspace.openWorkspaces.forEach { target ->
+                                        target.documents.forEach { document ->
+                                            add(document.file.absolutePath)
+                                        }
+                                    }
+                                    viewModel.filePath.takeIf { it.isNotBlank() }?.let { add(it) }
+                                }.distinct()
+                                discardedPaths.forEach { path ->
+                                    DiagnosticsStore.clear(context, path)
+                                }
                                 onNavigateBack()
                             }
                         },
