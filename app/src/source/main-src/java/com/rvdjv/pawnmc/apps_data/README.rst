@@ -20,7 +20,8 @@ Isi folder
     ``NativeBridge`` (satu permukaan JNI), ``Compiler`` (fasad), ``Detection``
     (deteksi versi kompiler), ``CaseConversion`` (mode ignore case),
     ``Explainer`` + ``Explanations`` (pesan ``[cause]``), dan ``DiagnosticsStore``
-    (``compiler/injector_data.json`` yang dibaca Xed).
+    (``compiler/injector_data.json`` yang dibaca Xed), tanpa kolom state:
+    satu kali discard menghapus seluruh record file itu.
 
 ``data_config/``
     ``ContentConfig`` (semua preferensi, cermin JSON di ``config/``),

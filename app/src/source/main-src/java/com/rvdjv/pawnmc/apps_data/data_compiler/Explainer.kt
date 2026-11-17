@@ -186,9 +186,9 @@ object Explainer {
     ): String {
         if (!sourcePath.isNullOrBlank()) noteSourcePath(sourcePath)
         if (rawText.isBlank()) {
-            // A clean run retires the *pending* hints only. The comments already in
-            // the buffer stay: removing them is the user's decision (Discard), not the
-            // compiler's, and discarded lines stay discarded.
+            // A clean run retires the stored record of the file. The comments
+            // already in the buffer stay: removing them is the user's decision
+            // (Discard), not the compiler's.
             recordDiagnostics(rawText, emptyList())
             return rawText
         }
@@ -230,15 +230,16 @@ object Explainer {
     /**
      * Hands the located diagnostics of one run to [DiagnosticsStore].
      *
-     * [DiagnosticsStore.record] merges instead of replacing: a line the user discarded
-     * keeps its tombstone, and a clean run only retires the pending hints. That is what
-     * keeps an injected comment in place until the user discards it.
+     * The store keeps no tombstones: each run replaces the record of the file it
+     * compiled, and a clean run leaves the store without a record for it at all.
+     * The comments already printed stay in the buffer either way - removing them
+     * is the user's call (Discard or a manual save).
      */
     private fun recordDiagnostics(rawText: String, located: List<LocatedDiagnostic>) {
         val context = Runner.hostContext() ?: return
         if (located.isEmpty()) {
-            // Nothing located in this run: retire the pending records of the file the
-            // run compiled, leaving every discarded tombstone untouched.
+            // Nothing located in this run: the file's record is dropped, so no
+            // later pass prints a hint from an older run.
             currentSourcePath()?.let { path -> DiagnosticsStore.record(context, path, emptyList()) }
             return
         }

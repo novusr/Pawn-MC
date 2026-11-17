@@ -19,28 +19,25 @@ import org.json.JSONObject
  *  - `explainer`: the localized `[cause]` text rendered for that message,
  *                 including the `%s` fill from the quoted symbol
  *  - `at`       : wall-clock stamp of the last compile that produced it
- *  - `state`    : `pending` while the hint is still wanted in the editor,
- *                 `discarded` once the user tapped Discard on that line
  *
- * Ownership rule: a compile only ever touches `pending` hints. A `discarded`
- * record is kept as a tombstone, so a later run - even a clean one - never
- * re-injects a comment the user already threw away, and the editor never strips
- * a comment the user chose to keep. The comments belong to the user: Discard and
- * Save are the only things that remove them.
+ * There is no per-line state any more. The whole store for a file is one of
+ * two things:
+ *
+ *  - *present*  : the last compile flagged lines in it, the editor prints the
+ *                 hints that are not on the buffer yet.
+ *  - *cleared*  : the user tapped Discard once, so the file's record is removed
+ *                 entirely. Nothing is re-injected into that file until the
+ *                 next compile writes a fresh record - the user's "no" lasts
+ *                 exactly until they ask the compiler for new hints.
+ *
+ * Saving the file is the other reset: whatever hint text was already injected
+ * lives in the source now, and the next compile re-reads the saved code and
+ * writes a fresh JSON from scratch.
  *
  * The file lives at `Documents/PawnMC/compiler/injector_data.json` when shared storage
  * is mounted, and falls back to the app-private folder otherwise.
  */
 object DiagnosticsStore {
-
-    /** Hint state written to the JSON. */
-    object State {
-        /** Recorded by the last run that reported the line; hint should be shown. */
-        const val PENDING = "pending"
-
-        /** The user dismissed this hint; it is never printed on that line again. */
-        const val DISCARDED = "discarded"
-    }
 
     /** Records kept for one file; keyed by 1-based line. */
     data class Entry(
@@ -49,13 +46,8 @@ object DiagnosticsStore {
         val kind: String,
         val message: String,
         val explainer: String,
-        val at: Long,
-        /** [State.PENDING] or [State.DISCARDED]. */
-        val state: String = State.PENDING
-    ) {
-        /** True while the editor is still expected to show this hint. */
-        val isPending: Boolean get() = state != State.DISCARDED
-    }
+        val at: Long
+    )
 
     private const val FILE_NAME = "injector_data.json"
 
@@ -101,13 +93,7 @@ object DiagnosticsStore {
                         kind = row.optString("kind", "error"),
                         message = row.optString("message"),
                         explainer = row.optString("explainer"),
-                        at = row.optLong("at"),
-                        // Older files have no state field: every record they carry was
-                        // written to be shown, so `pending` is the honest default.
-                        state = when (row.optString("state", State.PENDING)) {
-                            State.DISCARDED -> State.DISCARDED
-                            else -> State.PENDING
-                        }
+                        at = row.optLong("at")
                     )
                 )
             }
@@ -133,7 +119,6 @@ object DiagnosticsStore {
                         .put("message", entry.message)
                         .put("explainer", entry.explainer)
                         .put("at", entry.at)
-                        .put("state", entry.state)
                 )
             }
             fileEntry.put("diagnostics", rows)
@@ -148,13 +133,12 @@ object DiagnosticsStore {
     }
 
     /**
-     * Merges what the latest compiler run reported into the stored records.
+     * Replaces whatever the previous run stored for [sourceFile] with [entries].
      *
-     * Only `pending` hints are replaced: a `discarded` tombstones survives every run
-     * (clean or not) so a hint the user dismissed never comes back. When the run is
-     * clean the pending records are dropped - the editor keeps whatever comment is
-     * already in the buffer, because removing it is the user's call, not the
-     * compiler's.
+     * A compile never merges with an older record: the JSON is the record of the
+     * *latest* run, and a clean run stores nothing. No tombstone is kept - once
+     * the user discarded the hints, the next compile that flags lines again
+     * writes a fresh record and the hints are printed once more.
      */
     fun record(
         context: Context?,
@@ -164,52 +148,19 @@ object DiagnosticsStore {
         val file = fileFor(context)
         val store = load(file)
         val key = store.keyFor(sourceFile) ?: keyOf(sourceFile)
-        val discarded = store[key]?.filterNot { it.isPending }.orEmpty()
-        val pending = entries
-            .filter { it.isPending }
+        val fresh = entries
             .sortedBy { it.line }
             .take(MAX_ENTRIES_PER_FILE)
-        val merged = (pending + discarded)
-            .distinctBy { it.line to it.state }
-            .sortedBy { it.line }
-            .take(MAX_ENTRIES_PER_FILE * 2)
-        if (merged.isEmpty()) store.remove(key) else store[key] = merged.toMutableList()
+        if (fresh.isEmpty()) store.remove(key) else store[key] = fresh.toMutableList()
         save(file, store)
     }
 
-    /** Marks the hint on [sourceFile] at [line] as discarded; it is never shown again. */
-    fun discardLine(context: Context?, sourceFile: String, line: Int) {
-        mutate(context, sourceFile) { entries ->
-            entries.map { entry ->
-                if (entry.line == line) entry.copy(state = State.DISCARDED) else entry
-            }
-        }
-    }
-
-    /**
-     * How many physical lines the injected comment on [line] occupies.
-     *
-     * Kept in memory only: the editor measures it when it injects or saves the hint
-     * (a wrapped comment is several lines long) and Discard uses the same number to
-     * remove exactly what was printed. One line is the correct default - an unwrapped
-     * hint always sits on the line it explains.
-     */
-    fun setCommentSpan(sourceFile: String, line: Int, span: Int) {
-        spans[Pair(keyOf(sourceFile), line)] = span.coerceAtLeast(1)
-    }
-
-    /** Comment span last reported for [line], or 1. */
-    fun commentSpanFor(sourceFile: String, line: Int): Int =
-        spans[Pair(keyOf(sourceFile), line)] ?: 1
-
-    private val spans = java.util.concurrent.ConcurrentHashMap<Pair<String, Int>, Int>()
-
-    /** Removes the entry of [sourceFile] at [line]; only used for retired tombstones. */
+    /** Removes the entry of [sourceFile] at [line]. */
     fun dropLine(context: Context?, sourceFile: String, line: Int) {
         mutate(context, sourceFile) { entries -> entries.filterNot { it.line == line } }
     }
 
-    /** Drops every stored entry for [sourceFile] (pending and discarded). */
+    /** Drops every stored entry for [sourceFile]; this is the whole Discard action. */
     fun clear(context: Context?, sourceFile: String) {
         val file = fileFor(context)
         val store = load(file)
@@ -221,13 +172,9 @@ object DiagnosticsStore {
     fun entriesFor(context: Context?, sourceFile: String): List<Entry> =
         load(fileFor(context)).matchesFor(sourceFile)
 
-    /** Records the editor is still expected to print. */
-    fun pendingEntriesFor(context: Context?, sourceFile: String): List<Entry> =
-        entriesFor(context, sourceFile).filter { it.isPending }
-
     /** 1-based line numbers of [sourceFile] the last compile flagged, ascending. */
     fun damagedLines(context: Context?, sourceFile: String): List<Int> =
-        pendingEntriesFor(context, sourceFile).map { it.line }.distinct()
+        entriesFor(context, sourceFile).map { it.line }.distinct()
 
     /** Applies [transform] to the records of [sourceFile] and writes the store back. */
     private fun mutate(

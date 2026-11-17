@@ -57,6 +57,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.FolderOpen
@@ -144,6 +145,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
 import com.rvdjv.pawnmc.apps_data.data_compiler.DiagnosticsStore
 import com.rvdjv.pawnmc.user_interface._Icons
+import com.rvdjv.pawnmc.user_interface.editor.xedapi.ExplainInjector
 import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.user_interface.editor.workspace.MAX_OPEN_WORKSPACES
@@ -287,10 +289,8 @@ fun EditorScreen(
      * Applies the explain hints for the file now shown in the editor, without waiting
      * for the next periodic cycle.
      *
-     * Before reading the JSON, hints whose stored record was discarded are stripped from
-     * the buffer: the store is the only place that decides "this line is no longer
-     * explained", and a hint the user threw away must never come back - not after a
-     * recompile, not after a reopen.
+     * Lines that already carry a hint are skipped, not overwritten; a record the user
+     * discarded was cleared from the store, so there is nothing left to print either.
      */
     fun refreshExplainHints() {
         val editor = editorRef ?: return
@@ -300,7 +300,6 @@ fun EditorScreen(
             viewModel.filePath.takeIf { it.isNotBlank() }
         } ?: return
         scope.launch {
-            ExplainInjector.stripDiscarded(editor, path, context)
             ExplainInjector.apply(editor, path, context)
         }
     }
@@ -335,7 +334,6 @@ fun EditorScreen(
                     viewModel.filePath.takeIf { it.isNotBlank() }
                 }
                 if (path != null) {
-                    ExplainInjector.stripDiscarded(editor, path, context)
                     ExplainInjector.apply(editor, path, context)
                 }
             }
@@ -363,6 +361,14 @@ fun EditorScreen(
     var isWordWrap by remember { mutableStateOf(false) }
     var isReadOnly by remember { mutableStateOf(false) }
     var isLineNumbers by remember { mutableStateOf(true) }
+
+    /**
+     * Whether the custom scrollbar gutter (the bar plus its two line
+     * numbers) is shown at all. Toggleable from the overflow menu, like
+     * the floating buttons, so the reader can decide how clean the
+     * canvas is.
+     */
+    var gutterScrollbarVisible by remember { mutableStateOf(true) }
 
     // ------------------------------------------------------------------
     // Workspace: declared above, before the explain-sync loop; the scope
@@ -523,6 +529,12 @@ fun EditorScreen(
                 if (saved) {
                     Toast.makeText(context, "Saved ${document.name}", Toast.LENGTH_SHORT).show()
                 }
+                // A save resets the explainer record: whatever the last compile
+                // stored is gone, so the next compile writes a fresh JSON and
+                // fresh hints instead of printing from a stale one.
+                val path = document.file.absolutePath
+                ExplainInjector.saveWithoutHints(path)
+                DiagnosticsStore.clear(context, path)
             }
         } else if (viewModel.isTemporaryFile) {
             Toast.makeText(
@@ -531,7 +543,14 @@ fun EditorScreen(
                 Toast.LENGTH_SHORT
             ).show()
         } else {
-            viewModel.saveFile(editorRef?.text?.toString() ?: "")
+            val content = editorRef?.text?.toString() ?: ""
+            viewModel.saveFile(content)
+            // Same reset for the single-file mode.
+            scope.launch {
+                val path = viewModel.filePath.takeIf { it.isNotBlank() } ?: return@launch
+                ExplainInjector.saveWithoutHints(path)
+                DiagnosticsStore.clear(context, path)
+            }
         }
     }
 
@@ -1405,61 +1424,37 @@ fun EditorScreen(
                                     showJumpDialog = true
                                 }
                             )
-                            // Once a `[cause]` comment is printed it belongs to the user:
-                            // this is the only thing that removes it before a manual save.
+                            // Slide the gutter scrollbar (with its two line
+                            // numbers) in and out of view, the same way the
+                            // floating buttons are hidden.
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        localizer.get(
-                                            "editor.explainer.discard",
-                                            appLanguage,
-                                            "Discard explainer on this line"
-                                        )
+                                        if (gutterScrollbarVisible) {
+                                            localizer.get(
+                                                "editor.gutter.hide",
+                                                appLanguage,
+                                                "Hide scrollbar and line numbers"
+                                            )
+                                        } else {
+                                            localizer.get(
+                                                "editor.gutter.show",
+                                                appLanguage,
+                                                "Show scrollbar and line numbers"
+                                            )
+                                        }
                                     )
                                 },
                                 leadingIcon = {
                                     Icon(
-                                        Icons.Filled.DeleteSweep,
+                                        imageVector = Icons.Filled.SwapHoriz,
                                         contentDescription = null
                                     )
                                 },
                                 onClick = {
                                     dismissAutoCompletion()
                                     showMenu = false
-                                    val editor = editorRef
-                                    val path = if (workspace.isWorkspaceOpen) {
-                                        workspace.activeDocument?.file?.absolutePath
-                                    } else {
-                                        viewModel.filePath.takeIf { it.isNotBlank() }
-                                    }
-                                    if (editor != null && path != null) {
-                                        scope.launch {
-                                            val removed = ExplainInjector.discard(
-                                                editor = editor,
-                                                filePath = path,
-                                                context = context,
-                                                lineIndex = cursorLine
-                                            )
-                                            onDiagnosticsChanged()
-                                            Toast.makeText(
-                                                context,
-                                                if (removed) {
-                                                    localizer.get(
-                                                        "editor.explainer.discarded",
-                                                        appLanguage,
-                                                        "Explainer discarded on this line"
-                                                    )
-                                                } else {
-                                                    localizer.get(
-                                                        "editor.explainer.nothing",
-                                                        appLanguage,
-                                                        "No explainer comment on this line"
-                                                    )
-                                                },
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    }
+                                    gutterScrollbarVisible = !gutterScrollbarVisible
                                 }
                             )
                             DropdownMenuItem(
@@ -1896,6 +1891,7 @@ fun EditorScreen(
                         // The widget reads its state lazily, so the instance is enough:
                         // it must not depend on `editorRef` state changes, which would
                         // re-create the AndroidView on every recomposition.
+                        if (gutterScrollbarVisible) {
                         GutterScrollbar(
                             editor = editorRef,
                             activeColor = MaterialTheme.colorScheme.primary,
@@ -1904,6 +1900,7 @@ fun EditorScreen(
                                 .align(Alignment.CenterEnd)
                                 .padding(top = 28.dp)
                         )
+                        }
                         }
                     }
                 }

@@ -890,6 +890,20 @@ tl = "Walang explainer comment sa linyang ito"
 ru = "V etoj stroke net kommentariya-obyasneniya"
 es = "No hay comentario de explicador en esta linea"
 
+[editor.gutter.hide]
+id = "Sembunyikan scrollbar dan angkanya"
+en = "Hide scrollbar and line numbers"
+tl = "Itago ang scrollbar at mga numero"
+ru = "Skryt scrollbar i nomera strok"
+es = "Ocultar la barra y los numeros"
+
+[editor.gutter.show]
+id = "Perlihatkan scrollbar dan angkanya"
+en = "Show scrollbar and line numbers"
+tl = "Ipakita ang scrollbar at mga numero"
+ru = "Pokazat scrollbar i nomera strok"
+es = "Mostrar la barra y los numeros"
+
 [app.name]
 id = "PawnMC"
 en = "PawnEMC"

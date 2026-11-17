@@ -11,18 +11,22 @@ import kotlinx.coroutines.withContext
  * Injects the explainer hints recorded by the compiler run into the open editor.
  *
  * The compiler layer writes `Documents/PawnMC/compiler/injector_data.json` with the
- * file, the damaged line, the localized `[cause]` text and a `state`; this reader walks
- * that JSON and:
+ * file, the damaged line and the localized `[cause]` text; this reader walks that
+ * JSON and:
  *
- *  1. Appends a trailing `// [cause]: ...` comment to every `pending` line the compiler
- *     flagged, when the line is still present in the editor buffer. This runs right after
- *     the compile - the user sees the hint on the broken line while still looking at it,
- *     without leaving the editor.
- *  2. Leaves a comment that carries no pending record alone. A clean compile, a new log or
- *     a JSON that no longer lists the line never removes it: the comment belongs to the
- *     user now, and only [discard] (the Discard action) or a manual save takes it away.
- *  3. Never prints a comment on a line whose record was discarded. The tombstone stays in
- *     the JSON, so the hint cannot come back on the next run either.
+ *  1. Appends a trailing `// [cause]: ...` comment to every line the last compile
+ *     flagged, when the line is still present in the editor buffer. A line that
+ *     already carries a hint is skipped, never overwritten - that keeps repeated
+ *     passes and reload cycles free of doubled comments.
+ *  2. Leaves a comment that carries no record alone. A clean compile, a new log or
+ *     a JSON that no longer lists the line never removes it: the comment belongs to
+ *     the user now, and only [discard] (the Discard action) or a manual save takes
+ *     it away.
+ *
+ * There is no per-line discard state. [discard] removes every record the store
+ * keeps for the file at once, so the very next injection pass finds nothing to
+ * print and the editor settles quietly. The next compile writes a fresh JSON and
+ * fresh hints appear again.
  *
  * A plain comment was chosen over a shadow/gutter overlay on purpose: it needs no
  * renderer hooks and survives every theme.
@@ -48,41 +52,16 @@ internal object ExplainInjector {
     private fun hintComment(explainer: String): String = "// $explainer"
 
     /**
-     * Removes every printed hint whose record was discarded.
+     * One pass over the editor: reads the JSON off the IO dispatcher and appends
+     * the hints that are not printed yet.
      *
-     * Runs before each injection pass so a hint the user dismissed stays gone even when
-     * the buffer is reloaded from disk or a stale copy of it is restored.
-     */
-    suspend fun stripDiscarded(editor: CodeEditor, filePath: String, context: Context) {
-        val discarded = withContext(Dispatchers.IO) {
-            DiagnosticsStore.entriesFor(context, filePath).filterNot { it.isPending }
-        }
-        if (discarded.isEmpty()) return
-        withContext(Dispatchers.Main) {
-            val document = editor.text
-            var changed = false
-            for (entry in discarded) {
-                val index = entry.line - 1
-                if (index !in 0 until document.lineCount) continue
-                val text = document.getLine(index).toString()
-                if (!HINT_START.containsMatchIn(text)) continue
-                document.delete(index, stripHint(text).length, index, text.length)
-                changed = true
-            }
-            if (changed) editor.invalidate()
-        }
-    }
-
-    /**
-     * One pass over the editor: reads the JSON off the IO dispatcher and appends the
-     * pending hints that are not printed yet.
-     *
-     * Nothing is ever deleted here. Lines whose record disappeared simply keep the
-     * comment they already have.
+     * Nothing is ever deleted here. A line that already carries its hint is
+     * skipped rather than overwritten, so running the pass twice - or after the
+     * user saved the file with the comments in - never duplicates anything.
      */
     suspend fun apply(editor: CodeEditor, filePath: String, context: Context) {
         val entries = withContext(Dispatchers.IO) {
-            DiagnosticsStore.pendingEntriesFor(context, filePath)
+            DiagnosticsStore.entriesFor(context, filePath)
         }
         if (entries.isEmpty()) return
         withContext(Dispatchers.Main) {
@@ -139,8 +118,8 @@ internal object ExplainInjector {
 
     /**
      * Discard action for the line under the cursor: removes the printed hint (the wrapped
-     * continuation lines included), tombstones its record so no later run prints it again,
-     * and drops the hint from the saved file.
+     * continuation lines included), clears the whole stored record of the file - no
+     * matter how many lines it lists - and drops the hint from the saved file.
      *
      * Returns true when a hint was actually removed.
      */
@@ -150,34 +129,33 @@ internal object ExplainInjector {
         context: Context,
         lineIndex: Int
     ): Boolean {
-        val recordIndex = discardAt(editor, lineIndex) ?: return false
+        val removedAny = discardAt(editor, lineIndex)
         editor.invalidate()
 
-        // The hint lines that were removed are no longer in the buffer, so the record is
-        // matched by distance to the anchor line instead of by text.
         withContext(Dispatchers.IO) {
-            val entries = DiagnosticsStore.entriesFor(context, filePath)
-            val pending = entries.filter { it.isPending }
-            val closest = pending.minByOrNull { kotlin.math.abs(it.line - recordIndex) }
-            if (closest != null) DiagnosticsStore.discardLine(context, filePath, closest.line)
-            // Discard also reaches the saved file: after a reopen the comment must not be
-            // printed back from disk.
+            // One Discard cleans the entire file record: keeping a tombstone per
+            // line was the old contract and it is gone. Whatever the store still
+            // holds for this file goes away, so no pass re-prints anything until
+            // the next compile writes a fresh JSON.
+            DiagnosticsStore.clear(context, filePath)
+            // Discard also reaches the saved file: after a reopen the comment must
+            // not be printed back from disk.
             stripHintsFromDisk(filePath)
         }
-        return true
+        return removedAny
     }
 
     /**
-     * Removes the hint at [lineIndex] from the buffer and returns the 1-based number of
-     * the line the hint was attached to, or `null` when there was no hint to remove.
+     * Removes the hint at [lineIndex] from the buffer and returns whether anything
+     * was removed.
      *
      * Runs on the caller's (main) thread: it touches the editor's document directly, so
      * wrapping it in `withContext(Dispatchers.Main)` would save nothing and only add the
      * nullable result of a suspended block to reason about.
      */
-    private fun discardAt(editor: CodeEditor, lineIndex: Int): Int? {
+    private fun discardAt(editor: CodeEditor, lineIndex: Int): Boolean {
         val document = editor.text
-        if (lineIndex !in 0 until document.lineCount) return null
+        if (lineIndex !in 0 until document.lineCount) return false
         // The cursor may sit on the code line, on the hint itself or on a wrapped
         // continuation of it: walk up to the line that starts the hint.
         var anchor = lineIndex
@@ -185,7 +163,7 @@ internal object ExplainInjector {
             anchor--
         }
         val lineText = document.getLine(anchor).toString()
-        val match = HINT_START.find(lineText) ?: return null
+        val match = HINT_START.find(lineText) ?: return false
         document.delete(
             anchor,
             match.range.first.coerceAtMost(lineText.trimEnd().length),
@@ -200,7 +178,7 @@ internal object ExplainInjector {
             document.delete(anchor + 1, 0, anchor + 1, text.length)
             document.delete(anchor, document.getLine(anchor).length, anchor + 1, 0)
         }
-        return anchor + 1
+        return true
     }
 
     /** Rewrites the file on disk without any injected hint comment. */

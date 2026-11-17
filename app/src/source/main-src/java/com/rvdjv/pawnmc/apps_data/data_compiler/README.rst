@@ -40,9 +40,9 @@ Berkas
 
 ``DiagnosticsStore.kt``
     Penulis ``compiler/injector_data.json``. Per baris menyimpan
-    ``line/code/kind/message/explainer/at/state``. ``state`` adalah
-    ``pending`` atau ``discarded``; record ``discarded`` adalah batu nisan yang
-    mencegah komentar yang sudah dibuang pengguna muncul lagi.
+    ``line/code/kind/message/explainer/at``. Tanpa kolom ``state``: satu kali
+    *Discard* menghapus seluruh record file itu, dan kompilasi berikutnya
+    menulis JSON baru.
 
 ``Names.kt``
     Nama file dan flag yang dipakai lintas kelas (mis. nama binary pawncc).
@@ -51,8 +51,9 @@ Kontrak explainer
 -----------------
 
 * Setiap kompilasi memperbarui JSON, terlepas dari toggle *Explain output*.
-* Kompilasi bersih hanya memensiunkan record ``pending``; komentar yang sudah
-  tercetak di editor tetap ada sampai pengguna menekan *Discard*.
+* Kompilasi bersih menghapus record file itu; komentar yang sudah tercetak di
+  editor tetap ada sampai pengguna menekan *Discard* atau menyimpan file.
+* Baris yang sudah membawa komentar tidak pernah ditimpa oleh pass injeksi.
 * ``Explainer.explainCompilerOutput(rawText, cacheDir, language, sourcePath)``
   wajib diberi ``sourcePath`` agar kompilasi bersih tahu file mana yang
   recordnya dipensiunkan.

@@ -38,8 +38,8 @@ Alur besar aplikasi
 3. ``Explainer`` menulis ``compiler/injector_data.json`` lewat
    ``DiagnosticsStore``; Xed membaca file itu di ``ExplainInjector`` dan
    menempelkan komentar ``// [cause]`` pada baris yang rusak.
-4. Komentar hanya hilang lewat *Discard explainer* (record jadi ``discarded``)
-   atau ketika pengguna menyunting baris tersebut sendiri.
+4. Komentar hanya hilang lewat *Discard* (yang menghapus seluruh record file
+   itu di JSON) atau ketika pengguna menyunting baris tersebut sendiri.
 
 Berkas penunjuk
 ---------------
