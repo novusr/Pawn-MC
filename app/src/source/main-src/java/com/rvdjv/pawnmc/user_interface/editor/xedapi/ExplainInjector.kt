@@ -72,7 +72,14 @@ internal object ExplainInjector {
                 val original = document.getLine(baseLine).toString()
                 if (HINT_START.containsMatchIn(original)) continue
                 if (original.isBlank()) continue
-                document.insert(baseLine, original.length, " ${hintComment(entry.explainer)}")
+                // The column must never cross the line: sora's `Content.insert` past the text length when the line keeps a
+                // separator slot (CRLF), and landing there silently puts the hint
+                // outside the visible row - the hint then looks missing on lines
+                // that end in `}` and friends. Clamping to the plain text length
+                // keeps the comment glued to the code line it explains.
+                val column = original.length
+                    .coerceAtMost(document.getColumnCount(baseLine))
+                document.insert(baseLine, column, hintComment(entry.explainer))
                 changed = true
             }
             if (changed) editor.invalidate()

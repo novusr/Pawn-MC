@@ -38,9 +38,9 @@ Berkas dan tugasnya
 
 ``ExplainInjector.kt``
     Pembaca ``compiler/injector_data.json``. Menambahkan komentar ``// [cause]``
-    pada baris ``pending``, tidak pernah menghapus komentar yang tidak lagi ada
-    di JSON (komentar milik pengguna), dan menyediakan aksi Discard yang
-    menandai record sebagai ``discarded``.
+    pada baris yang dilaporkan kompilasi, tidak pernah menimpa komentar yang
+    sudah ada (komentar milik pengguna), dan menyediakan aksi Discard yang
+    menghapus seluruh record file itu.
 
 ``EditorViewModel.kt``
     State dokumen tunggal (file, konten, dirty flag) dan penyimpanan.
@@ -58,7 +58,7 @@ Alur penting
 1. Kompilasi berjalan di ``MainViewModel``; hasilnya menulis ``injector_data.json``.
 2. ``diagnosticsRevision`` naik, ``LaunchedEffect`` di ``EditorScreen`` memanggil
    ``ExplainInjector.apply`` sehingga komentar muncul saat itu juga.
-3. Pengguna memilih *Discard explainer on this line*: komentar dihapus dari
-   buffer dan dari file simpanan, record ditandai ``discarded``.
+3. Pengguna memilih *Discard*: komentar dihapus dari buffer dan dari file
+   simpanan, seluruh record file itu dihapus dari JSON.
 4. Kompilasi bersih tidak menghapus komentar yang sudah tampil - hanya record
-   ``pending`` yang dipensiunkan.
+   file itu yang dikosongkan.
