@@ -29,8 +29,8 @@ Isi folder
 ``editor/``
     Xed Editor: ``xedapi/`` (layar, widget Sora, skema warna, scrollbar gutter,
     injeksi explainer), ``syntax/`` (highlighter Pawn dan ``server.cfg``),
-    ``workspace/`` (sesi workspace, panel pohon file, folder picker dan
-    pemilih sumber folder), ``portal/`` (Developer Portal / Pawn terminal).
+    ``workspace/`` (sesi workspace, panel pohon file dan folder picker),
+    ``portal/`` (Developer Portal / Pawn terminal).
 
 ``theme/``
     Warna, tipografi dan pembungkus tema Material 3.

@@ -19,7 +19,7 @@ local.properties
 release-key.jks
 /-Z+bugs
 RELEASE_NOTES_DRAFT.md
-TODO.txt
+TODO
 .env
 
 # --- Build / debug output that must never be committed -------------------------

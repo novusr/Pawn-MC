@@ -34,8 +34,8 @@ Berkas
 Catatan
 -------
 
-* Teks diambil dari ``_extraction.toml`` lewat ``AppLocalization``; key baru
-  untuk include path dan pemilih folder ada di ``settings.include.*`` dan
-  ``picker.source.*``.
-* Folder picker hanya menampilkan pemilihan sumber (browser bawaan / sistem /
-  ZArchiver) bila aplikasi pihak ketiga memang terpasang.
+* Teks diambil dari ``_extraction.toml`` lewat ``AppLocalization``; key include
+  path ada di ``settings.include.*``.
+* Folder picker dibuka langsung lewat ``Intent.createChooser`` di atas
+  ``ACTION_OPEN_DOCUMENT_TREE``, jadi ZArchiver dan file manager lain ikut
+  tersedia di pemilih sistem tanpa daftar pilihan dari aplikasi.

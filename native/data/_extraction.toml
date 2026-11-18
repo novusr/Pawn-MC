@@ -820,55 +820,6 @@ tl = "Isara"
 ru = "Zakryt"
 es = "Cerrar"
 
-[picker.source.title]
-id = "Pilih aplikasi pemilih folder"
-en = "Choose a folder picker"
-tl = "Pumili ng folder picker"
-ru = "Vyberite vybor papki"
-es = "Elegir un selector de carpeta"
-
-[picker.source.desc]
-id = "Tentukan dari mana folder diambil. Aplikasi pihak ketiga hanya muncul jika terpasang."
-en = "Pick where the folder comes from. Third-party managers appear only when they are installed."
-tl = "Piliin kung saan kukunin ang folder. Lalabas lang ang third-party manager kapag naka-install."
-ru = "Vyberite, otkuda vzyat papku. Storonnnie menedzhery poyavlyayutsya tolko esli ustanovleny."
-es = "Elegí de donde viene la carpeta. Los gestores de terceros aparecen solo si estan instalados."
-
-[picker.source.builtin]
-id = "Browser bawaan"
-en = "Built-in browser"
-tl = "Built-in browser"
-ru = "Vstroennyj brauzer"
-es = "Explorador integrado"
-
-[picker.source.builtin.desc]
-id = "Telusuri folder di dalam PawnMC"
-en = "Browse folders inside PawnMC"
-tl = "Mag-browse ng folder sa loob ng PawnMC"
-ru = "Prosmotr papok vnutri PawnMC"
-es = "Explorar carpetas dentro de PawnMC"
-
-[picker.source.system]
-id = "Pemilih sistem"
-en = "System picker"
-tl = "System picker"
-ru = "Sistemnyj vybor"
-es = "Selector del sistema"
-
-[picker.source.system.desc]
-id = "Pemilih folder bawaan Android"
-en = "The Android folder picker"
-tl = "Ang folder picker ng Android"
-ru = "Standartnyj vybor papki Android"
-es = "El selector de carpetas de Android"
-
-[picker.source.thirdparty.desc]
-id = "Terpasang di perangkat ini"
-en = "Installed on this device"
-tl = "Naka-install sa device na ito"
-ru = "Ustanovleno na etom ustrojstve"
-es = "Instalado en este dispositivo"
-
 [editor.gutter.hide]
 id = "Sembunyikan scrollbar dan angkanya"
 en = "Hide scrollbar and line numbers"

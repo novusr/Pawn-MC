@@ -49,8 +49,9 @@ Berkas dan tugasnya
     Panel cari/ganti (workspace maupun per file).
 
 ``EditorScreen.kt`` juga memegang bilah status (posisi kursor, status simpan)
-dan meng-host ``FolderSourceChooserDialog`` + ``BuiltInFolderBrowser`` sebelum
-picker folder workspace dibuka.
+dan meng-host ``BuiltInFolderBrowser``; folder picker dibuka langsung lewat
+``Intent.createChooser`` di atas ``ACTION_OPEN_DOCUMENT_TREE``, tanpa dialog
+pemilih sumber tersendiri.
 
 Alur penting
 ------------

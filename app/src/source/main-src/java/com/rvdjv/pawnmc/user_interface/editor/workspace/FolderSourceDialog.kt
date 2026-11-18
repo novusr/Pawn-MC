@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -31,120 +30,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.user_interface.filebrowser.FileBrowserMode
 import com.rvdjv.pawnmc.user_interface.filebrowser.FileBrowserDialog
 import java.io.File
-
-/**
- * Asks which application should show the folder picker.
- *
- * Android answers `ACTION_OPEN_DOCUMENT_TREE` with the system picker only, so a user who
- * browses folders with ZArchiver had no way to reach it from PawnMC. Every place that
- * needs a folder now goes through this dialog first: the built-in browser, the system
- * picker, or - when they are installed - the third-party managers that understand the
- * same intent.
- *
- * The dialog is skipped entirely when nothing else is installed, so a device without
- * ZArchiver sees no extra step.
- */
-@Composable
-fun FolderSourceChooserDialog(
-    appLanguage: ContentConfig.AppLanguage,
-    localizer: com.rvdjv.pawnmc.apps_data.data_config.AppLocalization?,
-    onBuiltInPick: () -> Unit,
-    onSystemPick: () -> Unit,
-    onThirdPartyPick: (FolderPickerTarget) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val context = LocalContext.current
-    val thirdParty = remember(context) { availableThirdPartyFolderPickers(context) }
-
-    fun text(key: String, fallback: String): String =
-        localizer?.get(key, appLanguage, fallback) ?: fallback
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(text("picker.source.title", "Choose a folder picker")) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(
-                    text = text(
-                        "picker.source.desc",
-                        "Pick where the folder comes from. Third-party managers appear only when they are installed."
-                    ),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                PickerSourceRow(
-                    icon = Icons.Filled.FolderOpen,
-                    title = text("picker.source.builtin", "Built-in browser"),
-                    subtitle = text("picker.source.builtin.desc", "Browse folders inside PawnMC"),
-                    onClick = onBuiltInPick
-                )
-                PickerSourceRow(
-                    icon = Icons.Filled.PhoneAndroid,
-                    title = text("picker.source.system", "System picker"),
-                    subtitle = text("picker.source.system.desc", "The Android folder picker"),
-                    onClick = onSystemPick
-                )
-                for (target in thirdParty) {
-                    PickerSourceRow(
-                        icon = Icons.Filled.Folder,
-                        title = target.label,
-                        subtitle = text("picker.source.thirdparty.desc", "Installed on this device"),
-                        onClick = { onThirdPartyPick(target) }
-                    )
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text("settings.dialog.cancel", "Cancel"))
-            }
-        }
-    )
-}
-
-@Composable
-private fun PickerSourceRow(
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            shape = RoundedCornerShape(10.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            modifier = Modifier.size(38.dp)
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            }
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(
-                subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
 
 /** One folder or file shown in [IncludePathInfoDialog]. */
 private data class PathEntryRow(val file: File, val isDirectory: Boolean)

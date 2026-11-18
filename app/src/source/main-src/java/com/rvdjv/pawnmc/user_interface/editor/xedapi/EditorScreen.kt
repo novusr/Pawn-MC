@@ -157,9 +157,6 @@ import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFilePickerIntent
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveDocumentToFile
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveTreeToFile
 import com.rvdjv.pawnmc.user_interface.editor.workspace.BuiltInFolderBrowser
-import com.rvdjv.pawnmc.user_interface.editor.workspace.FolderSourceChooserDialog
-import com.rvdjv.pawnmc.user_interface.editor.workspace.availableThirdPartyFolderPickers
-import com.rvdjv.pawnmc.user_interface.editor.workspace.launchInPackage
 import com.rvdjv.pawnmc.user_interface.editor.syntax.CodeLanguages
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspacePanel
 import com.rvdjv.pawnmc.user_interface.editor.portal.DeveloperPortal
@@ -442,11 +439,11 @@ fun EditorScreen(
     val workspaceHasNoActiveFile = workspace.isWorkspaceOpen && activeDocument == null
 
     // ------------------------------------------------------------------
-    // Folder source: the system picker, the built-in browser or an installed
-    // third-party manager (ZArchiver and friends). Set when the user asks for a
-    // workspace folder while one of those managers is installed.
+    // The built-in browser is offered through a button instead of a source
+    // chooser; the picker itself is a plain ACTION_OPEN_DOCUMENT_TREE wrapped in
+    // Intent.createChooser, so installed managers (ZArchiver and friends) answer
+    // the system chooser directly.
     // ------------------------------------------------------------------
-    var showWorkspaceSourceChooser by remember { mutableStateOf(false) }
     var showBuiltInWorkspaceBrowser by remember { mutableStateOf(false) }
 
     /** Opens the picked folder as the active workspace. */
@@ -477,10 +474,9 @@ fun EditorScreen(
 
     /** Entry point of every "open a workspace folder" affordance. */
     fun requestWorkspaceFolder() {
-        showWorkspaceSourceChooser = availableThirdPartyFolderPickers(context).isNotEmpty()
-        if (!showWorkspaceSourceChooser) {
-            folderPickerLauncher.launch(buildFolderPickerIntent())
-        }
+        folderPickerLauncher.launch(
+            Intent.createChooser(buildFolderPickerIntent(), null)
+        )
     }
 
     val pawnFilePickerLauncher = rememberLauncherForActivityResult(
@@ -2335,31 +2331,6 @@ fun EditorScreen(
                 )
             }
         }
-    }
-
-    // Folder source chooser: shown only when a third-party manager is installed, so
-    // devices without one keep the single-tap system picker. The built-in browser is
-    // always offered because it can reach app-private folders the system picker hides.
-    if (showWorkspaceSourceChooser) {
-        FolderSourceChooserDialog(
-            appLanguage = appLanguage,
-            localizer = localizer,
-            onBuiltInPick = {
-                showWorkspaceSourceChooser = false
-                showBuiltInWorkspaceBrowser = true
-            },
-            onSystemPick = {
-                showWorkspaceSourceChooser = false
-                folderPickerLauncher.launch(buildFolderPickerIntent())
-            },
-            onThirdPartyPick = { target ->
-                showWorkspaceSourceChooser = false
-                if (!folderPickerLauncher.launchInPackage(buildFolderPickerIntent(), target.packageName)) {
-                    folderPickerLauncher.launch(buildFolderPickerIntent())
-                }
-            },
-            onDismiss = { showWorkspaceSourceChooser = false }
-        )
     }
 
     if (showBuiltInWorkspaceBrowser) {

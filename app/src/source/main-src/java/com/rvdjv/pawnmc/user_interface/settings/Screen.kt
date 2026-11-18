@@ -103,11 +103,8 @@ import com.rvdjv.pawnmc.apps_data.data_update.UpdateManager
 import com.rvdjv.pawnmc.apps_data.data_update.UpdateStatus
 import com.rvdjv.pawnmc.user_interface.main.SettingsTarget
 import com.rvdjv.pawnmc.user_interface.editor.workspace.BuiltInFolderBrowser
-import com.rvdjv.pawnmc.user_interface.editor.workspace.FolderSourceChooserDialog
 import com.rvdjv.pawnmc.user_interface.editor.workspace.IncludePathInfoDialog
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFolderPickerIntentAt
-import com.rvdjv.pawnmc.user_interface.editor.workspace.availableThirdPartyFolderPickers
-import com.rvdjv.pawnmc.user_interface.editor.workspace.launchInPackage
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveTreeToFile
 import com.rvdjv.pawnmc.user_interface.common.ScrollStateVerticalScrollbar
 import com.rvdjv.pawnmc.user_interface.common.lineCountOf
@@ -230,12 +227,10 @@ fun SettingsScreen(
     var editingIncludePathIndex by remember { mutableStateOf<Int?>(null) }
     var addingIncludePath by remember { mutableStateOf(false) }
     // Include-path interaction: tapping a stored path opens the info dialog, which then
-    // offers the picker; ":+" opens the source chooser first (built-in / system / third party).
+    // offers the picker; the picker itself is ACTION_OPEN_DOCUMENT_TREE wrapped in
+    // Intent.createChooser, so installed managers answer it directly.
     var infoIncludePath by remember { mutableStateOf<String?>(null) }
-    var showIncludeSourceChooser by remember { mutableStateOf(false) }
     var pendingIncludeStartDirectory by remember { mutableStateOf<File?>(null) }
-    // Package that should answer the next include folder pick; null = system picker.
-    var pendingIncludePickerPackage by remember { mutableStateOf<String?>(null) }
     var showBuiltInIncludeBrowser by remember { mutableStateOf(false) }
     var pendingVersion by remember { mutableStateOf<ContentConfig.CompilerVersion?>(null) }
     var updateStatus by remember { mutableStateOf("Checking for updates...") }
@@ -383,7 +378,6 @@ fun SettingsScreen(
         val isAdding = addingIncludePath
         editingIncludePathIndex = null
         addingIncludePath = false
-        pendingIncludePickerPackage = null
         if (result.resultCode != Activity.RESULT_OK || pickedUri == null) return@rememberLauncherForActivityResult
 
         val resultFlags = result.data?.flags ?: 0
@@ -433,18 +427,13 @@ fun SettingsScreen(
         addingIncludePath = index == null
         viewModel.clearIncludePathExtensionNotice()
         includeFolderPickerLauncher.launch(
-            buildFolderPickerIntentAt(startDirectory).setPackage(pendingIncludePickerPackage)
+            Intent.createChooser(buildFolderPickerIntentAt(startDirectory), null)
         )
     }
 
     fun openIncludeFolderPicker(index: Int? = null, startDirectory: File? = null) {
         pendingIncludeStartDirectory = startDirectory
-        // Devices with a third-party manager get to pick which app answers; without one
-        // the extra step is skipped entirely.
-        showIncludeSourceChooser = availableThirdPartyFolderPickers(context).isNotEmpty()
-        if (!showIncludeSourceChooser) {
-            launchIncludeFolderPicker(index, startDirectory)
-        }
+        launchIncludeFolderPicker(index, startDirectory)
     }
 
     // Safety net for paths that vanished while the app was running (e.g. the SD card was
@@ -1594,46 +1583,6 @@ fun SettingsScreen(
             onDismiss = {
                 infoIncludePath = null
                 editingIncludePathIndex = null
-            }
-        )
-    }
-
-    if (showIncludeSourceChooser) {
-        val start = pendingIncludeStartDirectory
-        val targetIndex = editingIncludePathIndex
-        FolderSourceChooserDialog(
-            appLanguage = appLanguage,
-            localizer = localizer,
-            onBuiltInPick = {
-                showIncludeSourceChooser = false
-                showBuiltInIncludeBrowser = true
-            },
-            onSystemPick = {
-                showIncludeSourceChooser = false
-                pendingIncludePickerPackage = null
-                launchIncludeFolderPicker(targetIndex, start)
-            },
-            onThirdPartyPick = { target ->
-                showIncludeSourceChooser = false
-                // A package that does not actually answer the tree intent would throw; the
-                // system picker then takes over so the tap never dies silently.
-                pendingIncludePickerPackage = target.packageName
-                // A package without an ACTION_OPEN_DOCUMENT_TREE handler would only fail
-                // asynchronously inside `launch`, so it is resolved (and the fallback taken)
-                // before the explicit launch.
-                val handled = includeFolderPickerLauncher.launchInPackage(
-                    buildFolderPickerIntentAt(start),
-                    target.packageName
-                )
-                if (!handled) {
-                    pendingIncludePickerPackage = null
-                    launchIncludeFolderPicker(targetIndex, start)
-                }
-            },
-            onDismiss = {
-                showIncludeSourceChooser = false
-                editingIncludePathIndex = null
-                addingIncludePath = false
             }
         )
     }

@@ -23,21 +23,18 @@ Berkas
 
 ``FolderPicker.kt``
     Intent folder picker (``buildFolderPickerIntent`` /
-    ``buildFolderPickerIntentAt``), konversi URI tree <-> ``File``, dan
-    ``availableThirdPartyFolderPickers`` untuk mendeteksi ZArchiver dan file
-    manager lain yang terpasang.
+    ``buildFolderPickerIntentAt``) dan konversi URI tree <-> ``File``.
 
 ``FolderSourceDialog.kt``
-    ``FolderSourceChooserDialog`` (pilih browser bawaan / picker sistem /
-    pihak ketiga), ``IncludePathInfoDialog`` (path lengkap + folder induk + isi
-    folder), dan ``BuiltInFolderBrowser``.
+    ``IncludePathInfoDialog`` (path lengkap + folder induk + isi folder) dan
+    ``BuiltInFolderBrowser`` (penjelajah bawaan untuk folder app-private).
 
 Alur pemilihan folder
 ---------------------
 
-1. Pemanggil memanggil ``availableThirdPartyFolderPickers(context)``.
-2. Jika kosong, picker sistem langsung dibuka seperti biasa.
-3. Jika ada, ``FolderSourceChooserDialog`` ditampilkan; pilihan pihak ketiga
-   dikirim dengan ``setPackage`` ke ``ACTION_OPEN_DOCUMENT_TREE``.
-4. Hasil URI diubah menjadi ``File`` oleh ``resolveTreeToFile`` dan diserahkan
+1. Pemanggil membungkus intent dari ``buildFolderPickerIntent(At)`` dengan
+   ``Intent.createChooser``; aplikasi yang memahami ``ACTION_OPEN_DOCUMENT_TREE``
+   (ZArchiver, file manager lain) muncul langsung di pemilih sistem tanpa daftar
+   tambahan dari aplikasi.
+2. Hasil URI diubah menjadi ``File`` oleh ``resolveTreeToFile`` dan diserahkan
    ke pemanggil (workspace baru atau include path baru).
