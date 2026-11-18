@@ -2944,8 +2944,9 @@ private fun EditorTabStrip(
                                 .padding(start = 6.dp)
                         )
                         if (document.isDirty) {
+                            /// *U* = unsaved here.
                             Text(
-                                text = "~",
+                                text = "*U*",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(start = 4.dp)
