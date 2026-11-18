@@ -1415,7 +1415,6 @@ tl = "Maglagay ng brace, parenthesis, bracket, bantas, o numero sa cursor."
 ru = "Vstavlyaet skobki, kavychki, znaki prepinaniya ili tsifry v pozitsiyu kursora."
 es = "Inserta llaves, parentesis, corchetes, signos de puntuacion o numeros en la posicion del cursor."
 
-
 [main.promo.title]
 id = "Pengaturan"
 en = "Settings"
