@@ -70,8 +70,7 @@ internal object HelpContent {
                 "dashboard",
                 "Halaman Utama",
                 "Mulai atau hentikan server di sini. Salin alamat Local untuk bermain di perangkat ini, " +
-                    "atau alamat LAN untuk pemain di jaringan Wi-Fi yang sama.\n\n" +
-                    "Jika server.cfg belum ada, file dengan pengaturan awal akan dibuat saat server pertama kali dimulai."
+                    "atau alamat LAN untuk pemain di jaringan Wi-Fi yang sama."
             ),
             HelpSection(
                 "console",
@@ -103,8 +102,7 @@ internal object HelpContent {
             HelpSection(
                 "dashboard",
                 "Main interface",
-                "Start or stop the server here. Copy the Local address to play on this phone, or the LAN address for players on the same Wi-Fi network.\n\n" +
-                    "If server.cfg is missing, the app creates it with default settings on first start."
+                "Start or stop the server here. Copy the Local address to play on this phone, or the LAN address for players on the same Wi-Fi network."
             ),
             HelpSection(
                 "console",
@@ -138,10 +136,7 @@ internal object HelpContent {
                 "Pangunahing interface",
                 "Dito binubuksan at isinasara ang server.\n\n" +
                     "Ang unang card ay may Local address (127.0.0.1) para maglaro sa phone na ito, " +
-                    "at LAN address para sa mga kaibigang nasa parehong Wi-Fi/hotspot. I-tap para kopyahin.\n\n" +
-                    "Ang pinakababang button ay Start/Stop. Kung wala pang server.cfg, gagamitin pa rin " +
-                    "ng runner ang default (PocketSAMP/PawnMC Runner, port 7777, 20 players, rcon234) at " +
-                    "gagawa ng file sa unang simula."
+                    "at LAN address para sa mga kaibigang nasa parehong Wi-Fi/hotspot. I-tap para kopyahin."
             ),
             HelpSection(
                 "console",
@@ -190,9 +185,7 @@ internal object HelpContent {
                 "Interfaz principal",
                 "Aquí se inicia y se detiene el servidor.\n\n" +
                     "La primera tarjeta muestra la dirección Local (127.0.0.1) para jugar en este " +
-                    "teléfono y la dirección LAN para amigos en la misma Wi-Fi/hotspot. Toca una para copiarla.\n\n" +
-                    "El botón inferior es Start/Stop. Sin server.cfg, el runner usa igualmente sus valores " +
-                    "por defecto (PocketSAMP/PawnMC Runner, puerto 7777, 20 jugadores, rcon234) y crea el archivo al arrancar."
+                    "teléfono y la dirección LAN para amigos en la misma Wi-Fi/hotspot. Toca una para copiarla."
             ),
             HelpSection(
                 "console",
@@ -240,9 +233,7 @@ internal object HelpContent {
                 "Glavnyj ekran",
                 "Zdes server zapuskaetsya i ostanavlivaetsya.\n\n" +
                     "Pervaya kartochka — adres Local (127.0.0.1) dlya igry na etom telefone, nizhe adres LAN " +
-                    "dlya druzej v toj zhe Wi-Fi/hotspot seti. Nazhmite na adres, chtoby skopirovat.\n\n" +
-                    "Knopka vnizu — Start/Stop. Bez server.cfg runner vsyo ravno ispolzuet znacheniya po " +
-                    "umolchaniyu (PocketSAMP/PawnMC Runner, port 7777, 20 igrokov, rcon234) i sozdayot fajl pri pervom zapuske."
+                    "dlya druzej v toj zhe Wi-Fi/hotspot seti. Nazhmite na adres, chtoby skopirovat."
             ),
             HelpSection(
                 "console",
