@@ -120,6 +120,20 @@ tl = "Isara ang Developer Portal"
 es = "Cerrar Developer Portal"
 ru = "Zakryt Developer Portal"
 
+[terminal.expand.on]
+id = "Melebarkan Developer Portal penuh"
+en = "Expand Developer Portal to full screen"
+tl = "Palawakin ang Developer Portal sa buong screen"
+es = "Expandir Developer Portal a pantalla completa"
+ru = "Razvernut Developer Portal na ves ekran"
+
+[terminal.expand.off]
+id = "Kembalikan Developer Portal ke ukuran normal"
+en = "Restore Developer Portal to normal size"
+tl = "Ibalik ang Developer Portal sa normal na laki"
+es = "Restaurar Developer Portal a su tamano normal"
+ru = "Vernut Developer Portal k obychnomu razmeru"
+
 [terminal.input.toggle]
 id = "Munculkan atau sembunyikan input"
 en = "Show or hide the input"

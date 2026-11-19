@@ -47,8 +47,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -110,12 +112,27 @@ fun WorkspacePanel(
     modifier: Modifier = Modifier,
     onCreateFileAt: (File) -> Unit = {},
     onCreateFolderAt: (File) -> Unit = {},
-    onBeforeAction: () -> Unit = {}
+    onBeforeAction: () -> Unit = {},
+    /** Reported while the panel demands the whole screen to itself. */
+    onExpandedChange: (Boolean) -> Unit = {},
+    /**
+     * Compile-focus mode: set right after the user taps the compile button (not
+     * when the panel is opened normally). The output section is scrolled to the
+     * very bottom immediately so the freshest log lines are the first thing seen,
+     * and the section keeps an unbounded viewport until the user interacts with
+     * the explorer again - the log is then never hidden behind the folder list.
+     */
+    compileFocusToken: Int = 0
 ) {
     val context = LocalContext.current
     val isIndonesian = remember(context) {
         ContentConfig.getInstance(context).n_app_language == ContentConfig.AppLanguage.ID
     }
+    // Full-screen focus mode: like the portal's expand toggle, the panel takes the
+    // whole canvas and the host hides its floating controls while it is on.
+    var isExpanded by remember { mutableStateOf(false) }
+    LaunchedEffect(isExpanded) { onExpandedChange(isExpanded) }
+
     val workspace = session.activeWorkspace
     val tree = workspace?.tree
     val collapsedPaths = workspace?.collapsedPaths
@@ -143,6 +160,17 @@ fun WorkspacePanel(
     val outputScrollState = rememberScrollState()
     val outputHorizontalScrollState = rememberScrollState()
 
+    // Compile focus: whenever the token ticks (a compile was requested), the whole
+    // list scrolls to the compiler-output item - the last section of the panel -
+    // instead of leaving the log hidden under the folder/file manager rows. Opening
+    // the panel normally never ticks the token, so browsing is not yanked downwards.
+    LaunchedEffect(compileFocusToken, outputText) {
+        if (compileFocusToken <= 0) return@LaunchedEffect
+        // The output item is one of the trailing items; scrolling to the very end
+        // of the list is the simplest reliable way to land on it.
+        explorerListState.animateScrollToItem(explorerListState.layoutInfo.totalItemsCount - 1)
+    }
+
     // `documents` is a SnapshotStateList, so `toList()` would hand the list a fresh
     // instance on every recomposition and make it re-diff the rows. Keyed on the
     // size, the snapshot conversion happens only when a tab really opened or closed.
@@ -155,7 +183,7 @@ fun WorkspacePanel(
             .fillMaxSize()
             .background(
                 color = MaterialTheme.colorScheme.surfaceContainerLow,
-                shape = RoundedCornerShape(18.dp),
+                shape = if (isExpanded) RectangleShape else RoundedCornerShape(18.dp),
             )
     ) {
         if (session.openWorkspaces.isNotEmpty()) {
@@ -182,7 +210,11 @@ fun WorkspacePanel(
                 onBeforeAction()
                 onOpenFolder()
             },
-            onDrag = onHeaderDrag
+            onDrag = onHeaderDrag,
+            // The expand toggle sits left of the folder button, the same
+            // focus-mode switch the Developer Portal header carries.
+            isExpanded = isExpanded,
+            onToggleExpand = { isExpanded = !isExpanded }
         )
 
         LazyColumn(
@@ -532,20 +564,29 @@ private fun SectionHeader(
     subtitle: String?,
     onClose: () -> Unit = {},
     onOpenFolder: () -> Unit = {},
-    onDrag: (IntOffset) -> Unit = {}
+    onDrag: (IntOffset) -> Unit = {},
+    isExpanded: Boolean = false,
+    onToggleExpand: () -> Unit = {}
 ) {
     val currentOnDrag = rememberUpdatedState(onDrag)
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .pointerInput(Unit) {
-                detectDragGestures { change, dragAmount ->
-                    change.consume()
-                    currentOnDrag.value(
-                        IntOffset(dragAmount.x.roundToInt(), dragAmount.y.roundToInt())
-                    )
+            .then(
+                // A full-screen panel has nowhere to be dragged to.
+                if (isExpanded) {
+                    Modifier
+                } else {
+                    Modifier.pointerInput(Unit) {
+                        detectDragGestures { change, dragAmount ->
+                            change.consume()
+                            currentOnDrag.value(
+                                IntOffset(dragAmount.x.roundToInt(), dragAmount.y.roundToInt())
+                            )
+                        }
+                    }
                 }
-            }
+            )
     ) {
         // Grab bar: makes the panel obviously draggable, the same cue the floating
         // compile button and the rectangle toolbar use.
@@ -599,6 +640,18 @@ private fun SectionHeader(
                 overflow = TextOverflow.Ellipsis
             )
         }
+        }
+        IconButton(onClick = onToggleExpand, modifier = Modifier.size(32.dp).testTag("workspace_panel_expand")) {
+            Icon(
+                imageVector = _Icons.ExpandGlass,
+                contentDescription = if (isExpanded) "Collapse workspace panel" else "Expand workspace panel",
+                tint = if (isExpanded) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier.size(16.dp)
+            )
         }
         IconButton(onClick = onOpenFolder, modifier = Modifier.size(32.dp)) {
             Icon(

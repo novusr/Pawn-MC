@@ -82,6 +82,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Code
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -401,6 +402,14 @@ fun EditorScreen(
     }
     var explorerWidth by remember { mutableFloatStateOf(320f) }
     var toolPanelMode by remember { mutableStateOf<ToolPanelMode?>(null) }
+    // Focus modes: when either floating surface expands to the whole canvas, the
+    // rest of the floating stack steps aside until it is collapsed again.
+    var isPortalExpanded by remember { mutableStateOf(false) }
+    var isPanelExpanded by remember { mutableStateOf(false) }
+    // Ticked only by the compile button: the panel then scrolls straight to the
+    // compiler output instead of leaving the log under the folder list. Opening
+    // the panel normally never ticks it, so browsing is not yanked downwards.
+    var compileFocusToken by remember { mutableIntStateOf(0) }
     var toolFind by remember { mutableStateOf("") }
     var toolReplace by remember { mutableStateOf("") }
     var isToolBusy by remember { mutableStateOf(false) }
@@ -1949,13 +1958,18 @@ fun EditorScreen(
                             clampedExplorerOffset.x + panelWidthPx > controlsRightX &&
                             clampedExplorerOffset.y + with(density) { (maxHeight.roundToPx() * EXPLORER_HEIGHT_FRACTION).roundToInt() } > controlY
                         Surface(
-                            shape = RoundedCornerShape(16.dp),
+                            shape = if (isPanelExpanded) RectangleShape else RoundedCornerShape(16.dp),
                             color = MaterialTheme.colorScheme.surfaceContainer,
-                            border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
-                            shadowElevation = 10.dp,
+                            border = if (isPanelExpanded) {
+                                null
+                            } else {
+                                BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant)
+                            },
+                            shadowElevation = if (isPanelExpanded) 0.dp else 10.dp,
                             modifier = Modifier
                                 .align(Alignment.TopStart)
                                 .offset {
+                                    if (isPanelExpanded) return@offset IntOffset.Zero
                                     val safeOffset = IntOffset(
                                         clampedExplorerOffset.x.coerceIn(0, maxOffsetX),
                                         clampedExplorerOffset.y.coerceIn(0, maxOffsetY)
@@ -1975,9 +1989,12 @@ fun EditorScreen(
                                         IntOffset(nextX, safeOffset.y)
                                     }
                                 }
-                                .padding(start = EXPLORER_EDGE_MARGIN, top = EXPLORER_EDGE_MARGIN)
+                                .padding(
+                                    start = if (isPanelExpanded) 0.dp else EXPLORER_EDGE_MARGIN,
+                                    top = if (isPanelExpanded) 0.dp else EXPLORER_EDGE_MARGIN
+                                )
                                 .width(panelWidth)
-                                .fillMaxHeight(EXPLORER_HEIGHT_FRACTION)
+                                .fillMaxHeight(if (isPanelExpanded) 1f else EXPLORER_HEIGHT_FRACTION)
                                 .zIndex(2f)
                         ) {
                             WorkspacePanel(
@@ -2019,6 +2036,8 @@ fun EditorScreen(
                                     openNewFolderDialog(directory)
                                 },
                                 onBeforeAction = ::dismissAutoCompletion,
+                                onExpandedChange = { isPanelExpanded = it },
+                                compileFocusToken = compileFocusToken,
                                 onHeaderDrag = { delta ->
                                     explorerOffset = IntOffset(
                                         (clampedExplorerOffset.x + delta.x).coerceIn(0, maxOffsetX),
@@ -2068,8 +2087,11 @@ fun EditorScreen(
 
             // Master gate: when hidden, the whole floating stack (Developer Portal,
             // orientation, workspace toggle, rectangle toolbar, compile button)
-            // disappears and the canvas is left clean.
-            if (!floatingButtonsHidden) {
+            // disappears and the canvas is left clean. The same happens when either
+            // floating surface expanded itself to the whole canvas: it owns the
+            // screen and every other control steps aside until it is collapsed.
+            val floatStackSuppressed = floatingButtonsHidden || isPortalExpanded || isPanelExpanded
+            if (!floatStackSuppressed) {
             FloatingRoundAction(
                 size = PANEL_BUTTON_SIZE,
                 icon = Icons.Filled.Extension,
@@ -2200,6 +2222,7 @@ fun EditorScreen(
                                 }
                                 if (allSaved) {
                                     onCompileRequest(target)
+                                    compileFocusToken++
                                     isExplorerVisible = true
                                 } else {
                                     Toast.makeText(
@@ -2229,6 +2252,7 @@ fun EditorScreen(
                         selectedVersion = pawnConsoleVersion,
                         onVersionChange = { pawnConsoleVersion = it },
                         onClose = { isPawnTerminalVisible = false },
+                        onExpandedChange = { isPortalExpanded = it },
                         onCompile = { source, manualOptions, version ->
                             var allSaved = true
                             if (workspace.isWorkspaceOpen) {

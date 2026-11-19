@@ -2,6 +2,7 @@
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -71,6 +72,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
+import com.rvdjv.pawnmc.user_interface._Icons
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.roundToInt
@@ -92,6 +94,7 @@ internal fun DeveloperPortal(
     selectedVersion: ContentConfig.CompilerVersion,
     onVersionChange: (ContentConfig.CompilerVersion) -> Unit,
     onClose: () -> Unit,
+    onExpandedChange: (Boolean) -> Unit = {},
     onCompile: suspend (File, List<String>, ContentConfig.CompilerVersion) -> String
 ) {
     val scope = rememberCoroutineScope()
@@ -104,6 +107,12 @@ internal fun DeveloperPortal(
     var inputImmersive by remember { mutableStateOf(true) }
     var dragOffset by remember { mutableStateOf(IntOffset.Zero) }
     val currentDragOffset = rememberUpdatedState(dragOffset)
+    // Full-screen mode: the card fills the whole canvas, drag is disabled and the
+    // host hides every other floating control while it is on (see [isPortalExpanded]).
+    var isExpanded by remember { mutableStateOf(false) }
+    // The host reacts to the focus-mode switch: hiding the floating stack and
+    // reporting the mode back through the callback so the portal owns the screen.
+    LaunchedEffect(isExpanded) { onExpandedChange(isExpanded) }
 
     fun text(key: String) = PortalText.get(context, key, language)
 
@@ -144,6 +153,11 @@ internal fun DeveloperPortal(
 
     BackHandler(enabled = true, onBack = onClose)
 
+    // Leaving the portal must never leave the host stuck in focus mode.
+    DisposableEffect(Unit) {
+        onDispose { onExpandedChange(false) }
+    }
+
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
@@ -160,21 +174,29 @@ internal fun DeveloperPortal(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.12f))
+                .background(MaterialTheme.colorScheme.scrim.copy(alpha = if (isExpanded) 0.55f else 0.12f))
                 .pointerInput(Unit) { detectTapGestures { } }
         )
 
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = if (isExpanded) RoundedCornerShape(0.dp) else RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surfaceContainerLow,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)),
-            shadowElevation = 14.dp,
+            border = if (isExpanded) {
+                null
+            } else {
+                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+            },
+            shadowElevation = if (isExpanded) 0.dp else 14.dp,
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset { limitedDragOffset }
-                .fillMaxWidth(0.92f)
-                .widthIn(max = 620.dp)
-                .fillMaxHeight(0.78f)
+                .offset { if (isExpanded) IntOffset.Zero else limitedDragOffset }
+                .fillMaxWidth(if (isExpanded) 1f else 0.92f)
+                .then(
+                    // `widthIn(max)` with an unspecified max is a no-op; skipping it
+                    // in full-screen mode keeps the card exactly the canvas wide.
+                    if (isExpanded) Modifier else Modifier.widthIn(max = 620.dp)
+                )
+                .fillMaxHeight(if (isExpanded) 1f else 0.78f)
                 .heightIn(min = 220.dp)
                 .imePadding()
         ) {
@@ -182,15 +204,19 @@ internal fun DeveloperPortal(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .pointerInput(Unit) {
-                            detectDragGestures { change, dragAmount ->
-                                change.consume()
-                                dragOffset = IntOffset(
-                                    currentDragOffset.value.x + dragAmount.x.roundToInt(),
-                                    currentDragOffset.value.y + dragAmount.y.roundToInt()
-                                )
-                            }
-                        },
+                        .then(
+                            // A full-screen card has nowhere to be dragged to.
+                            if (isExpanded) Modifier else Modifier
+                                .pointerInput(Unit) {
+                                    detectDragGestures { change, dragAmount ->
+                                        change.consume()
+                                        dragOffset = IntOffset(
+                                            currentDragOffset.value.x + dragAmount.x.roundToInt(),
+                                            currentDragOffset.value.y + dragAmount.y.roundToInt()
+                                        )
+                                    }
+                                }
+                        ),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
@@ -211,6 +237,23 @@ internal fun DeveloperPortal(
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
+                    // Expand toggle: right after the greeting and before the close
+                    // cross, forcing the card over the whole canvas so every floating
+                    // control of the host disappears while it is on.
+                    IconButton(
+                        onClick = { isExpanded = !isExpanded },
+                        modifier = Modifier.size(40.dp).testTag("developer_portal_expand")
+                    ) {
+                        Icon(
+                            imageVector = _Icons.ExpandGlass,
+                            contentDescription = if (isExpanded) text("terminal.expand.off") else text("terminal.expand.on"),
+                            tint = if (isExpanded) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
                     IconButton(onClick = onClose, modifier = Modifier.size(40.dp)) {
                         Icon(Icons.Filled.Close, contentDescription = text("terminal.close"))
                     }

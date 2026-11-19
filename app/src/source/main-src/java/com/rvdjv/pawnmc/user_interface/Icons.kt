@@ -14,6 +14,60 @@ import androidx.compose.ui.unit.dp
  */
 object _Icons {
 
+    /**
+     * Expand-to-full-screen icon: a square glass pane with four arrows pushing
+     * outwards from the centre, the common "widen this surface" affordance.
+     */
+    val ExpandGlass: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "_Icons.ExpandGlass",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            // Pane outline: the "glass" the arrows push out of.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.6f,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(4.4f, 4.4f)
+                lineTo(19.6f, 4.4f)
+                lineTo(19.6f, 19.6f)
+                lineTo(4.4f, 19.6f)
+                close()
+            }
+            // Four arrows, one per edge, all pointing outwards.
+            path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.5f, strokeLineCap = StrokeCap.Round) {
+                // Top: shaft then two head strokes.
+                moveTo(12f, 9.2f)
+                lineTo(12f, 4.8f)
+                moveTo(9.9f, 6.9f)
+                lineTo(12f, 4.8f)
+                lineTo(14.1f, 6.9f)
+                // Bottom.
+                moveTo(12f, 14.8f)
+                lineTo(12f, 19.2f)
+                moveTo(9.9f, 17.1f)
+                lineTo(12f, 19.2f)
+                lineTo(14.1f, 17.1f)
+                // Left.
+                moveTo(9.2f, 12f)
+                lineTo(4.8f, 12f)
+                moveTo(6.9f, 9.9f)
+                lineTo(4.8f, 12f)
+                lineTo(6.9f, 14.1f)
+                // Right.
+                moveTo(14.8f, 12f)
+                lineTo(19.2f, 12f)
+                moveTo(17.1f, 9.9f)
+                lineTo(19.2f, 12f)
+                lineTo(17.1f, 14.1f)
+            }
+        }.build()
+    }
+
     /** Save icon: a storage device with a label slot and a save arrow. */
     val Save: ImageVector by lazy {
         ImageVector.Builder(
