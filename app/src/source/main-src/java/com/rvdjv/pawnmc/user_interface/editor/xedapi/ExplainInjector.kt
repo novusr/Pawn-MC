@@ -84,7 +84,12 @@ internal object ExplainInjector {
                 // keeps the comment glued to the code line it explains.
                 val column = original.length
                     .coerceAtMost(document.getColumnCount(baseLine))
-                document.insert(baseLine, column, hintComment(entry.explainer))
+                // The comment must not look glued to the code it explains: when the
+                // line does not already end in a space (for example `//// kode`),
+                // one space goes in first, then the hint comment follows it.
+                val needsSeparator = original.isNotEmpty() && !original.last().isWhitespace()
+                val injected = (if (needsSeparator) " " else "") + hintComment(entry.explainer)
+                document.insert(baseLine, column, injected)
                 changed = true
             }
             if (changed) editor.invalidate()

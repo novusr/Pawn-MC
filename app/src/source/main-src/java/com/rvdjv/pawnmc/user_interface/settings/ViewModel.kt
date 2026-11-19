@@ -54,6 +54,9 @@ class SettingsViewModel(private val config: ContentConfig) : ViewModel() {
     var n_editor_auto_close by mutableStateOf(config.n_editor_auto_close)
         private set
 
+    var n_editor_quote_close by mutableStateOf(config.n_editor_quote_close)
+        private set
+
     val n_include_paths = mutableStateListOf<String>().apply {
         addAll(ContentConfig.pruneMissingIncludePaths(config.n_include_paths))
     }
@@ -145,6 +148,12 @@ class SettingsViewModel(private val config: ContentConfig) : ViewModel() {
     fun updateEditorAutoClose(mode: ContentConfig.EditorAutoClose) {
         n_editor_auto_close = mode
         config.n_editor_auto_close = mode
+    }
+
+    /** Toggles whether the quotes (" and ') also follow the auto-close rule. */
+    fun updateEditorQuoteClose(enabled: Boolean) {
+        n_editor_quote_close = enabled
+        config.n_editor_quote_close = enabled
     }
 
     /**

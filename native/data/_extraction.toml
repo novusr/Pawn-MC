@@ -638,6 +638,20 @@ tl = "Kontrol kung magdaragdag ba ang editor ng panaklong para sa iyo. Off (defa
 ru = "Opredelyaet, dobavlyaet li redaktor zakryvayushchuyu skobku avtomaticheski. Vykl. (po umolchaniyu): vvod ( ili { vstavlyaet tolko etot simvol, poetomu bystryj () ili {} ne dayot dvojnoj skobki. Umnaya para: skobka stavitsya, no vvedyonnaya sledom ) ili } peremeshchaet kursor, a ne dubliruetsya. Vsegda para: zakryvayushchaya skobka vsegda stavitsya."
 es = "Controla si el editor añade el paréntesis de cierre. Desactivado (predeterminado): escribir ( o { inserta solo ese carácter, así que un () o {} rápido nunca termina duplicado. Par inteligente: se inserta el cierre, pero un ) o } escrito justo después mueve el cursor en lugar de duplicarse. Siempre par: el cierre se inserta siempre."
 
+[settings.editor.autoclose.quotes]
+id = "Penutup Otomatis Tanda Kutip"
+en = "Auto-Close Quotes"
+tl = "Auto-Close ng Quotes"
+ru = "Avtozakrytie kavychek"
+es = "Cierre automático de comillas"
+
+[settings.editor.autoclose.quotes.desc]
+id = "Mengikutkan tanda kutip ganda (\"\") dan tanda petik tunggal ('') pada aturan penutup otomatis di atas. Ketika mati, tanda kutip hanya menyisipkan karakter itu sendiri."
+en = "Let the double quote (\"\") and single quote ('') take part in the auto-close rule above. When off, a quote only inserts the character itself."
+tl = "Isama ang double quote (\"\") at single quote ('') sa auto-close rule sa itaas. Kapag off, ang quote ay nag-iisa lang."
+ru = "Dvojnaya kavychka (\"\") i odinarnaya ('') uchastvuyut v pravile avtozakrytiya vyshe. Vikl.: kavychka vstavlyaet tolko sebya."
+es = "Incluye las comillas dobles (\"\") y simples ('') en la regla de cierre automático de arriba. Desactivado: la comilla solo inserta el carácter."
+
 [settings.editor.background.hex]
 id = "Kode warna heksadesimal"
 en = "Hex colour code"
@@ -896,6 +910,13 @@ en = "Browse File"
 tl = "Pumili ng File"
 ru = "Vybrat fajl"
 es = "Elegir archivo"
+
+[main.file.browse.unresolved]
+id = "Pilih file Pawn di penyimpanan utama"
+en = "Choose a Pawn file on local primary storage"
+tl = "Pumili ng Pawn file sa local primary storage"
+ru = "Vyberite fail Pawn na osnovnom khranilishche"
+es = "Elige un archivo Pawn en el almacenamiento principal"
 
 [main.output.title]
 id = "............."

@@ -49,6 +49,8 @@ class ContentConfig private constructor(context: Context) {
             n_explain_output = n_explain_output
             n_mandatory_semicolons = n_mandatory_semicolons
             n_mandatory_parentheses = n_mandatory_parentheses
+            n_editor_auto_close = n_editor_auto_close
+            n_editor_quote_close = n_editor_quote_close
             n_custom_flags = n_custom_flags
             n_include_paths = n_include_paths
             n_compiler_version = n_compiler_version
@@ -82,6 +84,8 @@ class ContentConfig private constructor(context: Context) {
         n_explain_output = n_explain_output
         n_mandatory_semicolons = n_mandatory_semicolons
         n_mandatory_parentheses = n_mandatory_parentheses
+        n_editor_auto_close = n_editor_auto_close
+        n_editor_quote_close = n_editor_quote_close
         n_custom_flags = n_custom_flags
         n_include_paths = n_include_paths
         n_compiler_version = n_compiler_version
@@ -162,6 +166,19 @@ class ContentConfig private constructor(context: Context) {
         get() = EditorAutoClose.fromValue(prefs.getString(KEY_EDITOR_AUTO_CLOSE, EditorAutoClose.SMART.value))
         set(value) {
             prefs.edit { putString(KEY_EDITOR_AUTO_CLOSE, value.value) }
+            mirrorToFile()
+        }
+
+    /**
+     * Whether the quotes (" and ') also take part in the auto-close rule above.
+     * Brackets always follow [n_editor_auto_close]; the quotes only pair when
+     * this switch is on as well, so an apostrophe written by hand never grows
+     * a second one for anyone who leaves the pairing off.
+     */
+    var n_editor_quote_close: Boolean
+        get() = prefs.getBoolean(KEY_EDITOR_QUOTE_CLOSE, false)
+        set(value) {
+            prefs.edit { putBoolean(KEY_EDITOR_QUOTE_CLOSE, value) }
             mirrorToFile()
         }
 
@@ -644,6 +661,7 @@ class ContentConfig private constructor(context: Context) {
         internal const val KEY_SEMICOLONS       = "semicolons"
         internal const val KEY_PARENTHESES      = "parentheses"
         internal const val KEY_EDITOR_AUTO_CLOSE = "editor_auto_close"
+        internal const val KEY_EDITOR_QUOTE_CLOSE = "editor_quote_close"
         internal const val KEY_CUSTOM_FLAGS     = "custom_flags"
         internal const val KEY_INCLUDE_PATHS    = "include_paths"
         internal const val KEY_COMPILER_VERSION = "compiler_version"

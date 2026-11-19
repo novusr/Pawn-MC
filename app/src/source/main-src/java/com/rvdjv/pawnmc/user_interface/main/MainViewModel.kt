@@ -165,6 +165,11 @@ class MainViewModel(
     var selectionError by mutableStateOf<String?>(null)
         private set
 
+    /** Sets [selectionError] from outside the view model (picker callbacks). */
+    fun reportSelectionError(message: String) {
+        selectionError = message
+    }
+
     /** Compile request queued by the editor and handled by the mounted main screen. */
     var pendingCompilePath by mutableStateOf<String?>(null)
         private set

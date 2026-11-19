@@ -115,6 +115,7 @@ internal object ContentConfigFile {
         validateBoolean(ContentConfig.KEY_APP_LANGUAGE_SET, false)
         validateBoolean(ContentConfig.KEY_FORCED_MODE, false)
         validateBoolean(ContentConfig.KEY_FORCED_INCLUDE_PATH_AUTO, false)
+        validateBoolean(ContentConfig.KEY_EDITOR_QUOTE_CLOSE, false)
 
         // 4. custom_flags: String
         if (root.has(ContentConfig.KEY_CUSTOM_FLAGS)) {
@@ -291,6 +292,7 @@ internal object ContentConfigFile {
 
             root.optBoolean(ContentConfig.KEY_FORCED_MODE, null)?.let { editor.putBoolean(ContentConfig.KEY_FORCED_MODE, it) }
             root.optBoolean(ContentConfig.KEY_FORCED_INCLUDE_PATH_AUTO, null)?.let { editor.putBoolean(ContentConfig.KEY_FORCED_INCLUDE_PATH_AUTO, it) }
+            root.optBoolean(ContentConfig.KEY_EDITOR_QUOTE_CLOSE, null)?.let { editor.putBoolean(ContentConfig.KEY_EDITOR_QUOTE_CLOSE, it) }
 
             if (root.has(ContentConfig.KEY_EDITOR_BG_COLOR)) {
                 val color = root.optStringOrNull(ContentConfig.KEY_EDITOR_BG_COLOR)
@@ -330,6 +332,7 @@ internal object ContentConfigFile {
         root.put(ContentConfig.KEY_APP_LANGUAGE_SET, prefs.getBoolean(ContentConfig.KEY_APP_LANGUAGE_SET, false))
         root.put(ContentConfig.KEY_FORCED_MODE, prefs.getBoolean(ContentConfig.KEY_FORCED_MODE, false))
         root.put(ContentConfig.KEY_FORCED_INCLUDE_PATH_AUTO, prefs.getBoolean(ContentConfig.KEY_FORCED_INCLUDE_PATH_AUTO, false))
+        root.put(ContentConfig.KEY_EDITOR_QUOTE_CLOSE, prefs.getBoolean(ContentConfig.KEY_EDITOR_QUOTE_CLOSE, false))
 
         val color = prefs.getString(ContentConfig.KEY_EDITOR_BG_COLOR, null)
         if (color == null) root.put(ContentConfig.KEY_EDITOR_BG_COLOR, JSONObject.NULL)

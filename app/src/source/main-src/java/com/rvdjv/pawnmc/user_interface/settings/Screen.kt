@@ -689,6 +689,21 @@ fun SettingsScreen(
                         ),
                         onClick = { showAutoCloseDialog = true }
                     )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        thickness = 1.2.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                    SwitchRow(
+                        title = localizer.get("settings.editor.autoclose.quotes", appLanguage, "Auto-Close Quotes"),
+                        description = localizer.get(
+                            "settings.editor.autoclose.quotes.desc",
+                            appLanguage,
+                            "Let the double quote (\"\") and single quote ('') take part in the auto-close rule above."
+                        ),
+                        checked = viewModel.n_editor_quote_close,
+                        onCheckedChange = { viewModel.updateEditorQuoteClose(it) }
+                    )
                 }
             }
 

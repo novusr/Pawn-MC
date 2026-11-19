@@ -108,6 +108,8 @@ import com.rvdjv.pawnmc.BuildConfig
 import com.rvdjv.pawnmc.user_interface._Icons
 import com.rvdjv.pawnmc.user_interface.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.user_interface.filebrowser.FileBrowserMode
+import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFilePickerIntent
+import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveDocumentToFile
 import com.rvdjv.pawnmc.user_interface.theme.PawnMCTheme
 import com.rvdjv.pawnmc.user_interface.theme.DarkSectionContainer
 import com.rvdjv.pawnmc.user_interface.common.OverlayScrollbar
@@ -257,6 +259,34 @@ fun MainScreen(
         mutableStateOf(hasStoragePermission(context))
     }
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    // The same system picker the workspace uses, wrapped in Intent.createChooser so
+    // installed managers (ZArchiver and friends) answer the request directly.
+    val filePickerScope = rememberCoroutineScope()
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val pickedUri = result.data?.data ?: return@rememberLauncherForActivityResult
+        filePickerScope.launch {
+            val file = resolveDocumentToFile(context, pickedUri)
+            when {
+                file == null -> viewModel.reportSelectionError(
+                    localizer?.get("main.file.browse.unresolved", appLanguage, "Choose a Pawn file on local primary storage")
+                        ?: "Choose a Pawn file on local primary storage"
+                )
+                else -> viewModel.selectFile(file.absolutePath)
+            }
+        }
+    }
+
+    /** Opens the file picker, either the built-in browser or the system chooser. */
+    fun browseCompileFile() {
+        if (!isStoragePermissionGranted) {
+            showPermissionDialog = true
+            return
+        }
+        filePickerLauncher.launch(Intent.createChooser(buildFilePickerIntent(), null))
+    }
 
     DisposableEffect(context, lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -587,13 +617,7 @@ fun MainScreen(
                         selectedFileName = viewModel.selectedFilePath?.let { File(it).name },
                         selectedFileSize = viewModel.selectedFilePath?.let { formatFileSize(File(it).length()) },
                         isCompiling = viewModel.isCompiling || viewModel.isPreparingFilesystem,
-                        onChangeFileClick = {
-                            if (!isStoragePermissionGranted) {
-                                showPermissionDialog = true
-                            } else {
-                                showFileBrowser = true
-                            }
-                        },
+                        onChangeFileClick = { browseCompileFile() },
                         onCompileClick = {
                             viewModel.selectedFilePath?.let { path ->
                                 viewModel.compileFile(
@@ -781,7 +805,9 @@ fun MainScreen(
         }
     }
 
-    // dialog file browser
+    // dialog file browser: no longer the default path - "Browse File" now opens the
+    // system picker through Intent.createChooser (see browseCompileFile above). The
+    // built-in browser stays available for anything the SAF picker cannot reach.
     if (showFileBrowser) {
         FileBrowserDialog(
             mode = FileBrowserMode.FILE,

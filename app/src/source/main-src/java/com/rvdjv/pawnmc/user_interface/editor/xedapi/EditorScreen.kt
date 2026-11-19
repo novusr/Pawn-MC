@@ -203,6 +203,11 @@ fun EditorScreen(
     var editorAutoCloseEnabled by remember {
         mutableStateOf(ContentConfig.getInstance(context).n_editor_auto_close != ContentConfig.EditorAutoClose.SMART)
     }
+    // The quotes (" and ') follow the same rule as the brackets when this switch
+    // is on; off they stay a plain character, so an apostrophe never doubles.
+    var editorQuoteCloseEnabled by remember {
+        mutableStateOf(ContentConfig.getInstance(context).n_editor_quote_close)
+    }
     // The stored mode stays available for a user who picked "Smart pair" in
     // Settings; the toggle switches between that mode and fully-off.
     val storedAutoCloseMode by remember {
@@ -1522,6 +1527,49 @@ fun EditorScreen(
                                     ).show()
                                 }
                             )
+                            // The quotes follow the same toggle pattern, right under the
+                            // bracket item, with the same leading icon pair (Code when
+                            // pairing is on, Block when the quotes stay plain).
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        if (editorQuoteCloseEnabled) {
+                                            if (appLanguage == ContentConfig.AppLanguage.ID) "Matikan tutup otomatis kutip" else "Disable auto-close quotes"
+                                        } else {
+                                            if (appLanguage == ContentConfig.AppLanguage.ID) "Nyalakan tutup otomatis kutip" else "Enable auto-close quotes"
+                                        }
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = if (editorQuoteCloseEnabled) Icons.Filled.Code else Icons.Filled.Block,
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    dismissAutoCompletion()
+                                    showMenu = false
+                                    editorQuoteCloseEnabled = !editorQuoteCloseEnabled
+                                    ContentConfig.getInstance(context).n_editor_quote_close = editorQuoteCloseEnabled
+                                    Toast.makeText(
+                                        context,
+                                        if (editorQuoteCloseEnabled) {
+                                            if (appLanguage == ContentConfig.AppLanguage.ID) {
+                                                "Tutup otomatis kutip dinyalakan"
+                                            } else {
+                                                "Auto-close quotes enabled"
+                                            }
+                                        } else {
+                                            if (appLanguage == ContentConfig.AppLanguage.ID) {
+                                                "Tutup otomatis kutip dimatikan"
+                                            } else {
+                                                "Auto-close quotes disabled"
+                                            }
+                                        },
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            )
                             DropdownMenuItem(
                                 text = { Text("Jump to Matching Bracket") },
                                 leadingIcon = {
@@ -1808,6 +1856,7 @@ fun EditorScreen(
                                         storedAutoCloseMode != ContentConfig.EditorAutoClose.SMART -> storedAutoCloseMode
                                         else -> ContentConfig.EditorAutoClose.PAIR_ALWAYS
                                     }
+                                    this.autoCloseQuotes = editorQuoteCloseEnabled
                                     setTextSize(14f)
                                     // Same crash guard as the update pass: the very
                                     // first scheme install can race the editor's lazy
@@ -1868,6 +1917,7 @@ fun EditorScreen(
                                     // matcher underneath; re-assert the toggle so
                                     // the auto-close state survives the swap.
                                     editor.autoCloseMode = editor.autoCloseMode
+                                    editor.autoCloseQuotes = editorQuoteCloseEnabled
                                 }
                                 // Re-tint when the app theme (and therefore the surface
                                 // ramp) changes while the editor view is still alive.
@@ -1887,6 +1937,7 @@ fun EditorScreen(
                                     storedAutoCloseMode != ContentConfig.EditorAutoClose.SMART -> storedAutoCloseMode
                                     else -> ContentConfig.EditorAutoClose.PAIR_ALWAYS
                                 }
+                                editor.autoCloseQuotes = editorQuoteCloseEnabled
                                 // Push the buffer of the file the workspace panel
                                 // activated, or of the single file opened from the
                                 // browser. Only runs when the shown path or content

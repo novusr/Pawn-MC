@@ -31,24 +31,52 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
         ContentConfig.getInstance(context).n_editor_auto_close
         set(value) {
             field = value
-            // sora's own symbol-pair matcher is the thing inserting the closers on
-            // the IME path; replacing the whole pair map turns it off for good when
-            // the toggle (or the stored mode) says so, instead of fighting it in
-            // the input wrapper. The matcher lives in the protected
-            // `languageSymbolPairs` field, reachable from this subclass.
-            val pairs = languageSymbolPairs ?: SymbolPairMatch().also { languageSymbolPairs = it }
-            // The matcher has no on/off flag: an empty map means every opener falls
-            // through as a plain character, which is exactly the "off" behaviour.
-            if (value == ContentConfig.EditorAutoClose.SMART) {
-                pairs.putPair('(', null)
-                pairs.putPair('{', null)
-                pairs.putPair('[', null)
-            } else {
-                pairs.putPair('(', SymbolPairMatch.SymbolPair("(", ")"))
-                pairs.putPair('{', SymbolPairMatch.SymbolPair("{", "}"))
-                pairs.putPair('[', SymbolPairMatch.SymbolPair("[", "]"))
-            }
+            refreshSymbolPairs()
         }
+
+    /**
+     * Whether the quote characters (`"` and `'`) take part in the auto-close
+     * behaviour above. Brackets always follow [autoCloseMode]; the quotes only
+     * pair when this switch is on as well, so an apostrophe in a comment stays
+     * a plain character for anyone who turns the quote pairing off.
+     */
+    var autoCloseQuotes: Boolean = ContentConfig.getInstance(context).n_editor_quote_close
+        set(value) {
+            field = value
+            refreshSymbolPairs()
+        }
+
+    /** Rebuilds sora's pair map from the current mode and quote switch. */
+    private fun refreshSymbolPairs() {
+        // sora's own symbol-pair matcher is the thing inserting the closers on
+        // the IME path; replacing the whole pair map turns it off for good when
+        // the toggle (or the stored mode) says so, instead of fighting it in
+        // the input wrapper. The matcher lives in the protected
+        // `languageSymbolPairs` field, reachable from this subclass.
+        val pairs = languageSymbolPairs ?: SymbolPairMatch().also { languageSymbolPairs = it }
+        // The matcher has no on/off flag: an empty map means every opener falls
+        // through as a plain character, which is exactly the "off" behaviour.
+        val bracketsOff = autoCloseMode == ContentConfig.EditorAutoClose.SMART
+        if (bracketsOff) {
+            pairs.putPair('(', null)
+            pairs.putPair('{', null)
+            pairs.putPair('[', null)
+        } else {
+            pairs.putPair('(', SymbolPairMatch.SymbolPair("(", ")"))
+            pairs.putPair('{', SymbolPairMatch.SymbolPair("{", "}"))
+            pairs.putPair('[', SymbolPairMatch.SymbolPair("[", "]"))
+        }
+        // The quotes follow the same mode, gated by their own switch: paired
+        // when auto-close is on and the user wants them, a bare character
+        // otherwise.
+        if (!bracketsOff && autoCloseQuotes) {
+            pairs.putPair('"', SymbolPairMatch.SymbolPair("\"", "\""))
+            pairs.putPair('\'', SymbolPairMatch.SymbolPair("'", "'"))
+        } else {
+            pairs.putPair('"', null)
+            pairs.putPair('\'', null)
+        }
+    }
 
     override fun onCreateInputConnection(outAttrs: EditorInfo): InputConnection? {
         val connection = super.onCreateInputConnection(outAttrs) ?: return null
@@ -66,7 +94,8 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
                     }
                     // "Smart pair" mode: the closer was auto-inserted, so a
                     // closing character typed right after it moves over instead
-                    // of doubling it. "Always pair" skips this on purpose.
+                    // of doubling it. "Always pair" skips this on purpose. The
+                    // quotes only take part when their own switch pairs them.
                     if (autoCloseMode != ContentConfig.EditorAutoClose.PAIR_ALWAYS &&
                         skipExistingClosingCharacter(typed)
                     ) {
@@ -159,7 +188,10 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
     }
 
     private fun skipExistingClosingCharacter(typed: Char): Boolean {
-        if (typed !in CLOSING_SYMBOLS) return false
+        val canSkip = typed in CLOSING_SYMBOLS ||
+            (autoCloseQuotes && typed in QUOTE_CHARACTERS &&
+                autoCloseMode != ContentConfig.EditorAutoClose.SMART)
+        if (!canSkip) return false
         val currentCursor = cursor
         if (currentCursor.leftLine != currentCursor.rightLine ||
             currentCursor.leftColumn != currentCursor.rightColumn
@@ -258,6 +290,7 @@ class XedCodeEditor(context: Context) : CodeEditor(context) {
         const val INDENT_SIZE = 4
         val OPENING_SYMBOLS = setOf('(', '{', '[')
         val CLOSING_SYMBOLS = setOf(')', '}', ']')
+        val QUOTE_CHARACTERS = setOf('"', '\'')
     }
 
     /**
