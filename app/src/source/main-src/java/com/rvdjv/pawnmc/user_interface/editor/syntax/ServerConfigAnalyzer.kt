@@ -56,9 +56,11 @@ internal class ServerConfigAnalyzer : SimpleAnalyzeManager<Any?>() {
         while (index < end && (text[index] == ' ' || text[index] == '\t')) index++
         if (index >= end) return
 
-        // A full-line comment (either Sa-MP comment syntax).
+        // A full-line comment (either Sa-MP comment syntax); `////` is the highlight
+        // comment and reads in its own bright colour rather than the muted grey.
         if (text[index] == ';' || (text[index] == '/' && index + 1 < end && text[index + 1] == '/')) {
-            builder.addIfNeeded(line, index - start, SpanKind.Comment.style)
+            val highlight = text[index] == '/' && index + 3 < end && text[index + 2] == '/' && text[index + 3] == '/'
+            builder.addIfNeeded(line, index - start, (if (highlight) SpanKind.HighlightComment else SpanKind.Comment).style)
             return
         }
 
@@ -78,7 +80,8 @@ internal class ServerConfigAnalyzer : SimpleAnalyzeManager<Any?>() {
         while (index < end) {
             when {
                 text[index] == ';' || (text[index] == '/' && index + 1 < end && text[index + 1] == '/') -> {
-                    builder.addIfNeeded(line, index - start, SpanKind.Comment.style)
+                    val highlight = text[index] == '/' && index + 3 < end && text[index + 2] == '/' && text[index + 3] == '/'
+                    builder.addIfNeeded(line, index - start, (if (highlight) SpanKind.HighlightComment else SpanKind.Comment).style)
                     return
                 }
                 text[index] == '"' -> {
@@ -129,6 +132,8 @@ internal class ServerConfigAnalyzer : SimpleAnalyzeManager<Any?>() {
         String(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
         Constant(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
         Comment(TextStyle.makeStyle(EditorColorScheme.COMMENT)),
+        // `////` highlight comment: the same bright custom slot the Pawn analyzer uses.
+        HighlightComment(TextStyle.makeStyle(HIGHLIGHT_COMMENT_ID)),
         Punctuation(TextStyle.makeStyle(EditorColorScheme.OPERATOR));
     }
 

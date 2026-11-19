@@ -1,5 +1,6 @@
 ﻿package com.rvdjv.pawnmc.user_interface.editor.xedapi
 
+import com.rvdjv.pawnmc.user_interface.editor.syntax.HIGHLIGHT_COMMENT_ID
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -112,12 +113,19 @@ private fun applyVividSyntaxPalette(scheme: EditorColorScheme, darkCanvas: Boole
     scheme.setColor(EditorColorScheme.OPERATOR, p.operator)
     scheme.setColor(EditorColorScheme.ANNOTATION, p.annotation)
     scheme.setColor(EditorColorScheme.COMMENT, p.comment)
+    // The four-slash highlight comment (`////`) paints through this custom id (the same
+    // offset the analyzer uses) with a bright yellow that stays readable on both canvases.
+    scheme.setColor(HIGHLIGHT_COMMENT_ID, p.highlightComment)
     scheme.setColor(EditorColorScheme.LINE_NUMBER, p.lineNumber)
 
     // `BRACKET`, `STRING`, `NUMBER` and `COMMENT_KEYWORD` do not exist in the bundled sora
     // version. The analyzer therefore reaches its extra hues through the slots above:
     // `ANNOTATION` carries the dense orange for brackets, `LITERAL` serves strings and
     // numbers, and `KEYWORD` serves directives and comment keywords.
+    // Highlight comments (`////`) paint through the custom HIGHLIGHT_COMMENT_ID slot
+    // set above, so the explainer markers and any hand-written `////` line read as their
+    // own kind - bright yellow on a dark canvas, deep amber on a light one - rather than
+    // the muted comment grey.
     // Plain identifiers (variables, labels) inherit the scheme's text colour, so
     // it has to be re-pointed at the canvas as well. Without this a custom dark
     // canvas under a light app theme would render every variable dark-on-dark.
@@ -142,9 +150,19 @@ private data class SyntaxPalette(
     val operator: Int,
     val annotation: Int,
     val comment: Int,
+    val highlightComment: Int,
     val lineNumber: Int,
     val tag: Int
 )
+
+/**
+ * Custom color id for the four-slash highlight comment.
+ *
+ * Offset 256, the id pool the [EditorColorScheme] documentation recommends for custom
+ * languages; the analyzer emits [io.github.rosemoe.sora.lang.styling.TextStyle] against
+ * the same id, so the slot is shared by exactly one producer and one consumer.
+ */
+internal const val HIGHLIGHT_COMMENT_ID = 256
 
 /**
  * Warm dark palette.
@@ -164,6 +182,9 @@ private val DarkPalette = SyntaxPalette(
     // Brackets are painted through this slot, so it carries the dense orange.
     annotation = 0xFFFF7A00.toInt(),
     comment = 0xFF8E9B87.toInt(),
+    // Bright yellow for `////` highlight comments - clearly a comment, unmistakably
+    // not the muted grey of a normal one.
+    highlightComment = 0xFFFFE45E.toInt(),
     lineNumber = 0xFF9C8B72.toInt(),
     tag = 0xFFFFA94D.toInt()
 )
@@ -190,6 +211,8 @@ private val LightPalette = SyntaxPalette(
     // palette, so structure reads differently from every word around it.
     annotation = 0xFFC2410C.toInt(),
     comment = 0xFF7A7166.toInt(),
+    // Saturated yellow tuned for a white canvas: still bright, still >= 3:1 contrast.
+    highlightComment = 0xFFB45309.toInt(),
     lineNumber = 0xFF8A7A66.toInt(),
     tag = 0xFFB45309.toInt()
 )

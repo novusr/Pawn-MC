@@ -37,7 +37,7 @@ Berkas dan tugasnya
     di-drag untuk menggulir.
 
 ``ExplainInjector.kt``
-    Pembaca ``compiler/injector_data.json``. Menambahkan komentar ``// [cause]``
+    Pembaca ``compiler/injector_data.json``. Menambahkan komentar ``//// [cause]``
     pada baris yang dilaporkan kompilasi, tidak pernah menimpa komentar yang
     sudah ada (komentar milik pengguna), dan menyediakan aksi Discard yang
     menghapus seluruh record file itu.

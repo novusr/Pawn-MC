@@ -14,8 +14,8 @@ import kotlinx.coroutines.withContext
  * file, the damaged line and the localized `[cause]` text; this reader walks that
  * JSON and:
  *
- *  1. Appends a trailing `// [cause]: ...` comment to every line the last compile
- *     flagged, when the line is still present in the editor buffer. A line that
+ *  1. Appends a trailing `//// [cause]: ...` highlight comment to every line the last
+ *     compile flagged, when the line is still present in the editor buffer. A line that
  *     already carries a hint is skipped, never overwritten - that keeps repeated
  *     passes and reload cycles free of doubled comments.
  *  2. Leaves a comment that carries no record alone. A clean compile, a new log or
@@ -28,19 +28,24 @@ import kotlinx.coroutines.withContext
  * print and the editor settles quietly. The next compile writes a fresh JSON and
  * fresh hints appear again.
  *
- * A plain comment was chosen over a shadow/gutter overlay on purpose: it needs no
- * renderer hooks and survives every theme.
+ * A four-slash comment was chosen over a shadow/gutter overlay on purpose: it needs no
+ * renderer hooks, survives every theme and the analyzer paints `////` in its own bright
+ * highlight colour, so an injected hint reads differently from an ordinary `//` comment
+ * the user wrote.
  */
 internal object ExplainInjector {
 
     /** How often one cycle waits before re-reading the JSON, in milliseconds. */
     const val CYCLE_INTERVAL_MS: Long = 6L * 60L * 1000L
 
-    /** Matches a previously injected hint at the end of a line, / or // style. */
-    private val HINT_TAIL = Regex("""\s*(?://|/\*)\s*\[[^\]]*]\s*:.*$""")
+    /** Matches a previously injected hint at the end of a line, // or //// style. */
+    private val HINT_TAIL = Regex("""\s*////?\s*\[[^\]]*]\s*:.*$""")
 
     /** Where an injected hint starts on a line. */
-    private val HINT_START = Regex("""//\s*\[[^\]]*]\s*:""")
+    private val HINT_START = Regex("""////\s*\[[^\]]*]\s*:""")
+
+    /** A wrapped continuation line of a hint comment (`//// ...`, possibly indented). */
+    private val HINT_CONTINUATION = Regex("""^\s*////""")
 
     /** True when the line already carries an injected hint. */
     internal fun hasHint(lineText: String): Boolean = HINT_TAIL.containsMatchIn(lineText)
@@ -49,7 +54,7 @@ internal object ExplainInjector {
     internal fun stripHint(lineText: String): String =
         lineText.replace(HINT_TAIL, "").trimEnd()
 
-    private fun hintComment(explainer: String): String = "// $explainer"
+    private fun hintComment(explainer: String): String = "//// $explainer"
 
     /**
      * One pass over the editor: reads the JSON off the IO dispatcher and appends
@@ -177,11 +182,11 @@ internal object ExplainInjector {
             anchor,
             lineText.length
         )
-        // A wrapped hint continues on the following lines as plain `// ...` lines; they
+        // A wrapped hint continues on the following lines as plain `//// ...` lines; they
         // belong to the same comment and go with it.
         while (anchor + 1 < document.lineCount) {
             val text = document.getLine(anchor + 1).toString()
-            if (!text.trimStart().startsWith("//")) break
+            if (!HINT_CONTINUATION.containsMatchIn(text)) break
             document.delete(anchor + 1, 0, anchor + 1, text.length)
             document.delete(anchor, document.getLine(anchor).length, anchor + 1, 0)
         }

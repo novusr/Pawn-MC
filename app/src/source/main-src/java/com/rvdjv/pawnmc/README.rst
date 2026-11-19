@@ -37,7 +37,7 @@ Alur besar aplikasi
    ``Runner`` -> ``NativeBridge``) lalu ``Explainer.explainCompilerOutput``.
 3. ``Explainer`` menulis ``compiler/injector_data.json`` lewat
    ``DiagnosticsStore``; Xed membaca file itu di ``ExplainInjector`` dan
-   menempelkan komentar ``// [cause]`` pada baris yang rusak.
+   menempelkan komentar ``//// [cause]`` pada baris yang rusak.
 4. Komentar hanya hilang lewat *Discard* (yang menghapus seluruh record file
    itu di JSON) atau ketika pengguna menyunting baris tersebut sendiri.
 

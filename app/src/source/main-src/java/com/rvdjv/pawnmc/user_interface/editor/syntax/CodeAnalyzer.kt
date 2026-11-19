@@ -8,6 +8,16 @@ import io.github.rosemoe.sora.lang.styling.Styles
 import io.github.rosemoe.sora.lang.styling.TextStyle
 import io.github.rosemoe.sora.widget.schemes.EditorColorScheme
 
+/**
+ * Custom color id for the four-slash highlight comment (`////`).
+ *
+ * Offset 256, the id pool the [EditorColorScheme] documentation recommends for custom
+ * languages so it can never collide with a built-in slot. [com.rvdjv.pawnmc.user_interface.editor.xedapi.ExplainInjector]
+ * injects `////` comments and this analyzer paints them through the same id, which the
+ * editor scheme fills with a bright yellow.
+ */
+internal const val HIGHLIGHT_COMMENT_ID = 256
+
 /** Analyzes source and publishes syntax styles. */
 internal class CodeAnalyzer(
     private val onLocalFunctionsChanged: (List<LocalFunction>) -> Unit = {}
@@ -62,6 +72,10 @@ internal class CodeAnalyzer(
      * hues therefore come from distinct *slots*: brackets take `ANNOTATION`, which the
      * palette fills with the dense orange, while strings and numbers stay on `LITERAL`
      * and directives on `KEYWORD`.
+     *
+     * `HIGHLIGHT_COMMENT` is the shared custom color id [HIGHLIGHT_COMMENT_ID]: the
+     * four-slash comment `////` - the marker the explainer injects and anyone may write
+     * by hand - paints through it with its own bright hue instead of the muted grey.
      */
     private enum class SpanKind(val style: Long) {
         Keyword(TextStyle.makeStyle(EditorColorScheme.KEYWORD)),
@@ -74,6 +88,8 @@ internal class CodeAnalyzer(
         String(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
         Number(TextStyle.makeStyle(EditorColorScheme.LITERAL)),
         Comment(TextStyle.makeStyle(EditorColorScheme.COMMENT)),
+        // `////` four-slash highlight comment: its own custom slot, painted bright.
+        HighlightComment(TextStyle.makeStyle(HIGHLIGHT_COMMENT_ID)),
         CommentKeyword(TextStyle.makeStyle(EditorColorScheme.KEYWORD)),
         Operator(TextStyle.makeStyle(EditorColorScheme.OPERATOR)),
         // `()` `{}` `[]`: the dense-orange slot, separate from the operators.
@@ -109,6 +125,10 @@ internal class CodeAnalyzer(
                     c == '\n' -> advanceNewline()
                     c == '\r' -> advanceCarriageReturn()
                     c.isWhitespace() -> skipWhitespace()
+                    // Four slashes: the highlight comment, painted with its own bright
+                    // colour instead of the muted comment grey.
+                    c == '/' && peekChar(1) == '/' && peekChar(2) == '/' && peekChar(3) == '/' ->
+                        skipHighlightLineComment()
                     c == '/' && peekChar(1) == '/' -> skipLineComment()
                     c == '/' && peekChar(1) == '*' -> skipBlockComment()
                     c == '#' -> emitDirective()
@@ -150,6 +170,15 @@ internal class CodeAnalyzer(
 
         private fun skipLineComment() {
             emit(Span(line, column, SpanKind.Comment))
+            while (hasMore() && text[index] != '\n' && text[index] != '\r') {
+                index++
+                column++
+            }
+        }
+
+        /** Consumes a `////` line comment and paints it through the highlight slot. */
+        private fun skipHighlightLineComment() {
+            emit(Span(line, column, SpanKind.HighlightComment))
             while (hasMore() && text[index] != '\n' && text[index] != '\r') {
                 index++
                 column++
