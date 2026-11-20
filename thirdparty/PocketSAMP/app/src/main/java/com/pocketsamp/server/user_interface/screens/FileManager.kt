@@ -22,12 +22,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.DriveFileRenameOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
+import com.pocketsamp.server.user_interface._Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.automirrored.filled.NoteAdd
 import androidx.compose.material.icons.filled.Refresh
@@ -903,7 +902,7 @@ private fun FileEntry(
                 Spacer(Modifier.size(26.dp))
             }
             Icon(
-                imageVector = if (entry.isDirectory) Icons.Default.Folder else Icons.Default.Description,
+                imageVector = if (entry.isDirectory) if (expanded) _Icons.FolderRectOpen else _Icons.FolderRect else _Icons.FilePaper,
                 contentDescription = null,
                 tint = SampThemeColors.accent,
                 modifier = Modifier.size(20.dp)

@@ -518,6 +518,79 @@ object _Icons {
         }.build()
     }
 
+    /** Document glyph: a sheet of paper with horizontal lines — editing, writing, paper, document. */
+    val FilePaper: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "_Icons.FilePaper",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            // Sheet outline with folded top-right corner.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.5f,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                moveTo(5.4f, 3.6f)
+                lineTo(14.2f, 3.6f)
+                lineTo(18.6f, 8.0f)
+                lineTo(18.6f, 20.4f)
+                lineTo(5.4f, 20.4f)
+                close()
+            }
+            // Solid fold at the top-right corner.
+            path(fill = SolidColor(Color.Black)) {
+                moveTo(14.2f, 3.6f)
+                lineTo(18.6f, 8.0f)
+                lineTo(14.2f, 8.0f)
+                close()
+            }
+            // Horizontal writing lines on the body.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.2f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(7.0f, 9.0f)
+                lineTo(17.0f, 9.0f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.2f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(7.0f, 11.0f)
+                lineTo(16.0f, 11.0f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.2f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(7.0f, 13.0f)
+                lineTo(15.0f, 13.0f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.2f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(7.0f, 15.0f)
+                lineTo(14.0f, 15.0f)
+            }
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.2f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(7.0f, 17.0f)
+                lineTo(13.0f, 17.0f)
+            }
+        }.build()
+    }
+
     /** Save-all icon: the [Save] body with a second sheet behind it. */
     val SaveAll: ImageVector by lazy {
         ImageVector.Builder(
