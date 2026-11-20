@@ -195,7 +195,16 @@ class UpdateManager(private val context: Context) {
         return stored.ifEmpty { null }
     }
 
-    fun checkForUpdate(): UpdateCheckResult {
+    fun checkForUpdate(): UpdateCheckResult = checkForUpdate(forceDownload = false)
+
+    /**
+     * Same check as [checkForUpdate], but when [forceDownload] is set the version
+     * comparison is ignored: whatever the latest GitHub release publishes is
+     * reported as UPDATE_AVAILABLE and downloaded even when this installation is
+     * already on that version (or newer). Used by the "Force reinstall" action,
+     * which doubles as a refresh-the-installation path.
+     */
+    fun checkForUpdate(forceDownload: Boolean): UpdateCheckResult {
         val currentVersion = getCurrentVersion()
         val storedVersion = readStoredVersion()
             ?.removeSuffix(NOUGAT_VERSION_SUFFIX)
@@ -215,9 +224,10 @@ class UpdateManager(private val context: Context) {
         val installComparison = compareVersions(currentVersion, release.version)
         val isNougat = isNougatBuild()
         val latestVersionIsNewer = installComparison < 0 || (isNougat && comparison < 0)
-        val hasPackage = latestVersionIsNewer && release.archiveUrl(isNougat) != null
+        val hasPackage = (if (forceDownload) true else latestVersionIsNewer) &&
+            release.archiveUrl(isNougat) != null
         val status = when {
-            (installComparison < 0 || (isNougat && comparison < 0)) && hasPackage -> UpdateStatus.UPDATE_AVAILABLE
+            hasPackage -> UpdateStatus.UPDATE_AVAILABLE
             latestVersionIsNewer -> UpdateStatus.ERROR
             else -> UpdateStatus.UP_TO_DATE
         }

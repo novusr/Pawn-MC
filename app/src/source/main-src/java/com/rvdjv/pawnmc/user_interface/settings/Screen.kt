@@ -246,6 +246,9 @@ fun SettingsScreen(
     var appVersion by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
     var updateCheckOnResume by remember { mutableStateOf(false) }
+    // When set, the next update check ignores the version comparison entirely and
+    // downloads whatever the latest release publishes - the force-reinstall path.
+    var forceReinstall by remember { mutableStateOf(false) }
     val installLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { }
@@ -288,7 +291,9 @@ fun SettingsScreen(
             updateStatus = "Checking for updates..."
 
             try {
-                val result = withContext(Dispatchers.IO) { updateManager.checkForUpdate() }
+                val result = withContext(Dispatchers.IO) {
+                    updateManager.checkForUpdate(forceDownload = forceReinstall)
+                }
                 val status = result.status
 
                 if (status == UpdateStatus.UPDATE_AVAILABLE) {
@@ -303,7 +308,9 @@ fun SettingsScreen(
                     }
                     val hasValidApk = downloaded != null && downloaded.isFile && downloaded.length() > 0L
                     val packageLabel = if (updateManager.isNougatBuild()) "Nougat (Android 7/8)" else "Newer (Android 8-15)"
-                    updateStatus = if (hasValidApk) "Update available: $latestVersion ($packageLabel)" else "Update available, but no compatible package is attached"
+                    updateStatus = if (hasValidApk) {
+                        if (forceReinstall) "Force reinstall ready: $latestVersion ($packageLabel)" else "Update available: $latestVersion ($packageLabel)"
+                    } else "Update available, but no compatible package is attached"
                     lastReleaseInfo = release?.releaseUrl
                     releaseNotesMarkdown = release?.bodyMarkdown.orEmpty().ifBlank { "No release notes provided." }
                     pendingReleaseVersion = latestVersion
@@ -312,7 +319,10 @@ fun SettingsScreen(
                     if (!hasValidApk) {
                         releaseNotesMarkdown = ""
                     }
-                } else if (status == UpdateStatus.UP_TO_DATE) {
+                } else if (status == UpdateStatus.UP_TO_DATE && !forceReinstall) {
+                    // Only the normal (non-forced) path reports "up to date"; a
+                    // forced run can never land here because the comparison is
+                    // skipped, but the guard keeps a stale flag honest anyway.
                     updateStatus = "You're on the latest version"
                     lastReleaseInfo = result.release?.releaseUrl
                     releaseNotesMarkdown = ""
@@ -334,6 +344,10 @@ fun SettingsScreen(
                 updateReady = false
             } finally {
                 isCheckingUpdates = false
+                // The forced intent is one-shot: after this pass the flag is
+                // cleared so the next ordinary check behaves like the primary
+                // update button again.
+                forceReinstall = false
             }
         }
         Unit
@@ -1008,6 +1022,64 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(if (isCheckingUpdates) "Checking..." else updateButtonText)
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Force reinstall: ignores whether the app and the GitHub release
+                    // are already in sync. Downloads the latest package again and
+                    // offers the installer, so the user can refresh the installation
+                    // or simulate a clean update at any time.
+                    TextButton(
+                        onClick = {
+                            if (isCheckingUpdates) return@TextButton
+                            if (updateReady) {
+                                // The forced download already landed: install it
+                                // through the same permission-aware path as the
+                                // primary update button.
+                                if (releaseNotesMarkdown.isNotBlank()) {
+                                    showReleaseNotesDialog = true
+                                    return@TextButton
+                                }
+                                if (downloadedApk == null || downloadedApk?.isFile != true) {
+                                    forceReinstall = true
+                                    refreshUpdateStatus()
+                                    return@TextButton
+                                }
+                                if (!updateManager.canRequestUnknownSources()) {
+                                    pendingInstallAfterPermission = true
+                                    updateCheckOnResume = true
+                                    permissionLauncher.launch(updateManager.buildUnknownSourcesIntent())
+                                    return@TextButton
+                                }
+                                val packageFile = downloadedApk ?: return@TextButton
+                                coroutineScope.launch {
+                                    runCatching {
+                                        val apkFile = withContext(Dispatchers.IO) {
+                                            updateManager.extractUpdateApk(packageFile)
+                                        }
+                                        installLauncher.launch(updateManager.buildInstallIntent(apkFile))
+                                    }.onFailure { error ->
+                                        if (error is kotlinx.coroutines.CancellationException) throw error
+                                        updateStatus = error.localizedMessage?.let { "Reinstall failed: $it" } ?: "Unable to prepare reinstall"
+                                        updateReady = false
+                                    }
+                                }
+                                return@TextButton
+                            }
+                            forceReinstall = true
+                            refreshUpdateStatus()
+                        },
+                        enabled = !isCheckingUpdates,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            localizer.get(
+                                "settings.updates.force",
+                                appLanguage,
+                                "Force reinstall from latest release"
+                            )
+                        )
                     }
                 }
             }

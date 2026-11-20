@@ -715,6 +715,13 @@ tl = "Nasa pinakabagong bersyon ka na"
 ru = "U vas ustanovlena poslednyaya versiya"
 es = "Estas usando la version mas reciente"
 
+[settings.updates.force]
+id = "Paksa Instal Ulang dari Rilis Terbaru"
+en = "Force reinstall from latest release"
+tl = "Pilitang muling i-install mula sa pinakabagong release"
+ru = "Prinuditelnaya pereustanovka iz poslednego releasa"
+es = "Forzar reinstalacion desde la ultima version"
+
 [main.busy.notice]
 id = "Pengaturan, PawnMC Editor, dan PocketSAMP sementara tidak tersedia sampai proses kompilasi selesai."
 en = "Settings, PawnMC Editor, and PocketSAMP are temporarily unavailable until compilation is complete."
