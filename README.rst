@@ -109,6 +109,15 @@ breakdown, and file-by-file analysis of the current codebase.
 
 .. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/PAWNMC2.png
 
+User-Interface
+------------
+
+.. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/MC.png
+
+.. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/MC2.png
+
+.. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/MC3.png
+
 Installation
 ------------
 
