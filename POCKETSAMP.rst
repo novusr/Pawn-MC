@@ -401,6 +401,16 @@ Pesan startup, kegagalan pemuatan plugin, dan error gamemode biasanya memberikan
 
 Jika aplikasi berhenti secara tiba-tiba, periksa Crash Logs untuk mendapatkan laporan yang dapat dibagikan kepada developer.
 
+Kamu bisa menyimpan shared library eksternal (`.so`) di File Manager PocketSAMP, tepat di sebelah folder Game Mode milikmu.
+
+Misalnya, saat terminal PocketSAMP menampilkan pesan error karena ada shared library eksternal yang belum tersedia, seperti ``libcurl.so``, kamu mungkin akan melihat pesan seperti ini:
+
+.. code-block:: text
+   
+   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory
+
+Caranya gampang, cukup cari library yang dibutuhkan lewat Google. Setelah menemukan file `.so` yang cocok (dalam contoh ini, ``libcurl.so``), simpan saja di sebelah file executable `samp03svr` melalui File Manager PocketSAMP.
+
 **English (US)**
 
 If the server encounters a problem or does not behave as expected, check the Console messages first.
@@ -408,6 +418,16 @@ If the server encounters a problem or does not behave as expected, check the Con
 Startup output, plugin loading failures, and gamemode errors usually provide useful information for identifying the cause.
 
 If the application stops unexpectedly, check Crash Logs for a report that you can share with the developer.
+
+You can store external shared libraries (``.so`` files) in your File Manager, right next to your game mode folder.
+
+For example, if PocketSAMP's terminal displays an error saying that an external ``.so`` library is missing, such as ``libcurl.so``, you'll see something like this:
+
+.. code-block:: text
+
+   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory
+
+All you need to do is search Google for the required library. Once you've found the correct ``.so`` file (in this case, ``libcurl.so``), simply place it alongside your `samp03svr` executable in your PocketSAMP File Manager.
 
 **Tagalog**
 
@@ -417,6 +437,16 @@ Karaniwang makikita sa startup output, plugin loading failures, at gamemode erro
 
 Kung biglang huminto ang application, tingnan ang Crash Logs at ipadala ang report sa developer kung kinakailangan.
 
+Puwede kang mag-save ng mga external shared library (``.so`` files) sa File Manager ng PocketSAMP, katabi mismo ng folder ng game mode mo.
+
+Halimbawa, kung may lumabas na error sa PocketSAMP terminal dahil may nawawalang external ``.so`` library, gaya ng ``libcurl.so``, ganito ang maaaring makita mong mensahe:
+
+.. code-block:: text
+
+   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory
+
+Ang kailangan mo lang gawin ay hanapin sa Google ang tamang library. Kapag nahanap mo na ang kailangang ``.so`` file (sa halimbawang ito, ``libcurl.so``), ilagay mo lang ito katabi ng `samp03svr` executable gamit ang PocketSAMP File Manager.
+
 **Español**
 
 Si el servidor presenta algún problema o no funciona como debería, revisa primero los mensajes de Console.
@@ -425,13 +455,27 @@ Los mensajes de inicio, los errores al cargar plugins y los problemas del gamemo
 
 Si la aplicación se cierra inesperadamente, consulta Crash Logs para obtener un informe que puedas compartir con el desarrollador.
 
+Puedes guardar bibliotecas externas (``.so``) en el administrador de archivos de PocketSAMP, justo al lado de la carpeta de tu Game Mode.
+
+Por ejemplo, si la terminal de PocketSAMP muestra un error porque falta una biblioteca ``.so`` externa, como ``libcurl.so``, verás algo parecido a esto:
+
+.. code-block:: text
+
+   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory
+
+Solo tienes que buscar la biblioteca que falta en Google. Cuando encuentres el archivo ``.so`` correcto (en este caso, ``libcurl.so``), guárdalo junto al ejecutable `samp03svr` desde el administrador de archivos de PocketSAMP.
+
 **Русский**
 
-Если сервер работает неправильно или возникла ошибка, сначала проверьте сообщения в Console.
+Вы можете разместить внешние библиотеки (``.so``) в файловом менеджере PocketSAMP, рядом с папкой Game Mode.
 
-Вывод запуска, ошибки загрузки плагинов и сообщения gamemode обычно содержат информацию, необходимую для определения причины проблемы.
+Например, если терминал PocketSAMP сообщает об отсутствии библиотеки, например ``libcurl.so``, вы можете увидеть следующую ошибку:
 
-Если приложение неожиданно завершилось, откройте Crash Logs и при необходимости отправьте отчёт разработчику.
+.. code-block:: text
+
+   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory
+
+Чтобы устранить эту проблему, найдите подходящую версию библиотеки, совместимую с вашей системой. Убедитесь, что она соответствует архитектуре и требованиям программы, а затем поместите её рядом с исполняемым файлом `samp03svr` через файловый менеджер PocketSAMP.
 
 Final Notes
 -----------

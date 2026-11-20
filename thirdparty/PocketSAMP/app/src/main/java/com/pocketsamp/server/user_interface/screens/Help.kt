@@ -55,14 +55,39 @@ internal object HelpContent {
         Locales.Lang.ES -> "¡Hola! Esta es la guía corta de PocketSAMP. Sin prisa, lee una sección a la vez — todo toma un par de minutos."
         Locales.Lang.RU -> "Privet! Eto korotkoe rukovodstvo po PocketSAMP. Ne speshite, chitajte po odnomu razdelu — vsyo zajmyot paru minut."
     }
-
+    
     fun footer(lang: Locales.Lang): String = when (lang) {
-        Locales.Lang.ID -> "Jika server bermasalah, periksa pesan di Console."
-        Locales.Lang.EN -> "If the server has a problem, check the Console messages."
-        Locales.Lang.TL -> "Kung may hindi pa malinaw, buksan ang Console at basahin ang log: halos lahat ng problema ng server makikita doon."
-        Locales.Lang.ES -> "Si algo sigue rare, abre Console y lee el registro: casi todos los problemas del servidor se ven ahí."
-        Locales.Lang.RU -> "Esli chto-to vsyo eshchyo ne tak, otkrojte Console i prochitajte zhurnal: pochti vse problemy servera vidny tam."
+        Locales.Lang.ID ->
+            "Kamu bisa menyimpan shared library eksternal (.so) di File Manager PocketSAMP, tepat di sebelah folder Game Mode milikmu.\n\n" +
+            "Misalnya, jika terminal PocketSAMP menampilkan error karena ada shared library yang belum tersedia, seperti libcurl.so, kamu mungkin akan melihat pesan seperti ini:\n\n" +
+            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory\n\n" +
+            "Caranya gampang, cukup cari library yang dibutuhkan lewat Google. Setelah menemukan file .so yang cocok, simpan saja di sebelah executable samp03svr melalui File Manager PocketSAMP."
+
+        Locales.Lang.EN ->
+            "You can store external shared libraries (.so files) in your PocketSAMP File Manager, right next to your Game Mode folder.\n\n" +
+            "For example, if PocketSAMP's terminal reports a missing shared library, such as libcurl.so, you might see an error like this:\n\n" +
+            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory\n\n" +
+            "All you need to do is search Google for the required library. Once you find the correct .so file, simply place it next to your samp03svr executable using the PocketSAMP File Manager."
+
+        Locales.Lang.TL ->
+            "Puwede kang mag-save ng external shared libraries (.so files) sa PocketSAMP File Manager, katabi mismo ng Game Mode folder mo.\n\n" +
+            "Halimbawa, kung may nawawalang shared library ang PocketSAMP at lumabas ito sa terminal, gaya ng libcurl.so, maaari kang makakita ng ganitong error:\n\n" +
+            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory\n\n" +
+            "Hanapin lang sa Google ang library na kailangan mo. Kapag nahanap mo na ang tamang .so file, ilagay ito katabi ng samp03svr executable gamit ang PocketSAMP File Manager."
+
+        Locales.Lang.ES ->
+            "Puedes guardar bibliotecas externas (.so) en el administrador de archivos de PocketSAMP, justo al lado de tu carpeta Game Mode.\n\n" +
+            "Por ejemplo, si la terminal de PocketSAMP muestra un error porque falta una biblioteca, como libcurl.so, podrías ver algo así:\n\n" +
+            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory\n\n" +
+            "Solo tienes que buscar en Google la biblioteca que necesitas. Cuando encuentres el archivo .so correcto, guárdalo junto al ejecutable samp03svr desde el administrador de archivos de PocketSAMP."
+            
+        Locales.Lang.RU ->
+            "Vy mozhete razmestit vneshnie biblioteki (.so) v faylovom menedzhere PocketSAMP, ryadom s papkoy Game Mode.\n\n" +
+            "Naprimer, yesli terminal PocketSAMP soobshchayet ob otsutstvii biblioteki, naprimer libcurl.so.1, vy mozhete uvidet sleduyushchuyu oshibku:\n\n" +
+            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory\n\n" +
+            "Chtoby reshit etu problemu, naydite podkhodyashchuyu versiyu biblioteki, sovmestimuyu s vashey sistemoy. Ubedites, chto ona sootvetstvuyet arkhitekture i trebovaniyam programmy, a zatem pomestite yeye ryadom s ispolnyaemym faylom samp03svr cherez faylovyy menedzher PocketSAMP."
     }
+
 
     fun sections(lang: Locales.Lang): List<HelpSection> = when (lang) {
         Locales.Lang.ID -> listOf(
