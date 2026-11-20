@@ -29,10 +29,8 @@ import androidx.compose.ui.unit.sp
 import com.pocketsamp.server.user_interface.theme.SampThemeColors
 
 /**
- * One explainer card of the PocketSAMP help screen.
- *
- * [body] is plain text (blank line = paragraph break); it is deliberately not markdown so
- * the help screen stays readable in every language without a renderer per locale.
+ * One help card: [icon], [title], [body].
+ * [body] is plain text (blank line = paragraph break), not markdown — readable in every language.
  */
 internal data class HelpSection(
     val icon: String,
@@ -41,10 +39,8 @@ internal data class HelpSection(
 )
 
 /**
- * The multi-language walkthrough shown by the (H) button in the floating tab rail.
- *
- * The copy is intentionally relaxed ("pelan-pelan") instead of reference-style: the help
- * button exists for first-time users who do not know what each tab does yet.
+ * Multi-language walkthrough shown by the (H) button.
+ * Intentionally relaxed ("pelan-pelan") for first-time users learning each tab.
  */
 internal object HelpContent {
 
@@ -58,34 +54,44 @@ internal object HelpContent {
     
     fun footer(lang: Locales.Lang): String = when (lang) {
         Locales.Lang.ID ->
-            "Kamu bisa menyimpan shared library eksternal (.so) di File Manager PocketSAMP, tepat di sebelah folder Game Mode milikmu.\n\n" +
-            "Misalnya, jika terminal PocketSAMP menampilkan error karena ada shared library yang belum tersedia, seperti libcurl.so, kamu mungkin akan melihat pesan seperti ini:\n\n" +
-            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory\n\n" +
-            "Caranya gampang, cukup cari library yang dibutuhkan lewat Google. Setelah menemukan file .so yang cocok, simpan saja di sebelah executable samp03svr melalui File Manager PocketSAMP."
+            "Simpan shared library (.so) eksternal di File Manager PocketSAMP, di sebelah folder Game Mode.\n\n" +
+            "Contoh error terminal:\n\n" +
+            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file\n\n" +
+            "Cara memperbaiki:\n\n" +
+            "- Cari library yang diperlukan di Google\n\n" +
+            "- Simpan file .so yang cocok di sebelah samp03svr via File Manager PocketSAMP"
 
         Locales.Lang.EN ->
-            "You can store external shared libraries (.so files) in your PocketSAMP File Manager, right next to your Game Mode folder.\n\n" +
-            "For example, if PocketSAMP's terminal reports a missing shared library, such as libcurl.so, you might see an error like this:\n\n" +
-            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory\n\n" +
-            "All you need to do is search Google for the required library. Once you find the correct .so file, simply place it next to your samp03svr executable using the PocketSAMP File Manager."
+            "Store external shared libraries (.so) in PocketSAMP File Manager, next to your Game Mode folder.\n\n" +
+            "Example terminal error:\n\n" +
+            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file\n\n" +
+            "How to fix:\n\n" +
+            "- Search for the required library on Google\n\n" +
+            "- Place the correct .so file next to samp03svr via PocketSAMP File Manager"
 
         Locales.Lang.TL ->
-            "Puwede kang mag-save ng external shared libraries (.so files) sa PocketSAMP File Manager, katabi mismo ng Game Mode folder mo.\n\n" +
-            "Halimbawa, kung may nawawalang shared library ang PocketSAMP at lumabas ito sa terminal, gaya ng libcurl.so, maaari kang makakita ng ganitong error:\n\n" +
-            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory\n\n" +
-            "Hanapin lang sa Google ang library na kailangan mo. Kapag nahanap mo na ang tamang .so file, ilagay ito katabi ng samp03svr executable gamit ang PocketSAMP File Manager."
+            "Magtago ng external shared libraries (.so) sa PocketSAMP File Manager, katabi ng Game Mode folder.\n\n" +
+            "Halimbawa ng error sa terminal:\n\n" +
+            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file\n\n" +
+            "Paano ayusin:\n\n" +
+            "- Hanapin ang library na kailangan sa Google\n\n" +
+            "- Ilagay ang .so file katabi ng samp03svr via PocketSAMP File Manager"
 
         Locales.Lang.ES ->
-            "Puedes guardar bibliotecas externas (.so) en el administrador de archivos de PocketSAMP, justo al lado de tu carpeta Game Mode.\n\n" +
-            "Por ejemplo, si la terminal de PocketSAMP muestra un error porque falta una biblioteca, como libcurl.so, podrías ver algo así:\n\n" +
-            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory\n\n" +
-            "Solo tienes que buscar en Google la biblioteca que necesitas. Cuando encuentres el archivo .so correcto, guárdalo junto al ejecutable samp03svr desde el administrador de archivos de PocketSAMP."
+            "Guarda bibliotecas externas (.so) en el administrador de archivos de PocketSAMP, junto a tu carpeta Game Mode.\n\n" +
+            "Ejemplo de error en terminal:\n\n" +
+            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file\n\n" +
+            "Cómo arreglarlo:\n\n" +
+            "- Busca la biblioteca necesaria en Google\n\n" +
+            "- Coloca el archivo .so correcto junto a samp03svr desde el administrador de archivos de PocketSAMP"
             
         Locales.Lang.RU ->
-            "Vy mozhete razmestit vneshnie biblioteki (.so) v faylovom menedzhere PocketSAMP, ryadom s papkoy Game Mode.\n\n" +
-            "Naprimer, yesli terminal PocketSAMP soobshchayet ob otsutstvii biblioteki, naprimer libcurl.so.1, vy mozhete uvidet sleduyushchuyu oshibku:\n\n" +
-            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory\n\n" +
-            "Chtoby reshit etu problemu, naydite podkhodyashchuyu versiyu biblioteki, sovmestimuyu s vashey sistemoy. Ubedites, chto ona sootvetstvuyet arkhitekture i trebovaniyam programmy, a zatem pomestite yeye ryadom s ispolnyaemym faylom samp03svr cherez faylovyy menedzher PocketSAMP."
+            "Razmestite vneshnie biblioteki (.so) v faylovom menedzhere PocketSAMP, ryadom s papkoy Game Mode.\n\n" +
+            "Primier oshibki v terminale:\n\n" +
+            "   ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file\n\n" +
+            "Kak ispravit:\n\n" +
+            "- Naydite nuzhnuyu biblioteku cherez Google\n\n" +
+            "- Pomestite .so file ryadom s samp03svr cherez faylovyy menedzher PocketSAMP"
     }
 
 
@@ -94,65 +100,84 @@ internal object HelpContent {
             HelpSection(
                 "dashboard",
                 "Halaman Utama",
-                "Mulai atau hentikan server di sini. Salin alamat Local untuk bermain di perangkat ini, " +
-                    "atau alamat LAN untuk pemain di jaringan Wi-Fi yang sama."
+                "Mulai atau hentikan server di sini.\n\n" +
+                    "- Salin alamat Local untuk main di perangkat ini\n\n" +
+                    "- Salin alamat LAN untuk pemain di Wi-Fi yang sama"
             ),
             HelpSection(
                 "console",
                 "Console",
-                "Pesan startup, plugin, dan error server tampil di sini. Bersihkan tampilan tanpa menghapus log tersimpan."
+                "Pesan startup, plugin, dan error server tampil di sini.\n\n" +
+                    "- Bersihkan tampilan tanpa menghapus log tersimpan"
             ),
             HelpSection(
                 "files",
                 "File Manager",
-                "Kelola file server dan subfolder di sini. Pilih folder untuk membuat file baru. Edit membuka file di Xed; Open workspace membukanya sebagai workspace."
+                "Kelola file server dan subfolder di sini.\n\n" +
+                    "- Pilih folder untuk membuat file baru\n\n" +
+                    "- Edit: buka file di Xed\n\n" +
+                    "- Open workspace: buka sebagai workspace"
             ),
             HelpSection(
                 "database",
                 "Database",
-                "MariaDB berjalan bersama server. Buat database, lihat tabel, jalankan SQL, atau impor file .sql. Sesuaikan akun jika gamemode memerlukannya."
+                "MariaDB berjalan bersama server.\n\n" +
+                    "- Buat database, lihat tabel, jalankan SQL, impor .sql\n\n" +
+                    "- Sesuaikan akun jika gamemode memerlukan"
             ),
             HelpSection(
                 "crashes",
                 "Crash Logs",
-                "Lihat dan salin laporan saat aplikasi berhenti mendadak. Hapus laporan lama untuk merapikan daftar."
+                "Lihat dan salin laporan crash aplikasi.\n\n" +
+                    "- Hapus laporan lama untuk merapikan daftar"
             ),
             HelpSection(
                 "config",
                 "Configuration",
-                "Ubah hostname, port, pemain, RCON, gamemode, filterscripts, dan plugins. Simpan untuk memperbarui server.cfg."
+                "Ubah hostname, port, pemain, RCON, gamemode, filterscripts, plugins.\n\n" +
+                    "- Simpan untuk memperbarui server.cfg"
             )
         )
         Locales.Lang.EN -> listOf(
             HelpSection(
                 "dashboard",
                 "Main interface",
-                "Start or stop the server here. Copy the Local address to play on this phone, or the LAN address for players on the same Wi-Fi network."
+                "Start or stop the server here.\n\n" +
+                    "- Copy Local address to play on this phone\n\n" +
+                    "- Copy LAN address for players on same Wi-Fi"
             ),
             HelpSection(
                 "console",
                 "Console",
-                "Startup messages, plugins, and server errors appear here. Clear the view without deleting saved logs."
+                "Startup messages, plugins, and server errors appear here.\n\n" +
+                    "- Clear the view without deleting saved logs"
             ),
             HelpSection(
                 "files",
                 "File Manager",
-                "Manage server files and folders here. Select a folder to create an item inside it. Edit opens a file in Xed; Open workspace opens it in the editor workspace."
+                "Manage server files and folders here.\n\n" +
+                    "- Select a folder to create an item inside it\n\n" +
+                    "- Edit: opens a file in Xed\n\n" +
+                    "- Open workspace: opens it in the editor workspace"
             ),
             HelpSection(
                 "database",
                 "Database",
-                "MariaDB runs with the server. Create databases, view tables, run SQL, or import .sql files. Set credentials if your gamemode requires them."
+                "MariaDB runs with the server.\n\n" +
+                    "- Create databases, view tables, run SQL, import .sql files\n\n" +
+                    "- Set credentials if your gamemode requires them"
             ),
             HelpSection(
                 "crashes",
                 "Crash logs",
-                "View and copy reports when the app stops unexpectedly. Delete old reports to keep the list tidy."
+                "View and copy reports when the app stops unexpectedly.\n\n" +
+                    "- Delete old reports to keep the list tidy"
             ),
             HelpSection(
                 "config",
                 "Configuration",
-                "Edit hostname, port, player limit, RCON, gamemode, filterscripts, and plugins. Save to update server.cfg."
+                "Edit hostname, port, player limit, RCON, gamemode, filterscripts, plugins.\n\n" +
+                    "- Save to update server.cfg"
             )
         )
         Locales.Lang.TL -> listOf(
@@ -160,48 +185,44 @@ internal object HelpContent {
                 "dashboard",
                 "Pangunahing interface",
                 "Dito binubuksan at isinasara ang server.\n\n" +
-                    "Ang unang card ay may Local address (127.0.0.1) para maglaro sa phone na ito, " +
-                    "at LAN address para sa mga kaibigang nasa parehong Wi-Fi/hotspot. I-tap para kopyahin."
+                    "- Local address (127.0.0.1) para maglaro sa phone na ito\n\n" +
+                    "- LAN address para kaibigang nasa parehong Wi-Fi/hotspot. I-tap para kopyahin."
             ),
             HelpSection(
                 "console",
                 "Console",
-                "Dito lumalabas ang lahat ng sinasabi ng server: startup, mga plugin na na-load, at " +
-                    "error kapag hindi na-load ang gamemode.\n\n" +
-                    "Kung may kakaiba, dito muna tumingin — kadalasan pula ang dahilan. Hindi binubura " +
-                    "ng pag-clear ng view ang lumang log sa device."
+                "Dito lumalabas ang lahat ng sinasabi ng server: startup, mga plugin na na-load, at error kapag hindi na-load ang gamemode.\n\n" +
+                    "Kung may kakaiba, dito muna tumingin — kadalasan pula ang dahilan.\n\n" +
+                    "Hindi binubura ng pag-clear ng view ang lumang log sa device."
             ),
             HelpSection(
                 "files",
                 "File Manager",
-                "Dito inaayos ang mga file ng server. Nagbubukas at nagsasara ang folder sa mismong " +
-                    "listahan tulad ng Xed Editor workspace, kaya kita agad ang laman ng subfolder.\n\n" +
-                    "Pumili muna ng folder para gumawa ng file/folder sa loob nito; kung wala pang " +
-                    "napili, sa kasalukuyang bukas na folder mapupunta ang bago.\n\n" +
-                    "Ang Edit ay nagbubukas sa Xed, at Open workspace ay ibinibigay ang folder sa editor."
+                "Dito inaayos ang mga file ng server. Nagbubukas at nagsasara ang folder sa mismong listahan tulad ng Xed Editor workspace.\n\n" +
+                    "- Pumili muna ng folder para gumawa ng file/folder sa loob nito\n\n" +
+                    "- Kung wala pang napili, sa kasalukuyang bukas na folder mapupunta ang bago\n\n" +
+                    "- Edit: bukas sa Xed; Open workspace: ibinibigay ang folder sa editor"
             ),
             HelpSection(
                 "database",
                 "Database",
-                "Kasabay tumatakbo ang MariaDB engine. Dito ka puwedeng gumawa ng database, tumingin " +
-                    "ng table, magpatakbo ng SQL, at mag-import ng .sql file.\n\n" +
-                    "Karaniwang root na walang password ang account; ikaw ang magpalit kung iba ang " +
-                    "kailangan ng gamemode mo."
+                "Kasabay tumatakbo ang MariaDB engine.\n\n" +
+                    "- Gumawa ng database, tumingin ng table, magpatakbo ng SQL, mag-import ng .sql file\n\n" +
+                    "- Karaniwang root na walang password ang account; ikaw ang magpalit kung iba ang kailangan ng gamemode mo"
             ),
             HelpSection(
                 "crashes",
                 "Crash logs",
-                "Kapag biglang huminto ang app, nandito ang buong report. Buksan ang detalye, kopyahin " +
-                    "ang mahalagang bahagi, at ipadala sa developer.\n\n" +
-                    "Puwedeng burahin ang lumang report para maikli lang ang listahan."
+                "Kapag biglang huminto ang app, nandito ang buong report.\n\n" +
+                    "- Buksan ang detalye, kopyahin ang mahalagang bahagi, at ipadala sa developer\n\n" +
+                    "- Puwedeng burahin ang lumang report para maikli lang ang listahan"
             ),
             HelpSection(
                 "config",
                 "Configuration",
-                "Editor ng server.cfg: hostname, port, max players, password ng RCON, gamemode, " +
-                    "filterscripts at plugins.\n\n" +
-                    "Kung wala pa ang file, ipinapakita ang default ng runner. Pindutin ang Save para " +
-                    "maisulat ito sa server folder."
+                "Editor ng server.cfg: hostname, port, max players, password ng RCON, gamemode, filterscripts at plugins.\n\n" +
+                    "- Kung wala pa ang file, ipinapakita ang default ng runner\n\n" +
+                    "- Pindutin ang Save para maisulat ito sa server folder"
             )
         )
         Locales.Lang.ES -> listOf(
@@ -209,47 +230,44 @@ internal object HelpContent {
                 "dashboard",
                 "Interfaz principal",
                 "Aquí se inicia y se detiene el servidor.\n\n" +
-                    "La primera tarjeta muestra la dirección Local (127.0.0.1) para jugar en este " +
-                    "teléfono y la dirección LAN para amigos en la misma Wi-Fi/hotspot. Toca una para copiarla."
+                    "- Dirección Local (127.0.0.1) para jugar en este teléfono\n\n" +
+                    "- Dirección LAN para amigos en la misma Wi-Fi/hotspot. Toca una para copiarla."
             ),
             HelpSection(
                 "console",
                 "Consola",
-                "Aquí aparece todo lo que dice el servidor: arranque, plugins cargados y el error que " +
-                    "impidió cargar un gamemode.\n\n" +
-                    "Si algo va raro, mira aquí primero: la línea roja suele ser la causa. Limpiar la " +
-                    "vista no borra los registros del dispositivo."
+                "Aquí aparece todo lo que dice el servidor: arranque, plugins cargados y el error que impidió cargar un gamemode.\n\n" +
+                    "Si algo va raro, mira aquí primero: la línea roja suele ser la causa.\n\n" +
+                    "Limpiar la vista no borra los registros del dispositivo."
             ),
             HelpSection(
                 "files",
                 "File Manager",
-                "Aquí se organizan los archivos del servidor. Las carpetas se abren y cierran en el " +
-                    "mismo listado, como el workspace de Xed Editor, así que el contenido anidado se ve al instante.\n\n" +
-                    "Selecciona una carpeta para crear archivos o carpetas dentro; si no hay selección, " +
-                    "lo nuevo va a la carpeta abierta.\n\n" +
-                    "Edit abre el archivo en Xed y Open workspace entrega la carpeta al editor."
+                "Aquí se organizan los archivos del servidor. Las carpetas se abren y cierran en el mismo listado, como el workspace de Xed Editor.\n\n" +
+                    "- Selecciona una carpeta para crear archivos o carpetas dentro\n\n" +
+                    "- Si no hay selección, lo nuevo va a la carpeta abierta\n\n" +
+                    "- Edit abre el archivo en Xed; Open workspace entrega la carpeta al editor"
             ),
             HelpSection(
                 "database",
                 "Base de datos",
-                "El motor MariaDB corre junto al servidor. Desde aquí puedes crear bases, revisar tablas, " +
-                    "ejecutar SQL e importar archivos .sql.\n\n" +
-                    "La cuenta habitual es root sin contraseña; cámbiala si tu gamemode necesita otras credenciales."
+                "El motor MariaDB corre junto al servidor.\n\n" +
+                    "- Crea bases, revisa tablas, ejecuta SQL, importa archivos .sql\n\n" +
+                    "- La cuenta habitual es root sin contraseña; cámbiala si tu gamemode necesita otras credenciales"
             ),
             HelpSection(
                 "crashes",
                 "Informes de fallos",
-                "Si la app se detuvo de golpe, el informe completo queda aquí. Abre el detalle, copia lo " +
-                    "importante y envíalo al desarrollador.\n\n" +
-                    "Los informes antiguos se pueden borrar para mantener la lista corta."
+                "Si la app se detuvo de golpe, el informe completo queda aquí.\n\n" +
+                    "- Abre el detalle, copia lo importante y envíalo al desarrollador\n\n" +
+                    "- Los informes antiguos se pueden borrar para mantener la lista corta"
             ),
             HelpSection(
                 "config",
                 "Configuración",
-                "El editor de server.cfg: hostname, puerto, jugadores máximos, contraseña RCON, gamemode, " +
-                    "filterscripts y plugins.\n\n" +
-                    "Si el archivo aún no existe se muestran los valores por defecto. Pulsa Save para " +
-                    "escribirlos en la carpeta del servidor."
+                "El editor de server.cfg: hostname, puerto, jugadores máximos, contraseña RCON, gamemode, filterscripts y plugins.\n\n" +
+                    "- Si el archivo aún no existe se muestran los valores por defecto\n\n" +
+                    "- Pulsa Save para escribirlos en la carpeta del servidor"
             )
         )
         Locales.Lang.RU -> listOf(
@@ -257,57 +275,52 @@ internal object HelpContent {
                 "dashboard",
                 "Glavnyj ekran",
                 "Zdes server zapuskaetsya i ostanavlivaetsya.\n\n" +
-                    "Pervaya kartochka — adres Local (127.0.0.1) dlya igry na etom telefone, nizhe adres LAN " +
-                    "dlya druzej v toj zhe Wi-Fi/hotspot seti. Nazhmite na adres, chtoby skopirovat."
+                    "- Adres Local (127.0.0.1) dlya igry na etom telefone\n\n" +
+                    "- Adres LAN dlya druzej v toj zhe Wi-Fi/hotspot seti. Nazhmite na adres, chtoby skopirovat."
             ),
             HelpSection(
                 "console",
                 "Konsol",
-                "Zdes vidno vsyo, chto soobshchaet server: zapusk, zagruzhennye plaginy i oshibku, iz-za " +
-                    "kotoroj ne zagruzilsya gamemode.\n\n" +
-                    "Esli chto-to ne tak, smotrite syuda: krasnaya stroka obychno i est prichina. Ochistka " +
-                    "vida ne udalyaet starye zhurnaly s ustrojstva."
+                "Zdes vidno vsyo, chto soobshchaet server: zapusk, zagruzhennye plaginy i oshibku, iz-za kotoroj ne zagruzilsya gamemode.\n\n" +
+                    "Esli chto-to ne tak, smotrite syuda: krasnaya stroka obychno i est prichina.\n\n" +
+                    "Ochistka vida ne udalyaet starye zhurnaly s ustrojstva."
             ),
             HelpSection(
                 "files",
                 "File Manager",
-                "Zdes navodyat poryadok v fajlakh servera. Papki raskryvayutsya pryamo v spiske, kak v " +
-                    "workspace Xed Editor, poetomu vlozhennoe soderzhimoe vidno srazu.\n\n" +
-                    "Snachala vyberite papku, chtoby sozdat fajl ili papku vnutri neyo; bez vybora novyj " +
-                    "element popadaet v otkrytuyu sejchas papku.\n\n" +
-                    "Edit otkryvaet fajl v Xed, Open workspace peredayot papku redaktoru."
+                "Zdes navodyat poryadok v fajlakh servera. Papki raskryvayutsya pryamo v spiske, kak v workspace Xed Editor.\n\n" +
+                    "- Snachala vyberite papku, chtoby sozdat fajl ili papku vnutri neyo\n\n" +
+                    "- Bez vybora novyj element popadaet v otkrytuyu sejchas papku\n\n" +
+                    "- Edit otkryvaet fajl v Xed; Open workspace peredayot papku redaktoru"
             ),
             HelpSection(
                 "database",
                 "Baza dannykh",
-                "Dvizhok MariaDB rabotaet vmeste s serverom. Zdes mozhno sozdavat bazy, smotret " +
-                    "tablitsy, vypolnyat SQL i importirovat .sql.\n\n" +
-                    "Obychnaya uchyotnaya zapis — root bez parolya; smenite eyo, esli gamemode trebuet drugoe."
+                "Dvizhok MariaDB rabotaet vmeste s serverom.\n\n" +
+                    "- Sozdavat bazy, smotret tablitsy, vypolnyat SQL i importirovat .sql\n\n" +
+                    "- Obychnaya uchyotnaya zapis — root bez parolya; smenite eyo, esli gamemode trebuet drugoe"
             ),
             HelpSection(
                 "crashes",
                 "Zhurnaly sboev",
-                "Esli prilozhenie vnezapno zakrylos, polnyj otchyot lezhit zdes. Otkrojte detali, " +
-                    "skopirujte vazhnoe i otpravte razrabotchiku.\n\n" +
-                    "Starye otchyoty mozhno udalit, chtoby spisok ostavalsya korotkim."
+                "Esli prilozhenie vnezapno zakrylos, polnyj otchyot lezhit zdes.\n\n" +
+                    "- Otkrojte detali, skopirujte vazhnoe i otpravte razrabotchiku\n\n" +
+                    "- Starye otchyoty mozhno udalit, chtoby spisok ostavalsya korotkim"
             ),
             HelpSection(
                 "config",
                 "Konfiguratsiya",
-                "Redaktor server.cfg: hostname, port, maksimum igrokov, parol RCON, gamemode, " +
-                    "filterscripts i plugins.\n\n" +
-                    "Esli fajla eshchyo net, pokazany znacheniya runner po umolchaniyu. Nazhmite Save, chtoby " +
-                    "zapisat ikh v papku servera."
+                "Redaktor server.cfg: hostname, port, maksimum igrokov, parol RCON, gamemode, filterscripts i plugins.\n\n" +
+                    "- Esli fajla eshchyo net, pokazany znacheniya runner po umolchaniyu\n\n" +
+                    "- Nazhmite Save, chtoby zapisat ikh v papku servera"
             )
         )
     }
 }
 
 /**
- * The "PocketSAMP, slowly" screen opened from the (H) button.
- *
- * It is a plain scrolling read rather than a wizard: the reader chooses the pace, and
- * each card explains one tab in the same order the floating rail shows them.
+ * "PocketSAMP, slowly" screen opened from the (H) button.
+ * Plain scrolling read (not a wizard): reader sets the pace; each card explains one tab.
  */
 @Composable
 fun _Help(lang: Locales.Lang) {
