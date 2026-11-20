@@ -30,13 +30,11 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Monitor
-import androidx.compose.material.icons.filled.PedalBike
+import com.pocketsamp.server.user_interface._Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -78,12 +76,12 @@ import com.pocketsamp.server.user_interface.theme.*
 
 enum class AppTab(val label: String, val icon: ImageVector) {
     // The help entry sits first so the rail reads as "learn, then use".
-    HELP("Help", Icons.AutoMirrored.Filled.HelpOutline),
+    HELP("Help", _Icons.CircledI),
     DASHBOARD("Dashboard", Icons.Default.Home),
     CONSOLE("Console", Icons.Default.Monitor),
     FILES("Files", Icons.Default.FolderOpen),
     DATABASE("Database", Icons.Default.Storage),
-    CRASHES("Crash Logs", Icons.Default.BugReport),
+    CRASHES("Crash Logs", _Icons.CircledBigI),
     CONFIG("Config", Icons.Default.Settings)
 }
 
@@ -434,7 +432,7 @@ class MainActivity : ComponentActivity() {
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.PedalBike,
+                                imageVector = _Icons.CircledB,
                                 contentDescription = t("back.to.pawnmc"),
                                 tint = SampThemeColors.textSecondary,
                                 modifier = Modifier.size(20.dp)

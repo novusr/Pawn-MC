@@ -167,4 +167,76 @@ object _Icons {
             }
         }.build()
     }
+
+    /** Circled letter glyph family — same circle, different letter inside. */
+    private fun CircledLetter(letter: String): ImageVector =
+        ImageVector.Builder(
+            name = "_Icons.Circled$letter",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            // Outer circle (same for all three icons).
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.8f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                addCircle(12f, 12f, 9f)
+            }
+            // Letter in the centre (same baseline, same size so all three read as a family).
+            path(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero
+            ) {
+                when (letter) {
+                    "B" -> {
+                        moveTo(10.2f, 8.4f)
+                        lineTo(13.8f, 8.4f)
+                        curveTo(15.0f, 8.4f, 16.0f, 9.6f, 16.0f, 12.0f)
+                        curveTo(16.0f, 14.4f, 15.0f, 15.6f, 13.8f, 15.6f)
+                        lineTo(10.2f, 15.6f)
+                        curveTo(9.0f, 15.6f, 8.2f, 14.4f, 8.2f, 12.0f)
+                        curveTo(8.2f, 9.6f, 9.0f, 8.4f, 10.2f, 8.4f)
+                        moveTo(10.2f, 10.8f)
+                        lineTo(13.8f, 10.8f)
+                        curveTo(15.0f, 10.8f, 16.0f, 12.0f, 16.0f, 13.2f)
+                        curveTo(16.0f, 14.4f, 15.0f, 15.6f, 13.8f, 15.6f)
+                        lineTo(10.2f, 15.6f)
+                        curveTo(9.0f, 15.6f, 8.2f, 14.4f, 8.2f, 13.2f)
+                        curveTo(8.2f, 12.0f, 9.0f, 10.8f, 10.2f, 10.8f)
+                    }
+                    "i" -> {
+                        moveTo(11.4f, 8.4f)
+                        lineTo(12.6f, 8.4f)
+                        lineTo(12.6f, 14.4f)
+                        lineTo(11.4f, 14.4f)
+                        close()
+                        moveTo(12.0f, 7.2f)
+                        lineTo(12.0f, 7.8f)
+                        lineTo(12.6f, 7.8f)
+                        lineTo(12.6f, 7.2f)
+                        close()
+                    }
+                    "I" -> {
+                        moveTo(10.2f, 8.4f)
+                        lineTo(13.8f, 8.4f)
+                        lineTo(13.8f, 15.6f)
+                        lineTo(10.2f, 15.6f)
+                        close()
+                    }
+                }
+            }
+        }.build()
+
+    /** Circled uppercase B — replaces the bicycle icon on the Leave-PocketSAMP button. */
+    val CircledB: ImageVector by lazy { CircledLetter("B") }
+
+    /** Circled lowercase i — replaces the question-mark help icon. */
+    val CircledI: ImageVector by lazy { CircledLetter("i") }
+
+    /** Circled uppercase I — replaces the bug-report crash icon. */
+    val CircledBigI: ImageVector by lazy { CircledLetter("I") }
 }
