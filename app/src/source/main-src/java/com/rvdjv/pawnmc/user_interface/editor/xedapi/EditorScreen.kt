@@ -1527,49 +1527,6 @@ fun EditorScreen(
                                     ).show()
                                 }
                             )
-                            // The quotes follow the same toggle pattern, right under the
-                            // bracket item, with the same leading icon pair (Code when
-                            // pairing is on, Block when the quotes stay plain).
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        if (editorQuoteCloseEnabled) {
-                                            if (appLanguage == ContentConfig.AppLanguage.ID) "Matikan tutup otomatis kutip" else "Disable auto-close quotes"
-                                        } else {
-                                            if (appLanguage == ContentConfig.AppLanguage.ID) "Nyalakan tutup otomatis kutip" else "Enable auto-close quotes"
-                                        }
-                                    )
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = if (editorQuoteCloseEnabled) Icons.Filled.Code else Icons.Filled.Block,
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = {
-                                    dismissAutoCompletion()
-                                    showMenu = false
-                                    editorQuoteCloseEnabled = !editorQuoteCloseEnabled
-                                    ContentConfig.getInstance(context).n_editor_quote_close = editorQuoteCloseEnabled
-                                    Toast.makeText(
-                                        context,
-                                        if (editorQuoteCloseEnabled) {
-                                            if (appLanguage == ContentConfig.AppLanguage.ID) {
-                                                "Tutup otomatis kutip dinyalakan"
-                                            } else {
-                                                "Auto-close quotes enabled"
-                                            }
-                                        } else {
-                                            if (appLanguage == ContentConfig.AppLanguage.ID) {
-                                                "Tutup otomatis kutip dimatikan"
-                                            } else {
-                                                "Auto-close quotes disabled"
-                                            }
-                                        },
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
-                            )
                             DropdownMenuItem(
                                 text = { Text("Jump to Matching Bracket") },
                                 leadingIcon = {

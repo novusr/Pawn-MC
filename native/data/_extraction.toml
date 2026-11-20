@@ -632,25 +632,11 @@ ru = "Avtozakrytie skobok"
 es = "Cierre automático de corchetes"
 
 [settings.editor.autoclose.desc]
-id = "Mengatur apakah editor menambahkan pasangan penutup otomatis. Mati (bawaan): mengetik ( atau { hanya menyisipkan karakter itu sendiri, jadi () atau {} yang diketik cepat tidak pernah menghasilkan penutup ganda. Pasangan pintar: penutup disisipkan, tetapi ) atau } yang diketik langsung setelahnya memindahkan kursor, bukan menggandakan. Selalu pasang: penutup selalu disisipkan."
-en = "Controls whether the editor adds a closing bracket for you. Off (default): typing ( or { inserts only that character, so a fast () or {} never ends up with a doubled closer. Smart pair: the closer is inserted, but a ) or } typed right after it moves over instead of doubling. Always pair: the closer is always inserted."
-tl = "Kontrol kung magdaragdag ba ang editor ng panaklong para sa iyo. Off (default): ang pag-type ng ( o { ay mag-iisa lang. Smart pair: malalagay ang closer, ngunit ang ) o } na itinape pagkatapos ay lilipat, hindi magdo-doble. Always pair: lalaging ilalagay ang closer."
-ru = "Opredelyaet, dobavlyaet li redaktor zakryvayushchuyu skobku avtomaticheski. Vykl. (po umolchaniyu): vvod ( ili { vstavlyaet tolko etot simvol, poetomu bystryj () ili {} ne dayot dvojnoj skobki. Umnaya para: skobka stavitsya, no vvedyonnaya sledom ) ili } peremeshchaet kursor, a ne dubliruetsya. Vsegda para: zakryvayushchaya skobka vsegda stavitsya."
-es = "Controla si el editor añade el paréntesis de cierre. Desactivado (predeterminado): escribir ( o { inserta solo ese carácter, así que un () o {} rápido nunca termina duplicado. Par inteligente: se inserta el cierre, pero un ) o } escrito justo después mueve el cursor en lugar de duplicarse. Siempre par: el cierre se inserta siempre."
-
-[settings.editor.autoclose.quotes]
-id = "Penutup Otomatis Tanda Kutip"
-en = "Auto-Close Quotes"
-tl = "Auto-Close ng Quotes"
-ru = "Avtozakrytie kavychek"
-es = "Cierre automático de comillas"
-
-[settings.editor.autoclose.quotes.desc]
-id = "Mengikutkan tanda kutip ganda (\"\") dan tanda petik tunggal ('') pada aturan penutup otomatis di atas. Ketika mati, tanda kutip hanya menyisipkan karakter itu sendiri."
-en = "Let the double quote (\"\") and single quote ('') take part in the auto-close rule above. When off, a quote only inserts the character itself."
-tl = "Isama ang double quote (\"\") at single quote ('') sa auto-close rule sa itaas. Kapag off, ang quote ay nag-iisa lang."
-ru = "Dvojnaya kavychka (\"\") i odinarnaya ('') uchastvuyut v pravile avtozakrytiya vyshe. Vikl.: kavychka vstavlyaet tolko sebya."
-es = "Incluye las comillas dobles (\"\") y simples ('') en la regla de cierre automático de arriba. Desactivado: la comilla solo inserta el carácter."
+id = "Mengatur apakah editor otomatis menambahkan karakter penutup. Mati (bawaan): mengetik (, {, [, \" atau ' hanya menyisipkan karakter itu sendiri. Smart Pair: karakter penutup otomatis disisipkan, tetapi jika kamu mengetik karakter penutup yang sama tepat setelahnya, kursor akan melewatinya tanpa membuat duplikat. Always Pair: karakter penutup selalu disisipkan otomatis."
+en = "Controls whether the editor automatically adds closing characters. Off (default): typing (, {, [, \" or ' inserts only that character. Smart Pair: the matching closer is inserted automatically, but typing that same closing character right after it moves the cursor over it instead of creating a duplicate. Always Pair: the closing character is always inserted automatically."
+tl = "Kinokontrol kung awtomatikong maglalagay ang editor ng mga panghuling character. Off (default): kapag nag-type ka ng (, {, [, \" o ', ang character na iyon lang ang ilalagay. Smart Pair: awtomatikong ilalagay ang katugmang panghuling character, pero kapag na-type mo ulit ito kaagad, ililipat lang ang cursor lampas dito sa halip na magdoble. Always Pair: palaging awtomatikong ilalagay ang panghuling character."
+ru = "Opredelyaet, budet li redaktor avtomaticheski dobavlyat zakryvayushchie simvoly. Vykl. (po umolchaniyu): pri vvode (, {, [, \" ili ' vstavlyaetsya tolko etot simvol. Umnaya para: sootvetstvuyushchiy zakryvayushchiy simvol dobavlyaetsya avtomaticheski, no pri povtornom vvode etogo simvola kursor prohodit za nego vmesto sozdaniya dublikata. Vsegda para: zakryvayushchiy simvol vsegda dobavlyaetsya avtomaticheski."
+es = "Controla si el editor añade automáticamente los caracteres de cierre. Desactivado (predeterminado): escribir (, {, [, \" o ' inserta solo ese carácter. Par inteligente: el carácter de cierre correspondiente se inserta automáticamente, pero si escribes ese mismo carácter justo después, el cursor lo salta en lugar de duplicarlo. Siempre par: el carácter de cierre se inserta siempre automáticamente."
 
 [settings.editor.background.hex]
 id = "Kode warna heksadesimal"
