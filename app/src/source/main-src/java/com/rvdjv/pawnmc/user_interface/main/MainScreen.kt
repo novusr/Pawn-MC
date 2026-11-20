@@ -53,7 +53,6 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Pinch
 
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -889,7 +888,7 @@ internal fun ScreenHeader(
                         testTag = "pocketsamp_button",
                         icon = {
                             Icon(
-                                imageVector = Icons.Filled.ShoppingCart,
+                                imageVector = _Icons.ShoppingBag,
                                 contentDescription = localizer?.get("main.header.pocketsamp", appLanguage, "PocketSAMP server") ?: "PocketSAMP server",
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )

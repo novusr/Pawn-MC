@@ -704,6 +704,45 @@ object _Icons {
         }.build()
     }
 
+    /** Shopping bag icon: a tote bag with two handles, matching the reference in TODO/IMG.png. */
+    val ShoppingBag: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "_Icons.ShoppingBag",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            // Bag body: tote shape with slightly flared bottom.
+            path(
+                fill = SolidColor(Color.Black),
+                pathFillType = PathFillType.NonZero
+            ) {
+                moveTo(5f, 6f)
+                lineTo(19f, 6f)
+                lineTo(20f, 20f)
+                lineTo(4f, 20f)
+                close()
+            }
+            // Handles: two loops rising above the bag.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.6f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                // Left handle loop.
+                moveTo(9f, 6f)
+                curveTo(8f, 4f, 8f, 2f, 10f, 2f)
+                curveTo(12f, 2f, 12f, 4f, 11f, 6f)
+                // Right handle loop.
+                moveTo(13f, 6f)
+                curveTo(14f, 4f, 14f, 2f, 16f, 2f)
+                curveTo(18f, 2f, 18f, 4f, 17f, 6f)
+            }
+        }.build()
+    }
+
     /** Screen-rotation glyph for the portrait / landscape toggle. */
     val ScreenRotation: ImageVector by lazy {
         ImageVector.Builder(
