@@ -8,6 +8,8 @@ Panduan Xed Editor
 
 Panduan lengkap untuk Xed Editor bawaan PawnMC — antarmuka, fitur penyuntingan, dan kemudahan kecil yang mudah terlewat. Ikuti setiap bagian untuk mengenal semuanya.
 
+.. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/MC.png
+
 .. contents:: Daftar Isi
    :local:
    :depth: 2

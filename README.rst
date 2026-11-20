@@ -114,9 +114,57 @@ User-Interface
 
 .. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/MC.png
 
+Image 1 — Main Interface
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The main screen is the PawnMC launcher hub. From top to bottom it exposes:
+
+* **Shopping / PocketSAMP button** — opens the embedded thirdparty PocketSAMP
+  server runtime (SA-MP server manager with dashboard, console, files, database,
+  crashes, and config tabs).
+* **Browse File button** — opens the system file picker to select a Pawn source
+  file or project folder.
+* **Compile button** — starts the Pawn compiler pipeline for the currently open
+  file.
+* **Xed Editor button** — opens the built-in code editor (Xed) with syntax
+  highlighting, tabbed documents, and a floating toolbar.
+
 .. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/MC2.png
 
+Image 2 — Promo / Settings List
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The settings list screen groups project and compiler configuration:
+
+* **Language** — selects the UI locale (Indonesian, English, Tagalog, Spanish,
+  Russian).
+* **Compiler Version** — chooses the Pawn compiler binary to use.
+* **Compiler Options** — free-form flags passed to the compiler.
+* **Include Paths** — directories searched for ``#include`` directives.
+* **Explain Output** — toggles verbose compiler explanation output.
+
 .. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/MC3.png
+
+Image 3 — Floating Action Buttons (Xed Editor Toolbar)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the Xed Editor is active, a floating toolbar appears with the following
+buttons:
+
+* **Xed Editor** — refocuses the editor canvas.
+* **Hotspot / Wi-Fi Compile** — compiles over the local hotspot/Wi-Fi link.
+* **Developer Portal** — opens the PawnMC developer portal page.
+* **Screen Rotation** — toggles portrait / landscape orientation.
+* **Panel Workspace** — shows/hides the workspace folder panel.
+* **Find** — opens the search/find-in-files dialog.
+* **Save** — floppy-disk icon; saves the currently open file.
+* **Save As / Save All** — the same button behaves contextually:
+
+  * If **no folder is opened as workspace**, it acts as **Save As** and prompts
+    for a destination.
+  * If a **folder is opened in the workspace panel**, it acts as **Save All**
+    and writes all modified open documents.
+  * A cross overlay appears when the contextual save-all target is not available.
 
 Installation
 ------------
