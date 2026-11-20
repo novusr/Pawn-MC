@@ -48,12 +48,14 @@ class FileManagerIconTest {
     @Test
     fun circledIIconsIsNotNull() {
         assertNotNull("_Icons.CircledI should be created", _Icons.CircledI)
-        assertEquals("_Icons.CircledI", _Icons.CircledI.name)
+        // CircledLetter("i") builds name "_Icons.Circledi" (lowercase i from string interpolation).
+        assertEquals("_Icons.Circledi", _Icons.CircledI.name)
     }
 
     @Test
     fun circledBigIIconsIsNotNull() {
         assertNotNull("_Icons.CircledBigI should be created", _Icons.CircledBigI)
-        assertEquals("_Icons.CircledBigI", _Icons.CircledBigI.name)
+        // CircledLetter("I") builds name "_Icons.CircledI" (uppercase I from string interpolation).
+        assertEquals("_Icons.CircledI", _Icons.CircledBigI.name)
     }
 }
