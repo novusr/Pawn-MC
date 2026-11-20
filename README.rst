@@ -1,9 +1,9 @@
 PawnMC
 ======
 
-**New Updates** link: Android 7/8: https://github.com/novusr/Pawn-MC/actions/runs/44477296356/artifacts/14506733846
+**New Updates** link: Android 7/8: https://github.com/novusr/Pawn-MC/actions/runs/44787585046/artifacts/14653954817
 
-**New Updates** link: Android 8-15: https://github.com/novusr/Pawn-MC/actions/runs/44477296356/artifacts/14506663454
+**New Updates** link: Android 8-15: https://github.com/novusr/Pawn-MC/actions/runs/44787585046/artifacts/14655567046
 
 *PawnMC* expands the workflow of the Pawn scripting language with a complete, native
 compilation environment for your mobile device.
