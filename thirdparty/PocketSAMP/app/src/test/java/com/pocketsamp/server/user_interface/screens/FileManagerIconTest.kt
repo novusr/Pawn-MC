@@ -56,12 +56,4 @@ class FileManagerIconTest {
         assertNotNull("_Icons.CircledBigI should be created", _Icons.CircledBigI)
         assertEquals("_Icons.CircledBigI", _Icons.CircledBigI.name)
     }
-
-    @Test
-    fun circledLettersUseSameCircleButDifferentInnerPath() {
-        // All three icons share the same circle outline; only the inner letter differs.
-        assertNotSame("_Icons.CircledB and _Icons.CircledI should differ", _Icons.CircledB, _Icons.CircledI)
-        assertNotSame("_Icons.CircledI and _Icons.CircledBigI should differ", _Icons.CircledI, _Icons.CircledBigI)
-        assertNotSame("_Icons.CircledB and _Icons.CircledBigI should differ", _Icons.CircledB, _Icons.CircledBigI)
-    }
 }

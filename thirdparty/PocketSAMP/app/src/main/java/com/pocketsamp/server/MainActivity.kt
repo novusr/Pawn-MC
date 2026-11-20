@@ -79,7 +79,7 @@ enum class AppTab(val label: String, val icon: ImageVector) {
     HELP("Help", _Icons.CircledI),
     DASHBOARD("Dashboard", Icons.Default.Home),
     CONSOLE("Console", Icons.Default.Monitor),
-    FILES("Files", Icons.Default.FolderOpen),
+    FILES("Files", _Icons.FolderRectOpen),
     DATABASE("Database", Icons.Default.Storage),
     CRASHES("Crash Logs", _Icons.CircledBigI),
     CONFIG("Config", Icons.Default.Settings)

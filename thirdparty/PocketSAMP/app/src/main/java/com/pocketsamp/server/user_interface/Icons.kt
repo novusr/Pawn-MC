@@ -177,14 +177,21 @@ object _Icons {
             viewportWidth = 24f,
             viewportHeight = 24f
         ).apply {
-            // Outer circle (same for all three icons).
+            // Outer circle (same for all three icons). Drawn with four cubic curves
+            // because PathBuilder.addCircle is not available in this Compose version.
             path(
                 stroke = SolidColor(Color.Black),
                 strokeLineWidth = 1.8f,
                 strokeLineCap = StrokeCap.Round,
                 strokeLineJoin = StrokeJoin.Round
             ) {
-                addCircle(12f, 12f, 9f)
+                val k = 9f * 0.5523f
+                moveTo(21f, 12f)
+                curveTo(21f, 12f + k, 12f + k, 21f, 12f, 21f)
+                curveTo(12f - k, 21f, 3f, 12f + k, 3f, 12f)
+                curveTo(3f, 12f - k, 12f - k, 3f, 12f, 3f)
+                curveTo(12f + k, 3f, 21f, 12f - k, 21f, 12f)
+                close()
             }
             // Letter in the centre (same baseline, same size so all three read as a family).
             path(

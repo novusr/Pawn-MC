@@ -423,7 +423,7 @@ fun _FileManager(status: Status, lang: Locales.Lang) {
                     }
                 }
             ) {
-                Icon(Icons.Default.FolderOpen, contentDescription = t("files.choose.root"), tint = SampThemeColors.accent)
+                Icon(_Icons.FolderRectOpen, contentDescription = t("files.choose.root"), tint = SampThemeColors.accent)
             }
             if (showPickerSource) {
                 PocketSampPickerSourceDialog(
@@ -937,7 +937,7 @@ private fun FileEntry(
                         )
                         DropdownMenuItem(
                             text = { Text(workspaceLabel) },
-                            leadingIcon = { Icon(Icons.Default.Folder, contentDescription = null) },
+                            leadingIcon = { Icon(_Icons.FolderRect, contentDescription = null) },
                             onClick = { showActions = false; onOpenWorkspace() }
                         )
                     } else if (extractSupported) {
