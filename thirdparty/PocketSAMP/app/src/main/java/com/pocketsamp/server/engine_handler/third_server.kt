@@ -399,6 +399,12 @@ class Server(private val context: Context) {
                 privateRuntimeLibraryPath(filesDir),
                 "${rootfsDir.absolutePath}/usr/lib/i386-linux-gnu",
                 "${rootfsDir.absolutePath}/lib/i386-linux-gnu",
+                // The game mode folder itself is searched first so that any external
+                // shared objects (.so) placed alongside samp03svr by the user are
+                // automatically available to the dynamic linker before the server
+                // binary starts. This avoids "cannot open shared object file"
+                // errors for plugins or dependencies the gamemode needs.
+                sampDir.absolutePath,
                 "${sampDir.absolutePath}/plugins"
             ).filter { it.isNotBlank() }.joinToString(":"),
             "HOME" to sampDir.absolutePath,

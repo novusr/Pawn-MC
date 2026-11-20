@@ -419,7 +419,7 @@ Startup output, plugin loading failures, and gamemode errors usually provide use
 
 If the application stops unexpectedly, check Crash Logs for a report that you can share with the developer.
 
-You can store external shared libraries (``.so`` files) in your File Manager, right next to your game mode folder.
+External shared libraries (``.so`` files) placed in your selected game mode folder — the same folder that contains ``samp03svr`` — are automatically loaded by the dynamic linker before the server starts. You do not need to load them manually; simply place the ``.so`` file alongside ``samp03svr`` in your PocketSAMP File Manager and PocketSAMP will make it available to ``LD_LIBRARY_PATH`` at launch.
 
 For example, if PocketSAMP's terminal displays an error saying that an external ``.so`` library is missing, such as ``libcurl.so``, you'll see something like this:
 
@@ -427,7 +427,7 @@ For example, if PocketSAMP's terminal displays an error saying that an external 
 
    ./samp03svr: error while loading shared libraries: libcurl.so.1: cannot open shared object file: No such file or directory
 
-All you need to do is search Google for the required library. Once you've found the correct ``.so`` file (in this case, ``libcurl.so``), simply place it alongside your `samp03svr` executable in your PocketSAMP File Manager.
+All you need to do is search Google for the required library. Once you've found the correct ``.so`` file (in this case, ``libcurl.so``), place it inside your selected game mode folder next to ``samp03svr`` using PocketSAMP File Manager. On the next server start, PocketSAMP adds that folder to ``LD_LIBRARY_PATH`` so the library is resolved automatically.
 
 **Tagalog**
 
