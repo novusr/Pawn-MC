@@ -267,12 +267,22 @@ class ThirdMariaDb(private val context: Context) {
             val result = installBuilder.start()
             try {
                 result.outputStream.bufferedWriter().use { writer ->
-                    // No leading `USE mysql;`: the system-table script creates the
-                    // mysql database itself, and selecting it beforehand failed with
-                    // `ERROR 1049 Unknown database 'mysql'` — the abort the console
-                    // showed before a single table existed.
-                    for (sqlFile in bootstrapSqlFiles) {
-                        sqlFile.bufferedReader().use { reader -> reader.copyTo(writer) }
+                    // Write the first bootstrap script that creates the `mysql`
+                    // system database, then select it before any subsequent script
+                    // that needs an active database context. Without `USE mysql;`
+                    // after the database exists, later statements (CREATE TABLE,
+                    // INSERT into system tables, etc.) fail with `ERROR 1046 No
+                    // database selected`, which aborts the bootstrap and kills
+                    // mariadbd via broken pipe.
+                    val iterator = bootstrapSqlFiles.iterator()
+                    if (iterator.hasNext()) {
+                        iterator.next().bufferedReader().use { reader -> reader.copyTo(writer) }
+                        writer.append('\n')
+                        writer.append("USE mysql;\n")
+                        writer.append('\n')
+                    }
+                    while (iterator.hasNext()) {
+                        iterator.next().bufferedReader().use { reader -> reader.copyTo(writer) }
                         writer.append('\n')
                     }
                 }
