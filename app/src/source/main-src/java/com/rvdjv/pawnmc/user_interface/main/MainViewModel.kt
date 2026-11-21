@@ -259,6 +259,23 @@ class MainViewModel(
         }
     }
 
+    /**
+     * Ensures `Documents/PawnMC/blank.pwn` exists (creating it from the bundled
+     * starter when missing) and opens it as the active single file. Used after the
+     * last workspace is closed so the user is never left staring at a stale editor.
+     */
+    fun ensureAndOpenBlankPawn() {
+        val appCtx = context ?: return
+        val documents = AppStorage.dataRoot(appCtx)
+        val blank = File(documents, "blank.pwn")
+        if (!blank.exists()) {
+            documents.mkdirs()
+            blank.writeText(TEMPORARY_FILE_CONTENT.trimIndent())
+        }
+        selectFile(blank.absolutePath, openedFromIntent = false)
+        workspaceAvailable = false
+    }
+
     private fun isInternalTemporaryStarter(path: String): Boolean {
         if (File(path).name != TEMPORARY_FILE_NAME) return false
         val configuredWorkspace = if (appDirectory.name == WORKSPACE_DIR_NAME) {

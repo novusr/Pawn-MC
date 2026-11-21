@@ -242,6 +242,14 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
 
     val hasDirtyDocuments: Boolean get() = workspaces.any { it.hasDirtyDocuments }
 
+    /** Every dirty document across all open workspaces (for save-all prompts). */
+    val allDirtyDocuments: List<OpenDocument>
+        get() = workspaces.flatMap { it.documents.filter { it.isDirty } }
+
+    /** Dirty documents belonging to a single workspace. */
+    fun dirtyDocumentsOf(workspace: Workspace): List<OpenDocument> =
+        workspace.documents.filter { it.isDirty }
+
     val activePath: String? get() = activeWorkspace?.activePath
 
     val searchQuery: String get() = activeWorkspace?.searchQuery.orEmpty()
@@ -402,7 +410,10 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     }
 
     /** Closes one workspace and its opened editors, switching to another one. */
-    fun closeWorkspace(workspace: Workspace) {
+    fun closeWorkspace(workspace: Workspace, saveDirty: Boolean = false) {
+        if (saveDirty) {
+            viewModelScope.launch { saveAll(workspace) }
+        }
         // SnapshotStateList.remove returns a Boolean, so the removed workspace has to
         // be captured before it leaves the list.
         val closing = workspaces.firstOrNull { it.root.absolutePath == workspace.root.absolutePath }
@@ -414,6 +425,27 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         if (activeWorkspace != null && activeWorkspace?.root?.absolutePath == closingPath) {
             activeWorkspace = workspaces.lastOrNull()
         }
+    }
+
+    /** Closes the workspace folder in front; false when none was open. */
+    fun closeActiveWorkspace(saveDirty: Boolean = false): Boolean {
+        val closing = activeWorkspace ?: return false
+        closeWorkspace(closing, saveDirty = saveDirty)
+        return true
+    }
+
+    /** Leaves every workspace; the caller decides what to show instead. */
+    fun closeAllWorkspaces(saveDirty: Boolean = false) {
+        if (saveDirty) {
+            viewModelScope.launch { saveAll() }
+        }
+        workspaces.toList().forEach(::stopWatchingWorkspace)
+        workspaces.clear()
+        scanning.clear()
+        activeWorkspace = null
+        // The store is cleared too, otherwise the next launch would silently bring
+        // every folder back and make this menu item look like it did nothing.
+        config?.clearWorkspaceFolders()
     }
 
     /** Registers a file opened from outside the workspace panel as a tab. */

@@ -151,6 +151,7 @@ import com.rvdjv.pawnmc.apps_data.data_config.AppLocalization
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.user_interface.editor.workspace.MAX_OPEN_WORKSPACES
 import com.rvdjv.pawnmc.user_interface.editor.workspace.OpenDocument
+import com.rvdjv.pawnmc.user_interface.editor.workspace.Workspace
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspaceSession
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspaceSearchHit
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFolderPickerIntent
@@ -237,6 +238,10 @@ fun EditorScreen(
     var cursorCol by remember { mutableIntStateOf(0) }
 
     var showExitDialog by remember { mutableStateOf(false) }
+    /** Shown when the user asks to close a workspace while files are dirty. */
+    var showCloseWorkspaceDialog by remember { mutableStateOf(false) }
+    /** Which workspaces the pending close-workspace dialog refers to. */
+    var closeWorkspaceTargets by remember { mutableStateOf<List<Workspace>>(emptyList()) }
     var showMenu by remember { mutableStateOf(false) }
     var showNewFileDialog by remember { mutableStateOf(false) }
     var newFileName by remember { mutableStateOf("Server.pwn") }
@@ -464,6 +469,12 @@ fun EditorScreen(
 
     /** Opens the picked folder as the active workspace. */
     fun openWorkspaceFolder(folder: File) {
+        val dirty = workspace.allDirtyDocuments
+        if (dirty.isNotEmpty()) {
+            pendingWorkspaceFolder = folder
+            showSaveBeforeWorkspaceDialog = true
+            return
+        }
         workspace.openWorkspace(folder)
         isExplorerVisible = true
     }
@@ -476,8 +487,7 @@ fun EditorScreen(
             val folder = resolveTreeToFile(context, pickedUri)
             if (folder != null) {
                 // Opening a folder replaces whatever single file was open before.
-                workspace.openWorkspace(folder)
-                isExplorerVisible = true
+                openWorkspaceFolder(folder)
             } else {
                 Toast.makeText(
                     context,
@@ -917,6 +927,189 @@ fun EditorScreen(
         )
     }
 
+    /** Folder waiting to be opened once the user decides about unsaved files. */
+    var pendingWorkspaceFolder by remember { mutableStateOf<File?>(null) }
+    /** Shown when opening a workspace while dirty files exist. */
+    var showSaveBeforeWorkspaceDialog by remember { mutableStateOf(false) }
+
+    /** Returns the editor to the blank.pwn starter when no workspace remains open. */
+    private fun openBlankPawnIfNoWorkspace() {
+        if (!workspace.isWorkspaceOpen) {
+            viewModel.ensureAndOpenBlankPawn()
+        }
+    }
+
+    if (showCloseWorkspaceDialog) {
+        val targets = closeWorkspaceTargets
+        val totalDirty = targets.flatMap { it.documents.filter { it.isDirty } }.size
+        AlertDialog(
+            onDismissRequest = { showCloseWorkspaceDialog = false },
+            title = { Text("Unsaved Changes in Workspace") },
+            text = {
+                Text(
+                    if (targets.size == 1) {
+                        "File '${targets.first().name}' has $totalDirty unsaved modification(s). Save before closing?"
+                    } else {
+                        "$totalDirty unsaved modification(s) across ${targets.size} workspace(s). Save all before closing?"
+                    }
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            var allSaved = true
+                            targets.forEach { target ->
+                                val dirtyCount = target.documents.count { it.isDirty }
+                                if (workspace.saveAll(target) != dirtyCount) allSaved = false
+                            }
+                            showCloseWorkspaceDialog = false
+                            closeWorkspaceTargets = emptyList()
+                            if (allSaved) {
+                                targets.forEach { target ->
+                                    workspace.closeWorkspace(target, saveDirty = false)
+                                }
+                                isExplorerVisible = workspace.isWorkspaceOpen
+                                openBlankPawnIfNoWorkspace()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Some files could not be saved. Review the unsaved tabs and retry.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    },
+                    modifier = Modifier.testTag("dialog_close_save_button")
+                ) {
+                    Text("Save All")
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            showCloseWorkspaceDialog = false
+                            closeWorkspaceTargets = emptyList()
+                            scope.launch {
+                                // Roll dirty buffers back to disk content before closing.
+                                targets.forEach { target ->
+                                    target.documents.filter { it.isDirty }.forEach { document ->
+                                        runCatching {
+                                            document.updateContent(document.file.readText())
+                                            document.markSaved()
+                                        }
+                                    }
+                                }
+                                targets.forEach { target ->
+                                    workspace.closeWorkspace(target, saveDirty = false)
+                                }
+                                isExplorerVisible = workspace.isWorkspaceOpen
+                                openBlankPawnIfNoWorkspace()
+                            }
+                        },
+                        modifier = Modifier.testTag("dialog_close_discard_button")
+                    ) {
+                        Text("Discard All")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = {
+                            showCloseWorkspaceDialog = false
+                            closeWorkspaceTargets = emptyList()
+                        },
+                        modifier = Modifier.testTag("dialog_close_cancel_button")
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            }
+        )
+    }
+
+    if (showSaveBeforeWorkspaceDialog) {
+        val target = pendingWorkspaceFolder
+        val dirtyCount = workspace.allDirtyDocuments.size
+        AlertDialog(
+            onDismissRequest = {
+                showSaveBeforeWorkspaceDialog = false
+                pendingWorkspaceFolder = null
+            },
+            title = { Text("Unsaved Changes") },
+            text = {
+                Text(
+                    "You have $dirtyCount unsaved file(s). Save them before opening '${target?.name}'?"
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            var allSaved = true
+                            workspace.openWorkspaces.forEach { ws ->
+                                val dc = ws.documents.count { it.isDirty }
+                                if (workspace.saveAll(ws) != dc) allSaved = false
+                            }
+                            showSaveBeforeWorkspaceDialog = false
+                            val folder = pendingWorkspaceFolder
+                            pendingWorkspaceFolder = null
+                            if (allSaved && folder != null) {
+                                workspace.openWorkspace(folder)
+                                isExplorerVisible = true
+                            } else if (!allSaved) {
+                                Toast.makeText(
+                                    context,
+                                    "Some files could not be saved. Review the unsaved tabs and retry.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        }
+                    },
+                    modifier = Modifier.testTag("dialog_savews_save_button")
+                ) {
+                    Text("Save All")
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            showSaveBeforeWorkspaceDialog = false
+                            val folder = pendingWorkspaceFolder
+                            pendingWorkspaceFolder = null
+                            scope.launch {
+                                // Discard: roll dirty buffers back to disk, then open.
+                                workspace.allDirtyDocuments.forEach { document ->
+                                    runCatching {
+                                        document.updateContent(document.file.readText())
+                                        document.markSaved()
+                                    }
+                                }
+                                if (folder != null) {
+                                    workspace.openWorkspace(folder)
+                                    isExplorerVisible = true
+                                }
+                            }
+                        },
+                        modifier = Modifier.testTag("dialog_savews_discard_button")
+                    ) {
+                        Text("Discard All")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = {
+                            showSaveBeforeWorkspaceDialog = false
+                            pendingWorkspaceFolder = null
+                        },
+                        modifier = Modifier.testTag("dialog_savews_cancel_button")
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            }
+        )
+    }
+
     if (showJumpDialog) {
         // Opening the dialog processes `injector_data.json`: the damaged lines of the
         // file now open become the rotating shadow hints of the line input.
@@ -1322,14 +1515,22 @@ fun EditorScreen(
                                     leadingIcon = {
                                         Icon(Icons.Filled.FolderOpen, contentDescription = null)
                                     },
+                                    enabled = workspace.activeWorkspace != null,
                                     onClick = {
                                         dismissAutoCompletion()
                                         showMenu = false
                                         val closing = workspace.activeWorkspace
                                         if (closing != null) {
-                                            workspace.closeWorkspace(closing)
+                                            val dirty = workspace.dirtyDocumentsOf(closing)
+                                            if (dirty.isNotEmpty()) {
+                                                closeWorkspaceTargets = listOf(closing)
+                                                showCloseWorkspaceDialog = true
+                                            } else {
+                                                workspace.closeWorkspace(closing)
+                                                isExplorerVisible = workspace.isWorkspaceOpen
+                                                openBlankPawnIfNoWorkspace()
+                                            }
                                         }
-                                        isExplorerVisible = workspace.isWorkspaceOpen
                                     }
                                 )
                                 DropdownMenuItem(
@@ -1337,11 +1538,19 @@ fun EditorScreen(
                                     leadingIcon = {
                                         Icon(Icons.Filled.Close, contentDescription = null)
                                     },
+                                    enabled = workspace.openWorkspaces.isNotEmpty(),
                                     onClick = {
                                         dismissAutoCompletion()
                                         showMenu = false
-                                        workspace.closeAllWorkspaces()
-                                        isExplorerVisible = false
+                                        val dirty = workspace.allDirtyDocuments
+                                        if (dirty.isNotEmpty()) {
+                                            closeWorkspaceTargets = workspace.openWorkspaces.toList()
+                                            showCloseWorkspaceDialog = true
+                                        } else {
+                                            workspace.closeAllWorkspaces()
+                                            isExplorerVisible = false
+                                            openBlankPawnIfNoWorkspace()
+                                        }
                                     }
                                 )
                             }
