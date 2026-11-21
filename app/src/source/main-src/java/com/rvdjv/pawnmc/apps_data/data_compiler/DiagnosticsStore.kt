@@ -51,8 +51,12 @@ object DiagnosticsStore {
 
     private const val FILE_NAME = "injector_data.json"
 
-    /** Hard limit of [Entry]s per file, errors and warnings share the budget. */
-    const val MAX_ENTRIES_PER_FILE: Int = 6
+    /**
+     * Hard limit of [Entry]s per file, errors and warnings share the budget. Raised
+     * from 6 to 11: shorter scripts can flag more lines than the old budget covered,
+     * and the editor's injection pass is cheap enough to print eleven hints.
+     */
+    const val MAX_ENTRIES_PER_FILE: Int = 11
 
     private val lock = Any()
 

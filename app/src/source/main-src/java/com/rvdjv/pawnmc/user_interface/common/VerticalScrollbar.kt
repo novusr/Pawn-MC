@@ -1,8 +1,11 @@
 package com.rvdjv.pawnmc.user_interface.common
 
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.BoxScope
@@ -27,9 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
@@ -40,7 +47,8 @@ import kotlin.math.roundToInt
  * How a scrollable surface is measured by the scrollbar.
  *
  * The two implementations cover the two ways Compose exposes scrolling here: a pixel based
- * [ScrollState] (the compiler output) and an item based [LazyListState] (the screens).
+ * [ScrollState] (the compiler output, the settings column) and an item based [LazyListState]
+ * (the main screen).
  */
 internal interface ScrollMetrics {
     val maxValue: Float
@@ -55,12 +63,13 @@ private class PixelScrollMetrics(
 ) : ScrollMetrics {
     override val maxValue: Float get() = state.maxValue.toFloat()
     override val value: Float get() = state.value.toFloat()
+    // True viewport proportion: the thumb grows with how much of the content is on
+    // screen, and reaches the full track exactly when nothing is left to scroll.
     override val visibleFraction: Float
-        get() = if (maxValue <= 0f) 1f else (1f - maxValue / (maxValue + 1f)).coerceIn(0.08f, 1f)
+        get() = if (maxValue <= 0f) 1f else (state.viewportSize / (maxValue + state.viewportSize)).coerceIn(0.06f, 1f)
     override fun scrollToFraction(fraction: Float) {
-        coroutineScope.launch {
-            state.scrollTo((fraction.coerceIn(0f, 1f) * maxValue).roundToInt())
-        }
+        val target = (fraction.coerceIn(0f, 1f) * maxValue).roundToInt()
+        coroutineScope.launch { state.scrollTo(target) }
     }
 }
 
@@ -77,7 +86,19 @@ private class LazyScrollMetrics(
         val last = maxValue.toInt()
         if (last <= 0) return
         coroutineScope.launch {
-            state.scrollToItem((fraction.coerceIn(0f, 1f) * last).roundToInt())
+            // Scrolling to the last item never clears `canScrollForward` on its own when
+            // that item is taller than the viewport plus its trailing padding - the bar
+            // then looks stuck one notch above the bottom (the "stuck at 9" report). The
+            // fix is the same move the FAB makes: hop to the last item first, then keep
+            // scrolling forward until the list says it cannot, which lands exactly on
+            // the bottom of the content.
+            val target = (fraction.coerceIn(0f, 1f) * last).roundToInt()
+            state.scrollToItem(target)
+            var guard = 0
+            while (fraction >= 1f && state.canScrollForward && guard < 64) {
+                state.scrollBy(state.layoutInfo.viewportEndOffset.toFloat())
+                guard++
+            }
         }
     }
 }
@@ -89,6 +110,10 @@ private class LazyScrollMetrics(
  * unit at its bottom; for the item lists those are item numbers, for the compiler output
  * they are line numbers. Both move while scrolling, so the user can read where the thumb
  * currently sits without counting rows.
+ *
+ * Interaction: the whole bar is live. A tap anywhere on the track jumps the thumb there
+ * (centre of the thumb on the tapped spot), and dragging the thumb - or the track, which
+ * behaves as a handle while a drag is running - scrolls the content continuously.
  *
  * This is the shared painter; the two public entry points are
  * [ScrollStateVerticalScrollbar] and [LazyListScrollbar]. They are deliberately *not*
@@ -110,6 +135,11 @@ private fun ScrollbarBody(
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     var dragging by remember { mutableStateOf(false) }
+    // Track height in px, measured live - used to turn pointer movement into fractions.
+    var trackHeightPx by remember { mutableStateOf(0) }
+    // Fraction the active drag last scrolled to, so each drag event is a delta on top of
+    // the previous one instead of an absolute jump.
+    var dragLastFraction by remember { mutableStateOf(0f) }
 
     BoxWithConstraints(
         modifier = modifier
@@ -134,6 +164,15 @@ private fun ScrollbarBody(
             .roundToInt()
             .coerceIn(topLine, safeUnits - 1)
 
+        // Jump helper shared by tap and drag: a pointer y inside the paddings maps to a
+        // scroll fraction, with the thumb centred on the touched position so the content
+        // does not snap its middle to the finger.
+        fun fractionFor(y: Float): Float {
+            val track = trackHeightPx.coerceAtLeast(1).toFloat()
+            val centre = usablePx / 2f
+            return ((y - centre) / (track - usablePx).coerceAtLeast(1f)).coerceIn(0f, 1f)
+        }
+
         // Track.
         Box(
             modifier = Modifier
@@ -143,17 +182,31 @@ private fun ScrollbarBody(
                 .padding(horizontal = 6.dp, vertical = SB_LABEL_ROOM)
                 .clip(RoundedCornerShape(4.dp))
                 .background(trackColor.copy(alpha = 0.6f))
+                .onSizeChanged { trackHeightPx = it.height }
                 .pointerInput(metrics, maxScroll) {
+                    // Drag = grab the bar anywhere and scroll continuously. The pointer
+                    // position maps straight onto a scroll fraction, so the content
+                    // follows the finger one-to-one across the whole track - including
+                    // the very bottom, which the old thumb-only drag never reached.
                     detectDragGestures(
-                        onDragStart = { dragging = true },
+                        onDragStart = { offset ->
+                            dragging = true
+                            dragLastFraction = fractionFor(offset.y)
+                            metrics.scrollToFraction(dragLastFraction)
+                        },
                         onDragEnd = { dragging = false },
                         onDragCancel = { dragging = false }
                     ) { change, dragAmount ->
                         change.consume()
-                        val deltaFraction = dragAmount.y / usablePx
-                        scope.launch {
-                            metrics.scrollToFraction(progress + deltaFraction)
-                        }
+                        val span = (trackHeightPx.coerceAtLeast(1) - usablePx).coerceAtLeast(1f)
+                        dragLastFraction = (dragLastFraction + dragAmount.y / span).coerceIn(0f, 1f)
+                        metrics.scrollToFraction(dragLastFraction)
+                    }
+                }
+                .pointerInput(metrics) {
+                    // Tap = jump straight to the touched spot (thumb centred on it).
+                    detectTapGestures { offset ->
+                        metrics.scrollToFraction(fractionFor(offset.y))
                     }
                 }
         ) {
@@ -174,26 +227,35 @@ private fun ScrollbarBody(
         }
 
         if (showLabels) {
-            // "Nearest number above" and "nearest number below" the bar.
-            Text(
-                text = (topLine + 1).toString(),
-                fontSize = 9.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                color = activeColor,
-                maxLines = 1,
-                modifier = Modifier.align(Alignment.TopCenter)
-            )
-            Text(
-                text = (bottomLine + 1).toString(),
-                fontSize = 9.sp,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                color = activeColor,
-                maxLines = 1,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            )
+            // "Nearest number above" and "nearest number below" the bar. Both get a
+            // translucent plate behind them: on the settings screen the top label used
+            // to sit under the collapsing app bar and read as missing - the plate keeps
+            // it visible and legible against whatever scrolls beneath it.
+            LabelPlate(text = (topLine + 1).toString(), color = activeColor, modifier = Modifier.align(Alignment.TopCenter))
+            LabelPlate(text = (bottomLine + 1).toString(), color = activeColor, modifier = Modifier.align(Alignment.BottomCenter))
         }
+    }
+}
+
+/** Small rounded plate that carries one scrollbar label and keeps it readable. */
+@Composable
+private fun LabelPlate(text: String, color: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+            .padding(horizontal = 3.dp, vertical = 1.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 9.sp,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
+            color = color,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            modifier = Modifier.align(Alignment.Center)
+        )
     }
 }
 
@@ -293,8 +355,10 @@ internal fun BoxScope.OverlayScrollbar(
     )
 }
 
-private val SB_WIDTH = 22.dp
-private val SB_MIN_THUMB = 28.dp
+// The main-interface bar was reported as "too big": the lane shrinks to a slim strip and
+// the minimum thumb follows so a short list keeps a usable grab area.
+private val SB_WIDTH = 14.dp
+private val SB_MIN_THUMB = 24.dp
 private val SB_LABEL_ROOM = 14.dp
 
 /** Lines in [text], at least one, for the bar's unit count. */

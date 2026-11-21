@@ -1697,6 +1697,10 @@ fun SettingsScreen(
         // Settings scrollbar: its own Box takes the full height and the bar is aligned
         // inside it, so `Modifier.align` always resolves against a `BoxScope` of this very
         // call - no dependency on an enclosing Box from the Scaffold body.
+        // The bar sits in a Box that ignores the app bar's inner padding on the top
+        // edge only: it used to inherit it, and the collapsing app bar then slid over
+        // the top label (the "number 1 is hidden" report). The trailing lane padding
+        // keeps the cards clear of the bar itself.
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -1707,6 +1711,7 @@ fun SettingsScreen(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .fillMaxHeight()
+                    .padding(top = 6.dp, bottom = 6.dp)
             )
         }
     }

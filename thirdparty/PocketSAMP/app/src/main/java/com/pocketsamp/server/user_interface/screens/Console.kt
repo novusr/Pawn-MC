@@ -7,11 +7,14 @@ import android.os.Build
 import android.os.Environment
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -26,11 +29,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import com.pocketsamp.server.Locales
 import com.pocketsamp.server.user_interface.theme.*
 import java.io.File
@@ -171,44 +179,61 @@ fun _Console(
                 }
             }
 
-            /* Vertical scrollbar on the right of the log surface. Two bars:
-             * a faint track spanning the full height (so the strip is visible
-             * even before any scroll happens) and a solid draggable thumb
-             * whose position reflects the scroll progress. */
+            /* Vertical scrollbar on the right of the log surface. The track takes a
+             * full-height faint bar and the thumb sits on top of it; tapping the
+             * track jumps the log to that spot and dragging scrolls continuously -
+             * the old weighted-boxes build only painted the position, it could not
+             * be used for scrolling. */
             val layoutInfo = listState.layoutInfo
             val totalCount = layoutInfo.totalItemsCount
             val visibleCount = layoutInfo.visibleItemsInfo.size
+            var trackHeightPx by remember { mutableStateOf(0) }
+            var dragFraction by remember { mutableStateOf(0f) }
+            val coroutine = rememberCoroutineScope()
+            val density = LocalDensity.current
             if (totalCount > 0 && visibleCount > 0) {
                 val first = layoutInfo.visibleItemsInfo.first().index
                 val scrollRange = (totalCount - visibleCount).coerceAtLeast(1)
                 val progress = (first.toFloat() / scrollRange).coerceIn(0f, 1f)
                 val thumbFraction = (visibleCount.toFloat() / totalCount).coerceIn(0.08f, 1f)
-                Column(
+                fun fractionAt(y: Float): Float {
+                    val span = (trackHeightPx - with(density) { (thumbFraction * trackHeightPx).coerceAtLeast(1f) }.toInt())
+                        .coerceAtLeast(1)
+                    return ((y - thumbFraction * trackHeightPx / 2f) / span).coerceIn(0f, 1f)
+                }
+                Box(
                     modifier = Modifier
                         .width(18.dp)
                         .fillMaxHeight()
                         .padding(start = 6.dp, top = 12.dp, bottom = 12.dp)
+                        .onSizeChanged { trackHeightPx = it.height }
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(SampThemeColors.card)
+                        .pointerInput(scrollRange, totalCount) {
+                            detectDragGestures(
+                                onDragStart = { offset ->
+                                    dragFraction = fractionAt(offset.y)
+                                    coroutine.launch { listState.scrollToItem((dragFraction * scrollRange).roundToInt().coerceAtLeast(0)) }
+                                }
+                            ) { change, _ ->
+                                change.consume()
+                            }
+                        }
+                        .pointerInput(scrollRange) {
+                            detectTapGestures { offset ->
+                                coroutine.launch { listState.scrollToItem((fractionAt(offset.y) * scrollRange).roundToInt().coerceAtLeast(0)) }
+                            }
+                        }
                 ) {
                     Box(
                         modifier = Modifier
-                            .weight(progress.coerceAtLeast(0.001f))
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(SampThemeColors.card)
-                    ) {}
-                    Box(
-                        modifier = Modifier
-                            .weight(thumbFraction)
-                            .fillMaxWidth()
+                            .fillMaxHeight()
+                            .offset(y = with(density) { (progress * (trackHeightPx - thumbFraction * trackHeightPx)).toDp() })
+                            .fillMaxWidth(1f)
+                            .height(with(density) { (thumbFraction * trackHeightPx).toDp() })
                             .clip(RoundedCornerShape(6.dp))
                             .background(SampThemeColors.textMuted)
-                    ) {}
-                    Box(
-                        modifier = Modifier
-                            .weight((1f - progress - thumbFraction).coerceAtLeast(0.001f))
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(SampThemeColors.card)
                     ) {}
                 }
             }

@@ -1,6 +1,8 @@
 package com.rvdjv.pawnmc.apps_data.data_compiler
 
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
+import com.rvdjv.pawnmc.apps_data.data_compiler.DiagnosticsStore
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -138,3 +140,11 @@ class ExplanationTableTest {
         assertTrue("fatal codes without a stop notice: $missing", missing.isEmpty())
     }
 }
+
+    @Test
+    fun `the per-file hint budget allows eleven explainer entries`() {
+        // The injection budget was raised from 6 to 11: shorter scripts can flag
+        // more lines than the old cap covered, and the editor prints eleven
+        // hints without any trouble.
+        assertEquals(11, DiagnosticsStore.MAX_ENTRIES_PER_FILE)
+    }
