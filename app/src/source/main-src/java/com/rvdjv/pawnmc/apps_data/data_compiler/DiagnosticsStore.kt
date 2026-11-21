@@ -180,6 +180,10 @@ object DiagnosticsStore {
     fun damagedLines(context: Context?, sourceFile: String): List<Int> =
         entriesFor(context, sourceFile).map { it.line }.distinct()
 
+    /** Every file path that currently has damaged (error/warning/fatal) lines stored. */
+    fun damagedFiles(context: Context?): List<String> =
+        load(fileFor(context)).keys.toList()
+
     /** Applies [transform] to the records of [sourceFile] and writes the store back. */
     private fun mutate(
         context: Context?,

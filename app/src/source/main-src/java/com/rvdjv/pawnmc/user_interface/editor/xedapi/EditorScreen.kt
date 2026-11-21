@@ -1111,6 +1111,42 @@ fun EditorScreen(
     }
 
     if (showJumpDialog) {
+        // When the dialog opens, auto-open a damaged file if the current one has no
+        // errors. This lets Jump to Line take the user straight to the broken file
+        // instead of an unrelated, error-free buffer.
+        LaunchedEffect(showJumpDialog) {
+            if (!showJumpDialog) return@LaunchedEffect
+            val currentPath = if (workspace.isWorkspaceOpen) {
+                workspace.activeDocument?.file?.absolutePath
+            } else {
+                viewModel.filePath.takeIf { it.isNotBlank() }
+            }
+            val currentDamaged =
+                currentPath?.let { DiagnosticsStore.damagedLines(context, it) }.orEmpty()
+            if (currentDamaged.isNotEmpty()) return@LaunchedEffect
+
+            // Collect paths of every file already open (any workspace or single file).
+            val openPaths = mutableSetOf<String>()
+            if (workspace.isWorkspaceOpen) {
+                workspace.openWorkspaces.forEach { ws ->
+                    ws.documents.forEach { doc -> openPaths.add(doc.file.absolutePath) }
+                }
+            }
+            currentPath?.let { openPaths.add(it) }
+
+            // Pick a damaged file that is not already open; fall back to any damaged file.
+            val damaged = DiagnosticsStore.damagedFiles(context)
+            val target =
+                damaged.firstOrNull { it !in openPaths } ?: damaged.firstOrNull()
+            if (target != null && target != currentPath && File(target).isFile) {
+                if (workspace.isWorkspaceOpen) {
+                    workspace.openFile(File(target))
+                } else {
+                    viewModel.attachFile(target)
+                }
+            }
+        }
+
         // Opening the dialog processes `injector_data.json`: the damaged lines of the
         // file now open become the rotating shadow hints of the line input.
         val jumpTargetPath = if (workspace.isWorkspaceOpen) {
