@@ -63,4 +63,25 @@ object PathStore {
     /** Restores [paths] but keeps only the ones that still exist on disk. */
     fun restoreExisting(paths: List<String>): List<String> =
         paths.filter { runCatching { File(it).exists() }.getOrDefault(false) }
+
+    /**
+     * Restores [paths], re-creating a recorded folder that vanished on disk.
+     *
+     * A remembered workspace folder is a user decision: if the storage hiccupped
+     * or the app was reinstalled, silently pruning the entry made the workspace
+     * disappear from the panel even though the mirror file still named it. The
+     * folder is created again (empty when it cannot be recovered) so the restore
+     * pass finds it and the panel repopulates as recorded.
+     */
+    fun restoreRecreating(paths: List<String>): List<String> =
+        paths.map { path -> path.trim() }
+            .filter { it.isNotEmpty() }
+            .distinct()
+            .onEach { path ->
+                val folder = File(path)
+                if (!folder.isDirectory) {
+                    runCatching { folder.mkdirs() }
+                }
+            }
+            .filter { File(it).isDirectory }
 }

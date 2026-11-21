@@ -46,6 +46,10 @@ Workspace
 * Hingga tiga workspace bisa terbuka sekaligus; masing-masing punya pohon file dan tab sendiri.
 * Tab yang terbuka dan dokumen aktif diingat antar sesi, sehingga saat aplikasi dibuka lagi semuanya kembali seperti sebelumnya.
 * Folder workspace juga disimpan di ``Documents/PawnMC/workspace/workspace.json``, sehingga tetap pulih bahkan setelah aplikasi diinstal ulang.
+* "Close Workspace" dan "Close All Workspaces" selalu bertanya dulu bila ada perubahan yang belum disimpan: pilih **Save All / Save** untuk menulis semua perubahan sebelum menutup, **Discard** untuk membuangnya, atau **Cancel** untuk membatalkan. Menutup workspace terakhir mengembalikan editor ke ``blank.pwn`` bawaan di ``Documents/PawnMC/workspace`` — bila file itu sudah dihapus, ia dibuat ulang otomatis.
+* Tanda **X** pada tab workspace di panel juga beralih lewat konfirmasi yang sama, per workspace satu per satu.
+* Membuka folder workspace baru ketika masih ada file yang berubah juga memunculkan permintaan yang sama, jadi suntingan tidak pernah tertimpa diam-diam.
+* "Close Workspace" tidak bisa dipakai ketika tidak ada folder workspace yang terbuka.
 
 **English (US)**
 
@@ -53,6 +57,10 @@ Workspace
 * Up to three workspaces can be open at once; each keeps its own file tree and tabs.
 * Open tabs and the active document are remembered between sessions, so reopening the app restores everything.
 * Workspace folders are also stored in ``Documents/PawnMC/workspace/workspace.json``, so they survive even a full reinstall.
+* "Close Workspace" and "Close All Workspaces" always ask first when unsaved changes are around: pick **Save All / Save** to write every change before closing, **Discard** to throw them away, or **Cancel** to back out. Closing the last workspace hands the editor back to the ``blank.pwn`` starter under ``Documents/PawnMC/workspace`` — if that file was deleted, it is recreated automatically.
+* The **X** on a workspace tab in the panel goes through the same confirmation, one workspace at a time.
+* Opening another workspace folder while files still hold unsaved edits raises the same prompt, so edits are never silently overwritten by the switch.
+* "Close Workspace" is unavailable when no workspace folder is open.
 
 **Tagalog**
 
@@ -60,6 +68,7 @@ Workspace
 * Hanggang tatlong workspace ang pwedeng buksan nang sabay; may sariling file tree at tabs ang bawat isa.
 * Naalala ang mga tab at aktibong dokumento sa pagitan ng mga session.
 * Nakaimbak din ang folders sa ``Documents/PawnMC/workspace/workspace.json`` para bumalik kahit mag-reinstall.
+* Bago magsara ang workspace, laging may tanong kapag may hindi pa na-save: **Save All / Save**, **Discard**, o **Cancel**.
 
 **Español**
 
@@ -67,6 +76,7 @@ Workspace
 * Se pueden abrir hasta tres workspaces a la vez; cada uno tiene su propio árbol de archivos y pestañas.
 * Las pestañas abiertas y el documento activo se recuerdan entre sesiones.
 * Las carpetas también se guardan en ``Documents/PawnMC/workspace/workspace.json``, así sobreviven a una reinstalación.
+* Antes de cerrar un workspace siempre se pregunta si hay cambios sin guardar: **Save All / Save**, **Discard** o **Cancel**.
 
 **Русский**
 
@@ -74,6 +84,7 @@ Workspace
 * Одновременно может быть открыто до трёх workspace; у каждого своё дерево файлов и вкладки.
 * Открытые вкладки и активный документ сохраняются между запусками.
 * Папки также хранятся в ``Documents/PawnMC/workspace/workspace.json`` и восстанавливаются даже после переустановки.
+* Перед закрытием workspace с несохранёнными изменениями всегда спрашивается: **Save All / Save**, **Discard** или **Cancel**.
 
 Fitur yang Jarang Diketahui
 ---------------------------

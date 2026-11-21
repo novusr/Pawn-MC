@@ -38,6 +38,7 @@ class MainViewModel(
             "Ignore case already applied: the backup folder \"%s\" exists, so the conversion was skipped."
         const val IGNORE_CASE_FAILED_NOTICE =
             "Ignore case could not finish for this folder. The original files were left untouched."
+        /** Starter script body; shared with the workspace starter recreation. */
         val TEMPORARY_FILE_CONTENT = """
             native print(const string[]);
 

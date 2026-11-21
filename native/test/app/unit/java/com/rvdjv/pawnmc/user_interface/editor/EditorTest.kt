@@ -401,6 +401,105 @@ class EditorTest {
     }
 
     @Test
+    fun `close workspace request is raised for the active workspace only`() {
+        val session = WorkspaceSession()
+        val first = tempFolder.newFolder("gamemodes")
+        val second = tempFolder.newFolder("scriptfiles")
+        session.openWorkspace(first)
+        session.openWorkspace(second)
+
+        assertTrue(session.canCloseWorkspace)
+        session.requestCloseWorkspace(session.activeWorkspace!!)
+        val request = session.pendingCloseRequest
+        assertTrue(request != null)
+        assertEquals(listOf(second.absolutePath), request!!.targets.map { it.root.absolutePath })
+        assertFalse(request.all)
+
+        session.cancelPendingCloseRequest()
+        assertEquals(null, session.pendingCloseRequest)
+        assertEquals(2, session.openWorkspaces.size)
+    }
+
+    @Test
+    fun `close all request covers every open workspace`() {
+        val session = WorkspaceSession()
+        session.openWorkspace(tempFolder.newFolder("gamemodes"))
+        session.openWorkspace(tempFolder.newFolder("scriptfiles"))
+
+        session.requestCloseAllWorkspaces()
+        val request = session.pendingCloseRequest
+        assertTrue(request != null)
+        assertTrue(request!!.all)
+        assertEquals(2, request.targets.size)
+    }
+
+    @Test
+    fun `save and close persists dirty buffers then closes the workspace`() {
+        val session = WorkspaceSession()
+        val root = tempFolder.newFolder("save-close")
+        val source = File(root, "mode.pwn").apply { writeText("original") }
+        session.openWorkspace(root)
+        val workspace = session.activeWorkspace!!
+        session.openFile(source, workspace)
+
+        val document = workspace.documentFor(source)!!
+        document.updateContent("edited body")
+        session.requestCloseWorkspace(workspace)
+        val request = session.pendingCloseRequest!!
+        assertTrue(session.closeRequestHasDirtyWork(request))
+
+        runBlocking { session.saveAndClose(request) }
+        assertEquals("edited body", source.readText())
+        assertFalse(session.isWorkspaceOpen)
+        assertEquals(null, session.pendingCloseRequest)
+    }
+
+    @Test
+    fun `discard and close keeps the disk content untouched`() {
+        val session = WorkspaceSession()
+        val root = tempFolder.newFolder("discard-close")
+        val source = File(root, "mode.pwn").apply { writeText("disk version") }
+        session.openWorkspace(root)
+        val workspace = session.activeWorkspace!!
+        session.openFile(source, workspace)
+
+        workspace.documentFor(source)!!.updateContent("unsaved edit")
+        session.requestCloseWorkspace(workspace)
+        val request = session.pendingCloseRequest!!
+        assertTrue(session.closeRequestHasDirtyWork(request))
+
+        runBlocking { session.discardAndClose(request) }
+        assertEquals("disk version", source.readText())
+        assertFalse(session.isWorkspaceOpen)
+    }
+
+    @Test
+    fun `closing the last workspace returns the editor to the starter file`() {
+        val session = WorkspaceSession()
+        val root = tempFolder.newFolder("starter-return")
+        session.openWorkspace(root)
+
+        // No config in a bare session: the starter handover is a no-op there,
+        // but the close itself must still work.
+        session.closeWorkspace(session.activeWorkspace!!)
+        assertFalse(session.isWorkspaceOpen)
+    }
+
+    @Test
+    fun `close request with clean buffers reports no dirty work`() {
+        val session = WorkspaceSession()
+        val root = tempFolder.newFolder("clean-close")
+        val source = File(root, "mode.pwn").apply { writeText("content") }
+        session.openWorkspace(root)
+        val workspace = session.activeWorkspace!!
+        session.openFile(source, workspace)
+
+        session.requestCloseWorkspace(workspace)
+        val request = session.pendingCloseRequest!!
+        assertFalse(session.closeRequestHasDirtyWork(request))
+    }
+
+    @Test
     fun `workspace tree lists folders before files and collapses folders`() {
         val root = tempFolder.newFolder("tree")
         File(root, "zulu.pwn").writeText("zulu")

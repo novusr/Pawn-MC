@@ -115,6 +115,8 @@ fun WorkspacePanel(
     onBeforeAction: () -> Unit = {},
     /** Reported while the panel demands the whole screen to itself. */
     onExpandedChange: (Boolean) -> Unit = {},
+    /** Raised instead of closing a workspace right away; the host shows a dialog. */
+    onRequestCloseWorkspace: (Workspace) -> Unit = {},
     /**
      * Compile-focus mode: set right after the user taps the compile button (not
      * when the panel is opened normally). The output section is scrolled to the
@@ -191,7 +193,8 @@ fun WorkspacePanel(
                 session = session,
                 onCreateFileAt = onCreateFileAt,
                 onCreateFolderAt = onCreateFolderAt,
-                onBeforeAction = onBeforeAction
+                onBeforeAction = onBeforeAction,
+                onRequestClose = onRequestCloseWorkspace
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
         }
@@ -467,7 +470,8 @@ private fun WorkspaceSwitcherRow(
     session: WorkspaceSession,
     onCreateFileAt: (File) -> Unit,
     onCreateFolderAt: (File) -> Unit,
-    onBeforeAction: () -> Unit
+    onBeforeAction: () -> Unit,
+    onRequestClose: (Workspace) -> Unit = {}
 ) {
     Row(
         modifier = Modifier
@@ -532,7 +536,10 @@ private fun WorkspaceSwitcherRow(
                 IconButton(
                     onClick = {
                         onBeforeAction()
-                        session.closeWorkspace(workspace)
+                        // The close asks for confirmation (and offers Save/Discard
+                        // when buffers are dirty) instead of dropping the workspace
+                        // and its open editors without a word.
+                        onRequestClose(workspace)
                     },
                     modifier = Modifier.size(20.dp)
                 ) {

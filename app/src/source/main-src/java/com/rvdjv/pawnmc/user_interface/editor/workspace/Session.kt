@@ -9,10 +9,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.rvdjv.pawnmc.apps_data.data_config.AppStorage
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
 import com.rvdjv.pawnmc.apps_data.data_config.PathStore
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.EditorScreen
 import com.rvdjv.pawnmc.user_interface.editor.xedapi.EditorViewModel
+import com.rvdjv.pawnmc.user_interface.main.MainViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -284,7 +286,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         // arrived later or through a different path.
         val folders = store.n_workspace_folders.ifEmpty {
             PathStore.readPaths(store.applicationContextHolder(), "workspace")
-                .let(PathStore::restoreExisting)
+                .let(PathStore::restoreRecreating)
         }
         if (folders.isEmpty()) return
         val tabsByFolder = store.n_workspace_open_tabs.associateBy { group -> group.first() }
@@ -349,19 +351,24 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
             // The JSON mirror survives an uninstall where SharedPreferences does not;
             // fall back to it so a reinstall restores the same workspaces.
             val context = store.applicationContextHolder()
-            stored = PathStore.readPaths(context, "workspace").let(PathStore::restoreExisting)
+            stored = PathStore.readPaths(context, "workspace").let(PathStore::restoreRecreating)
             if (stored.isNotEmpty()) store.n_workspace_folders = stored
         }
         if (stored.isEmpty()) return
 
         val requested = stored.distinct()
-        val surviving = requested.filter { path ->
-            // canonicalPath can throw on freshly mounted folders; a plain exists
-            // probe keeps a valid folder from being pruned as "missing".
-            runCatching { File(path).isDirectory }.getOrDefault(false)
-        }
+        // A remembered folder that vanished is recreated rather than pruned: the
+        // path was a user decision and reinstalling the app must not empty the
+        // workspace panel down to just blank.pwn.
+        val surviving = requested.map { path ->
+            val folder = File(path)
+            if (!folder.isDirectory) {
+                runCatching { folder.mkdirs() }
+            }
+            path to folder.isDirectory
+        }.filter { it.second }.map { it.first }
         if (surviving.size != requested.size) {
-            // Dead folders cost restore IO every launch; drop them from both stores.
+            // Only paths that cannot even be recreated are dropped from both stores.
             store.n_workspace_folders = surviving
             PathStore.writePaths(store.applicationContextHolder(), "workspace", surviving)
         }
@@ -401,6 +408,115 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         }
     }
 
+    /** A close request waiting for the user to pick Save or Discard. */
+    var pendingCloseRequest by mutableStateOf<WorkspaceCloseRequest?>(null)
+        private set
+
+    /**
+     * Raises a close request for one workspace.
+     *
+     * Dirty buffers make the UI show the Save All / Save / Discard dialog first;
+     * with everything clean the caller may close immediately.
+     */
+    fun requestCloseWorkspace(workspace: Workspace) {
+        val target = workspaces.firstOrNull { it.root.absolutePath == workspace.root.absolutePath } ?: return
+        pendingCloseRequest = WorkspaceCloseRequest(listOf(target), all = workspaces.size == 1)
+    }
+
+    /** Raises a close request covering every open workspace. */
+    fun requestCloseAllWorkspaces() {
+        if (workspaces.isEmpty()) return
+        pendingCloseRequest = WorkspaceCloseRequest(workspaces.toList(), all = true)
+    }
+
+    /** Clears a handled close request without closing anything. */
+    fun cancelPendingCloseRequest() {
+        pendingCloseRequest = null
+    }
+
+    /** True when any of the request targets still holds a dirty buffer. */
+    fun closeRequestHasDirtyWork(request: WorkspaceCloseRequest): Boolean =
+        request.targets.any { it.hasDirtyDocuments }
+
+    /**
+     * Saves every dirty buffer of the request targets, then closes them.
+     *
+     * A partial failure (a write error on one file) keeps that workspace open so
+     * the user can retry instead of losing the edit silently.
+     */
+    suspend fun saveAndClose(request: WorkspaceCloseRequest) {
+        val failed = mutableListOf<Workspace>()
+        request.targets.forEach { target ->
+            val dirtyCount = target.documents.count { it.isDirty }
+            if (dirtyCount > 0 && saveAll(target) != dirtyCount) failed += target
+        }
+        pendingCloseRequest = null
+        if (failed.size == request.targets.size) return
+        request.targets.filterNot { it in failed }.forEach { target ->
+            closeWorkspace(target)
+        }
+        if (request.all || workspaces.isEmpty()) {
+            // Every workspace gone: the editor falls back to the starter file.
+            returnToStarterFile()
+        }
+    }
+
+    /**
+     * Rolls every dirty buffer of the request targets back to the disk content
+     * and closes the workspaces without writing anything.
+     */
+    suspend fun discardAndClose(request: WorkspaceCloseRequest) {
+        request.targets.forEach { target ->
+            target.documents.filter { it.isDirty }.forEach { document ->
+                runCatching {
+                    document.updateContent(document.file.readText())
+                    document.markSaved()
+                }
+            }
+        }
+        pendingCloseRequest = null
+        request.targets.forEach { target -> closeWorkspace(target) }
+        if (request.all || workspaces.isEmpty()) {
+            returnToStarterFile()
+        }
+    }
+
+    /**
+     * Returns the editor to the `blank.pwn` starter under `Documents/PawnMC`.
+     *
+     * The starter is recreated first when the user deleted it, so the editor is
+     * never left without a document after the last workspace closes. The stale
+     * single-file path remembered from before the workspace was opened must not
+     * come back: restoring it was the source of a "half-open" ghost buffer that
+     * showed a file name without any readable tab.
+     */
+    fun returnToStarterFile() {
+        val store = config ?: return
+        val context = store.applicationContextHolder()
+        val starter = runCatching {
+            AppStorage.workspaceRoot(context)
+        }.getOrNull()?.let { root -> File(root, "blank.pwn") } ?: return
+        if (!starter.isFile) {
+            runCatching {
+                starter.parentFile?.mkdirs()
+                starter.writeText(MainViewModel.TEMPORARY_FILE_CONTENT)
+            }
+        }
+        if (!starter.isFile) return
+        // Clear the remembered folders in both stores: the workspaces are gone
+        // now, and a leftover entry would fight the starter on the next launch.
+        store.clearWorkspaceFolders()
+        PathStore.writePaths(context, "workspace", emptyList())
+        // The single-file store gets the starter path, not the stale pre-workspace
+        // file, so the next launch without a workspace opens the starter.
+        store.n_last_selected_file_path = starter.absolutePath
+        store.n_workspace_open_tabs = emptyList()
+        store.n_workspace_active_tabs = emptyList()
+        // Any tab restore still queued belongs to closed workspaces: letting it
+        // drain would re-open the ghost buffer the close was meant to remove.
+        pendingTabLoads.clear()
+    }
+
     /** Closes one workspace and its opened editors, switching to another one. */
     fun closeWorkspace(workspace: Workspace) {
         // SnapshotStateList.remove returns a Boolean, so the removed workspace has to
@@ -410,11 +526,26 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         workspaces.remove(workspace)
         scanning.remove(workspace)
         persistWorkspaceFolders()
+        // A workspace that closed takes its remembered tabs with it: a leftover
+        // entry re-opened a "ghost" tab of a file the session no longer owned,
+        // which showed as a half-alive buffer with a name but no readable content.
+        if (closing != null) {
+            val remaining = workspaces.map { it.root.absolutePath }.toSet()
+            store()?.let { conf ->
+                conf.n_workspace_open_tabs = conf.n_workspace_open_tabs
+                    .filter { group -> group.firstOrNull() in remaining }
+                conf.n_workspace_active_tabs = conf.n_workspace_active_tabs
+                    .filter { group -> group.firstOrNull() in remaining }
+            }
+        }
         val closingPath = closing?.root?.absolutePath
         if (activeWorkspace != null && activeWorkspace?.root?.absolutePath == closingPath) {
             activeWorkspace = workspaces.lastOrNull()
         }
     }
+
+    /** Null-safe config accessor for helpers that may run in bare sessions. */
+    private fun store(): ContentConfig? = config
 
     /** Registers a file opened from outside the workspace panel as a tab. */
     fun registerExternalFile(file: File): Boolean {
@@ -456,6 +587,9 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         closeWorkspace(closing)
         return true
     }
+
+    /** True when the Close Workspace affordance may be used at all. */
+    val canCloseWorkspace: Boolean get() = workspaces.isNotEmpty()
 
     /** Leaves every workspace; the caller decides what to show instead. */
     fun closeAllWorkspaces() {
@@ -939,3 +1073,16 @@ private fun isProbablyText(file: File): Boolean {
         false
     }
 }
+
+/**
+ * A workspace-close request raised while unsaved edits were still open.
+ *
+ * The UI layer turns this into a "Save All / Save / Discard" dialog; the closing
+ * happens only after the user has picked one of the three outcomes.
+ */
+data class WorkspaceCloseRequest(
+    /** The workspaces the user asked to close, in open order. */
+    val targets: List<Workspace>,
+    /** True when the request covers every open workspace at once. */
+    val all: Boolean
+)

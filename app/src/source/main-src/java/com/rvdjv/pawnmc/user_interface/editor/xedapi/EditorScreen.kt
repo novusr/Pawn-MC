@@ -236,6 +236,9 @@ fun EditorScreen(
 
     var showExitDialog by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
+    // A workspace close waiting for the user to pick Save All / Save / Discard.
+    // Raised by the overflow menu and by the `X` of a workspace tab in the panel.
+    val pendingWorkspaceClose = workspace.pendingCloseRequest
     var showNewFileDialog by remember { mutableStateOf(false) }
     var newFileName by remember { mutableStateOf("Server.pwn") }
     var newFileParent by remember { mutableStateOf<File?>(null) }
@@ -459,11 +462,40 @@ fun EditorScreen(
     // the system chooser directly.
     // ------------------------------------------------------------------
     var showBuiltInWorkspaceBrowser by remember { mutableStateOf(false) }
+    // Guards the folder picker: set while unsaved buffers must be settled first.
+    var showWorkspacePickGuard by remember { mutableStateOf(false) }
 
     /** Opens the picked folder as the active workspace. */
     fun openWorkspaceFolder(folder: File) {
         workspace.openWorkspace(folder)
         isExplorerVisible = true
+    }
+
+    /** Flushes every dirty buffer across all open workspaces. */
+    fun saveEverythingForWorkspaceSwitch(onDone: (Boolean) -> Unit) {
+        scope.launch {
+            var allSaved = true
+            workspace.openWorkspaces.forEach { target ->
+                val dirtyCount = target.documents.count { it.isDirty }
+                if (workspace.saveAll(target) != dirtyCount) allSaved = false
+            }
+            onDone(allSaved)
+        }
+    }
+
+    /** Rolls every dirty buffer back to its disk content. */
+    fun discardEverythingForWorkspaceSwitch() {
+        scope.launch {
+            workspace.openWorkspaces.forEach { target ->
+                target.documents.filter { it.isDirty }.forEach { document ->
+                    runCatching {
+                        document.updateContent(document.file.readText())
+                        document.markSaved()
+                    }
+                }
+            }
+            viewModel.loadFile()
+        }
     }
 
     val folderPickerLauncher = rememberLauncherForActivityResult(
@@ -486,8 +518,19 @@ fun EditorScreen(
         }
     }
 
-    /** Entry point of every "open a workspace folder" affordance. */
+    /**
+     * Entry point of every "open a workspace folder" affordance.
+     *
+     * When the editor still holds unsaved buffers (a pre-workspace file being
+     * edited, or dirty documents of an already open workspace) the pick is held
+     * back: the user is asked to save - or discard - before the new folder can
+     * replace what is open, so no edit is silently overwritten by the switch.
+     */
     fun requestWorkspaceFolder() {
+        if (workspace.hasDirtyDocuments || (!workspace.isWorkspaceOpen && viewModel.hasUnsavedChanges)) {
+            showWorkspacePickGuard = true
+            return
+        }
         folderPickerLauncher.launch(
             Intent.createChooser(buildFolderPickerIntent(), null)
         )
@@ -757,6 +800,79 @@ fun EditorScreen(
         )
     }
 
+    if (showWorkspacePickGuard) {
+        val singleFileGuard = !workspace.isWorkspaceOpen && viewModel.hasUnsavedChanges
+        AlertDialog(
+            onDismissRequest = { showWorkspacePickGuard = false },
+            title = { Text("Unsaved Changes") },
+            text = {
+                Text(
+                    if (singleFileGuard) {
+                        "File '${viewModel.fileName}' has unsaved modifications. " +
+                            "Save it before opening a workspace folder?"
+                    } else {
+                        "Some open files have unsaved modifications. " +
+                            "Save them before opening another workspace folder?"
+                    }
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (singleFileGuard) {
+                            val currentText = editorRef?.text?.toString() ?: ""
+                            viewModel.saveFile(currentText) { success ->
+                                showWorkspacePickGuard = false
+                                if (success) {
+                                    viewModel.loadFile()
+                                    requestWorkspaceFolder()
+                                }
+                            }
+                        } else {
+                            saveEverythingForWorkspaceSwitch { allSaved ->
+                                showWorkspacePickGuard = false
+                                if (allSaved) {
+                                    requestWorkspaceFolder()
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        "Some files could not be saved. Review the unsaved tabs and retry.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        }
+                    },
+                    modifier = Modifier.testTag("workspace_pick_save_button")
+                ) {
+                    Text(if (workspace.openWorkspaces.size > 1) "Save All" else "Save")
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            showWorkspacePickGuard = false
+                            if (singleFileGuard) {
+                                viewModel.loadFile()
+                            } else {
+                                discardEverythingForWorkspaceSwitch()
+                            }
+                            requestWorkspaceFolder()
+                        },
+                        modifier = Modifier.testTag("workspace_pick_discard_button")
+                    ) {
+                        Text("Discard")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(onClick = { showWorkspacePickGuard = false }) {
+                        Text("Cancel")
+                    }
+                }
+            }
+        )
+    }
+
     BackHandler {
         // A running compile must not be abandoned mid-flight: back is blocked
         // until the job finishes, matching the disabled back button in the bar.
@@ -907,6 +1023,74 @@ fun EditorScreen(
                     TextButton(
                         onClick = { showExitDialog = false },
                         modifier = Modifier.testTag("dialog_cancel_button")
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            }
+        )
+    }
+
+    if (pendingWorkspaceClose != null) {
+        // Smart-cast helper: a delegate property cannot be smart-cast inside the
+        // dialog lambdas, so the request is copied into an immutable local first.
+        val closeRequest = pendingWorkspaceClose!!
+        val dirtyTargets = workspace.closeRequestHasDirtyWork(closeRequest)
+        AlertDialog(
+            onDismissRequest = { workspace.cancelPendingCloseRequest() },
+            title = {
+                Text(
+                    if (closeRequest.all) "Close All Workspaces" else "Close Workspace"
+                )
+            },
+            text = {
+                Text(
+                    when {
+                        dirtyTargets && closeRequest.targets.size > 1 ->
+                            "Some files across " +
+                                closeRequest.targets.joinToString(", ") { it.name } +
+                                " have unsaved modifications. Save them before closing?"
+                        dirtyTargets ->
+                            "'${closeRequest.targets.first().name}' has unsaved modifications. Save them before closing?"
+                        closeRequest.targets.size > 1 ->
+                            "Close " + closeRequest.targets.joinToString(", ") { it.name } + "?"
+                        else ->
+                            "Close workspace '${closeRequest.targets.first().name}'?"
+                    }
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        scope.launch {
+                            workspace.saveAndClose(closeRequest)
+                            isExplorerVisible = workspace.isWorkspaceOpen
+                        }
+                    },
+                    modifier = Modifier.testTag("workspace_close_save_button")
+                ) {
+                    // Save All covers every open workspace at once; Save commits
+                    // the single workspace being closed.
+                    Text(if (closeRequest.all) "Save All" else "Save")
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                workspace.discardAndClose(closeRequest)
+                                isExplorerVisible = workspace.isWorkspaceOpen
+                            }
+                        },
+                        modifier = Modifier.testTag("workspace_close_discard_button")
+                    ) {
+                        Text("Discard")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TextButton(
+                        onClick = { workspace.cancelPendingCloseRequest() },
+                        modifier = Modifier.testTag("workspace_close_cancel_button")
                     ) {
                         Text("Cancel")
                     }
@@ -1323,11 +1507,9 @@ fun EditorScreen(
                                     onClick = {
                                         dismissAutoCompletion()
                                         showMenu = false
-                                        val closing = workspace.activeWorkspace
-                                        if (closing != null) {
-                                            workspace.closeWorkspace(closing)
-                                        }
-                                        isExplorerVisible = workspace.isWorkspaceOpen
+                                        // The close goes through the save/discard prompt;
+                                        // with everything saved it completes immediately.
+                                        workspace.activeWorkspace?.let { workspace.requestCloseWorkspace(it) }
                                     }
                                 )
                                 DropdownMenuItem(
@@ -1338,8 +1520,7 @@ fun EditorScreen(
                                     onClick = {
                                         dismissAutoCompletion()
                                         showMenu = false
-                                        workspace.closeAllWorkspaces()
-                                        isExplorerVisible = false
+                                        workspace.requestCloseAllWorkspaces()
                                     }
                                 )
                             }
@@ -2053,6 +2234,10 @@ fun EditorScreen(
                                 },
                                 onBeforeAction = ::dismissAutoCompletion,
                                 onExpandedChange = { isPanelExpanded = it },
+                                onRequestCloseWorkspace = { target ->
+                                    dismissAutoCompletion()
+                                    workspace.requestCloseWorkspace(target)
+                                },
                                 compileFocusToken = compileFocusToken,
                                 onHeaderDrag = { delta ->
                                     explorerOffset = IntOffset(
