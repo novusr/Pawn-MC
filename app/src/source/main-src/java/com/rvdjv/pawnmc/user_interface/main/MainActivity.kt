@@ -234,9 +234,16 @@ class MainActivity : ComponentActivity() {
 
                 // The editor follows the file chosen on the main screen, without
                 // recreating its view model so the workspaces stay intact.
-                LaunchedEffect(currentFilePath) {
+                LaunchedEffect(currentFilePath, viewModel.lastOpenedNonCompileFile) {
                     if (!currentFilePath.isNullOrBlank()) {
                         editorViewModel.attachFile(currentFilePath)
+                    }
+                    // Log-style files (.txt, .log, .cfg, .html) are not meant to be
+                    // compiled: open Xed Editor directly instead of idling on the main
+                    // screen.
+                    if (viewModel.lastOpenedNonCompileFile) {
+                        isEditorOpen = true
+                        viewModel.lastOpenedNonCompileFile = false
                     }
                 }
 

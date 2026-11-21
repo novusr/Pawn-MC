@@ -139,7 +139,7 @@ class ExplanationTableTest {
         }
         assertTrue("fatal codes without a stop notice: $missing", missing.isEmpty())
     }
-}
+
 
     @Test
     fun `the per-file hint budget allows eleven explainer entries`() {
@@ -148,3 +148,4 @@ class ExplanationTableTest {
         // hints without any trouble.
         assertEquals(11, DiagnosticsStore.MAX_ENTRIES_PER_FILE)
     }
+}

@@ -162,6 +162,15 @@ class MainViewModel(
     var selectedFilePath by mutableStateOf<String?>(null)
         private set
 
+    /**
+     * True when the most recently opened file (via "Open With" / intent) is a
+     * non-compilable log-style file (`.txt`, `.log`, `.cfg`, `.html`). The main
+     * activity uses this to open Xed Editor directly instead of leaving the user
+     * idling on the main screen.
+     */
+    var lastOpenedNonCompileFile by mutableStateOf(false)
+        private set
+
     var selectionError by mutableStateOf<String?>(null)
         private set
 
@@ -288,6 +297,11 @@ class MainViewModel(
                 val validExtensions = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html")
                 if (File(path).extension.lowercase() in validExtensions) {
                     selectFile(path, openedFromIntent = true)
+                    // Log-style files are not meant to be compiled: open Xed Editor
+                    // directly instead of leaving the user on the main screen.
+                    if (File(path).extension.lowercase() in setOf("txt", "log", "cfg", "html")) {
+                        lastOpenedNonCompileFile = true
+                    }
                 } else {
                     selectionError = "Invalid file type! (only: .pawn .pwn .p .inc .txt .log .cfg .html)"
                 }
