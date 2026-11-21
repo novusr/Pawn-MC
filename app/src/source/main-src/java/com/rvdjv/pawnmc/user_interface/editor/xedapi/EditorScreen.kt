@@ -192,7 +192,9 @@ fun EditorScreen(
     diagnosticsRevision: Int = 0,
     onCompileRequest: (String) -> Unit = {},
     /** Lets Discard tell the host the JSON changed, so other screens re-read it. */
-    onDiagnosticsChanged: () -> Unit = {}
+    onDiagnosticsChanged: () -> Unit = {},
+    /** Called when the last workspace closes and the editor should return to blank.pwn. */
+    onReturnToBlankPawn: () -> Unit = {}
 ) {
     val context = LocalContext.current
     // Shared across screens so the localisation asset is read and parsed only once
@@ -466,6 +468,11 @@ fun EditorScreen(
     // the system chooser directly.
     // ------------------------------------------------------------------
     var showBuiltInWorkspaceBrowser by remember { mutableStateOf(false) }
+
+    /** Folder waiting to be opened once the user decides about unsaved files. */
+    var pendingWorkspaceFolder by remember { mutableStateOf<File?>(null) }
+    /** Shown when opening a workspace while dirty files exist. */
+    var showSaveBeforeWorkspaceDialog by remember { mutableStateOf(false) }
 
     /** Opens the picked folder as the active workspace. */
     fun openWorkspaceFolder(folder: File) {
@@ -927,15 +934,10 @@ fun EditorScreen(
         )
     }
 
-    /** Folder waiting to be opened once the user decides about unsaved files. */
-    var pendingWorkspaceFolder by remember { mutableStateOf<File?>(null) }
-    /** Shown when opening a workspace while dirty files exist. */
-    var showSaveBeforeWorkspaceDialog by remember { mutableStateOf(false) }
-
     /** Returns the editor to the blank.pwn starter when no workspace remains open. */
-    private fun openBlankPawnIfNoWorkspace() {
+    fun openBlankPawnIfNoWorkspace() {
         if (!workspace.isWorkspaceOpen) {
-            viewModel.ensureAndOpenBlankPawn()
+            onReturnToBlankPawn()
         }
     }
 

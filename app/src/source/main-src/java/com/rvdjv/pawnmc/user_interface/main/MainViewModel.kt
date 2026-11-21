@@ -169,7 +169,7 @@ class MainViewModel(
      * idling on the main screen.
      */
     var lastOpenedNonCompileFile by mutableStateOf(false)
-        private set
+        internal set
 
     var selectionError by mutableStateOf<String?>(null)
         private set

@@ -327,7 +327,8 @@ class MainActivity : ComponentActivity() {
                             onCompileRequest = { path ->
                                 viewModel.requestCompileFromEditor(path)
                             },
-                            onDiagnosticsChanged = { viewModel.notifyDiagnosticsChanged() }
+                            onDiagnosticsChanged = { viewModel.notifyDiagnosticsChanged() },
+                            onReturnToBlankPawn = { viewModel.ensureAndOpenBlankPawn() }
                         )
                     }
                 }
