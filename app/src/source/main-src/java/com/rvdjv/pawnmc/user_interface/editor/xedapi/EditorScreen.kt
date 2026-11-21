@@ -2030,7 +2030,15 @@ fun EditorScreen(
                                         editorRef?.jumpToLine((hit.line - 1).coerceAtLeast(0))
                                     }, 250)
                                 },
-                                onClosePanel = { isExplorerVisible = false },
+                                // Closing the panel must also clear the focus-mode flag:
+                                // if the panel was shut while expanded to the whole canvas,
+                                // the floating stack would stay suppressed forever and the
+                                // buttons would only come back after the expand toggle was
+                                // clicked again on a panel that no longer exists.
+                                onClosePanel = {
+                                    isPanelExpanded = false
+                                    isExplorerVisible = false
+                                },
                                 onOpenFolder = {
                                     dismissAutoCompletion()
                                     requestWorkspaceFolder()
