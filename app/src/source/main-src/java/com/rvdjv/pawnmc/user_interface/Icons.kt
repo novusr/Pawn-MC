@@ -862,6 +862,58 @@ object _Icons {
             }
         }.build()
     }
+
+    /** Jump-to-line icon: a small figure leaping with both arms raised. */
+    val Jump: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "_Icons.Jump",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f
+        ).apply {
+            // Head.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.7f,
+                strokeLineCap = StrokeCap.Round,
+                strokeLineJoin = StrokeJoin.Round
+            ) {
+                circle(12f, 5.6f, 2.0f)
+            }
+            // Body.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.7f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(12f, 7.6f)
+                lineTo(12f, 13f)
+            }
+            // Arms raised in a leap.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.7f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(12f, 9f)
+                lineTo(7.5f, 5.5f)
+                moveTo(12f, 9f)
+                lineTo(16.5f, 5.5f)
+            }
+            // Legs split mid-jump.
+            path(
+                stroke = SolidColor(Color.Black),
+                strokeLineWidth = 1.7f,
+                strokeLineCap = StrokeCap.Round
+            ) {
+                moveTo(12f, 13f)
+                lineTo(8.5f, 17.5f)
+                moveTo(12f, 13f)
+                lineTo(15.5f, 17.5f)
+            }
+        }.build()
+    }
 }
 
 /** Adds one circular petal to the current even-odd path. */

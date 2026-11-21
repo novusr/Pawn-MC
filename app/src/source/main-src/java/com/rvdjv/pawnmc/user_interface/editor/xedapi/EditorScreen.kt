@@ -185,6 +185,8 @@ fun EditorScreen(
     editorBackgroundColor: String? = null,
     compileOutput: String = "",
     isCompiling: Boolean = false,
+    /** True once a compile has finished; tints the workspace jump button green. */
+    hasCompiled: Boolean = false,
     /** Bumped by the host after a run that wrote diagnostics; pulls the hints at once. */
     diagnosticsRevision: Int = 0,
     onCompileRequest: (String) -> Unit = {},
@@ -504,7 +506,7 @@ fun EditorScreen(
                     context, "Choose a Pawn file on local primary storage", Toast.LENGTH_LONG
                 ).show()
                 file.extension.lowercase() !in EDITOR_OPENABLE_EXTENSIONS -> Toast.makeText(
-                    context, "Only .pawn, .pwn, .p, .inc, .txt, .log and .cfg files are supported", Toast.LENGTH_LONG
+                    context, "Only .pawn, .pwn, .p, .inc, .txt, .log, .cfg and .html files are supported", Toast.LENGTH_LONG
                 ).show()
                 else -> {
                     workspace.registerExternalFile(file)
@@ -2009,6 +2011,10 @@ fun EditorScreen(
                                 session = workspace,
                                 outputText = compileOutput,
                                 isCompiling = isCompiling,
+                                // Jump to line: opens the editor's "Jump to Position" dialog.
+                                onJumpClick = { showJumpDialog = true },
+                                hasCompiled = hasCompiled,
+                                logSourcePath = activeFilePath,
                                 onOpenFile = { file ->
                                     dismissAutoCompletion()
                                     openWorkspaceFile(file)
@@ -2541,7 +2547,7 @@ private val FLOAT_MARGIN = 16.dp
  * (`.txt`, `.log`, `.cfg`) are editor-only: they can be read and edited, but a
  * compile request against them is rejected by the main view model.
  */
-internal val EDITOR_OPENABLE_EXTENSIONS = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg")
+internal val EDITOR_OPENABLE_EXTENSIONS = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html")
 
 /** Vertical gap between the stacked floating controls. */
 private val FLOAT_GAP = 10.dp

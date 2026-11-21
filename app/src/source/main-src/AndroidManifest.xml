@@ -84,6 +84,10 @@
                 <data android:pathPattern=".*\\.pwn" />
                 <data android:pathPattern=".*\\.p" />
                 <data android:pathPattern=".*\\.inc" />
+                <data android:pathPattern=".*\\.cfg" />
+                <data android:pathPattern=".*\\.txt" />
+                <data android:pathPattern=".*\\.log" />
+                <data android:pathPattern=".*\\.html" />
             </intent-filter>
         </activity>
 

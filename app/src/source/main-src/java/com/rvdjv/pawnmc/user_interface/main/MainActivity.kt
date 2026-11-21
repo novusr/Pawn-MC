@@ -312,6 +312,7 @@ class MainActivity : ComponentActivity() {
                                 else -> ""
                             },
                             isCompiling = viewModel.isCompiling,
+                            hasCompiled = viewModel.lastExitCode != null,
                             // The compile just wrote injector_data.json; Xed re-applies the
                             // hints the moment this changes, so the comment shows up on the
                             // broken line while the user is still in the editor.

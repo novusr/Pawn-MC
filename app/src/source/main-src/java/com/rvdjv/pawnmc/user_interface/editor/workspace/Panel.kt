@@ -58,6 +58,7 @@ import com.rvdjv.pawnmc.user_interface.main.explainHighlightedText
 import com.rvdjv.pawnmc.user_interface.common.OverlayScrollbar
 import com.rvdjv.pawnmc.user_interface.common.lineCountOf
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
+import com.rvdjv.pawnmc.apps_data.data_logging._log_export
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -113,6 +114,12 @@ fun WorkspacePanel(
     onCreateFileAt: (File) -> Unit = {},
     onCreateFolderAt: (File) -> Unit = {},
     onBeforeAction: () -> Unit = {},
+    /** Shortcut for the editor's "Jump to Line" action. */
+    onJumpClick: () -> Unit = {},
+    /** True once a compile has finished, used to tint the jump button green. */
+    hasCompiled: Boolean = false,
+    /** Path of the active source file, used in the downloaded log header. */
+    logSourcePath: String? = null,
     /** Reported while the panel demands the whole screen to itself. */
     onExpandedChange: (Boolean) -> Unit = {},
     /**
@@ -312,7 +319,10 @@ fun WorkspacePanel(
                     OutputHeaderRow(
                         outputText = outputText,
                         isCompiling = isCompiling,
-                        onBeforeAction = onBeforeAction
+                        onBeforeAction = onBeforeAction,
+                        onJumpClick = onJumpClick,
+                        hasCompiled = hasCompiled,
+                        logSourcePath = logSourcePath
                     )
                     Box(
                         modifier = Modifier
@@ -378,9 +388,15 @@ fun WorkspacePanel(
 private fun OutputHeaderRow(
     outputText: String,
     isCompiling: Boolean,
-    onBeforeAction: () -> Unit
+    onBeforeAction: () -> Unit,
+    onJumpClick: () -> Unit,
+    hasCompiled: Boolean,
+    logSourcePath: String?
 ) {
     val context = LocalContext.current
+    val appVersion = runCatching {
+        context.packageManager.getPackageInfo(context.packageName, 0).versionName
+    }.getOrNull()
     var pendingLogText by remember { mutableStateOf("") }
     val downloadLogLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/plain")
@@ -407,11 +423,47 @@ private fun OutputHeaderRow(
     ) {
         SectionLabelInline("Output")
         Spacer(modifier = Modifier.weight(1f))
+        // Shortcut to the editor's "Jump to Line" action.
         IconButton(
             onClick = {
                 onBeforeAction()
-                pendingLogText = outputText
-                downloadLogLauncher.launch("pawnmc-compile-output.log")
+                onJumpClick()
+            },
+            modifier = Modifier.size(28.dp)
+        ) {
+            val baseTint = when {
+                hasCompiled -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurfaceVariant
+            }
+            val tint = if (isCompiling) baseTint.copy(alpha = 0.38f) else baseTint
+            Icon(
+                imageVector = _Icons.Jump,
+                contentDescription = "Jump to line",
+                tint = tint,
+                modifier = Modifier.size(14.dp)
+            )
+        }
+        IconButton(
+            onClick = {
+                onBeforeAction()
+                if (outputText.isBlank()) {
+                    Toast.makeText(
+                        context, "Output is empty", Toast.LENGTH_SHORT
+                    ).show()
+                    return@IconButton
+                }
+                val info = _log_export.HeaderInfo(
+                    compilerVersion = ContentConfig.getInstance(context).n_compiler_version.label,
+                    appVersion = appVersion,
+                    sourcePath = logSourcePath,
+                    exitCode = null,
+                    durationLabel = null,
+                    lineCount = outputText.lines().size
+                )
+                pendingLogText = _log_export.buildHeader(info) + outputText
+                val baseName = logSourcePath?.let { File(it).nameWithoutExtension }
+                    ?.takeIf { it.isNotBlank() } ?: "pawnmc-compile-output"
+                downloadLogLauncher.launch("$baseName.log")
             },
             enabled = !isCompiling,
             modifier = Modifier.size(28.dp)

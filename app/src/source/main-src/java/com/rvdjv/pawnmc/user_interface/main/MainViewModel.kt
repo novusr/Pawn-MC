@@ -285,11 +285,11 @@ class MainViewModel(
             }
 
             if (path != null) {
-                val validExtensions = setOf("pawn", "pwn", "p", "inc")
+                val validExtensions = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html")
                 if (File(path).extension.lowercase() in validExtensions) {
                     selectFile(path, openedFromIntent = true)
                 } else {
-                    selectionError = "Invalid file type! (only: .pawn .pwn .p .inc)"
+                    selectionError = "Invalid file type! (only: .pawn .pwn .p .inc .txt .log .cfg .html)"
                 }
             }
         }
@@ -314,10 +314,10 @@ class MainViewModel(
         isStartupLoad: Boolean = false,
         openedFromIntent: Boolean = false
     ) {
-        val validExtensions = setOf("pawn", "pwn", "p", "inc")
+        val validExtensions = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html")
         val n_source = File(path)
         if (n_source.extension.lowercase() !in validExtensions) {
-            selectionError = "Invalid file type! (only: .pawn .pwn .p)"
+            selectionError = "Invalid file type! (only: .pawn .pwn .p .inc .txt .log .cfg .html)"
             return
         }
         if (config.n_last_selected_file_path != path) {
