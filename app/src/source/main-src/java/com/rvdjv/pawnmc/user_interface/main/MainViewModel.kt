@@ -300,7 +300,9 @@ class MainViewModel(
                         val extension = u.lastPathSegment?.substringAfterLast('.', "pwn") ?: "pwn"
                         val n_fileName = "pawnmc-open-${System.nanoTime()}.${extension}"
                         val n_target = File(appContext.cacheDir, n_fileName)
-                        contentResolver.openInputStream(u)?.use { n_input ->
+                        val input = contentResolver.openInputStream(u)
+                            ?: error("Cannot open input stream for content URI: $u")
+                        input.use { n_input ->
                             n_target.outputStream().use { n_output -> n_input.copyTo(n_output) }
                         }
                         n_target
@@ -311,16 +313,16 @@ class MainViewModel(
             }
 
             if (path != null) {
-                val validExtensions = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html")
+                val validExtensions = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html", "json")
                 if (File(path).extension.lowercase() in validExtensions) {
                     selectFile(path, openedFromIntent = true)
                     // Log-style files are not meant to be compiled: open Xed Editor
                     // directly instead of leaving the user on the main screen.
-                    if (File(path).extension.lowercase() in setOf("txt", "log", "cfg", "html")) {
+                    if (File(path).extension.lowercase() in setOf("txt", "log", "cfg", "html", "json")) {
                         lastOpenedNonCompileFile = true
                     }
                 } else {
-                    selectionError = "Invalid file type! (only: .pawn .pwn .p .inc .txt .log .cfg .html)"
+                    selectionError = "Invalid file type! (only: .pawn .pwn .p .inc .txt .log .cfg .html .json)"
                 }
             }
         }
@@ -345,10 +347,10 @@ class MainViewModel(
         isStartupLoad: Boolean = false,
         openedFromIntent: Boolean = false
     ) {
-        val validExtensions = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html")
+        val validExtensions = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html", "json")
         val n_source = File(path)
         if (n_source.extension.lowercase() !in validExtensions) {
-            selectionError = "Invalid file type! (only: .pawn .pwn .p .inc .txt .log .cfg .html)"
+            selectionError = "Invalid file type! (only: .pawn .pwn .p .inc .txt .log .cfg .html .json)"
             return
         }
         if (config.n_last_selected_file_path != path) {

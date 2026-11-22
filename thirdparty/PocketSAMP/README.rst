@@ -1,8 +1,19 @@
 PocketSAMP
 ==========
 
-Portable SA-MP 0.3.7 server runtime with a local MariaDB instance, embedded in PawnMC
+Portable SA-MP 0.3.7/0.3.DL-R1 server runtime with a local MariaDB instance, embedded in PawnMC
 as the ``:pocketsamp`` Android library module. No root is required.
+
+.. important::
+
+   **File Manager dependency.** PocketSAMP works out-of-the-box using a 0.3.7 game mode
+   template downloaded from GitHub (`archive <https://github.com/novusr/Pawn-MC/tree/main/thirdparty/PocketSAMP/runtime/samp>`__)
+   and stored in your ``downloads`` directory. This template is accessible for quick
+   testing purposes **only**. To run your own server, you can simply replace it with your
+   custom game mode folder using a file manager (`File Manager guide <https://github.com/novusr/Pawn-MC/blob/main/POCKETSAMP.rst#file-manager>`__).
+   Without the File Manager you cannot select, replace, or manage your own game mode folder
+   — the built-in template is read-only for testing and is not intended as your production
+   server root.
 
 Architecture
 ------------
@@ -101,10 +112,22 @@ directories, rename items and delete them after confirmation. It does not copy f
 into the app's private storage, and its operations are restricted to the selected
 folder and its descendants. Stop the server before changing its selected folder.
 
-The Config screen reads ``server.cfg`` from this selected folder. Saving updates the
-settings managed by the screen while keeping other directives and comment lines in
-the file. A folder without ``server.cfg`` remains browsable, but cannot be used to
-start the server until a configuration is added.
+Configuration screen and server.cfg
+-----------------------------------
+
+.. important::
+
+   **Configuration tab role changed.** Back then (v1.5.2 and earlier, see
+   `Pawn-MC releases <https://github.com/novusr/Pawn-MC/releases/tag/v1.5.2>`__)
+   the configuration tab was for editing. Now it has switched careers into a
+   comprehension booster for the game mode's `server.cfg
+   <https://sampwiki.blast.hk/wiki/Server.cfg>`__ in the file manager. Settings now
+   make full use of the main ``server.cfg`` in the file manager — the implementation
+   lives in `Config.kt <https://github.com/novusr/Pawn-MC/blob/main/thirdparty/PocketSAMP/app/src/main/java/com/pocketsamp/server/configuration/Parameters/Config.kt>`__.
+   Read and write operations target the selected folder's ``server.cfg`` directly;
+   saving updates the settings managed by the screen while keeping other directives
+   and comment lines in the file. A folder without ``server.cfg`` remains browsable,
+   but cannot be used to start the server until a configuration is added.
 
 Expected contents:
 
@@ -162,6 +185,15 @@ Source layout
             screens/             Dashboard, Console, Database, Crash logs, Configuration,
                                  phpMyAdmin browser
             theme/               colour ramp and typography
+
+Cross-references
+----------------
+
+- `POCKETSAMP.rst <POCKETSAMP.rst>`__ — top-level PocketSAMP documentation in the repository root
+- `File Manager <https://github.com/novusr/Pawn-MC/blob/main/POCKETSAMP.rst#file-manager>`__ — managing game mode folders and server.cfg
+- `SA-MP Server.cfg wiki <https://sampwiki.blast.hk/wiki/Server.cfg>`__ — official server.cfg reference
+- `Config.kt source <https://github.com/novusr/Pawn-MC/blob/main/thirdparty/PocketSAMP/app/src/main/java/com/pocketsamp/server/configuration/Parameters/Config.kt>`__ — server.cfg read/write implementation
+- `Pawn-MC releases <https://github.com/novusr/Pawn-MC/releases>`__ — release history including v1.5.2
 
 Licence
 -------

@@ -325,6 +325,12 @@ fun EditorScreen(
     LaunchedEffect(isCompiling) {
         if (!isCompiling) refreshExplainHints()
     }
+    // Inject explainer hints whenever the active workspace document changes, so
+    // include files that had errors get their [cause] comments as soon as they are
+    // opened - not just the main compiled file.
+    LaunchedEffect(workspace.activeDocument?.file?.absolutePath) {
+        refreshExplainHints()
+    }
 
     /**
      * Explainer sync loop: every six minutes - and once right after the screen opens -
@@ -523,7 +529,7 @@ fun EditorScreen(
                     context, "Choose a Pawn file on local primary storage", Toast.LENGTH_LONG
                 ).show()
                 file.extension.lowercase() !in EDITOR_OPENABLE_EXTENSIONS -> Toast.makeText(
-                    context, "Only .pawn, .pwn, .p, .inc, .txt, .log, .cfg and .html files are supported", Toast.LENGTH_LONG
+                    context, "Only .pawn, .pwn, .p, .inc, .txt, .log, .cfg, .html and .json files are supported", Toast.LENGTH_LONG
                 ).show()
                 else -> {
                     workspace.registerExternalFile(file)
@@ -2794,7 +2800,7 @@ private val FLOAT_MARGIN = 16.dp
  * (`.txt`, `.log`, `.cfg`) are editor-only: they can be read and edited, but a
  * compile request against them is rejected by the main view model.
  */
-internal val EDITOR_OPENABLE_EXTENSIONS = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html")
+internal val EDITOR_OPENABLE_EXTENSIONS = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html", "json")
 
 /** Vertical gap between the stacked floating controls. */
 private val FLOAT_GAP = 10.dp

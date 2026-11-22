@@ -237,8 +237,14 @@ class MainActivity : ComponentActivity() {
                 LaunchedEffect(currentFilePath, viewModel.lastOpenedNonCompileFile) {
                     if (!currentFilePath.isNullOrBlank()) {
                         editorViewModel.attachFile(currentFilePath)
+                        // Register the file in workspace documents so it appears in
+                        // the "Opened Editors" section of the workspace panel, not just
+                        // loaded silently into the editor buffer.
+                        if (editorViewModel.workspace.isWorkspaceOpen) {
+                            editorViewModel.workspace.openFile(File(currentFilePath))
+                        }
                     }
-                    // Log-style files (.txt, .log, .cfg, .html) are not meant to be
+                    // Log-style files (.txt, .log, .cfg, .html, .json) are not meant to be
                     // compiled: open Xed Editor directly instead of idling on the main
                     // screen.
                     if (viewModel.lastOpenedNonCompileFile) {

@@ -365,6 +365,6 @@ private val SB_LABEL_ROOM = 14.dp
 internal fun lineCountOf(text: String): Int =
     if (text.isEmpty()) 1 else text.count { it == '\n' } + 1
 
-/** Rows a pixel scroll covers, at a nominal 48 px per row of laid-out content. */
+/** Rows a pixel scroll covers, at a nominal 24 px per row of laid-out content. */
 private fun estimatedLineCount(maxScrollPx: Int): Int =
-    ((maxScrollPx.coerceAtLeast(0) / 48) + 2).coerceAtLeast(1)
+    ((maxScrollPx.coerceAtLeast(0) / 24) + 2).coerceAtLeast(1)
