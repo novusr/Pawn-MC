@@ -113,8 +113,24 @@ class EditorViewModel(
         isTemporaryFile =
             activeDocumentUri == null &&
                 appContext?.let { AppStorage.isInternalTemporaryPawnFile(it, path) } == true
-        if (!workspace.isWorkspaceOpen) loadFile()
+        // Load unconditionally: when a workspace already holds this file, the editor
+        // renders it from that document's buffer, and otherwise from this one. Loading
+        // only "when no workspace is open" left the file empty whenever a workspace had
+        // been restored in the background.
+        if (!workspace.openWorkspaces.any { it.documentFor(file) != null }) loadFile()
     }
+
+    /**
+     * True when the open file belongs to no workspace - an outside document, or a single
+     * file the main screen selected - so the editor renders it as a lone buffer.
+     *
+     * `isWorkspaceOpen` alone is not enough: an unrelated workspace restored in the
+     * background used to mask the file just opened from another app, which showed up as
+     * an empty editor even though the document content had been read.
+     */
+    val showsStandaloneFile: Boolean
+        get() = filePath.isNotBlank() &&
+            !workspace.openWorkspaces.any { it.documentFor(file) != null }
 
     fun loadFile() {
         val n_path = filePath

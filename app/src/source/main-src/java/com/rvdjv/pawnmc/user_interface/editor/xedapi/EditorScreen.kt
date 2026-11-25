@@ -156,9 +156,11 @@ import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspaceSession
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspaceSearchHit
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFolderPickerIntent
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFilePickerIntent
-import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveDocumentToFile
+import com.rvdjv.pawnmc.user_interface.editor.workspace.isEditorOpenableExtension
+import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveOpenableDocument
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveTreeToFile
 import com.rvdjv.pawnmc.user_interface.editor.workspace.BuiltInFolderBrowser
+import com.rvdjv.pawnmc.user_interface.editor.workspace.FolderPickerSourceDialog
 import com.rvdjv.pawnmc.user_interface.editor.syntax.CodeLanguages
 import com.rvdjv.pawnmc.user_interface.editor.workspace.WorkspacePanel
 import com.rvdjv.pawnmc.user_interface.editor.portal.DeveloperPortal
@@ -444,25 +446,30 @@ fun EditorScreen(
 
     // The active file decides the language: Pawn scripts keep the Pawn highlighter,
     // while an SA-MP `server.cfg` switches to the config highlighter and completion.
-    val activeDocument = workspace.activeDocument
+    //
+    // The standalone buffer wins when it belongs to no workspace: a file opened from
+    // another app is loaded into `viewModel` even while an unrelated workspace sits in
+    // the background, and reading only the workspace would show an empty editor.
+    val standaloneFile = viewModel.showsStandaloneFile
+    val activeDocument = if (standaloneFile) null else workspace.activeDocument
     val activeFilePath = activeDocument?.file?.absolutePath
-        ?: if (workspace.isWorkspaceOpen) null else viewModel.filePath
+        ?: if (standaloneFile || !workspace.isWorkspaceOpen) viewModel.filePath else null
     val codeLanguage = remember(activeFilePath, appLanguage) {
         CodeLanguages.forFile(activeFilePath?.let(::File), appLanguage)
     }
 
     val hasUnsavedChanges =
-        if (workspace.isWorkspaceOpen) {
+        if (!standaloneFile && workspace.isWorkspaceOpen) {
             workspace.hasDirtyDocuments
         } else {
             !viewModel.isTemporaryFile && viewModel.hasUnsavedChanges
         }
-    val displayFileName = if (workspace.isWorkspaceOpen) {
+    val displayFileName = if (!standaloneFile && workspace.isWorkspaceOpen) {
         activeDocument?.name ?: "No file open"
     } else {
         viewModel.visibleFileName + if (viewModel.isTemporaryFile) " (internal temporary)" else ""
     }
-    val displayFilePath = if (workspace.isWorkspaceOpen) {
+    val displayFilePath = if (!standaloneFile && workspace.isWorkspaceOpen) {
         activeDocument?.file?.path ?: workspace.activeWorkspace?.root?.path.orEmpty()
     } else {
         viewModel.filePath
@@ -476,6 +483,8 @@ fun EditorScreen(
     // the system chooser directly.
     // ------------------------------------------------------------------
     var showBuiltInWorkspaceBrowser by remember { mutableStateOf(false) }
+    /** Source chooser shown before a folder pick (system vs built-in). */
+    var showFolderSourceDialog by remember { mutableStateOf(false) }
 
     /** Folder waiting to be opened once the user decides about unsaved files. */
     var pendingWorkspaceFolder by remember { mutableStateOf<File?>(null) }
@@ -515,8 +524,21 @@ fun EditorScreen(
 
     /** Entry point of every "open a workspace folder" affordance. */
     fun requestWorkspaceFolder() {
-        folderPickerLauncher.launch(
-            Intent.createChooser(buildFolderPickerIntent(), null)
+        // Folder picks get their own source dialog: file managers that only register
+        // files (ZArchiver and friends) never show up for ACTION_OPEN_DOCUMENT_TREE, so
+        // the chooser would look broken. Offering the built-in browser next to the
+        // system picker keeps both routes reachable.
+        showFolderSourceDialog = true
+    }
+
+    if (showFolderSourceDialog) {
+        FolderPickerSourceDialog(
+            title = "Open workspace folder with",
+            onSystemPicker = {
+                folderPickerLauncher.launch(Intent.createChooser(buildFolderPickerIntent(), null))
+            },
+            onBuiltInPicker = { showBuiltInWorkspaceBrowser = true },
+            onDismiss = { showFolderSourceDialog = false }
         )
     }
 
@@ -525,16 +547,25 @@ fun EditorScreen(
     ) { result ->
         val pickedUri = result.data?.data ?: return@rememberLauncherForActivityResult
         scope.launch {
-            val file = resolveDocumentToFile(context, pickedUri)
-            when {
-                file == null -> Toast.makeText(
-                    context, "Choose a Pawn file on local primary storage", Toast.LENGTH_LONG
+            // Any provider works now: a real path is used when the document maps back to
+            // shared storage, otherwise the content is staged in the cache. Rejecting
+            // everything that was not `primary:` is what produced the false
+            // "Choose a Pawn file on local primary storage" for ordinary Downloads files.
+            val resolved = resolveOpenableDocument(context, pickedUri)
+            val (file, displayName) = resolved ?: run {
+                Toast.makeText(
+                    context, "That document could not be read", Toast.LENGTH_LONG
                 ).show()
-                file.extension.lowercase() !in EDITOR_OPENABLE_EXTENSIONS -> Toast.makeText(
-                    context, "Only .pawn, .pwn, .p, .inc, .txt, .log, .cfg, .html and .json files are supported", Toast.LENGTH_LONG
+                return@launch
+            }
+            when {
+                !isEditorOpenableExtension(displayName ?: file.name) -> Toast.makeText(
+                    context,
+                    "Only .pawn, .pwn, .p, .inc, .txt, .log, .cfg, .html, .json and similar text files are supported",
+                    Toast.LENGTH_LONG
                 ).show()
                 else -> {
-                    workspace.openExternalFile(file)
+                    workspace.openExternalFile(file, displayName)
                     if (workspace.activeDocument?.file == file) isExplorerVisible = true
                     else Toast.makeText(context, "Could not open file (workspace limit reached)", Toast.LENGTH_LONG).show()
                 }
@@ -653,12 +684,9 @@ fun EditorScreen(
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
         } catch (e: Exception) {
-            Toast.makeText(
-                context,
-                "Save As failed: ${e.localizedMessage ?: "Unknown error"}",
-                Toast.LENGTH_SHORT
-            ).show()
-            return@rememberLauncherForActivityResult
+            // Not every provider grants persistable access; the write below is still
+            // attempted with the transient grant the picker returned. Failing here used to
+            // abort the whole Save As, which is what made it look like nothing happened.
         }
 
         val displayName = try {
@@ -2015,6 +2043,38 @@ fun EditorScreen(
                         .fillMaxWidth()
                 ) {
                     when {
+                    // The standalone buffer is its own mode: when the open file is not part
+                    // of any workspace (a document from another app, or a single file),
+                    // its loading and error states must not be masked by a restored
+                    // workspace sitting in the background.
+                    standaloneFile && viewModel.isLoading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                    standaloneFile && viewModel.loadError != null -> {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = viewModel.loadError ?: "Failed to open file",
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(onClick = { viewModel.loadFile() }) {
+                                    Text("Retry")
+                                }
+                            }
+                        }
+                    }
                     viewModel.isLoading && !workspace.isWorkspaceOpen -> {
                         Box(
                             modifier = Modifier.fillMaxSize(),
@@ -2046,7 +2106,7 @@ fun EditorScreen(
                     else -> {
                         // An empty workspace must not fall through to a stale single-file
                         // buffer such as TMP/blank.pwn; offer workspace navigation instead.
-                        if (workspaceHasNoActiveFile) {
+                        if (workspaceHasNoActiveFile && !standaloneFile) {
                             EmptyWorkspaceView(
                                 onBrowseExplorer = { isExplorerVisible = !isExplorerVisible },
                                 onOpenFolder = { requestWorkspaceFolder() }
@@ -2156,9 +2216,17 @@ fun EditorScreen(
                                 // activated, or of the single file opened from the
                                 // browser. Only runs when the shown path or content
                                 // really changed, so typing is never interrupted.
-                                val document = workspace.activeDocument
-                                val singlePath = if (workspace.isWorkspaceOpen) "" else viewModel.filePath
-                                val singleContent = if (workspace.isWorkspaceOpen) "" else (viewModel.fileContent ?: "")
+                                val document = if (standaloneFile) null else workspace.activeDocument
+                                val singlePath = if (standaloneFile || !workspace.isWorkspaceOpen) {
+                                    viewModel.filePath
+                                } else {
+                                    ""
+                                }
+                                val singleContent = if (standaloneFile || !workspace.isWorkspaceOpen) {
+                                    viewModel.fileContent ?: ""
+                                } else {
+                                    ""
+                                }
                                 val targetPath = document?.file?.absolutePath ?: singlePath
                                 val targetContent = document?.content ?: singleContent
                                 if (loadedBuffer.needsReload(document, singlePath, singleContent, editorReloadToken)) {
@@ -2425,7 +2493,13 @@ fun EditorScreen(
                 // Rectangle-style toolbar remains directly above the compile button.
                 FloatingRectToolbar(
                     hasUnsavedChanges = hasUnsavedChanges,
-                    workspaceOpen = workspace.isWorkspaceOpen,
+                    // The last entry is "Save All" only while a workspace truly has
+                    // something to write; with nothing dirty it becomes "Save As", which
+                    // is what tapping it now does.
+                    workspaceOpen = workspace.isWorkspaceOpen &&
+                        workspace.openWorkspaces.any { openWorkspace ->
+                            openWorkspace.documents.any { it.isDirty }
+                        },
                     saveEnabled = workspace.isWorkspaceOpen || !viewModel.isTemporaryFile,
                     isSearchOpen = showSearchBar,
                     onBeforeAction = ::dismissAutoCompletion,
@@ -2436,7 +2510,14 @@ fun EditorScreen(
                     onOpenWorkspaceClick = { requestWorkspaceFolder() },
                     onSaveClick = { saveActiveFile() },
                     onSaveAllClick = {
-                        if (workspace.isWorkspaceOpen) {
+                        // "Save All" and "Save As" share the button. In a workspace with
+                        // nothing to save it used to answer "Nothing to save" and stop;
+                        // now the same tap offers a destination, which is the only useful
+                        // meaning left for it.
+                        val hasDirty = workspace.openWorkspaces.any { openWorkspace ->
+                            openWorkspace.documents.any { it.isDirty }
+                        }
+                        if (workspace.isWorkspaceOpen && hasDirty) {
                             scope.launch {
                                 var allSaved = true
                                 workspace.openWorkspaces.forEach { openWorkspace ->
@@ -2453,7 +2534,14 @@ fun EditorScreen(
                                 }
                             }
                         } else {
-                            saveAsLauncher.launch(viewModel.fileName)
+                            // Save As never needs the editor buffer to be dirty: the
+                            // current text is what gets written to the chosen destination.
+                            val suggested = (workspace.activeDocument?.name
+                                ?: viewModel.visibleFileName.takeIf { it.isNotBlank() }
+                                ?: "untitled.pwn")
+                                .substringAfterLast('/')
+                                .ifBlank { "untitled.pwn" }
+                            saveAsLauncher.launch(suggested)
                         }
                     }
                 )

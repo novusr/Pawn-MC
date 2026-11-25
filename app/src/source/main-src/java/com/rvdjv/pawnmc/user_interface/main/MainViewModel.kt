@@ -189,6 +189,9 @@ class MainViewModel(
     var selectedSourceFilePath by mutableStateOf<String?>(null)
         private set
 
+    /** `content://` string of the last document opened from outside, to avoid re-copying. */
+    private var lastOpenedContentUri: String? = null
+
     var selectionError by mutableStateOf<String?>(null)
         private set
 
@@ -311,10 +314,20 @@ class MainViewModel(
     fun handleInitialUri(uri: Uri?) {
         uri?.let { u ->
             val appContext = context ?: return@let
+            // The same intent is delivered again by `onNewIntent` and after a recreate
+            // (theme/language swaps, returning from another activity). Copying it again
+            // produced a brand new `pawnmc-open-<nano>` file every time - which is how the
+            // name followed by "268..." piled up in the tabs. The previous copy is reused
+            // for the same document instead.
             // The provider knows the document's real name; the cache copy cannot.
             val displayName = displayNameOf(u)
+            val previous = if (u.scheme == "content" && lastOpenedContentUri == u.toString()) {
+                selectedFilePath?.let { File(it) }?.takeIf { it.isFile }
+            } else {
+                null
+            }
             val path = when (u.scheme) {
-                "content" -> {
+                "content" -> previous?.absolutePath ?: run {
                     val contentResolver = appContext.contentResolver
                     val copied = runCatching {
                         val extension = displayName?.substringAfterLast('.', "")
@@ -334,22 +347,29 @@ class MainViewModel(
                 }
                 else -> u.path
             }
+            if (u.scheme == "content") lastOpenedContentUri = u.toString()
 
             if (path != null) {
                 val validExtensions = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html", "json")
                 if (File(path).extension.lowercase() in validExtensions) {
                     val stagedCopy = File(path).name.startsWith(EXTERNAL_STAGING_PREFIX)
                     selectFile(path, openedFromIntent = true)
-                    // `selectFile` clears the display name for every other pick; the
-                    // staging copy is the one exception, so it is set again afterwards.
-                    // The editor tab, the title bar and the workspace list then show the
-                    // document the user tapped instead of `pawnmc-open-<nano>.<ext>`.
+                    // `selectFile` clears the display name for every non-staged pick; a
+                    // cache copy of an outside document keeps the document's own name so
+                    // the editor tab, title bar and workspace list show that name instead
+                    // of `pawnmc-open-<nano>.<ext>`.
                     if (stagedCopy) {
                         selectedFileDisplayName = displayName
                         config.n_last_selected_file_display_name = displayName
                     }
+                    // An outside document is opened in Xed straight away, whatever its
+                    // extension: Pawn sources included, because the user came here with a
+                    // file, not with the intention of compiling it from the main screen.
                     // Log-style files are not meant to be compiled: open Xed Editor
                     // directly instead of leaving the user on the main screen.
+                    if (File(path).name.startsWith(EXTERNAL_STAGING_PREFIX)) {
+                        lastOpenedNonCompileFile = true
+                    }
                     if (File(path).extension.lowercase() in setOf("txt", "log", "cfg", "html", "json")) {
                         lastOpenedNonCompileFile = true
                     }
@@ -476,6 +496,25 @@ class MainViewModel(
             isPreparingFilesystem = false
             applyCompilerAutoDetection(n_result.sourceFile)
         }
+    }
+
+    /**
+     * Selects a file picked through a system picker and asks the editor to show it.
+     *
+     * [stagedName] is the document's own name when the path is a cache copy of a
+     * `content://` document (`pawnmc-open-<nano>.<ext>`). `selectFile` clears any previous
+     * display name, so this wrapper is what keeps the name attached to the selection.
+     * The editor is opened for the pick straight away: the user came from a file, not
+     * from the main screen's compile flow.
+     */
+    fun openStagedFile(path: String, stagedName: String?) {
+        selectFile(path)
+        if (selectedFilePath != path) return
+        if (stagedName != null) {
+            selectedFileDisplayName = stagedName
+            config.n_last_selected_file_display_name = stagedName
+        }
+        lastOpenedNonCompileFile = true
     }
 
     fun syncEditorSelection(path: String) {

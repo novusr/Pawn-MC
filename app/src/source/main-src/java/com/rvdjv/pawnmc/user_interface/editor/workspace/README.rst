@@ -23,18 +23,28 @@ Berkas
 
 ``FolderPicker.kt``
     Intent folder picker (``buildFolderPickerIntent`` /
-    ``buildFolderPickerIntentAt``) dan konversi URI tree <-> ``File``.
+    ``buildFolderPickerIntentAt``), konversi URI tree/documen <-> ``File`` untuk
+    semua volume (``primary:``, ``emulated:``, ``home:``, volume eksternal), serta
+    ``resolveOpenableDocument`` yang menyalin dokumen tanpa path lokal ke
+    ``cache/open/`` supaya tetap bisa dibuka di editor.
 
 ``FolderSourceDialog.kt``
-    ``IncludePathInfoDialog`` (path lengkap + folder induk + isi folder) dan
-    ``BuiltInFolderBrowser`` (penjelajah bawaan untuk folder app-private).
+    ``IncludePathInfoDialog`` (path lengkap + folder induk + isi folder),
+    ``FolderPickerSourceDialog`` (pilih "System picker" atau "Browse inside
+    PawnMC"), dan ``BuiltInFolderBrowser`` (penjelajah bawaan untuk folder
+    app-private).
 
 Alur pemilihan folder
 ---------------------
 
-1. Pemanggil membungkus intent dari ``buildFolderPickerIntent(At)`` dengan
-   ``Intent.createChooser``; aplikasi yang memahami ``ACTION_OPEN_DOCUMENT_TREE``
-   (ZArchiver, file manager lain) muncul langsung di pemilih sistem tanpa daftar
-   tambahan dari aplikasi.
-2. Hasil URI diubah menjadi ``File`` oleh ``resolveTreeToFile`` dan diserahkan
+1. ``FolderPickerSourceDialog`` menawarkan dua sumber. Pemilih sistem adalah
+   ``buildFolderPickerIntent(At)`` dibungkus ``Intent.createChooser``; penjelajah
+   bawaan adalah ``BuiltInFolderBrowser``.
+2. ZArchiver dan teman-temannya **tidak** muncul di pemilih folder karena mereka
+   hanya mendaftarkan ``ACTION_OPEN_DOCUMENT`` (file), bukan
+   ``ACTION_OPEN_DOCUMENT_TREE`` (folder) - bukan karena chooser kita salah.
+3. Hasil URI diubah menjadi ``File`` oleh ``resolveTreeToFile`` dan diserahkan
    ke pemanggil (workspace baru atau include path baru).
+4. Folder milik PawnMC sendiri (``Documents/PawnMC/workspace``, tempat
+   ``workspace.json`` berada) tidak pernah dibuka sebagai workspace dan tidak
+   pernah disimpan ke daftar workspace.

@@ -219,8 +219,15 @@ class MainActivity : ComponentActivity() {
                             editorViewModel.workspace.activeWorkspace?.root?.absolutePath == target.absolutePath
                         }
                     } else {
-                        target.isFile && target.canRead() &&
+                        val opened = target.isFile && target.canRead() &&
                             editorViewModel.workspace.openExternalFile(target)
+                        // A file behind an `ACTION_OPEN_XED_PATH` shortcut may live outside
+                        // any workspace (PawnMC's own data folder, a cache copy); the
+                        // editor still has to show it, so the buffer is attached either way.
+                        if (target.isFile && target.canRead()) {
+                            editorViewModel.attachFile(target.path)
+                        }
+                        opened
                     }
                     // Opening the file is what makes the editor renderable, so the outcome is
                     // published before the editor flag: no frame draws the main screen between
@@ -234,8 +241,16 @@ class MainActivity : ComponentActivity() {
 
                 // The editor follows the file chosen on the main screen, without
                 // recreating its view model so the workspaces stay intact.
-                LaunchedEffect(currentFilePath, viewModel.lastOpenedNonCompileFile) {
-                    if (!currentFilePath.isNullOrBlank()) {
+                //
+                // Keyed on the path only: the effect used to re-run for
+                // `lastOpenedNonCompileFile` too, so every toggle back from the editor
+                // re-attached and re-opened the very same file. That is what kept
+                // duplicating tabs (`pawnmc-open-<nano>`) and re-opening workspaces.
+                // The file is announced once per path; opening it again is idempotent.
+                val announcedPath = remember { mutableStateOf<String?>(null) }
+                LaunchedEffect(currentFilePath) {
+                    if (!currentFilePath.isNullOrBlank() && announcedPath.value != currentFilePath) {
+                        announcedPath.value = currentFilePath
                         editorViewModel.attachFile(currentFilePath, viewModel.selectedFileDisplayName)
                         // Register the file in workspace documents so it appears in
                         // the "Opened Editors" section of the workspace panel, not just
@@ -247,9 +262,13 @@ class MainActivity : ComponentActivity() {
                             viewModel.selectedFileDisplayName
                         )
                     }
-                    // Log-style files (.txt, .log, .cfg, .html, .json) are not meant to be
-                    // compiled: open Xed Editor directly instead of idling on the main
-                    // screen.
+                }
+
+                // Log-style files (.txt, .log, .cfg, .html, .json) are not meant to be
+                // compiled: open Xed Editor directly instead of idling on the main
+                // screen. Kept separate from the announce above so the editor opens even
+                // when the file was already attached earlier.
+                LaunchedEffect(viewModel.lastOpenedNonCompileFile) {
                     if (viewModel.lastOpenedNonCompileFile) {
                         isEditorOpen = true
                         viewModel.lastOpenedNonCompileFile = false

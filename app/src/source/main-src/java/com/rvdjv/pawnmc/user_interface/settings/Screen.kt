@@ -105,6 +105,7 @@ import com.rvdjv.pawnmc.apps_data.data_update.UpdateManager
 import com.rvdjv.pawnmc.apps_data.data_update.UpdateStatus
 import com.rvdjv.pawnmc.user_interface.main.SettingsTarget
 import com.rvdjv.pawnmc.user_interface.editor.workspace.BuiltInFolderBrowser
+import com.rvdjv.pawnmc.user_interface.editor.workspace.FolderPickerSourceDialog
 import com.rvdjv.pawnmc.user_interface.editor.workspace.IncludePathInfoDialog
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFolderPickerIntentAt
 import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveTreeToFile
@@ -234,6 +235,7 @@ fun SettingsScreen(
     var infoIncludePath by remember { mutableStateOf<String?>(null) }
     var pendingIncludeStartDirectory by remember { mutableStateOf<File?>(null) }
     var showBuiltInIncludeBrowser by remember { mutableStateOf(false) }
+    var showIncludeSourceDialog by remember { mutableStateOf(false) }
     var pendingVersion by remember { mutableStateOf<ContentConfig.CompilerVersion?>(null) }
     var updateStatus by remember { mutableStateOf("Checking for updates...") }
     var updateReady by remember { mutableStateOf(false) }
@@ -441,9 +443,26 @@ fun SettingsScreen(
     fun launchIncludeFolderPicker(index: Int?, startDirectory: File?) {
         editingIncludePathIndex = index
         addingIncludePath = index == null
+        pendingIncludeStartDirectory = startDirectory
         viewModel.clearIncludePathExtensionNotice()
-        includeFolderPickerLauncher.launch(
-            Intent.createChooser(buildFolderPickerIntentAt(startDirectory), null)
+        // Same source dialog as the workspace folder pick: a folder chooser has no
+        // third-party entries on most devices, so the built-in browser is offered too.
+        showIncludeSourceDialog = true
+    }
+
+    if (showIncludeSourceDialog) {
+        FolderPickerSourceDialog(
+            title = "Add include folder with",
+            onSystemPicker = {
+                includeFolderPickerLauncher.launch(
+                    Intent.createChooser(
+                        buildFolderPickerIntentAt(pendingIncludeStartDirectory),
+                        null
+                    )
+                )
+            },
+            onBuiltInPicker = { showBuiltInIncludeBrowser = true },
+            onDismiss = { showIncludeSourceDialog = false }
         )
     }
 

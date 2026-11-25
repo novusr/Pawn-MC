@@ -179,7 +179,7 @@ class Workspace(val root: File) {
  * outside PawnMC: the tab then reads like the document the user tapped instead of the
  * `pawnmc-open-<nano>.<ext>` staging file in the cache.
  */
-class OpenDocument(val file: File, val displayName: String? = null) {
+class OpenDocument(val file: File, displayName: String? = null) {
     var content by mutableStateOf("")
         private set
 
@@ -189,9 +189,22 @@ class OpenDocument(val file: File, val displayName: String? = null) {
     var isLoaded by mutableStateOf(false)
         private set
 
+    /**
+     * Name shown in the tab. Snapshot state, so a name that arrives after the document
+     * was registered (the workspace also restores its own tabs, and only one of the two
+     * knows the original document name) renames the open tab instead of being dropped.
+     */
+    var displayName by mutableStateOf(displayName)
+        private set
+
     val isDirty: Boolean get() = content != savedContent
 
     val name: String get() = displayName ?: file.name
+
+    fun updateDisplayName(name: String?) {
+        val clean = name?.takeIf { it.isNotBlank() }
+        if (clean != null && clean != displayName) displayName = clean
+    }
 
     fun updateContent(text: String) {
         content = text
@@ -369,6 +382,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         val storeContext = store.applicationContextHolder()
         val fromJson = PathStore.readPaths(storeContext, "workspace")
             .let(PathStore::restoreExisting)
+            .filterNot(::isStorageFolder)
         val stored = when {
             // No prefs copy left (a reinstall wipes SharedPreferences but not Documents):
             // the JSON is the authority and is written back into the prefs below.
@@ -377,7 +391,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
             // that still exist are only revived when the panel has nothing at all to open.
             else -> store.n_workspace_folders.filter { path ->
                 runCatching { File(path).isDirectory }.getOrDefault(false)
-            }.ifEmpty { fromJson }
+            }.filterNot(::isStorageFolder).ifEmpty { fromJson }
         }
         if (stored.isEmpty()) {
             // Nothing left on disk and nothing remembered: drop the stale JSON too.
@@ -389,7 +403,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
             // canonicalPath can throw on freshly mounted folders; a plain exists
             // probe keeps a valid folder from being pruned as "missing".
             runCatching { File(path).isDirectory }.getOrDefault(false)
-        }
+        }.filterNot(::isStorageFolder)
         // The JSON is rewritten either way: on a fresh install this is what promotes the
         // recovered paths into the prefs-backed list again.
         if (surviving != store.n_workspace_folders) store.n_workspace_folders = surviving
@@ -409,6 +423,11 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     fun openWorkspace(dir: File) {
         if (!dir.isDirectory) {
             statusMessage = "Not a folder: ${dir.name}"
+            return
+        }
+        if (isStorageFolder(dir.absolutePath)) {
+            // PawnMC's own data folder (the one holding workspace.json) is not a project.
+            statusMessage = "That folder is PawnMC's own data, pick a project folder instead"
             return
         }
         val existing = workspaces.firstOrNull { it.root.absolutePath == dir.absolutePath }
@@ -475,19 +494,62 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     /** Registers a file opened from outside the workspace panel as a tab. */
     fun registerExternalFile(file: File): Boolean = openExternalFile(file)
 
-    /** Creates and scans a workspace for [dir], or returns null when the limit is hit. */
-    private fun newWorkspaceFor(dir: File, persist: Boolean = true): Workspace? {
+    /**
+     * Creates and scans a workspace for [dir], or returns null when the limit is hit.
+     *
+     * [rememberDayFolder] is false for the folder an externally opened file happens to
+     * live in: that folder is convenient for the current session but was never chosen by
+     * the user, so it must not end up in the remembered workspace list.
+     */
+    private fun newWorkspaceFor(
+        dir: File,
+        persist: Boolean = true,
+        rememberDayFolder: Boolean = true
+    ): Workspace? {
         if (isAtWorkspaceLimit) return null
         val created = Workspace(dir)
         workspaces.add(created)
         scan(created)
-        if (persist) persistWorkspaceFolders()
+        if (persist && rememberDayFolder) persistWorkspaceFolders()
         return created
     }
 
     /** Writes the open workspace folders to the config so they survive the process. */
     private fun persistWorkspaceFolders() {
-        config?.n_workspace_folders = workspaces.map { it.root.absolutePath }.distinct()
+        config?.n_workspace_folders = workspaces
+            .map { it.root.absolutePath }
+            .filterNot(::isStorageFolder)
+            .distinct()
+    }
+
+    /**
+     * True for the app's own bookkeeping folders, which must never be opened as a
+     * workspace.
+     *
+     * `Documents/PawnMC/workspace` is where `workspace.json` lives and where the bundled
+     * `blank.pwn` starter is written. Remembering it - which the old restore did whenever
+     * the stored path list was empty - made the panel open that folder and list
+     * `workspace.json` and `blank.pwn` instead of the user's real project folders.
+     *
+     * The comparison is by canonical path, with a plain-name fallback for the case where a
+     * path cannot be canonicalised yet (a just-mounted volume).
+     */
+    private fun isStorageFolder(path: String): Boolean {
+        if (path.isBlank()) return false
+        return runCatching {
+            val store = config ?: return@runCatching false
+            val root = com.rvdjv.pawnmc.apps_data.data_config.AppStorage.dataRoot(
+                store.applicationContextHolder()
+            )
+            val target = File(path)
+            val storeFolder = File(root, "workspace")
+            val sameFolder = target.canonicalPath == storeFolder.canonicalPath ||
+                target.absolutePath.trimEnd('/') == storeFolder.absolutePath.trimEnd('/')
+            sameFolder || listOf("workspace", "filemanager", "logs").any { name ->
+                runCatching { target.canonicalPath }.getOrNull() ==
+                    runCatching { File(root, name).canonicalPath }.getOrNull()
+            }
+        }.getOrDefault(false)
     }
 
     /** Closes the workspace folder in front; false when none was open. */
@@ -631,6 +693,9 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         val target = workspace ?: return
         val existing = target.documentFor(file)
         if (existing != null) {
+            // The workspace restores its own tabs without knowing the document name; the
+            // host does. Renaming the open tab is enough, no second tab is created.
+            existing.updateDisplayName(displayName)
             target.activate(existing.file.absolutePath)
             if (!existing.isLoaded) loadDocument(existing, target)
             return
@@ -648,6 +713,10 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
      * `.json`/`.txt` from another app left the panel looking empty. The file is therefore
      * always given a workspace - its own folder when no workspace owns it yet - and the
      * tab carries [displayName] when the buffer edits a staged copy.
+     *
+     * Idempotent on purpose: the host announces its current file again whenever the main
+     * screen comes back, so the same file must be brought to the front, never opened a
+     * second time (that is what piled up `pawnmc-open-<nano>` tabs).
      */
     fun openExternalFile(file: File, displayName: String? = null): Boolean {
         if (!file.isFile) return false
@@ -660,11 +729,14 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
             openFile(file, existing, displayName)
             return true
         }
+        // Never turn PawnMC's own data folder into a workspace: doing that is what put
+        // `workspace.json` and `blank.pwn` in the panel instead of the user's folders.
+        if (isStorageFolder(dir.absolutePath)) return false
         // A folder inside an already open workspace (its tree is scanned, so a document
         // may not exist yet) keeps that workspace rather than spending another slot.
         val owner = workspaces.firstOrNull { it.root.absolutePath == dir.absolutePath }
             ?: workspaces.firstOrNull { isWithinWorkspace(it.root, file) }
-        val target = owner ?: newWorkspaceFor(dir) ?: run {
+        val target = owner ?: newWorkspaceFor(dir, rememberDayFolder = false) ?: run {
             statusMessage = "Close a workspace before opening another file"
             return false
         }
@@ -672,7 +744,9 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
             activeWorkspace = target
         }
         openFile(file, target, displayName)
-        persistWorkspaceFolders()
+        // Only a folder the user already owned is remembered; the ad-hoc folder created
+        // for a one-off external file stays for this session and is not persisted.
+        if (owner != null) persistWorkspaceFolders()
         return true
     }
 

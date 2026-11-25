@@ -109,7 +109,7 @@ import com.rvdjv.pawnmc.user_interface._Icons
 import com.rvdjv.pawnmc.user_interface.filebrowser.FileBrowserDialog
 import com.rvdjv.pawnmc.user_interface.filebrowser.FileBrowserMode
 import com.rvdjv.pawnmc.user_interface.editor.workspace.buildFilePickerIntent
-import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveDocumentToFile
+import com.rvdjv.pawnmc.user_interface.editor.workspace.resolveOpenableDocument
 import com.rvdjv.pawnmc.user_interface.theme.PawnMCTheme
 import com.rvdjv.pawnmc.user_interface.theme.DarkSectionContainer
 import com.rvdjv.pawnmc.user_interface.common.OverlayScrollbar
@@ -268,14 +268,22 @@ fun MainScreen(
     ) { result ->
         val pickedUri = result.data?.data ?: return@rememberLauncherForActivityResult
         filePickerScope.launch {
-            val file = resolveDocumentToFile(context, pickedUri)
-            when {
-                file == null -> viewModel.reportSelectionError(
-                    localizer?.get("main.file.browse.unresolved", appLanguage, "Choose a Pawn file on local primary storage")
-                        ?: "Choose a Pawn file on local primary storage"
+            // Credentials-free resolution: a document that maps to shared storage is used
+            // in place, anything else (zip entry, cloud provider) is staged in the cache.
+            // The previous "primary:" only rule rejected normal Downloads picks.
+            val resolved = resolveOpenableDocument(context, pickedUri)
+            if (resolved == null) {
+                viewModel.reportSelectionError(
+                    localizer?.get("main.file.browse.unresolved", appLanguage, "That document could not be read")
+                        ?: "That document could not be read"
                 )
-                else -> viewModel.selectFile(file.absolutePath)
+                return@launch
             }
+            val (file, displayName) = resolved
+            viewModel.openStagedFile(
+                file.absolutePath,
+                displayName?.takeIf { file.name.startsWith(MainViewModel.EXTERNAL_STAGING_PREFIX) }
+            )
         }
     }
 
