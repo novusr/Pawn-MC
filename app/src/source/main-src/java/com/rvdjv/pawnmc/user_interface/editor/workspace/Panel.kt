@@ -179,9 +179,12 @@ fun WorkspacePanel(
     }
 
     // `documents` is a SnapshotStateList, so `toList()` would hand the list a fresh
-    // instance on every recomposition and make it re-diff the rows. Keyed on the
-    // size, the snapshot conversion happens only when a tab really opened or closed.
-    val openDocuments: List<OpenDocument> = remember(workspace) {
+    // instance on every recomposition and make it re-diff the rows. Keyed on the size,
+    // the snapshot conversion happens only when a tab really opened or closed.
+    // The size is part of the key on purpose: keyed on the workspace alone the snapshot
+    // was captured once and "Opened Editors" stayed empty for every file opened later.
+    // The `toList()` call is also what subscribes this composable to the list's changes.
+    val openDocuments: List<OpenDocument> = remember(workspace, workspace?.documents?.size) {
         workspace?.documents?.toList().orEmpty()
     }
 

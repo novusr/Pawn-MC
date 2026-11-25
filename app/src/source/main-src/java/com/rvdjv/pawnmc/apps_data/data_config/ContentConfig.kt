@@ -234,6 +234,20 @@ class ContentConfig private constructor(context: Context) {
         }
 
     /**
+     * Name to show for [n_last_selected_file_path] when it is a cache copy of a document
+     * opened from outside (see `MainViewModel.EXTERNAL_STAGING_PREFIX`).
+     */
+    var n_last_selected_file_display_name: String?
+        get() = prefs.getString(KEY_LAST_FILE_DISPLAY_NAME, null)
+        set(value) {
+            prefs.edit {
+                if (value.isNullOrBlank()) remove(KEY_LAST_FILE_DISPLAY_NAME)
+                else putString(KEY_LAST_FILE_DISPLAY_NAME, value)
+            }
+            mirrorToFile()
+        }
+
+    /**
      * Folder that already went through the ignore-case conversion.
      *
      * The conversion leaves a `<folder>.backup` copy next to the working folder,
@@ -421,6 +435,12 @@ class ContentConfig private constructor(context: Context) {
     /** Forgets the remembered workspace folders, e.g. when the user closes every workspace. */
     fun clearWorkspaceFolders() {
         prefs.edit { remove(KEY_WORKSPACE_FOLDERS) }
+        // The JSON mirror is what survives an uninstall; leaving it behind made the
+        // folders come back after closing every workspace and reopening the app.
+        runCatching {
+            PathStore.clearPaths(appContext, "workspace")
+        }
+        mirrorToFile()
     }
 
     //
@@ -655,6 +675,7 @@ class ContentConfig private constructor(context: Context) {
         internal const val KEY_LAST_DIR         = "last_open_dir"
         internal const val KEY_LAST_FILE        = "last_sel_file"
         internal const val KEY_LAST_FILE_URI    = "last_sel_file_uri"
+        internal const val KEY_LAST_FILE_DISPLAY_NAME = "last_sel_file_display"
         private const val KEY_CASE_BACKUP_DIR  = "case_insensitive_backup_dir"
 
         private const val KEY_EXPLAIN_AUTO = "explain_output_auto"

@@ -14,11 +14,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -30,6 +32,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import io.github.rosemoe.sora.event.ScrollEvent
 import io.github.rosemoe.sora.event.SelectionChangeEvent
 import io.github.rosemoe.sora.widget.CodeEditor
+import kotlinx.coroutines.isActive
 
 /** Width reserved on the right of the code for the scrollbar and its two labels. */
 internal val GUTTER_SCROLLBAR_WIDTH = 28.dp
@@ -54,13 +57,14 @@ internal val GutterScrollbarShape = RoundedCornerShape(6.dp)
  * line of the first screenful, and while scrolling the lower one keeps closing in on the
  * end of the visible range.
  *
- * ## Why it listens instead of polling
+ * ## Why it listens *and* follows the frame
  *
  * The first version repainted itself inside `onDraw` by comparing `offsetY` with the value
  * of the previous frame. That never worked: `onDraw` is only called when something else
  * invalidates the view, so a scroll produced no draw at all and the bar looked frozen. The
- * bar now subscribes to sora's own scroll/selection events and repaints from there, which is
- * the same signal the editor uses to move the text under the finger.
+ * bar now subscribes to sora's own scroll/selection events and repaints from there, and a
+ * per-frame follower additionally picks up the `offsetY` a fast fling moves between two
+ * events, so the thumb never lags the text.
  */
 @Composable
 internal fun GutterScrollbar(
@@ -89,6 +93,23 @@ internal fun GutterScrollbar(
         onDispose {
             runCatching { scrollReceipt.unsubscribe() }
             runCatching { selectionReceipt.unsubscribe() }
+        }
+    }
+
+    // Fling/frame follower. Events alone are not enough: a fast fling can move the editor
+    // far between two dispatches, and the bar then re-drew with a stale offset while the
+    // text was already gone - the "the bar stays still" report. Polling sora's own
+    // `offsetY` right before each draw keeps the thumb glued to the text at any speed,
+    // and an idle editor costs one int comparison per frame.
+    var lastOffsetY by remember(editor) { mutableStateOf(Int.MIN_VALUE) }
+    LaunchedEffect(editor) {
+        while (isActive) {
+            val offset = editor.offsetY
+            if (offset != lastOffsetY) {
+                lastOffsetY = offset
+                scrollTick++
+            }
+            withFrameNanos { }
         }
     }
 

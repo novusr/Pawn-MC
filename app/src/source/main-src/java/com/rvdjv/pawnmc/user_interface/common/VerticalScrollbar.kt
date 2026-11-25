@@ -20,11 +20,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +42,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -68,7 +71,11 @@ private class PixelScrollMetrics(
     override val visibleFraction: Float
         get() = if (maxValue <= 0f) 1f else (state.viewportSize / (maxValue + state.viewportSize)).coerceIn(0.06f, 1f)
     override fun scrollToFraction(fraction: Float) {
-        val target = (fraction.coerceIn(0f, 1f) * maxValue).roundToInt()
+        // Clamp to the live range: the caller computes the fraction once at drag start, and
+        // `maxValue` can still be 0 on the frame the screen appears, which used to send
+        // every jump to the top.
+        val target = (fraction.coerceIn(0f, 1f) * state.maxValue.toFloat()).roundToInt()
+            .coerceIn(0, state.maxValue.coerceAtLeast(0))
         coroutineScope.launch { state.scrollTo(target) }
     }
 }
@@ -79,9 +86,36 @@ private class LazyScrollMetrics(
 ) : ScrollMetrics {
     override val maxValue: Float
         get() = (state.layoutInfo.totalItemsCount - 1).coerceAtLeast(0).toFloat()
+
+    /**
+     * Item the thumb is on, as a float so a partly scrolled item counts fractionally.
+     *
+     * At the very bottom `firstVisibleItemIndex` is still one short of the last item -
+     * the last item is merely visible at the end of the viewport - so the raw index made
+     * the thumb stop one notch above the bottom ("the bar never reaches the end"). When
+     * the list says it cannot scroll forward, the value is pinned to [maxValue].
+     */
     override val value: Float
-        get() = state.firstVisibleItemIndex + state.firstVisibleItemScrollOffset / 10_000f
-    override val visibleFraction: Float get() = 0.12f
+        get() {
+            if (maxValue <= 0f) return 0f
+            if (!state.canScrollForward) return maxValue
+            val info = state.layoutInfo
+            val first = info.visibleItemsInfo.firstOrNull()
+            val itemHeight = first?.size?.takeIf { it > 0 } ?: 1
+            val fraction = (state.firstVisibleItemScrollOffset.toFloat() / itemHeight)
+                .coerceIn(0f, 1f)
+            return (state.firstVisibleItemIndex + fraction).coerceIn(0f, maxValue)
+        }
+
+    /** Share of the list that is on screen, so the thumb grows and shrinks with it. */
+    override val visibleFraction: Float
+        get() {
+            val total = state.layoutInfo.totalItemsCount
+            val visible = state.layoutInfo.visibleItemsInfo.size
+            if (total <= 0) return 1f
+            return (visible.toFloat() / total).coerceIn(0.06f, 1f)
+        }
+
     override fun scrollToFraction(fraction: Float) {
         val last = maxValue.toInt()
         if (last <= 0) return
@@ -140,6 +174,21 @@ private fun ScrollbarBody(
     // Fraction the active drag last scrolled to, so each drag event is a delta on top of
     // the previous one instead of an absolute jump.
     var dragLastFraction by remember { mutableStateOf(0f) }
+
+    // Frame follower. It exists purely for the subscription: reading `framePosition` here
+    // keeps this composable recomposing while the content moves, which is what used to be
+    // missing - the thumb only repainted on the next unrelated recomposition and looked
+    // frozen during a fling. The geometry below still reads the live position.
+    var framePosition by remember(metrics) { mutableStateOf(metrics.value) }
+    LaunchedEffect(metrics) {
+        while (isActive) {
+            val current = metrics.value
+            if (current != framePosition) framePosition = current
+            withFrameNanos { }
+        }
+    }
+    @Suppress("UNUSED_VARIABLE")
+    val frameSubscription = framePosition
 
     BoxWithConstraints(
         modifier = modifier

@@ -411,7 +411,9 @@ fun EditorScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    var isExplorerVisible by remember { mutableStateOf(false) }
+    // The panel opens in front when a workspace is open; a restored session therefore
+    // shows its folders instead of an empty editor with a hidden panel.
+    var isExplorerVisible by remember { mutableStateOf(workspace.isWorkspaceOpen) }
     var explorerOffset by remember { mutableStateOf(IntOffset.Zero) }
     var isPawnTerminalVisible by remember { mutableStateOf(false) }
     // Landscape toggle: `true` forces landscape, `false` releases the lock back to
@@ -458,7 +460,7 @@ fun EditorScreen(
     val displayFileName = if (workspace.isWorkspaceOpen) {
         activeDocument?.name ?: "No file open"
     } else {
-        viewModel.fileName + if (viewModel.isTemporaryFile) " (internal temporary)" else ""
+        viewModel.visibleFileName + if (viewModel.isTemporaryFile) " (internal temporary)" else ""
     }
     val displayFilePath = if (workspace.isWorkspaceOpen) {
         activeDocument?.file?.path ?: workspace.activeWorkspace?.root?.path.orEmpty()
@@ -532,7 +534,7 @@ fun EditorScreen(
                     context, "Only .pawn, .pwn, .p, .inc, .txt, .log, .cfg, .html and .json files are supported", Toast.LENGTH_LONG
                 ).show()
                 else -> {
-                    workspace.registerExternalFile(file)
+                    workspace.openExternalFile(file)
                     if (workspace.activeDocument?.file == file) isExplorerVisible = true
                     else Toast.makeText(context, "Could not open file (workspace limit reached)", Toast.LENGTH_LONG).show()
                 }

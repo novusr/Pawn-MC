@@ -63,4 +63,9 @@ object PathStore {
     /** Restores [paths] but keeps only the ones that still exist on disk. */
     fun restoreExisting(paths: List<String>): List<String> =
         paths.filter { runCatching { File(it).exists() }.getOrDefault(false) }
+
+    /** Deletes the stored list for [surface], e.g. when the user closed every workspace. */
+    fun clearPaths(context: Context, surface: String) {
+        runCatching { fileFor(context, surface).delete() }
+    }
 }

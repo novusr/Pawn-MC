@@ -174,8 +174,12 @@ class Workspace(val root: File) {
 
 /**
  * A file opened in an editor, with its buffer and save state.
+ *
+ * [displayName] is set when the buffer edits a staged copy of a document opened from
+ * outside PawnMC: the tab then reads like the document the user tapped instead of the
+ * `pawnmc-open-<nano>.<ext>` staging file in the cache.
  */
-class OpenDocument(val file: File) {
+class OpenDocument(val file: File, val displayName: String? = null) {
     var content by mutableStateOf("")
         private set
 
@@ -187,7 +191,7 @@ class OpenDocument(val file: File) {
 
     val isDirty: Boolean get() = content != savedContent
 
-    val name: String get() = file.name
+    val name: String get() = displayName ?: file.name
 
     fun updateContent(text: String) {
         content = text
@@ -261,6 +265,17 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     var statusMessage by mutableStateOf<String?>(null)
         private set
 
+    /**
+     * True while remembered folders are being re-opened.
+     *
+     * The host waits for this before deciding what to put in the editor, so a restored
+     * workspace is never overwritten by the single-file (blank.pwn) buffer behind it - the
+     * "the panel only shows blank.pwn" report. Restoring is still incremental: folders
+     * scan on the IO dispatcher and their tabs are queued one at a time.
+     */
+    var isRestoring by mutableStateOf(true)
+        private set
+
     /** Tab-restore queue, drained one document at a time.
      *
      * Declared before the init block below: the block runs in declaration
@@ -274,6 +289,10 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     init {
         restoreRememberedWorkspaces()
         restoreRememberedTabs()
+        // Restoring only enqueues the work (scans run off the main thread, tabs are
+        // drained one per [TAB_RESTORE_DELAY_MS]); the flag drops on the next main-loop
+        // pass so the content is already composed when the host reacts to it.
+        android.os.Handler(android.os.Looper.getMainLooper()).post { isRestoring = false }
     }
 
     /**
@@ -349,18 +368,33 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         PathStore.writePaths(contextForStore, "workspace", store.n_workspace_folders)
     }
 
-    /** Re-opens the workspace folders stored by a previous run. */
+    /**
+     * Re-opens the workspace folders stored by a previous run.
+     *
+     * `workspace/workspace.json` is the store that survives an uninstall, so it is read
+     * first and the prefs copy only fills in afterwards. When the panel is empty but the
+     * JSON still carries full paths, every stored folder is opened again; the folders and
+     * their tabs are restored, never the one-shot blank.pwn fallback.
+     */
     private fun restoreRememberedWorkspaces() {
         val store = config ?: return
-        var stored = store.n_workspace_folders
-        if (stored.isEmpty()) {
-            // The JSON mirror survives an uninstall where SharedPreferences does not;
-            // fall back to it so a reinstall restores the same workspaces.
-            val context = store.applicationContextHolder()
-            stored = PathStore.readPaths(context, "workspace").let(PathStore::restoreExisting)
-            if (stored.isNotEmpty()) store.n_workspace_folders = stored
+        val storeContext = store.applicationContextHolder()
+        val fromJson = PathStore.readPaths(storeContext, "workspace")
+            .let(PathStore::restoreExisting)
+        val stored = when {
+            // No prefs copy left (a reinstall wipes SharedPreferences but not Documents):
+            // the JSON is the authority and is written back into the prefs below.
+            store.n_workspace_folders.isEmpty() -> fromJson
+            // A folder manually removed from the panel is gone from the prefs; JSON entries
+            // that still exist are only revived when the panel has nothing at all to open.
+            else -> store.n_workspace_folders.filter { path ->
+                runCatching { File(path).isDirectory }.getOrDefault(false)
+            }.ifEmpty { fromJson }
         }
-        if (stored.isEmpty()) return
+        if (stored.isEmpty()) {
+            // Nothing left on disk and nothing remembered: drop the stale JSON too.
+            return
+        }
 
         val requested = stored.distinct()
         val surviving = requested.filter { path ->
@@ -368,14 +402,16 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
             // probe keeps a valid folder from being pruned as "missing".
             runCatching { File(path).isDirectory }.getOrDefault(false)
         }
+        // The JSON is rewritten either way: on a fresh install this is what promotes the
+        // recovered paths into the prefs-backed list again.
+        if (surviving != store.n_workspace_folders) store.n_workspace_folders = surviving
         if (surviving.size != requested.size) {
-            // Dead folders cost restore IO every launch; drop them from both stores.
-            store.n_workspace_folders = surviving
-            PathStore.writePaths(store.applicationContextHolder(), "workspace", surviving)
+            PathStore.writePaths(storeContext, "workspace", surviving)
         }
         if (surviving.isEmpty()) return
 
-        val restored = surviving.mapNotNull { path -> newWorkspaceFor(File(path), persist = false) }
+        val restored = surviving.take(MAX_OPEN_WORKSPACES)
+            .mapNotNull { path -> newWorkspaceFor(File(path), persist = false) }
         if (restored.isNotEmpty()) {
             activeWorkspace = restored.first()
         }
@@ -449,23 +485,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     }
 
     /** Registers a file opened from outside the workspace panel as a tab. */
-    fun registerExternalFile(file: File): Boolean {
-        if (!file.isFile) return false
-        val dir = file.parentFile ?: return false
-
-        val workspace = workspaces.firstOrNull { it.root.absolutePath == dir.absolutePath }
-            ?: newWorkspaceFor(dir)
-            ?: run {
-                statusMessage = "Close a workspace before opening another file"
-                return false
-            }
-
-        if (activeWorkspace == null || activeWorkspace?.root?.absolutePath != workspace.root.absolutePath) {
-            activeWorkspace = workspace
-        }
-        openFile(file, workspace)
-        return true
-    }
+    fun registerExternalFile(file: File): Boolean = openExternalFile(file)
 
     /** Creates and scans a workspace for [dir], or returns null when the limit is hit. */
     private fun newWorkspaceFor(dir: File, persist: Boolean = true): Workspace? {
@@ -619,7 +639,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     // ------------------------------------------------------------------
 
     /** Registers [file] as open and makes it the active editor. */
-    fun openFile(file: File, workspace: Workspace? = activeWorkspace) {
+    fun openFile(file: File, workspace: Workspace? = activeWorkspace, displayName: String? = null) {
         val target = workspace ?: return
         val existing = target.documentFor(file)
         if (existing != null) {
@@ -627,10 +647,45 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
             if (!existing.isLoaded) loadDocument(existing, target)
             return
         }
-        val opened = OpenDocument(file)
+        val opened = OpenDocument(file, displayName)
         target.addDocument(opened)
         target.activate(file.absolutePath)
         loadDocument(opened, target)
+    }
+
+    /**
+     * Opens a file picked outside the workspace panel.
+     *
+     * A plain single-file buffer never showed up under "Opened Editors", so opening a
+     * `.json`/`.txt` from another app left the panel looking empty. The file is therefore
+     * always given a workspace - its own folder when no workspace owns it yet - and the
+     * tab carries [displayName] when the buffer edits a staged copy.
+     */
+    fun openExternalFile(file: File, displayName: String? = null): Boolean {
+        if (!file.isFile) return false
+        val dir = file.parentFile ?: return false
+        val existing = workspaces.firstOrNull { it.documentFor(file) != null }
+        if (existing != null) {
+            if (activeWorkspace?.root?.absolutePath != existing.root.absolutePath) {
+                activeWorkspace = existing
+            }
+            openFile(file, existing, displayName)
+            return true
+        }
+        // A folder inside an already open workspace (its tree is scanned, so a document
+        // may not exist yet) keeps that workspace rather than spending another slot.
+        val owner = workspaces.firstOrNull { it.root.absolutePath == dir.absolutePath }
+            ?: workspaces.firstOrNull { isWithinWorkspace(it.root, file) }
+        val target = owner ?: newWorkspaceFor(dir) ?: run {
+            statusMessage = "Close a workspace before opening another file"
+            return false
+        }
+        if (activeWorkspace?.root?.absolutePath != target.root.absolutePath) {
+            activeWorkspace = target
+        }
+        openFile(file, target, displayName)
+        persistWorkspaceFolders()
+        return true
     }
 
     /** Creates a new Pawn source file in the active workspace and opens it. */

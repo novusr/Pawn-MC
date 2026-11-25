@@ -40,6 +40,20 @@ class EditorViewModel(
     val file: File get() = File(filePath)
     val fileName: String get() = file.name
 
+    /**
+     * Name shown for the open file when it differs from the path on disk.
+     *
+     * A document opened from outside PawnMC ("Open with" / PocketSAMP File Manager)
+     * is copied into the cache as `pawnmc-open-<nano>.<ext>` so the editor has a real
+     * path to edit. Without this the tab, the title bar and the workspace list showed
+     * that staging name instead of the file the user actually opened.
+     */
+    var displayName by mutableStateOf<String?>(null)
+        private set
+
+    /** Name to render for the single file: [displayName] when set, else the file name. */
+    val visibleFileName: String get() = displayName ?: fileName
+
     /** Path currently held in [fileContent], used to skip redundant reloads. */
     private var loadedFilePath: String? = null
     private var latestEditorContent: String = ""
@@ -71,13 +85,45 @@ class EditorViewModel(
         private set
 
     init {
-        if (filePath.isNotBlank() && !workspace.isWorkspaceOpen) loadFile()
-        else isLoading = false
+        // A restored session repoints the single file at its cache copy; the document's
+        // own name is remembered next to the path so the tab keeps reading naturally.
+        displayName = config?.n_last_selected_file_display_name
+        if (filePath.isNotBlank()) {
+            // Deferred until the session finished restoring, not just one loop hop: a
+            // restored workspace owns the editor, and loading the single-file buffer
+            // underneath it left the file in no editor at all (an empty, tab-less
+            // document). A short timeout keeps a slow restore from blocking the editor.
+            viewModelScope.launch {
+                var waited = 0
+                while (workspace.isRestoring && waited < RESTORE_WAIT_MS) {
+                    kotlinx.coroutines.delay(16)
+                    waited += 16
+                }
+                if (workspace.isWorkspaceOpen) {
+                    isLoading = false
+                } else {
+                    loadFile()
+                }
+            }
+        } else {
+            isLoading = false
+        }
+    }
+
+    private companion object {
+        /** How long the initial file load waits for the workspace restore. */
+        const val RESTORE_WAIT_MS = 300
     }
 
     /** Points the editor at [path], the file the main screen has selected. */
-    fun attachFile(path: String) {
-        if (path.isBlank() || (path == filePath && loadedFilePath == path)) return
+    fun attachFile(path: String, name: String? = null) {
+        if (path.isBlank() || (path == filePath && loadedFilePath == path)) {
+            // A pure name change (the same buffer shown under its real document name)
+            // must not reload the file.
+            if (path.isNotBlank() && path == filePath) displayName = name
+            return
+        }
+        displayName = name
         if (path != filePath) {
             activeDocumentUri = null
             config?.n_last_selected_file_uri = null

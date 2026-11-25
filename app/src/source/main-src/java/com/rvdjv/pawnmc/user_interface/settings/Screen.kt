@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -546,9 +548,10 @@ fun SettingsScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
-        // The content stays in the Scaffold body; the scrollbar is a sibling that overlays
-        // its trailing edge, so the list keeps its full width and the bar still has a lane
-        // of its own (the extra end padding above reserves that lane).
+        // The content stays in the Scaffold body; the scrollbar overlays its trailing edge,
+        // so the list keeps its full width and the bar still has a lane of its own (the
+        // extra end padding above reserves that lane). The bar is the *last* child so it
+        // paints on top of the scrolling column instead of under it.
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -1694,13 +1697,15 @@ fun SettingsScreen(
         )
     }
 
-        // Settings scrollbar: its own Box takes the full height and the bar is aligned
-        // inside it, so `Modifier.align` always resolves against a `BoxScope` of this very
-        // call - no dependency on an enclosing Box from the Scaffold body.
-        // The bar sits in a Box that ignores the app bar's inner padding on the top
-        // edge only: it used to inherit it, and the collapsing app bar then slid over
-        // the top label (the "number 1 is hidden" report). The trailing lane padding
-        // keeps the cards clear of the bar itself.
+        // Settings scrollbar. It sits on the unpadded screen so its lane runs the full
+        // height, but the top label still clears the app bar: the status bar inset is the
+        // only part of `innerPadding` that must stay reserved, otherwise the collapsing
+        // app bar slid over the "1" and the bar read as having a single number.
+        //
+        // It used to be a sibling declared *after* the Scaffold, in the SettingsScreen
+        // Column, which laid it out below the visible area - half hidden under whatever
+        // was composed before it.
+        val statusBarPx = WindowInsets.statusBars.getTop(density)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -1711,7 +1716,10 @@ fun SettingsScreen(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .fillMaxHeight()
-                    .padding(top = 6.dp, bottom = 6.dp)
+                    .padding(
+                        top = with(density) { statusBarPx.toDp() } + 6.dp,
+                        bottom = 6.dp
+                    )
             )
         }
     }

@@ -27,6 +27,8 @@ class MainViewModel(
 
     companion object {
         const val TEMPORARY_FILE_NAME = "blank.pwn"
+        /** Prefix of the cache copy made for a `content://` document opened from outside. */
+        const val EXTERNAL_STAGING_PREFIX = "pawnmc-open-"
         /** English fallback text; the localized wording comes from `notice.temporary`. */
         const val TEMPORARY_FILE_NOTICE_KEY = "notice.temporary"
         const val TEMPORARY_FILE_NOTICE = "What you opened is just a temporary file. You can't edit it. It's like a statue, just for display. haha!."
@@ -171,6 +173,22 @@ class MainViewModel(
     var lastOpenedNonCompileFile by mutableStateOf(false)
         internal set
 
+    /**
+     * Name of the file the user actually picked, when [selectedFilePath] points at a
+     * cache copy. A `content://` open is staged as `pawnmc-open-<nano>.<ext>` so the
+     * editor has a real path to edit; without this the tab and the title bar showed
+     * that staging name instead of the document the user tapped.
+     */
+    var selectedFileDisplayName by mutableStateOf<String?>(null)
+        private set
+
+    /**
+     * Original document behind [selectedFilePath] when it is a cache copy. Kept so the
+     * Xed editor can show/register the tab under the real name and mirror saves back.
+     */
+    var selectedSourceFilePath by mutableStateOf<String?>(null)
+        private set
+
     var selectionError by mutableStateOf<String?>(null)
         private set
 
@@ -293,11 +311,16 @@ class MainViewModel(
     fun handleInitialUri(uri: Uri?) {
         uri?.let { u ->
             val appContext = context ?: return@let
+            // The provider knows the document's real name; the cache copy cannot.
+            val displayName = displayNameOf(u)
             val path = when (u.scheme) {
                 "content" -> {
                     val contentResolver = appContext.contentResolver
                     val copied = runCatching {
-                        val extension = u.lastPathSegment?.substringAfterLast('.', "pwn") ?: "pwn"
+                        val extension = displayName?.substringAfterLast('.', "")
+                            ?.takeIf { ext -> ext.isNotBlank() && ext.length <= 8 }
+                            ?: u.lastPathSegment?.substringAfterLast('.', "pwn")
+                            ?: "pwn"
                         val n_fileName = "pawnmc-open-${System.nanoTime()}.${extension}"
                         val n_target = File(appContext.cacheDir, n_fileName)
                         val input = contentResolver.openInputStream(u)
@@ -315,7 +338,16 @@ class MainViewModel(
             if (path != null) {
                 val validExtensions = setOf("pawn", "pwn", "p", "inc", "txt", "log", "cfg", "html", "json")
                 if (File(path).extension.lowercase() in validExtensions) {
+                    val stagedCopy = File(path).name.startsWith(EXTERNAL_STAGING_PREFIX)
                     selectFile(path, openedFromIntent = true)
+                    // `selectFile` clears the display name for every other pick; the
+                    // staging copy is the one exception, so it is set again afterwards.
+                    // The editor tab, the title bar and the workspace list then show the
+                    // document the user tapped instead of `pawnmc-open-<nano>.<ext>`.
+                    if (stagedCopy) {
+                        selectedFileDisplayName = displayName
+                        config.n_last_selected_file_display_name = displayName
+                    }
                     // Log-style files are not meant to be compiled: open Xed Editor
                     // directly instead of leaving the user on the main screen.
                     if (File(path).extension.lowercase() in setOf("txt", "log", "cfg", "html", "json")) {
@@ -327,6 +359,21 @@ class MainViewModel(
             }
         }
     }
+
+    /**
+     * Name the SAF provider reports for [uri], or the last path segment as a fallback.
+     * Returns `null` instead of a made-up name when neither is available.
+     */
+    fun displayNameOf(uri: Uri): String? = runCatching {
+        val resolver = context?.contentResolver ?: return@runCatching null
+        resolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)
+            ?.use { cursor ->
+                val index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                if (index >= 0 && cursor.moveToFirst()) cursor.getString(index) else null
+            }
+            ?.takeIf { it.isNotBlank() }
+            ?: uri.lastPathSegment?.substringAfterLast('/')?.takeIf { it.isNotBlank() }
+    }.getOrNull()
 
     fun ensureTemporaryFileSelected(): String {
         val privateFallback = context?.filesDir?.let { File(it, "PawnMC") }
@@ -355,6 +402,13 @@ class MainViewModel(
         }
         if (config.n_last_selected_file_path != path) {
             config.n_last_selected_file_uri = null
+        }
+        // Only a staged content copy carries a display name; any other pick clears it so
+        // a later selection never inherits the previous document's name.
+        if (!File(path).name.startsWith(EXTERNAL_STAGING_PREFIX)) {
+            selectedFileDisplayName = null
+            selectedSourceFilePath = null
+            config.n_last_selected_file_display_name = null
         }
 
         if (!config.n_ignore_case) {

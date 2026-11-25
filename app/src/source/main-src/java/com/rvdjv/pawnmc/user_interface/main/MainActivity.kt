@@ -220,7 +220,7 @@ class MainActivity : ComponentActivity() {
                         }
                     } else {
                         target.isFile && target.canRead() &&
-                            editorViewModel.workspace.registerExternalFile(target)
+                            editorViewModel.workspace.openExternalFile(target)
                     }
                     // Opening the file is what makes the editor renderable, so the outcome is
                     // published before the editor flag: no frame draws the main screen between
@@ -236,13 +236,16 @@ class MainActivity : ComponentActivity() {
                 // recreating its view model so the workspaces stay intact.
                 LaunchedEffect(currentFilePath, viewModel.lastOpenedNonCompileFile) {
                     if (!currentFilePath.isNullOrBlank()) {
-                        editorViewModel.attachFile(currentFilePath)
+                        editorViewModel.attachFile(currentFilePath, viewModel.selectedFileDisplayName)
                         // Register the file in workspace documents so it appears in
                         // the "Opened Editors" section of the workspace panel, not just
-                        // loaded silently into the editor buffer.
-                        if (editorViewModel.workspace.isWorkspaceOpen) {
-                            editorViewModel.workspace.openFile(File(currentFilePath))
-                        }
+                        // loaded silently into the editor buffer. A file opened from
+                        // outside the panel gets a workspace for its own folder, so it
+                        // always has a tab there instead of only a single-file buffer.
+                        editorViewModel.workspace.openExternalFile(
+                            File(currentFilePath),
+                            viewModel.selectedFileDisplayName
+                        )
                     }
                     // Log-style files (.txt, .log, .cfg, .html, .json) are not meant to be
                     // compiled: open Xed Editor directly instead of idling on the main

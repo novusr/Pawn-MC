@@ -518,6 +518,11 @@ fun MainScreen(
             }
         }
     ) { innerPadding ->
+        // The bar is positioned against the *unpadded* screen, so its lane runs the full
+        // height instead of stopping at the content padding. Positioned inside the padded
+        // Box it ended at `innerPadding.bottom`, which read as "the thumb stops halfway
+        // down the page".
+        Box(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
                 .padding(innerPadding)
@@ -793,9 +798,11 @@ fun MainScreen(
 
             item { Spacer(modifier = Modifier.height(SpaceL)) }
         }
+        }
         // Main-interface scrollbar: floats on the trailing edge of the screen, beside the
         // list. The numbers above and below the thumb are the first and last item it
-        // covers, so it reads the same way as the editor's gutter bar.
+        // covers, so it reads the same way as the editor's gutter bar. It deliberately
+        // clears the Scaffold's inner padding so its lane reaches the bottom edge.
         LazyListScrollbar(
             state = listState,
             modifier = Modifier
