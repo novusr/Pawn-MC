@@ -107,8 +107,6 @@ documentation and guides on how to use this application and set up your mobile w
 See the project roadmap in ``ROADMAP.rst`` for a full architecture overview, feature
 breakdown, and file-by-file analysis of the current codebase.
 
-.. image:: https://raw.githubusercontent.com/machijine/mdl-content/refs/heads/main/PAWNMC2.png
-
 User-Interface
 ------------
 
