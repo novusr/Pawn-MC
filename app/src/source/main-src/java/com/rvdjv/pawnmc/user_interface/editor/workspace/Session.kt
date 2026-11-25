@@ -265,17 +265,6 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     var statusMessage by mutableStateOf<String?>(null)
         private set
 
-    /**
-     * True while remembered folders are being re-opened.
-     *
-     * The host waits for this before deciding what to put in the editor, so a restored
-     * workspace is never overwritten by the single-file (blank.pwn) buffer behind it - the
-     * "the panel only shows blank.pwn" report. Restoring is still incremental: folders
-     * scan on the IO dispatcher and their tabs are queued one at a time.
-     */
-    var isRestoring by mutableStateOf(true)
-        private set
-
     /** Tab-restore queue, drained one document at a time.
      *
      * Declared before the init block below: the block runs in declaration
@@ -287,12 +276,11 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
     private val pendingTabLoads = ArrayDeque<Pair<Workspace, File>>()
 
     init {
+        // Both restores are synchronous in what they touch: the workspace list is filled
+        // here (only the folder scans are handed to the IO dispatcher) and the tabs are
+        // queued, so `isWorkspaceOpen` is already correct for the host's very first read.
         restoreRememberedWorkspaces()
         restoreRememberedTabs()
-        // Restoring only enqueues the work (scans run off the main thread, tabs are
-        // drained one per [TAB_RESTORE_DELAY_MS]); the flag drops on the next main-loop
-        // pass so the content is already composed when the host reacts to it.
-        android.os.Handler(android.os.Looper.getMainLooper()).post { isRestoring = false }
     }
 
     /**

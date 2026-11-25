@@ -88,31 +88,12 @@ class EditorViewModel(
         // A restored session repoints the single file at its cache copy; the document's
         // own name is remembered next to the path so the tab keeps reading naturally.
         displayName = config?.n_last_selected_file_display_name
-        if (filePath.isNotBlank()) {
-            // Deferred until the session finished restoring, not just one loop hop: a
-            // restored workspace owns the editor, and loading the single-file buffer
-            // underneath it left the file in no editor at all (an empty, tab-less
-            // document). A short timeout keeps a slow restore from blocking the editor.
-            viewModelScope.launch {
-                var waited = 0
-                while (workspace.isRestoring && waited < RESTORE_WAIT_MS) {
-                    kotlinx.coroutines.delay(16)
-                    waited += 16
-                }
-                if (workspace.isWorkspaceOpen) {
-                    isLoading = false
-                } else {
-                    loadFile()
-                }
-            }
-        } else {
-            isLoading = false
-        }
-    }
-
-    private companion object {
-        /** How long the initial file load waits for the workspace restore. */
-        const val RESTORE_WAIT_MS = 300
+        // `workspace.isWorkspaceOpen` is already settled here: WorkspaceSession fills its
+        // list synchronously in its own init and only hands the folder scans to the IO
+        // dispatcher. Reading it up front keeps this constructor free of any deferred
+        // work, which is what makes the view model constructible without a context.
+        if (filePath.isNotBlank() && !workspace.isWorkspaceOpen) loadFile()
+        else isLoading = false
     }
 
     /** Points the editor at [path], the file the main screen has selected. */
