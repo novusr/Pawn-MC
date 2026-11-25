@@ -19,7 +19,8 @@ Berkas
 
 ``PortalMain.kt``
     Composable utama portal: input perintah, riwayat, status kompilasi, dan
-    tombol salin.
+    tombol salin / unduh log (header ``[LOGGING ...]`` sama seperti Antarmuka
+    utama dan Panel Workspace) di kanan tombol full-screen.
 
 ``PortalCommandParser.kt``
     Memecah baris perintah menjadi verb, argumen, dan opsi.

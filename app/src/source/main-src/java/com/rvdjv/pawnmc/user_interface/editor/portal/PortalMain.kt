@@ -1,7 +1,10 @@
 ﻿package com.rvdjv.pawnmc.user_interface.editor.portal
 
 import android.content.Context
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -32,7 +35,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -72,6 +77,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.rvdjv.pawnmc.apps_data.data_compiler.Compiler
 import com.rvdjv.pawnmc.apps_data.data_config.ContentConfig
+import com.rvdjv.pawnmc.apps_data.data_logging._log_export
 import com.rvdjv.pawnmc.user_interface._Icons
 import kotlinx.coroutines.launch
 import java.io.File
@@ -82,7 +88,11 @@ private data class PortalEntry(
     val output: String,
     val markdown: Boolean = false,
     /** Whether the `% command` line is echoed above the output. */
-    val showPrompt: Boolean = true
+    val showPrompt: Boolean = true,
+    /** Source path of a `pawncc` run, fed into the exported log header. */
+    val sourcePath: String? = null,
+    /** Compile time of a `pawncc` run, fed into the exported log header. */
+    val durationLabel: String? = null
 )
 
 @Composable
@@ -115,6 +125,26 @@ internal fun DeveloperPortal(
     LaunchedEffect(isExpanded) { onExpandedChange(isExpanded) }
 
     fun text(key: String) = PortalText.get(context, key, language)
+
+    // Saving a log is the same flow as the main interface and the workspace panel:
+    // the system "create document" picker, so the `.log` lands wherever the user owns.
+    var pendingLogText by remember { mutableStateOf("") }
+    val downloadLogLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+        if (uri != null) {
+            val saved = runCatching {
+                context.contentResolver.openOutputStream(uri)?.bufferedWriter()?.use { writer ->
+                    writer.write(pendingLogText)
+                } ?: error("Could not open the selected destination")
+            }.isSuccess
+            Toast.makeText(
+                context,
+                text(if (saved) "terminal.log.download.success" else "terminal.log.download.failed"),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 
     /** Runs [commandLine] as if it had been typed in the console. */
     fun submit(commandLine: String = input.trim(), isAutomatic: Boolean = false) {
@@ -149,6 +179,46 @@ internal fun DeveloperPortal(
 
     LaunchedEffect(entries.size, isRunning) {
         if (!isRunning) scrollState.animateScrollTo(scrollState.maxValue)
+    }
+
+    /**
+     * Everything the console currently shows, in order, which is exactly what the
+     * copy / download buttons act on. Markdown entries are plain text here.
+     */
+    fun transcriptText(): String = entries.joinToString("\n\n") { entry ->
+        if (entry.showPrompt) "% ${entry.command}\n${entry.output}" else entry.output
+    }.trim()
+
+    /** Walks the transcript backwards to the most recent `pawncc` run. */
+    fun lastCompileEntry(): PortalEntry? =
+        entries.lastOrNull { it.command.trim().substringBefore(' ').equals("pawncc", ignoreCase = true) }
+
+    /**
+     * Builds the enriched `.log` header — date, compiler and app version, device,
+     * compile info — in front of the transcript, the same block the main interface
+     * writes. Returns `null` when no compile has run yet.
+     */
+    fun buildLogText(): String? {
+        val lastCompile = lastCompileEntry() ?: return null
+        val output = transcriptText().takeIf { it.isNotBlank() } ?: return null
+        val appVersion = runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull()
+        val sourcePath = lastCompile.sourcePath
+            ?: PortalCommandParser.tokenize(lastCompile.command)
+                ?.drop(1)?.firstOrNull { !it.startsWith("-") }
+            ?: activeSource?.path
+        val info = _log_export.HeaderInfo(
+            compilerVersion = selectedVersion.label,
+            appVersion = appVersion,
+            sourcePath = sourcePath,
+            exitCode = null,
+            durationLabel = lastCompile.durationLabel,
+            lineCount = output.lines().size
+        )
+        // The recorded source wins over `activeSource`, which may have moved on
+        // between the compile and the tap on download.
+        return _log_export.buildHeader(info) + output
     }
 
     BackHandler(enabled = true, onBack = onClose)
@@ -223,6 +293,8 @@ internal fun DeveloperPortal(
                         text = "Developer Portal",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
                     Text(
@@ -237,6 +309,62 @@ internal fun DeveloperPortal(
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(horizontal = 8.dp)
                     )
+                    // Copy / download sit right before the expand toggle, with the
+                    // same icons and behaviour the main interface and the workspace
+                    // panel use. Both stay disabled until a `pawncc` run exists.
+                    val logEnabled = !isRunning && lastCompileEntry() != null
+                    val logTint = if (logEnabled) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                    }
+                    IconButton(
+                        onClick = {
+                            val logText = buildLogText()
+                            if (logText == null) {
+                                Toast.makeText(context, text("terminal.log.empty"), Toast.LENGTH_SHORT).show()
+                            } else {
+                                pendingLogText = logText
+                                val baseName = lastCompileEntry()?.let { entry ->
+                                    entry.sourcePath ?: PortalCommandParser.tokenize(entry.command)
+                                        ?.drop(1)?.firstOrNull { arg -> !arg.startsWith("-") }
+                                }?.let { File(it).nameWithoutExtension }
+                                    ?.takeIf { it.isNotBlank() }
+                                    ?: activeSource?.nameWithoutExtension
+                                        ?.takeIf { it.isNotBlank() }
+                                    ?: "pawnmc-compile-output"
+                                downloadLogLauncher.launch("$baseName.log")
+                            }
+                        },
+                        enabled = logEnabled,
+                        modifier = Modifier.size(40.dp).testTag("developer_portal_download")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDownward,
+                            contentDescription = text("terminal.download"),
+                            tint = logTint
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            val logText = buildLogText()
+                            if (logText == null) {
+                                Toast.makeText(context, text("terminal.log.empty"), Toast.LENGTH_SHORT).show()
+                            } else {
+                                // Chunked so a long console log is not clipped by the OS.
+                                _log_export.copyChunked(context, logText, "PawnMC Compilation Result")
+                                Toast.makeText(context, text("terminal.log.copy.success"), Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        enabled = logEnabled,
+                        modifier = Modifier.size(40.dp).testTag("developer_portal_copy")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ContentCopy,
+                            contentDescription = text("terminal.copy"),
+                            tint = logTint
+                        )
+                    }
                     // Expand toggle: right after the greeting and before the close
                     // cross, forcing the card over the whole canvas so every floating
                     // control of the host disappears while it is on.
@@ -390,7 +518,14 @@ private suspend fun runCommandAndUpdateTranscript(
             onVersionChange, onCompile, clearTranscript = { entries.clear() }
         )
         if (result.record) {
-            entries += PortalEntry(commandLine, result.output, result.markdown, showPrompt = !isAutomatic)
+            entries += PortalEntry(
+                commandLine,
+                result.output,
+                result.markdown,
+                showPrompt = !isAutomatic,
+                sourcePath = result.sourcePath,
+                durationLabel = result.durationLabel
+            )
             trimTranscript(entries)
         }
     } finally {
@@ -402,8 +537,18 @@ private suspend fun runCommandAndUpdateTranscript(
 private data class PortalCommandResult(
     val output: String,
     val markdown: Boolean = false,
-    val record: Boolean = true
-)
+    val record: Boolean = true,
+    /** Compile time of a `pawncc` run, for the exported log header. */
+    val durationLabel: String? = null,
+    /** Source path of a `pawncc` run, for the exported log header. */
+    val sourcePath: String? = null
+) {
+    fun withSource(source: File?) = copy(
+        sourcePath = source?.path,
+        durationLabel = Regex("(?i)compilation time:\\s*(.+)")
+            .find(output)?.groupValues?.get(1)?.trim()
+    )
+}
 
 private suspend fun executeCommand(
     commandLine: String,
@@ -475,12 +620,12 @@ private suspend fun pawnccCommand(
     val invocation = root?.let { PortalCommandParser.pawnccInvocation(tokens.drop(1), it) }
         ?: return PortalCommandResult(text("terminal.error.source"))
     if (Compiler.isRestartRequired(selectedVersion)) return PortalCommandResult(text("terminal.error.restart"))
-    var result = runCatching { onCompile(invocation.source, invocation.options, selectedVersion) }
+    val result = runCatching { onCompile(invocation.source, invocation.options, selectedVersion) }
         .getOrElse { "${text("terminal.error.execution")} ${it.message.orEmpty()}" }
     // Pure auto-switch: 3.10.7 output mentioning __addressof moves the stored
     // selection to 3.10.11; output from 3.10.11 itself is left alone.
     Compiler.applyAddressOfPolicy(result, selectedVersion)
-    return PortalCommandResult(result)
+    return PortalCommandResult(result).withSource(invocation.source)
 }
 
 private fun listFilesCommand(activeSource: File?, workspaceRoot: File?): PortalCommandResult {

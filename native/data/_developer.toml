@@ -140,3 +140,45 @@ en = "Show or hide the input"
 tl = "Ipakita o itago ang input"
 es = "Mostrar u ocultar la entrada"
 ru = "Pokazat ili skryt vvod"
+
+[terminal.download]
+id = "Unduh log kompilasi"
+en = "Download compile log"
+tl = "I-download ang compile log"
+es = "Descargar el registro de compilación"
+ru = "Sokhranit log kompilyacii"
+
+[terminal.copy]
+id = "Salin log kompilasi"
+en = "Copy compile log"
+tl = "Kopyahin ang compile log"
+es = "Copiar el registro de compilación"
+ru = "Kopirovat log kompilyacii"
+
+[terminal.log.empty]
+id = "Belum ada log kompilasi. Ketik pawncc dulu."
+en = "No compile log yet. Run pawncc first."
+tl = "Wala pang compile log. Patakbuhin muna ang pawncc."
+es = "Aún no hay registro de compilación. Ejecuta pawncc primero."
+ru = "Loga kompilyacii poka net. Snachala zapustite pawncc."
+
+[terminal.log.download.success]
+id = "Log berhasil diunduh"
+en = "Log downloaded successfully"
+tl = "Matagumpay na na-download ang log"
+es = "Registro descargado correctamente"
+ru = "Log uspeshno sokhranen"
+
+[terminal.log.download.failed]
+id = "Gagal mengunduh log"
+en = "Failed to download log"
+tl = "Nabigo ang pag-download ng log"
+es = "No se pudo descargar el registro"
+ru = "Ne udalos sokhranit log"
+
+[terminal.log.copy.success]
+id = "Log disalin ke clipboard"
+en = "Log copied to clipboard"
+tl = "Nakopya ang log sa clipboard"
+es = "Registro copiado al portapapeles"
+ru = "Log skopirovan v bufer obmena"
