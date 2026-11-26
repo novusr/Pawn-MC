@@ -49,7 +49,7 @@ jobs:
           "$SDKMANAGER" --install "platform-tools" "cmdline-tools;latest" "platforms;android-36" "build-tools;36.0.0" "ndk;29.0.14206865" "ndk;28.2.13676358" "cmake;3.22.1"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
           add-job-summary: 'always'
@@ -157,7 +157,7 @@ jobs:
 
       - name: Upload Release APK
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-${{ matrix.label }}-release
           path: app/build/outputs/apk/${{ matrix.flavor }}/release/*.apk
@@ -177,7 +177,7 @@ jobs:
       - name: Upload Lint Report
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lint-report-${{ matrix.label }}
           path: app/build/reports
@@ -214,7 +214,7 @@ jobs:
           "$SDKMANAGER" --install "platform-tools" "cmdline-tools;latest" "platforms;android-36" "build-tools;36.0.0" "ndk;29.0.14206865" "ndk;28.2.13676358" "cmake;3.22.1"
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           cache-read-only: true
           add-job-summary: 'always'
@@ -229,7 +229,7 @@ jobs:
       - name: Upload Test Results
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: app/build/reports/tests/
