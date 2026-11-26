@@ -912,11 +912,11 @@ ru = "Vyberite fail Pawn na osnovnom khranilishche"
 es = "Elige un archivo Pawn en el almacenamiento principal"
 
 [main.output.title]
-id = "-------------"
-en = "-------------"
-tl = "-------------"
-ru = "-------------"
-es = "-------------"
+id = "#############"
+en = "#############"
+tl = "#############"
+ru = "#############"
+es = "#############"
 
 [main.output.actions]
 id = "Aksi"
