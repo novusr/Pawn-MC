@@ -1009,6 +1009,27 @@ tl = "Ipakita ang Quick Keys"
 ru = "Pokazat bystrye klavishi"
 es = "Mostrar teclas rapidas"
 
+[editor.menu.select_all]
+id = "Pilih Semua"
+en = "Select All"
+tl = "Piliin Lahat"
+ru = "Vybrat vse"
+es = "Seleccionar todo"
+
+[editor.menu.jump]
+id = "Lompat ke Baris..."
+en = "Jump to Line..."
+tl = "Pumunta sa Linya..."
+ru = "Perejti k stroke..."
+es = "Ir a linea..."
+
+[editor.menu.jump_bracket]
+id = "Lompat ke Kurung Berpasangan"
+en = "Jump to Matching Bracket"
+tl = "Pumunta sa Kapares na Bracket"
+ru = "Perejti k parnoj skobke"
+es = "Ir al parentesis correspondiente"
+
 [editor.about.menu]
 id = "Tentang Xed Editor"
 en = "About Xed Editor"

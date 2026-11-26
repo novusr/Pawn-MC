@@ -1567,7 +1567,7 @@ fun EditorScreen(
                             DropdownMenuItem(
                                 text = { Text("Open Workspace Folder...") },
                                 leadingIcon = {
-                                    Icon(_Icons.Workspace, contentDescription = null)
+                                    Icon(_Icons.Workspace, contentDescription = null, tint = XED_MENU_ICON_TINT)
                                 },
                                 onClick = {
                                     dismissAutoCompletion()
@@ -1587,7 +1587,7 @@ fun EditorScreen(
                                         )
                                     },
                                     leadingIcon = {
-                                        Icon(Icons.Filled.FolderOpen, contentDescription = null)
+                                        Icon(Icons.Filled.FolderOpen, contentDescription = null, tint = XED_MENU_ICON_TINT)
                                     },
                                     enabled = workspace.activeWorkspace != null,
                                     onClick = {
@@ -1610,7 +1610,7 @@ fun EditorScreen(
                                 DropdownMenuItem(
                                     text = { Text("Close All Workspaces") },
                                     leadingIcon = {
-                                        Icon(Icons.Filled.Close, contentDescription = null)
+                                        Icon(Icons.Filled.Close, contentDescription = null, tint = XED_MENU_ICON_TINT)
                                     },
                                     enabled = workspace.openWorkspaces.isNotEmpty(),
                                     onClick = {
@@ -1631,7 +1631,7 @@ fun EditorScreen(
                             DropdownMenuItem(
                                 text = { Text("Search in Workspace") },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.Search, contentDescription = null)
+                                    Icon(Icons.Filled.Search, contentDescription = null, tint = XED_MENU_ICON_TINT)
                                 },
                                 onClick = {
                                     dismissAutoCompletion()
@@ -1642,7 +1642,7 @@ fun EditorScreen(
                             DropdownMenuItem(
                                 text = { Text("Replace Words per File") },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.FindReplace, contentDescription = null)
+                                    Icon(Icons.Filled.FindReplace, contentDescription = null, tint = XED_MENU_ICON_TINT)
                                 },
                                 onClick = {
                                     dismissAutoCompletion()
@@ -1653,7 +1653,7 @@ fun EditorScreen(
                             DropdownMenuItem(
                                 text = { Text("Replace Words All Files") },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.FindReplace, contentDescription = null)
+                                    Icon(Icons.Filled.FindReplace, contentDescription = null, tint = XED_MENU_ICON_TINT)
                                 },
                                 onClick = {
                                     dismissAutoCompletion()
@@ -1664,7 +1664,7 @@ fun EditorScreen(
                             DropdownMenuItem(
                                 text = { Text("Hash Generator") },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.PrecisionManufacturing, contentDescription = null)
+                                    Icon(Icons.Filled.PrecisionManufacturing, contentDescription = null, tint = XED_MENU_ICON_TINT)
                                 },
                                 onClick = {
                                     dismissAutoCompletion()
@@ -1681,7 +1681,8 @@ fun EditorScreen(
                                 leadingIcon = {
                                     Icon(
                                         imageVector = if (isExplorerVisible) Icons.Filled.ChevronRight else Icons.Filled.Explore,
-                                        contentDescription = null
+                                        contentDescription = null,
+                                        tint = XED_MENU_ICON_TINT
                                     )
                                 },
                                 onClick = {
@@ -1703,7 +1704,8 @@ fun EditorScreen(
                                 leadingIcon = {
                                     Icon(
                                         imageVector = if (floatingButtonsHidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
-                                        contentDescription = null
+                                        contentDescription = null,
+                                        tint = XED_MENU_ICON_TINT
                                     )
                                 },
                                 onClick = {
@@ -1713,9 +1715,9 @@ fun EditorScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Select All") },
+                                text = { Text(localizer.get("editor.menu.select_all", appLanguage, "Select All")) },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.SelectAll, contentDescription = null)
+                                    Icon(Icons.Filled.SelectAll, contentDescription = null, tint = XED_MENU_ICON_TINT)
                                 },
                                 onClick = {
                                     dismissAutoCompletion()
@@ -1724,9 +1726,13 @@ fun EditorScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Jump to Line...") },
+                                text = { Text(localizer.get("editor.menu.jump", appLanguage, "Jump to Line...")) },
                                 leadingIcon = {
-                                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = null,
+                                        tint = XED_MENU_ICON_TINT
+                                    )
                                 },
                                 onClick = {
                                     dismissAutoCompletion()
@@ -1758,7 +1764,8 @@ fun EditorScreen(
                                 leadingIcon = {
                                     Icon(
                                         imageVector = Icons.Filled.SwapHoriz,
-                                        contentDescription = null
+                                        contentDescription = null,
+                                        tint = XED_MENU_ICON_TINT
                                     )
                                 },
                                 onClick = {
@@ -1780,7 +1787,8 @@ fun EditorScreen(
                                 leadingIcon = {
                                     Icon(
                                         imageVector = if (editorAutoCloseEnabled) Icons.Filled.Code else Icons.Filled.Block,
-                                        contentDescription = null
+                                        contentDescription = null,
+                                        tint = XED_MENU_ICON_TINT
                                     )
                                 },
                                 onClick = {
@@ -1813,9 +1821,9 @@ fun EditorScreen(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Jump to Matching Bracket") },
+                                text = { Text(localizer.get("editor.menu.jump_bracket", appLanguage, "Jump to Matching Bracket")) },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.Code, contentDescription = null)
+                                    Icon(Icons.Filled.Code, contentDescription = null, tint = XED_MENU_ICON_TINT)
                                 },
                                 onClick = {
                                     dismissAutoCompletion()
@@ -1832,7 +1840,11 @@ fun EditorScreen(
                             DropdownMenuItem(
                                 text = { Text(if (isWordWrap) "Disable Word Wrap" else "Enable Word Wrap") },
                                 leadingIcon = {
-                                    Icon(Icons.AutoMirrored.Filled.WrapText, contentDescription = null)
+                                    Icon(
+                                        Icons.AutoMirrored.Filled.WrapText,
+                                        contentDescription = null,
+                                        tint = XED_MENU_ICON_TINT
+                                    )
                                 },
                                 onClick = {
                                     dismissAutoCompletion()
@@ -1846,7 +1858,8 @@ fun EditorScreen(
                                 leadingIcon = {
                                     Icon(
                                         imageVector = if (isReadOnly) Icons.Filled.EditNote else Icons.Filled.Visibility,
-                                        contentDescription = null
+                                        contentDescription = null,
+                                        tint = XED_MENU_ICON_TINT
                                     )
                                 },
                                 onClick = {
@@ -1861,7 +1874,8 @@ fun EditorScreen(
                                 leadingIcon = {
                                     Icon(
                                         imageVector = if (isLineNumbers) Icons.Filled.FormatListNumbered else Icons.Filled.VisibilityOff,
-                                        contentDescription = null
+                                        contentDescription = null,
+                                        tint = XED_MENU_ICON_TINT
                                     )
                                 },
                                 onClick = {
@@ -1882,7 +1896,7 @@ fun EditorScreen(
                                     )
                                 },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.Keyboard, contentDescription = null)
+                                    Icon(Icons.Filled.Keyboard, contentDescription = null, tint = XED_MENU_ICON_TINT)
                                 },
                                 onClick = {
                                     isQuickSymbolBarVisible = !isQuickSymbolBarVisible
@@ -1893,7 +1907,9 @@ fun EditorScreen(
                                 text = {
                                     Text(localizer.get("editor.about.menu", appLanguage, "About PawnMC Editor"))
                                 },
-                                leadingIcon = { Icon(Icons.Filled.Info, contentDescription = null) },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.Info, contentDescription = null, tint = XED_MENU_ICON_TINT)
+                                },
                                 onClick = {
                                     showMenu = false
                                     showAboutDialog = true
@@ -2900,6 +2916,16 @@ private val COMPILE_BUTTON_SIZE = 58.dp
 
 /** Diameter of the floating workspace panel button. */
 private val PANEL_BUTTON_SIZE = 48.dp
+
+/**
+ * Tint for every leading icon in the editor options menu.
+ *
+ * The icons used to inherit `onSurface` (black on a light theme, white on a dark
+ * one), which made the whole menu read as one flat grey column. A single warm
+ * orange - the same family as the syntax palette's keywords - gives each row a
+ * fixed accent that no longer depends on the app theme.
+ */
+private val XED_MENU_ICON_TINT = Color(0xFFFF8A00)
 
 /** Icon colours for the floating actions. */
 private val FLOAT_TINT_NEUTRAL = Color(0xFF8A8A94)

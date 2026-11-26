@@ -90,6 +90,7 @@ Fitur yang Jarang Diketahui
 * **Developer Portal** — terminal mini (perintah ``help``, ``docs``, ``pawncc``, ``switch``, ``ls``, ``time``, ``deviceinfo``) untuk kompilasi cepat tanpa meninggalkan editor.
 * **Tombol Mengambang** — gunakan opsi "Sembunyikan tombol mengambang" di menu untuk menyembunyikan seluruh kontrol mengambang agar kanvas kode bersih; pilih "Tampilkan tombol mengambang" untuk mengembalikan portal, workspace, toolbar, dan tombol kompilasi.
 * **Word Wrap / Read-Only / Line Numbers** — ketiganya bisa di-toggle dari menu dan hanya berlaku untuk sesi ini.
+* **Ikon Menu Oranye** — setiap ikon di menu opsi editor (Select All, Jump to Line, Word Wrap, dan lain-lain) kini memakai satu warna oranye (``#FF8A00``) yang sama, tidak lagi hitam/putih yang mengikuti tema, jadi tiap baris menu punya aksen tetap.
 
 **English (US)**
 
@@ -102,6 +103,7 @@ Fitur yang Jarang Diketahui
 * **Hash Generator** — the "Hash Generator" menu computes hashes (SHA-256 and friends) for typed text or a picked file.
 * **Developer Portal** — a mini terminal (``help``, ``docs``, ``pawncc``, ``switch``, ``ls``, ``time``, ``deviceinfo``) for quick compiles without leaving the editor.
 * **Floating Buttons** — choose "Hide floating buttons" in the overflow menu for a clear code canvas, then "Show floating buttons" to restore the portal, workspace, toolbar, and compile controls. This toggle lasts for the editor session.
+* **Orange Menu Icons** — every icon in the editor options menu (Select All, Jump to Line, Word Wrap, and so on) now shares one orange tint (``#FF8A00``) instead of the theme's black/white, so each row keeps a constant accent.
 * **Word Wrap / Read-Only / Line Numbers** — all three toggle from the menu and only last for the session.
 
 **Tagalog**
