@@ -3,6 +3,7 @@
 import android.content.Context
 import android.net.Uri
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -56,6 +57,29 @@ class EditorViewModel(
 
     /** Path currently held in [fileContent], used to skip redundant reloads. */
     private var loadedFilePath: String? = null
+
+    //
+    // Observation counters, read only through [showsStandaloneFile].
+    //
+    // Whether the open file belongs to a workspace is answered by walking every workspace
+    // and its documents. That answer is read during composition at least four times per
+    // `EditorScreen` pass, on *every* recomposition. Keeping it as a plain getter meant the
+    // snapshot system never saw it: a workspace document being registered (or a workspace
+    // opening) did not invalidate the screen, so the tab strip followed the click while
+    // the canvas kept rendering the old file. Reading these counters inside the getter
+    // subscribes the composition to the exact changes that can flip the answer.
+    //
+    /** Bumped whenever the list of open workspaces may have changed. */
+    private var workspaceListRevision by mutableIntStateOf(0)
+    /** Bumped whenever any workspace may have gained, dropped or activated a document. */
+    private var workspaceDocumentsRevision by mutableIntStateOf(0)
+
+    /** Re-marks the standalone question as recomposition-worthy. */
+    fun invalidateWorkspaceObservation() {
+        workspaceListRevision++
+        workspaceDocumentsRevision++
+    }
+
     private var latestEditorContent: String = ""
     private var loadGeneration = 0
     private var activeSaveJob: kotlinx.coroutines.Job? = null
@@ -129,8 +153,14 @@ class EditorViewModel(
      * an empty editor even though the document content had been read.
      */
     val showsStandaloneFile: Boolean
-        get() = filePath.isNotBlank() &&
-            !workspace.openWorkspaces.any { it.documentFor(file) != null }
+        get() {
+            // Snapshot reads first: they are what makes the composition re-evaluate the
+            // answer when a workspace opens or a document is registered (see the counters
+            // above). The plain scan below is not observed by Compose.
+            if (workspaceListRevision < 0 || workspaceDocumentsRevision < 0) return false
+            return filePath.isNotBlank() &&
+                !workspace.openWorkspaces.any { it.documentFor(file) != null }
+        }
 
     fun loadFile() {
         val n_path = filePath

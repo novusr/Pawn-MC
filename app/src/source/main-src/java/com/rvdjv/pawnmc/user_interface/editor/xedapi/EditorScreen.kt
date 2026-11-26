@@ -447,13 +447,32 @@ fun EditorScreen(
     // The active file decides the language: Pawn scripts keep the Pawn highlighter,
     // while an SA-MP `server.cfg` switches to the config highlighter and completion.
     //
-    // The standalone buffer wins when it belongs to no workspace: a file opened from
-    // another app is loaded into `viewModel` even while an unrelated workspace sits in
-    // the background, and reading only the workspace would show an empty editor.
-    val standaloneFile = viewModel.showsStandaloneFile
-    val activeDocument = if (standaloneFile) null else workspace.activeDocument
+    // Priority: the workspace's active document always wins. A single-file buffer (the
+    // file the main screen selected, or an outside document) is only rendered when the
+    // workspace has no active document at all. The previous rule let a leftover
+    // single-file path - typically the blank.pwn starter or the last file picked on the
+    // main screen - shadow every workspace tab: tapping another file switched the tab
+    // strip while the canvas kept rendering that stale standalone buffer, which is the
+    // "opening a file does nothing" report.
+    val workspaceDocument = workspace.activeDocument
+    val standaloneFile = workspaceDocument == null && viewModel.showsStandaloneFile
+    val activeDocument = workspaceDocument
     val activeFilePath = activeDocument?.file?.absolutePath
         ?: if (standaloneFile || !workspace.isWorkspaceOpen) viewModel.filePath else null
+
+    // The workspace lists are plain scans, so a document being registered or a folder
+    // being opened never invalidated this screen by itself: the tab strip followed the
+    // tap while the canvas kept the previous buffer (the "clicking another file does
+    // nothing" report). The session therefore reports every such change here, and the
+    // buffer shown by the widget is re-evaluated below.
+    DisposableEffect(workspace) {
+        val previous = workspace.onWorkspaceObservationInvalidated
+        workspace.onWorkspaceObservationInvalidated = {
+            previous()
+            viewModel.invalidateWorkspaceObservation()
+        }
+        onDispose { workspace.onWorkspaceObservationInvalidated = previous }
+    }
     val codeLanguage = remember(activeFilePath, appLanguage) {
         CodeLanguages.forFile(activeFilePath?.let(::File), appLanguage)
     }
@@ -624,6 +643,10 @@ fun EditorScreen(
 
     val openWorkspaceFile: (File) -> Unit = { file ->
         workspace.openFile(file)
+        // Opening a file is an explicit switch of the canvas: it must never be swallowed
+        // by the "what changed?" guards the reload watcher uses, so the question of
+        // which buffer the widget shows is asked again right away.
+        viewModel.invalidateWorkspaceObservation()
         isExplorerVisible = true
     }
 
@@ -2029,7 +2052,10 @@ fun EditorScreen(
                     activePath = workspace.activePath,
                     onSelectTab = { file ->
                         dismissAutoCompletion()
+                        // Explicit tab switch: re-ask which buffer the canvas shows even when
+                        // the document object and its text did not change.
                         workspace.openFile(file)
+                        viewModel.invalidateWorkspaceObservation()
                     },
                     onCloseTab = { file ->
                         dismissAutoCompletion()
@@ -2246,10 +2272,25 @@ fun EditorScreen(
                                 val targetPath = document?.file?.absolutePath ?: singlePath
                                 val targetContent = document?.content ?: singleContent
                                 if (loadedBuffer.needsReload(document, singlePath, singleContent, editorReloadToken)) {
-                                    editor.setText(targetContent)
-                                    loadedBuffer.store(document, targetPath, targetContent, editorReloadToken)
-                                    cursorLine = 0
-                                    cursorCol = 0
+                                    // A document whose disk read is still in flight reports empty
+                                    // content, and rendering it would erase the previous file
+                                    // (and its caret) for a frame. Switching tabs now waits
+                                    // for the buffer instead - unless the document is the one
+                                    // already on screen, whose empty text is genuine.
+                                    val waitingForRead = document != null &&
+                                        !document.isLoaded &&
+                                        document.file.absolutePath != loadedBuffer.path &&
+                                        targetContent.isEmpty()
+                                    if (waitingForRead) {
+                                        // Do nothing: the update block reads the document's
+                                        // snapshot state, so it runs again the moment the disk
+                                        // read lands and this branch is re-evaluated.
+                                    } else {
+                                        editor.setText(targetContent)
+                                        loadedBuffer.store(document, targetPath, targetContent, editorReloadToken)
+                                        cursorLine = 0
+                                        cursorCol = 0
+                                    }
                                 }
                             },
                             modifier = Modifier.fillMaxSize()
@@ -2364,11 +2405,15 @@ fun EditorScreen(
                                 },
                                 onSelectFile = { file ->
                                     dismissAutoCompletion()
-                                    workspace.openFile(file)
+                                    // Same explicit switch as the explorer rows: a tab click
+                                    // must reload the canvas even when the document was already
+                                    // activated earlier (returning to it after another file).
+                                    openWorkspaceFile(file)
                                 },
                                 onOpenHit = { hit ->
                                     dismissAutoCompletion()
                                     workspace.openFile(hit.file)
+                                    viewModel.invalidateWorkspaceObservation()
                                     // The buffer is filled asynchronously, so the jump has
                                     // to wait for the reload to land in the widget.
                                     editorRef?.postDelayed({

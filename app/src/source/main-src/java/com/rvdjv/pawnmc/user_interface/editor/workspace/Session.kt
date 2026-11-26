@@ -82,8 +82,15 @@ data class WorkspaceNode(
 
 /**
  * A folder opened in the PawnMC editor, with its own tree, editors and search.
+ *
+ * [onDocumentsChanged] is the session's observation hook: it is called whenever the
+ * open-editor list of this folder changes, so the host can invalidate whatever it derived
+ * from "does this workspace own the active file?".
  */
-class Workspace(val root: File) {
+class Workspace(
+    val root: File,
+    private val onDocumentsChanged: () -> Unit = {}
+) {
 
     val name: String = root.name
 
@@ -123,6 +130,10 @@ class Workspace(val root: File) {
 
     fun addDocument(document: OpenDocument) {
         documents.add(document)
+        // The editor decides whether the active file is a standalone buffer by looking
+        // whether any workspace owns it; nothing reached the snapshot system from this
+        // list before, so the canvas kept showing the previous file.
+        onDocumentsChanged()
     }
 
     fun removeDocument(path: String) {
@@ -131,6 +142,7 @@ class Workspace(val root: File) {
         if (activePath == path) {
             activePath = documents.getOrNull(documents.lastIndex)?.file?.absolutePath
         }
+        if (index >= 0) onDocumentsChanged()
     }
 
     fun activate(path: String?) {
@@ -417,6 +429,9 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         if (restored.isNotEmpty()) {
             activeWorkspace = restored.first()
         }
+        // The restore is what closes the first "is a workspace open?" question, and it
+        // can also revive the very file the host was showing as a standalone buffer.
+        notifyObservationChanged()
     }
 
     /** Opens [dir] as a workspace and brings it to the front. */
@@ -445,10 +460,24 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         statusMessage = "Workspace opened: ${dir.name}"
     }
 
+    /**
+     * Called whenever the set of open workspaces, the workspace in front, or the open
+     * editors of any workspace may have changed.
+     *
+     * The host uses it to invalidate its derived "is the active file standalone?" state;
+     * the workspace lists themselves are plain scans that Compose does not observe.
+     */
+    var onWorkspaceObservationInvalidated: () -> Unit = {}
+
+    private fun notifyObservationChanged() {
+        onWorkspaceObservationInvalidated()
+    }
+
     /** Brings [workspace] to the front; the editor follows its active file. */
     fun activateWorkspace(workspace: Workspace) {
         if (workspaces.any { it.root.absolutePath == workspace.root.absolutePath }) {
             activeWorkspace = workspace
+            notifyObservationChanged()
         }
     }
 
@@ -468,6 +497,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         if (activeWorkspace != null && activeWorkspace?.root?.absolutePath == closingPath) {
             activeWorkspace = workspaces.lastOrNull()
         }
+        notifyObservationChanged()
     }
 
     /** Closes the workspace folder in front; false when none was open. */
@@ -489,6 +519,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         // The store is cleared too, otherwise the next launch would silently bring
         // every folder back and make this menu item look like it did nothing.
         config?.clearWorkspaceFolders()
+        notifyObservationChanged()
     }
 
     /** Registers a file opened from outside the workspace panel as a tab. */
@@ -507,10 +538,13 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         rememberDayFolder: Boolean = true
     ): Workspace? {
         if (isAtWorkspaceLimit) return null
-        val created = Workspace(dir)
+        // The hook is wired before the folder joins the list: the very next recomposition
+        // must already see a workspace that reports its document changes.
+        val created = Workspace(dir, onDocumentsChanged = ::notifyObservationChanged)
         workspaces.add(created)
         scan(created)
         if (persist && rememberDayFolder) persistWorkspaceFolders()
+        notifyObservationChanged()
         return created
     }
 
@@ -568,6 +602,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         // The store is cleared too, otherwise the next launch would silently bring
         // every folder back and make this menu item look like it did nothing.
         config?.clearWorkspaceFolders()
+        notifyObservationChanged()
     }
 
     /** Re-scans a workspace folder; called after files are replaced on disk. */
@@ -727,6 +762,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
                 activeWorkspace = existing
             }
             openFile(file, existing, displayName)
+            notifyObservationChanged()
             return true
         }
         // Never turn PawnMC's own data folder into a workspace: doing that is what put
@@ -747,6 +783,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         // Only a folder the user already owned is remembered; the ad-hoc folder created
         // for a one-off external file stays for this session and is not persisted.
         if (owner != null) persistWorkspaceFolders()
+        notifyObservationChanged()
         return true
     }
 
@@ -862,6 +899,7 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         if (activeWorkspace != null && activeWorkspace !in workspaces) {
             activeWorkspace = workspaces.lastOrNull()
         }
+        if (missing.isNotEmpty()) notifyObservationChanged()
         persistWorkspaceFolders()
         return missing.size
     }
