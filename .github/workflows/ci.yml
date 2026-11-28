@@ -164,6 +164,19 @@ jobs:
           if-no-files-found: warn
           retention-days: 90
 
+      # R8 mapping files are required to symbolicate obfuscated release crash
+      # reports (e.g. Play Console NPEs with renamed classes like `c5.o1`).
+      # Archive one mapping per flavor+build so any report can be matched to the
+      # exact APK that produced it.
+      - name: Upload R8 mapping file
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mapping-${{ matrix.label }}-release
+          path: app/build/outputs/mapping/${{ matrix.flavor }}/release/mapping.txt
+          if-no-files-found: warn
+          retention-days: 90
+
       - name: Report packaged native archives
         if: always()
         shell: bash

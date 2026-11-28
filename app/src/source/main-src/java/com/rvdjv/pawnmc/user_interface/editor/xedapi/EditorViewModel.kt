@@ -116,6 +116,12 @@ class EditorViewModel(
         // list synchronously in its own init and only hands the folder scans to the IO
         // dispatcher. Reading it up front keeps this constructor free of any deferred
         // work, which is what makes the view model constructible without a context.
+        //
+        // Defensive: `config` is nullable (built without a context via
+        // `EditorViewModel(filePath)`), so every read through it uses a safe call.
+        // Never call methods on `config` or on any interface-typed field directly in
+        // this init block without a null check - doing so risks an NPE during
+        // construction, which crashes the first frame of composition.
         if (filePath.isNotBlank() && !workspace.isWorkspaceOpen) loadFile()
         else isLoading = false
     }

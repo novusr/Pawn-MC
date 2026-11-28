@@ -107,7 +107,7 @@ object Manager {
     fun formatForClipboard(report: Report): String {
         return buildString {
             appendLine("=========================================")
-            appendLine("           POCKETSAMP CRASH REPORT       ")
+            appendLine(" PAWNMC/POCKETSAMP CRASH REPORT ")
             appendLine("=========================================")
             appendLine("Report ID    : ${report.id}")
             appendLine("Date & Time  : ${report.formattedDate}")

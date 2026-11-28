@@ -304,6 +304,12 @@ class WorkspaceSession(context: Context? = null) : ViewModel() {
         // Both restores are synchronous in what they touch: the workspace list is filled
         // here (only the folder scans are handed to the IO dispatcher) and the tabs are
         // queued, so `isWorkspaceOpen` is already correct for the host's very first read.
+        //
+        // Defensive: `config` is nullable (built without a context). Both restore
+        // methods guard with `config ?: return` before touching it - never call
+        // methods on `config` or on any interface-typed field directly in this init
+        // block without a null check, as an NPE during construction crashes the first
+        // frame of composition.
         restoreRememberedWorkspaces()
         restoreRememberedTabs()
     }
